@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+        <androidx.camera.view.PreviewView
+            android:id="@+id/previewView"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginStart="56dp"
+            android:layout_marginTop="512dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/user_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_marginTop="40dp"
+            android:layout_marginStart="50dp"
+            android:text="用户名："
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <EditText
+            android:id="@+id/user"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="20dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/user_hint" />
+
+        <TextView
+            android:id="@+id/task_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="50dp"
+            android:text="任务："
+            app:layout_constraintTop_toBottomOf="@id/user_hint"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Spinner
+            android:id="@+id/task_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="20dp"
+            android:textSize="4dp"
+            app:layout_constraintTop_toBottomOf="@id/user"
+            app:layout_constraintStart_toEndOf="@id/task_hint"
+            >
+        </Spinner>
+
+        <TextView
+            android:id="@+id/subtask_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="50dp"
+            android:text="子任务："
+            app:layout_constraintTop_toBottomOf="@id/task_hint"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Spinner
+            android:id="@+id/subtask_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="20dp"
+            android:textSize="4dp"
+            app:layout_constraintTop_toBottomOf="@id/task_hint"
+            app:layout_constraintStart_toEndOf="@id/subtask_hint"
+            >
+        </Spinner>
+
+        <TextView
+            android:id="@+id/video_switch_label"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="50dp"
+            android:text="录制视频："
+            app:layout_constraintTop_toBottomOf="@id/subtask_hint"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <CheckBox
+            android:id="@+id/video_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="10dp"
+            android:textSize="4dp"
+            android:checked="false"
+            app:layout_constraintTop_toBottomOf="@id/subtask_spinner"
+            app:layout_constraintStart_toEndOf="@id/video_switch_label"
+            >
+        </CheckBox>
+
+        <!--TextView
+            android:id="@+id/audio_switch_label"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_marginStart="224dp"
+            android:layout_marginTop="28dp"
+            android:text="录制音频："
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/subtask_hint" />
+
+        <CheckBox
+            android:id="@+id/audio_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="10dp"
+            android:textSize="4dp"
+            android:checked="false"
+            app:layout_constraintTop_toBottomOf="@id/subtask_spinner"
+            app:layout_constraintStart_toEndOf="@id/audio_switch_label"
+            >
+        </CheckBox-->
+
+        <Button
+            android:id="@+id/start"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:layout_marginStart="40dp"
+            android:text="开始"
+            app:layout_constraintTop_toBottomOf="@id/video_switch"
+            app:layout_constraintLeft_toLeftOf="parent" />
+
+        <Button
+            android:id="@+id/stop"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:layout_marginEnd="40dp"
+            android:text="重做"
+            app:layout_constraintTop_toBottomOf="@id/video_switch"
+            app:layout_constraintRight_toRightOf="parent" />
+
+<!--        <Button-->
+<!--            android:id="@+id/error"-->
+<!--            android:layout_width="120dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginTop="40dp"-->
+<!--            android:text="失败"-->
+<!--            app:layout_constraintTop_toBottomOf="@id/start"-->
+<!--            app:layout_constraintLeft_toLeftOf="parent"-->
+<!--            app:layout_constraintRight_toRightOf="parent" />-->
+
+        <TextView
+            android:id="@+id/description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="100dp"
+            android:layout_marginEnd="100dp"
+            android:textSize="10pt"
+            android:text=""
+            app:layout_constraintTop_toBottomOf="@id/start"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent" />
+
+        <TextView
+            android:id="@+id/counter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="100dp"
+            android:layout_marginEnd="100dp"
+            android:textSize="10pt"
+            android:text=""
+            app:layout_constraintTop_toBottomOf="@id/description"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
