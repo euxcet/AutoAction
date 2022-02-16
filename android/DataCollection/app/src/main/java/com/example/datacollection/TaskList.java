@@ -129,7 +129,7 @@ public class TaskList {
                 return id;
             }
 
-            public int getDuration() {
+            public long getDuration() {
                 return duration;
             }
 

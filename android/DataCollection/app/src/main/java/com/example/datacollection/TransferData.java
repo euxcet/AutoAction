@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.datacollection.data.SensorInfo;
 import com.google.gson.Gson;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.callback.StringCallback;
@@ -17,7 +18,6 @@ import java.util.List;
 public class TransferData {
 
     private boolean isRecording = false;
-
 //    private String serverAddr = "http://183.173.98.59:8888";
 
     private long lastTimestamp;

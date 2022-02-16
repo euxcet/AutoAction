@@ -1,4 +1,4 @@
-package com.example.datacollection;
+package com.example.datacollection.data;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -27,16 +27,12 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.example.datacollection.data.CameraController;
+import com.example.datacollection.data.Recorder;
+import com.example.datacollection.data.SensorController;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
-import java.io.Writer;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -46,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
 
     public static Context mContext;
     private static TransferData transferData;
-    private FilenameFormat filenameFormat;
     private Vibrator vibrator;
 
     // ui
@@ -55,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
     private Button stopButton;
     private TextView description;
     private TextView counter;
-    private CountDownTimer idxTimer;
 
     private Spinner taskSpinner;
     private ArrayAdapter<String> taskAdapter;
@@ -65,40 +59,27 @@ public class MainActivity extends AppCompatActivity {
 
     // task
     private TaskList taskList;
-    private String[] tasks = new String[6];
     private String[] taskName;
     private String[] subtaskName;
-    private int curTask = 0;
-    private int curSubtask = 0;
+    private int curTaskId = 0;
+    private int curSubtaskId = 0;
+    private TaskList.Task.Subtask curTask;
+
+    private boolean isVideo;
 
     private CheckBox cameraSwitch;
 
-
     // each action takes 3s = 3000ms
+    /*
     private int interval = 3000;
     private int repeatTimes = 5;
     private int actionTime = interval * repeatTimes;
-    private int curIdx = 0;
+     */
 
     // save file path
     private String pathName = "/storage/emulated/0/PlaceData/";
 
-    // sensor
-    private SensorManager sensorManager;
-    private int samplingPeriod = SensorManager.SENSOR_DELAY_FASTEST;  // fastest
-    private Sensor gyroSensor;
-    private Sensor linearAccSensor;
-    private Sensor accSensor;
-    private Sensor magSensor;
-    private boolean sensorSupported = true;
-
-    // microphone
-    private File file, audioFile, videoFile;
-    private MediaRecorder mMediaRecorder;
-
-    // camera
-    private CameraController cameraController;
-    private boolean isVideo;
+    private Recorder recorder;
 
 
     // permission
@@ -123,31 +104,24 @@ public class MainActivity extends AppCompatActivity {
         mContext = this;
 
         transferData = TransferData.getInstance();
-        filenameFormat = FilenameFormat.getInstance();
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-        // initTasks();
         taskList = TaskList.parseFromFile(getResources().openRawResource(R.raw.tasklist));
         initView();
 
-        // camera
-        cameraController = new CameraController(this);
+        vibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
 
-        filenameFormat.setPathName(pathName);
+        recorder = new Recorder(this, pathName, new Recorder.RecorderListener() {
+            @Override
+            public void onTick(int tickCount) {
+                vibrator.vibrate(VibrationEffect.createOneShot(200, 128));
+            }
 
-        // sensor
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        sensorManager.registerListener(gyroListener, gyroSensor, samplingPeriod);
-        linearAccSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        sensorManager.registerListener(linearAccListener, linearAccSensor, samplingPeriod);
-        accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorManager.registerListener(accListener, accSensor, samplingPeriod);
-        magSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        sensorManager.registerListener(magListener, magSensor, samplingPeriod);
-
-        if (!isSensorSupport())
-            sensorSupported = false;
+            @Override
+            public void onFinish() {
+                vibrator.vibrate(VibrationEffect.createOneShot(600, 128));
+            }
+        });
     }
 
 
@@ -174,9 +148,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private boolean isSensorSupport() {
-        return gyroSensor != null && linearAccSensor != null && accSensor != null && magSensor != null;
-    }
 
     private void initView() {
         user = findViewById(R.id.user);
@@ -195,8 +166,8 @@ public class MainActivity extends AppCompatActivity {
         taskSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                curTask = position;
-                subtaskName = taskList.getTask().get(curTask).getSubtaskName();
+                curTaskId = position;
+                subtaskName = taskList.getTask().get(curTaskId).getSubtaskName();
                 subtaskAdapter = new ArrayAdapter<>(mContext, android.R.layout.simple_spinner_item, subtaskName);
                 subtaskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 subtaskSpinner.setAdapter(subtaskAdapter);
@@ -207,19 +178,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        subtaskName = taskList.getTask().get(curTask).getSubtaskName();
+        subtaskName = taskList.getTask().get(curTaskId).getSubtaskName();
         subtaskAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, subtaskName);
         subtaskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         subtaskSpinner.setAdapter(subtaskAdapter);
         subtaskSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                curSubtask = position;
-                description.setText(subtaskName[curSubtask]);
-                interval = taskList.getTask().get(curTask).getSubtask().get(curSubtask).getDuration();
-                repeatTimes = taskList.getTask().get(curTask).getSubtask().get(curSubtask).getTimes();
-                actionTime = interval * repeatTimes;
-                isVideo = taskList.getTask().get(curTask).getSubtask().get(curSubtask).isVideo();
+                curSubtaskId = position;
+                description.setText(subtaskName[curSubtaskId]);
+                curTask = taskList.getTask().get(curTaskId).getSubtask().get(curSubtaskId);
+                isVideo = taskList.getTask().get(curTaskId).getSubtask().get(curSubtaskId).isVideo();
                 cameraSwitch.setChecked(isVideo);
             }
 
@@ -230,11 +199,7 @@ public class MainActivity extends AppCompatActivity {
 
         cameraSwitch = findViewById(R.id.video_switch);
         cameraSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
-            if (b) {
-                cameraController.openCamera();
-            } else {
-                cameraController.closeCamera();
-            }
+            recorder.setCamera(b);
         });
         cameraSwitch.setEnabled(false);
 
@@ -242,7 +207,40 @@ public class MainActivity extends AppCompatActivity {
         stopButton = findViewById(R.id.stop);
 
         startButton.setOnClickListener(view -> {
-            if (!sensorSupported) {
+            enableButtons(true);
+            recorder.start(
+                    user.getText().toString(),
+                    curTaskId,
+                    curSubtaskId,
+                    curTask
+            );
+        });
+
+        stopButton.setOnClickListener(view -> {
+            recorder.stop();
+            enableButtons(false);
+        });
+
+        enableButtons(false);
+    }
+
+    private void enableButtons(boolean isRecording) {
+        startButton.setEnabled(!isRecording);
+        stopButton.setEnabled(isRecording);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (vibrator != null) {
+            vibrator.cancel();
+        }
+    }
+}
+
+            /*
+        startButton.setOnClickListener(view -> {
+            if (!sensorController.isSensorSupport()) {
                 Toast.makeText(mContext, "传感器缺失", Toast.LENGTH_LONG).show();
                 return;
             }
@@ -324,43 +322,8 @@ public class MainActivity extends AppCompatActivity {
             idxTimer.cancel();
             stop();
         });
-
-        enableButtons(false);
-    }
-
-    private void startAudioRecording() {
-        if (mMediaRecorder != null) {
-            mMediaRecorder.start();
-        }
-    }
-
-    private void stop() {
-        stopRecording();
-        transferData.stopRecording();
-
-        // clear data
-        transferData.clear();
-        counter.setText("");
-
-        enableButtons(false);
-    }
-
-    private void done() {
-        stopRecording();
-        transferData.stopRecording();
-
-        // upload data
-        transferData.upload(mContext);
-        counter.setText("");
-
-        enableButtons(false);
-    }
-
-    private void enableButtons(boolean isRecording) {
-        startButton.setEnabled(!isRecording);
-        stopButton.setEnabled(isRecording);
-    }
-
+             */
+    /*
     // microphone
     private void createDataFile() {
         makeRootDirectory(filenameFormat.getPathName());
@@ -393,7 +356,8 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
+     */
+    /*
     private void stopRecording() {
         if (mMediaRecorder != null) {
             mMediaRecorder.stop();
@@ -403,6 +367,30 @@ public class MainActivity extends AppCompatActivity {
                     new String[] {file.getAbsolutePath(), audioFile.getAbsolutePath()},
                     null, null);
         }
+    }
+     */
+
+    /*
+    private void stop() {
+        stopRecording();
+        transferData.stopRecording();
+
+        // clear data
+        transferData.clear();
+        counter.setText("");
+
+        enableButtons(false);
+    }
+
+    private void done() {
+        stopRecording();
+        transferData.stopRecording();
+
+        // upload data
+        transferData.upload(mContext);
+        counter.setText("");
+
+        enableButtons(false);
     }
 
     private static void makeRootDirectory(String filePath) {
@@ -414,82 +402,4 @@ public class MainActivity extends AppCompatActivity {
             Log.e("error:", e + "");
         }
     }
-
-    // sensor
-    private SensorEventListener gyroListener = new SensorEventListener() {
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            float gyrox = event.values[0];
-            float gyroy = event.values[1];
-            float gyroz = event.values[2];
-            SensorInfo info = new SensorInfo(Sensor.TYPE_GYROSCOPE, gyrox, gyroy, gyroz, event.timestamp);
-            transferData.addSensorData(info);
-        }
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-        }
-    };
-
-    private SensorEventListener linearAccListener = new SensorEventListener() {
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            float linearx = event.values[0];
-            float lineary = event.values[1];
-            float linearz = event.values[2];
-            SensorInfo info = new SensorInfo(Sensor.TYPE_LINEAR_ACCELERATION, linearx, lineary, linearz, event.timestamp);
-            transferData.addSensorData(info);
-        }
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-        }
-    };
-
-    private SensorEventListener accListener = new SensorEventListener() {
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            float accx = event.values[0];
-            float accy = event.values[1];
-            float accz = event.values[2];
-            SensorInfo info = new SensorInfo(Sensor.TYPE_ACCELEROMETER, accx, accy, accz, event.timestamp);
-            transferData.addSensorData(info);
-        }
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-        }
-    };
-
-    private SensorEventListener magListener = new SensorEventListener() {
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            float magx = event.values[0];
-            float magy = event.values[1];
-            float magz = event.values[2];
-            SensorInfo info = new SensorInfo(Sensor.TYPE_MAGNETIC_FIELD, magx, magy, magz, event.timestamp);
-            transferData.addSensorData(info);
-        }
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-        }
-    };
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (sensorManager != null) {
-            sensorManager.unregisterListener(gyroListener);
-            sensorManager.unregisterListener(linearAccListener);
-            sensorManager.unregisterListener(accListener);
-            sensorManager.unregisterListener(magListener);
-        }
-        if (vibrator != null)
-            vibrator.cancel();
-    }
-}
+     */

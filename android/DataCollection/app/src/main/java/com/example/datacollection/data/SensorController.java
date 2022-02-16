@@ -1,0 +1,90 @@
+package com.example.datacollection.data;
+
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+public class SensorController {
+    // sensor
+    private SensorManager sensorManager;
+    private int samplingPeriod = SensorManager.SENSOR_DELAY_FASTEST;  // fastest
+    private Sensor gyroSensor;
+    private Sensor linearSensor;
+    private Sensor accSensor;
+    private Sensor magSensor;
+    private Context mContext;
+    private List<SensorInfo> sensorData = new ArrayList<>();
+    private long lastTimestamp;
+
+    private File saveFile;
+
+    public SensorController(Context context) {
+        this.mContext = context;
+
+        sensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
+
+        gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        linearSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+        if (!isSensorSupport()) {
+            // Toast.makeText(mContext, "传感器缺失", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void resume() {
+        if (sensorManager != null) {
+            sensorManager.registerListener(listener, gyroSensor, samplingPeriod);
+            sensorManager.registerListener(listener, linearSensor, samplingPeriod);
+            sensorManager.registerListener(listener, accSensor, samplingPeriod);
+            sensorManager.registerListener(listener, magSensor, samplingPeriod);
+        }
+    }
+
+    public void pause() {
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(listener);
+        }
+    }
+
+    public void start(File file) {
+        this.saveFile = file;
+        sensorData.clear();
+        resume();
+    }
+
+    public void stop() {
+        pause();
+    }
+
+    public boolean isSensorSupport() {
+        return gyroSensor != null && linearSensor != null && accSensor != null && magSensor != null;
+    }
+
+    private SensorEventListener listener = new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            sensorData.add(new SensorInfo(
+                    event.sensor.getType(),
+                    event.values[0],
+                    event.values[1],
+                    event.values[2],
+                    event.timestamp
+            ));
+            lastTimestamp = event.timestamp;
+        }
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int i) { }
+    };
+
+    public long getLastTimestamp() {
+        return lastTimestamp;
+    }
+}

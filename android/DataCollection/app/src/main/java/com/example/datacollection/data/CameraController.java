@@ -1,4 +1,4 @@
-package com.example.datacollection;
+package com.example.datacollection.data;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -24,6 +24,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
 
+import com.example.datacollection.R;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
@@ -89,9 +90,8 @@ public class CameraController {
         mCameraProvider = null;
     }
 
-    public void startRecording(File videoFile) {
+    public void start(File videoFile) {
         if (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-            Log.e("TAG", videoFile.getAbsolutePath());
             recording = recorder.prepareRecording(mActivity, new FileOutputOptions.Builder(videoFile).build())
                     .withAudioEnabled()
                     .start(ContextCompat.getMainExecutor(mActivity), videoRecordEvent -> {
@@ -99,7 +99,7 @@ public class CameraController {
         }
     }
 
-    public void stopRecording() {
+    public void stop() {
         if (recording != null) {
             recording.stop();
             recording.close();

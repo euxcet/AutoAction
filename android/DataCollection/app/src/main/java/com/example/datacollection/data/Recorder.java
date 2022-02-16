@@ -1,0 +1,129 @@
+package com.example.datacollection.data;
+
+import android.content.Context;
+import android.media.MediaRecorder;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Vibrator;
+import android.util.Log;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.datacollection.TaskList;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class Recorder {
+
+    private Context mContext;
+
+    private MicrophoneController microphoneController;
+    private CameraController cameraController;
+    private SensorController sensorController;
+    private TimestampController timestampController;
+
+    // file
+    private String saveDirectory;
+    private File cameraFile;
+    private File sensorFile;
+    private File microphoneFile;
+    private File timestampFile;
+
+    private TaskList.Task.Subtask subtask;
+    private CountDownTimer timer;
+    private RecorderListener listener;
+
+    private int tickCount = 0;
+
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMddHHmmss");
+
+    public Recorder(Context context, String saveDirectory, RecorderListener listener) {
+        this.mContext = context;
+        this.saveDirectory = saveDirectory;
+        this.listener = listener;
+        cameraController = new CameraController((AppCompatActivity) mContext);
+        sensorController = new SensorController(mContext);
+        microphoneController = new MicrophoneController();
+        timestampController = new TimestampController();
+        try {
+            File file = new File(this.saveDirectory);
+            if (!file.exists()) {
+                file.mkdir();
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    public void setCamera(boolean b) {
+        if (b) {
+            cameraController.openCamera();
+        } else {
+            cameraController.closeCamera();
+        }
+    }
+
+    public void start(String name, int taskId, int subtaskId, TaskList.Task.Subtask subtask) {
+        this.subtask = subtask;
+        this.tickCount = 0;
+
+        createFile(name, taskId, subtaskId, subtask);
+
+        long duration = subtask.getDuration();
+        long actionTime = subtask.getTimes() * subtask.getDuration();
+
+        timer = new CountDownTimer(actionTime, duration) {
+            @Override
+            public void onTick(long l) {
+                if (l < duration / 10) { // skip first tick
+                    return;
+                }
+                timestampController.add(sensorController.getLastTimestamp());
+                tickCount += 1;
+                listener.onTick(tickCount);
+            }
+
+            @Override
+            public void onFinish() {
+                listener.onFinish();
+                stop();
+            }
+        };
+
+        new Handler().postDelayed(() -> {
+            sensorController.start(sensorFile);
+            if (subtask.isAudio()) {
+                microphoneController.start(microphoneFile);
+            }
+            if (subtask.isVideo()) {
+                cameraController.start(cameraFile);
+            }
+            timestampController.start(timestampFile);
+        }, 3000);
+    }
+
+    public void stop() {
+        sensorController.stop();
+        if (subtask != null && subtask.isAudio()) {
+            microphoneController.stop();
+        }
+        if (subtask != null && subtask.isVideo()) {
+            cameraController.stop();
+        }
+        timestampController.stop();
+    }
+
+    public void createFile(String name, int taskId, int subtaskId, TaskList.Task.Subtask subtask) {
+        String suffix = "_" + name + "_" + taskId + "_" + subtaskId + "_" + dateFormat.format(new Date());
+        timestampFile = new File(this.saveDirectory, "Timestamp" + suffix + ".txt");
+        sensorFile = new File(this.saveDirectory, "Sensor" + suffix + ".json");
+        microphoneFile = new File(this.saveDirectory, "Microphone" + suffix + ".mp4");
+        cameraFile = new File(this.saveDirectory, "Camera" + suffix + ".mp4");
+    }
+
+    public interface RecorderListener {
+        void onTick(int tickCount);
+        void onFinish();
+    }
+}
