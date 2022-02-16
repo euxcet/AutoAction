@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.example.datacollection.R;
+import com.example.datacollection.utils.NetworkUtils;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
@@ -43,6 +44,8 @@ public class CameraController {
     private VideoCapture videoCapture;
     private ProcessCameraProvider mCameraProvider;
     private AppCompatActivity mActivity;
+
+    private File saveFile;
 
     public CameraController(AppCompatActivity activity) {
         mActivity = activity;
@@ -92,10 +95,10 @@ public class CameraController {
 
     public void start(File videoFile) {
         if (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            this.saveFile = videoFile;
             recording = recorder.prepareRecording(mActivity, new FileOutputOptions.Builder(videoFile).build())
                     .withAudioEnabled()
-                    .start(ContextCompat.getMainExecutor(mActivity), videoRecordEvent -> {
-                    });
+                    .start(ContextCompat.getMainExecutor(mActivity), videoRecordEvent -> {});
         }
     }
 
@@ -103,6 +106,12 @@ public class CameraController {
         if (recording != null) {
             recording.stop();
             recording.close();
+        }
+    }
+
+    public void upload() {
+        if (saveFile != null) {
+            NetworkUtils.uploadFile(mActivity, saveFile);
         }
     }
 }

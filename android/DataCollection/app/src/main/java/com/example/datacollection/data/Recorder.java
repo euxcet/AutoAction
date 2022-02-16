@@ -10,6 +10,7 @@ import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.FileUtils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -45,15 +46,9 @@ public class Recorder {
         this.listener = listener;
         cameraController = new CameraController((AppCompatActivity) mContext);
         sensorController = new SensorController(mContext);
-        microphoneController = new MicrophoneController();
-        timestampController = new TimestampController();
-        try {
-            File file = new File(this.saveDirectory);
-            if (!file.exists()) {
-                file.mkdir();
-            }
-        } catch (Exception ignored) {
-        }
+        microphoneController = new MicrophoneController(mContext);
+        timestampController = new TimestampController(mContext);
+        FileUtils.makeDir(this.saveDirectory);
     }
 
     public void setCamera(boolean b) {
@@ -68,7 +63,7 @@ public class Recorder {
         this.subtask = subtask;
         this.tickCount = 0;
 
-        createFile(name, taskId, subtaskId, subtask);
+        createFile(name, taskId, subtaskId);
 
         long duration = subtask.getDuration();
         long actionTime = subtask.getTimes() * subtask.getDuration();
@@ -112,9 +107,19 @@ public class Recorder {
             cameraController.stop();
         }
         timestampController.stop();
+        new Handler().postDelayed(() -> {
+            sensorController.upload();
+            if (subtask != null && subtask.isAudio()) {
+                microphoneController.upload();
+            }
+            if (subtask != null && subtask.isVideo()) {
+                cameraController.upload();
+            }
+            timestampController.upload();
+        }, 3000);
     }
 
-    public void createFile(String name, int taskId, int subtaskId, TaskList.Task.Subtask subtask) {
+    public void createFile(String name, int taskId, int subtaskId) {
         String suffix = "_" + name + "_" + taskId + "_" + subtaskId + "_" + dateFormat.format(new Date());
         timestampFile = new File(this.saveDirectory, "Timestamp" + suffix + ".txt");
         sensorFile = new File(this.saveDirectory, "Sensor" + suffix + ".json");

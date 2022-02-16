@@ -6,6 +6,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
+import com.example.datacollection.utils.FileUtils;
+import com.example.datacollection.utils.NetworkUtils;
+import com.google.gson.Gson;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +66,7 @@ public class SensorController {
 
     public void stop() {
         pause();
+        FileUtils.writeStringToFile(new Gson().toJson(sensorData), this.saveFile);
     }
 
     public boolean isSensorSupport() {
@@ -86,5 +91,11 @@ public class SensorController {
 
     public long getLastTimestamp() {
         return lastTimestamp;
+    }
+
+    public void upload() {
+        if (saveFile != null) {
+            NetworkUtils.uploadFile(mContext, saveFile);
+        }
     }
 }
