@@ -1,4 +1,4 @@
-package com.example.datacollection;
+package com.example.datacollection.ui;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -27,6 +27,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.datacollection.R;
+import com.example.datacollection.TaskList;
+import com.example.datacollection.TransferData;
 import com.example.datacollection.data.CameraController;
 import com.example.datacollection.data.Recorder;
 import com.example.datacollection.data.SensorController;
