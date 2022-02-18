@@ -4,20 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.ConfigTaskActivity">
+    tools:context=".ui.ConfigSubtaskActivity">
 
     <Button
-        android:id="@+id/addTaskButton"
-        android:layout_width="200dp"
-        android:layout_height="60dp"
-        android:layout_marginEnd="190dp"
-        android:layout_marginBottom="84dp"
-        android:text=" Add Task"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <Button
-        android:id="@+id/taskBackButton"
+        android:id="@+id/subtaskBackButton"
         android:layout_width="100dp"
         android:layout_height="60dp"
         android:layout_marginEnd="16dp"
@@ -26,24 +16,55 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <Button
+        android:id="@+id/addSubtaskButton"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:layout_marginEnd="190dp"
+        android:layout_marginBottom="84dp"
+        android:text="Add Subtask"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/configTaskButton"
+        android:layout_width="200dp"
+        android:layout_height="59dp"
+        android:layout_marginEnd="190dp"
+        android:layout_marginBottom="16dp"
+        android:text="Config Task"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <TextView
         android:id="@+id/editTextTextPersonName"
-        android:layout_width="156dp"
-        android:layout_height="46dp"
+        android:layout_width="124dp"
+        android:layout_height="47dp"
         android:layout_marginStart="7dp"
         android:layout_marginTop="22dp"
         android:ems="10"
-        android:text="Task list"
+        android:text="Subtask list"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ListView
-        android:id="@+id/taskListView"
+        android:id="@+id/subtaskListView"
         android:layout_width="392dp"
         android:layout_height="482dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="28dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextTextPersonName" />
+
+    <TextView
+        android:id="@+id/taskNameView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="90dp"
+        android:layout_marginTop="22dp"
+        android:textSize="20sp"
+        app:layout_constraintStart_toEndOf="@+id/editTextTextPersonName"
+        app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,20 +3,11 @@ package com.example.datacollection.ui;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.media.MediaRecorder;
-import android.media.MediaScannerConnection;
+import android.content.Intent;
 import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.os.Handler;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -25,17 +16,11 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.datacollection.R;
 import com.example.datacollection.TaskList;
 import com.example.datacollection.TransferData;
-import com.example.datacollection.data.CameraController;
 import com.example.datacollection.data.Recorder;
-import com.example.datacollection.data.SensorController;
-
-import java.io.File;
-import java.io.IOException;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -59,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Spinner subtaskSpinner;
     private ArrayAdapter<String> subtaskAdapter;
+
+    private Button configButton;
 
     // task
     private TaskList taskList;
@@ -208,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
 
         startButton = findViewById(R.id.start);
         stopButton = findViewById(R.id.stop);
+        configButton = findViewById(R.id.configButton);
 
         startButton.setOnClickListener(view -> {
             enableButtons(true);
@@ -222,6 +210,11 @@ public class MainActivity extends AppCompatActivity {
         stopButton.setOnClickListener(view -> {
             recorder.stop();
             enableButtons(false);
+        });
+
+        configButton.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, ConfigTaskActivity.class);
+            startActivity(intent);
         });
 
         enableButtons(false);

@@ -7,11 +7,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.List;
 
-public class TaskList {
+public class TaskList implements Serializable {
     private String date;
     private String description;
     private List<Task> task;
@@ -66,7 +67,7 @@ public class TaskList {
         }
     }
 
-    public class Task {
+    public class Task implements Serializable {
         private String name;
         private int id;
         private int times;
@@ -85,7 +86,7 @@ public class TaskList {
             return taskName;
         }
 
-        public class Subtask {
+        public class Subtask implements Serializable {
             private String name;
             private int id;
             private int times;
