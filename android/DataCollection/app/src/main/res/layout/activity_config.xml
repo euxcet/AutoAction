@@ -34,14 +34,14 @@
         android:layout_marginTop="22dp"
         android:ems="10"
         android:text="Task list"
-        android:textSize="20sp"
+        android:textSize="24sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ListView
         android:id="@+id/taskListView"
         android:layout_width="392dp"
-        android:layout_height="482dp"
+        android:layout_height="400dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="28dp"
         app:layout_constraintStart_toStartOf="parent"

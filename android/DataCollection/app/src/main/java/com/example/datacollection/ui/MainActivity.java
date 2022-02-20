@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -17,10 +18,16 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.example.datacollection.BuildConfig;
 import com.example.datacollection.R;
 import com.example.datacollection.TaskList;
 import com.example.datacollection.TransferData;
 import com.example.datacollection.data.Recorder;
+import com.example.datacollection.utils.FileUtils;
+import com.google.gson.Gson;
+
+import java.io.File;
+import java.io.FileInputStream;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -67,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
      */
 
     // save file path
-    private String pathName = "/storage/emulated/0/PlaceData/";
 
     private Recorder recorder;
 
@@ -97,11 +103,14 @@ public class MainActivity extends AppCompatActivity {
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         taskList = TaskList.parseFromFile(getResources().openRawResource(R.raw.tasklist));
+        TaskList.saveToLocalFile(taskList);
+        taskList = TaskList.parseFromLocalFile();
+
         initView();
 
         vibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
 
-        recorder = new Recorder(this, pathName, new Recorder.RecorderListener() {
+        recorder = new Recorder(this, new Recorder.RecorderListener() {
             @Override
             public void onTick(int tickCount) {
                 vibrator.vibrate(VibrationEffect.createOneShot(200, 128));
@@ -114,6 +123,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        taskList = TaskList.parseFromLocalFile();
+        initView();
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -168,7 +183,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        subtaskName = taskList.getTask().get(curTaskId).getSubtaskName();
+        if (taskName.length == 0) {
+            subtaskName = new String[0];
+        }
+        else {
+            subtaskName = taskList.getTask().get(curTaskId).getSubtaskName();
+        }
         subtaskAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, subtaskName);
         subtaskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         subtaskSpinner.setAdapter(subtaskAdapter);

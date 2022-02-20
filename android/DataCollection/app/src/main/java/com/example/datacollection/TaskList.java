@@ -1,15 +1,21 @@
 package com.example.datacollection;
 
+import android.util.Log;
+
+import com.example.datacollection.utils.FileUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TaskList implements Serializable {
@@ -42,6 +48,21 @@ public class TaskList implements Serializable {
         return null;
     }
 
+    public static TaskList parseFromLocalFile() {
+        TaskList taskList = null;
+        try {
+            taskList = TaskList.parseFromFile(new FileInputStream(BuildConfig.SAVE_PATH + "tasklist.json"));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return taskList;
+    }
+
+    public static void saveToLocalFile(TaskList taskList) {
+        FileUtils.writeStringToFile(new Gson().toJson(taskList), new File(BuildConfig.SAVE_PATH + "tasklist.json"));
+    }
+
     public String[] getTaskName() {
         int size = getTask().size();
         String[] taskName = new String[size];
@@ -67,14 +88,34 @@ public class TaskList implements Serializable {
         }
     }
 
-    public class Task implements Serializable {
-        private String name;
+    public void addTask(Task newTask) {
+        task.add(newTask);
+    }
+
+    public void resetId() {
+        for (int i = 0; i < task.size(); i++) {
+            task.get(i).id = i + 1;
+        }
+    }
+
+    public static class Task implements Serializable {
         private int id;
+        private String name;
         private int times;
         private int duration;
         private boolean audio;
         public boolean video;
         public List<Subtask> subtask;
+
+        public Task(int id, String name, int times, int duration, boolean audio, boolean video) {
+            this.id = id;
+            this.name = name;
+            this.times = times;
+            this.duration = duration;
+            this.audio = audio;
+            this.video = video;
+            this.subtask = new ArrayList<>();
+        }
 
         public String[] getSubtaskName() {
             int size = getSubtask().size();
@@ -86,7 +127,7 @@ public class TaskList implements Serializable {
             return taskName;
         }
 
-        public class Subtask implements Serializable {
+        public static class Subtask implements Serializable {
             private String name;
             private int id;
             private int times;

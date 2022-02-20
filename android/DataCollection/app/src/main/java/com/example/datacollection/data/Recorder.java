@@ -2,6 +2,7 @@ package com.example.datacollection.data;
 
 import android.content.Context;
 import android.media.MediaRecorder;
+import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Vibrator;
@@ -9,6 +10,7 @@ import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.datacollection.BuildConfig;
 import com.example.datacollection.TaskList;
 import com.example.datacollection.utils.FileUtils;
 
@@ -26,7 +28,6 @@ public class Recorder {
     private TimestampController timestampController;
 
     // file
-    private String saveDirectory;
     private File cameraFile;
     private File sensorFile;
     private File microphoneFile;
@@ -40,15 +41,14 @@ public class Recorder {
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMddHHmmss");
 
-    public Recorder(Context context, String saveDirectory, RecorderListener listener) {
+    public Recorder(Context context, RecorderListener listener) {
         this.mContext = context;
-        this.saveDirectory = saveDirectory;
         this.listener = listener;
         cameraController = new CameraController((AppCompatActivity) mContext);
         sensorController = new SensorController(mContext);
         microphoneController = new MicrophoneController(mContext);
         timestampController = new TimestampController(mContext);
-        FileUtils.makeDir(this.saveDirectory);
+        FileUtils.makeDir(BuildConfig.SAVE_PATH);
     }
 
     public void setCamera(boolean b) {
@@ -121,10 +121,10 @@ public class Recorder {
 
     public void createFile(String name, int taskId, int subtaskId) {
         String suffix = "_" + name + "_" + taskId + "_" + subtaskId + "_" + dateFormat.format(new Date());
-        timestampFile = new File(this.saveDirectory, "Timestamp" + suffix + ".txt");
-        sensorFile = new File(this.saveDirectory, "Sensor" + suffix + ".json");
-        microphoneFile = new File(this.saveDirectory, "Microphone" + suffix + ".mp4");
-        cameraFile = new File(this.saveDirectory, "Camera" + suffix + ".mp4");
+        timestampFile = new File(BuildConfig.SAVE_PATH, "Timestamp" + suffix + ".txt");
+        sensorFile = new File(BuildConfig.SAVE_PATH, "Sensor" + suffix + ".json");
+        microphoneFile = new File(BuildConfig.SAVE_PATH, "Microphone" + suffix + ".mp4");
+        cameraFile = new File(BuildConfig.SAVE_PATH, "Camera" + suffix + ".mp4");
     }
 
     public interface RecorderListener {

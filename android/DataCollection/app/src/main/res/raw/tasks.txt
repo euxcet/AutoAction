@@ -1,6 +1,106 @@
-1-1. 左手持握，顶部先接触桌面
-1-2. 左手持握，右侧先接触桌面
-1-3. 左手持握，底部先接触桌面
-2-1. 右手持握，顶部先接触桌面
-2-2. 右手持握，左侧先接触桌面
-2-3. 右手持握，底部先接触桌面
+{
+  "date": "2022.01.20",
+  "description": "The first data collection task.",
+  "task": [
+    {
+      "name": "放置在桌面上",
+      "id": 1,
+      "times": 3,
+      "duration": 3000,
+      "audio": true,
+      "video": false,
+      "subtask": [
+        {
+          "name": "左手持握，顶部先接触桌面",
+          "id": 1,
+          "times": 5,
+          "duration": 5000,
+          "audio": true,
+          "video": false
+        },
+        {
+          "name": "左手持握，右侧先接触桌面",
+          "id": 2
+        },
+        {
+          "name": "左手持握，底部先接触桌面",
+          "id": 3
+        },
+        {
+          "name": "右手持握，顶部先接触桌面",
+          "id": 4
+        },
+        {
+          "name": "右手持握，左侧先接触桌面",
+          "id": 5
+        },
+        {
+          "name": "右手持握，底部先接触桌面",
+          "id": 6
+        }
+      ]
+    },
+    {
+      "name": "遥控器",
+      "id": 2,
+      "times": 4,
+      "duration": 3000,
+      "audio": true,
+      "video": true,
+      "subtask": [
+        {
+          "name": "将手机指向自己",
+          "id": 1
+        },
+        {
+          "name": "水平翻转手机",
+          "id": 2
+        },
+        {
+          "name": "手机竖直靠近嘴边",
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "靠拢",
+      "id": 3,
+      "times": 50,
+      "duration": 5000,
+      "audio": true,
+      "video": false,
+      "subtask": [
+        {
+          "name": "靠向笔记本, 近距离",
+          "id": 1
+        },
+        {
+          "name": "靠向笔记本，远距离",
+          "id": 2
+        },
+        {
+          "name": "靠向键盘，近距离",
+          "id": 3
+        },
+        {
+          "name": "靠向键盘，远距离",
+          "id": 4
+        }
+      ]
+    },
+    {
+      "name": "负例",
+      "id": 4,
+      "times": 50,
+      "duration": 5000,
+      "audio": true,
+      "video": false,
+      "subtask": [
+        {
+          "name": "日常使用",
+          "id": 1
+        }
+      ]
+    }
+  ]
+}

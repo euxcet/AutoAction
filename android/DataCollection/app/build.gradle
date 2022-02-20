@@ -15,9 +15,16 @@ android {
     }
 
     buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField("String", "SAVE_PATH", "\"/storage/emulated/0/PlaceData/\"")
+
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField("String", "SAVE_PATH", "\"/storage/emulated/0/PlaceData/\"")
         }
     }
     compileOptions {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.datacollection" >
+    package="com.example.datacollection">
 
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -17,14 +17,20 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".ui.AddSubtaskActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.AddTaskActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.ConfigSubtaskActivity"
             android:exported="false" />
         <activity
             android:name=".ui.ConfigTaskActivity"
             android:exported="false" />
-        <activity android:name=".ui.MainActivity" >
+        <activity android:name=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

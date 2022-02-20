@@ -1,8 +1,6 @@
 package com.example.datacollection.ui.adapter;
 
 import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,21 +40,36 @@ public class SubtaskAdapter extends BaseAdapter {
 
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
-        if (view == null) {
-            view = inflater.inflate(R.layout.fragment_task, null);
-            TaskList.Task.Subtask subtask = task.getTask().get(task_id).getSubtask().get(i);
-            TextView textView = view.findViewById(R.id.textView);
-            textView.setText(subtask.getName());
-            /*
-            view.setOnClickListener((v) -> {
-                Bundle bundle = new Bundle();
-                bundle.putInt("task_id", i);
-                Intent intent = new Intent();
-                intent.putExtras(bundle);
-                context.startActivity(intent);
-            });
-             */
-        }
+        view = inflater.inflate(R.layout.fragment_task, null);
+
+        TaskList.Task.Subtask subtask = task.getTask().get(task_id).getSubtask().get(i);
+
+
+        TextView taskName = view.findViewById(R.id.taskName);
+        TextView taskTimes = view.findViewById(R.id.taskTimes);
+        TextView taskDuration = view.findViewById(R.id.taskDuration);
+        TextView taskVideo = view.findViewById(R.id.taskVideo);
+        TextView taskAudio = view.findViewById(R.id.taskAudio);
+
+        taskName.setText(subtask.getName());
+        taskTimes.setText("  录制次数:     " + subtask.getTimes());
+        taskDuration.setText("  单次时长:     " + subtask.getDuration() + " ms");
+        taskVideo.setText("  开启摄像头: " + subtask.isVideo());
+        taskAudio.setText("  开启麦克风: " + subtask.isAudio());
+
+        /*
+        TextView textView = view.findViewById(R.id.taskName);
+        textView.setText(subtask.getName());
+         */
+        /*
+        view.setOnClickListener((v) -> {
+            Bundle bundle = new Bundle();
+            bundle.putInt("task_id", i);
+            Intent intent = new Intent();
+            intent.putExtras(bundle);
+            context.startActivity(intent);
+        });
+         */
         return view;
     }
 }

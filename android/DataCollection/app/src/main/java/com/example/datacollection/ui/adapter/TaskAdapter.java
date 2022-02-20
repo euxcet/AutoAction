@@ -41,18 +41,26 @@ public class TaskAdapter extends BaseAdapter {
 
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
-        if (view == null) {
-            view = inflater.inflate(R.layout.fragment_task, null);
-            TextView textView = view.findViewById(R.id.textView);
-            textView.setText(task.getTask().get(i).getName());
-            view.setOnClickListener((v) -> {
-                Bundle bundle = new Bundle();
-                bundle.putInt("task_id", i);
-                Intent intent = new Intent(context, ConfigSubtaskActivity.class);
-                intent.putExtras(bundle);
-                context.startActivity(intent);
-            });
-        }
+        view = inflater.inflate(R.layout.fragment_task, null);
+        TextView taskName = view.findViewById(R.id.taskName);
+        TextView taskTimes = view.findViewById(R.id.taskTimes);
+        TextView taskDuration = view.findViewById(R.id.taskDuration);
+        TextView taskVideo = view.findViewById(R.id.taskVideo);
+        TextView taskAudio = view.findViewById(R.id.taskAudio);
+
+        taskName.setText(task.getTask().get(i).getName());
+        taskTimes.setText("  录制次数:     " + task.getTask().get(i).getTimes());
+        taskDuration.setText("  单次时长:     " + task.getTask().get(i).getDuration() + " ms");
+        taskVideo.setText("  开启摄像头: " + task.getTask().get(i).isVideo());
+        taskAudio.setText("  开启麦克风: " + task.getTask().get(i).isAudio());
+
+        view.setOnClickListener((v) -> {
+            Bundle bundle = new Bundle();
+            bundle.putInt("task_id", i);
+            Intent intent = new Intent(context, ConfigSubtaskActivity.class);
+            intent.putExtras(bundle);
+            context.startActivity(intent);
+        });
         return view;
     }
 }
