@@ -117,6 +117,16 @@ public class TaskList implements Serializable {
             this.subtask = new ArrayList<>();
         }
 
+        public void addSubtask(Subtask newSubtask) {
+            subtask.add(newSubtask);
+        }
+
+        public void resetId() {
+            for(int i = 0; i < subtask.size(); i++) {
+                subtask.get(i).id = i + 1;
+            }
+        }
+
         public String[] getSubtaskName() {
             int size = getSubtask().size();
             String[] taskName = new String[size];
@@ -134,6 +144,15 @@ public class TaskList implements Serializable {
             private int duration;
             private boolean audio;
             private boolean video;
+
+            public Subtask(int id, String name, int times, int duration, boolean audio, boolean video) {
+                this.id = id;
+                this.name = name;
+                this.times = times;
+                this.duration = duration;
+                this.audio = audio;
+                this.video = video;
+            }
 
             public void setTimes(int times) {
                 this.times = times;

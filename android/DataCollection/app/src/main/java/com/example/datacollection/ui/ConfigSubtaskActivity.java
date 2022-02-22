@@ -2,6 +2,7 @@ package com.example.datacollection.ui;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ListView;
@@ -14,7 +15,11 @@ import com.example.datacollection.ui.adapter.TaskAdapter;
 
 public class ConfigSubtaskActivity extends AppCompatActivity {
     private ListView subtaskListView;
+    private Button addButton;
     private Button backButton;
+    private TaskList taskList;
+    private SubtaskAdapter subtaskAdapter;
+    private int task_id;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,17 +30,34 @@ public class ConfigSubtaskActivity extends AppCompatActivity {
         backButton.setOnClickListener((v) -> this.finish());
 
         subtaskListView = findViewById(R.id.subtaskListView);
-        TaskList taskList = TaskList.parseFromFile(getResources().openRawResource(R.raw.tasklist));
+        taskList = TaskList.parseFromLocalFile();
 
         Bundle bundle = getIntent().getExtras();
-        int task_id = bundle.getInt("task_id");
+        task_id = bundle.getInt("task_id");
+
+        addButton = findViewById(R.id.addSubtaskButton);
+        addButton.setOnClickListener((v) -> {
+            Bundle addBundle = new Bundle();
+            addBundle.putInt("task_id", task_id);
+            Intent intent = new Intent(ConfigSubtaskActivity.this, AddSubtaskActivity.class);
+            intent.putExtras(addBundle);
+            startActivity(intent);
+        });
 
         TextView taskNameView = findViewById(R.id.taskNameView);
         if (taskList != null) {
             taskNameView.setText("Task name: " + taskList.getTask().get(task_id).getName());
         }
 
-        SubtaskAdapter subtaskAdapter = new SubtaskAdapter(this, taskList, task_id);
+        subtaskAdapter = new SubtaskAdapter(this, taskList, task_id);
+        subtaskListView.setAdapter(subtaskAdapter);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        taskList = TaskList.parseFromLocalFile();
+        subtaskAdapter = new SubtaskAdapter(this, taskList, task_id);
         subtaskListView.setAdapter(subtaskAdapter);
     }
 }

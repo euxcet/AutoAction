@@ -5,10 +5,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.datacollection.R;
 import com.example.datacollection.TaskList;
+
+import java.util.List;
 
 public class SubtaskAdapter extends BaseAdapter {
     private Context context;
@@ -42,8 +45,8 @@ public class SubtaskAdapter extends BaseAdapter {
     public View getView(int i, View view, ViewGroup viewGroup) {
         view = inflater.inflate(R.layout.fragment_task, null);
 
+        List<TaskList.Task.Subtask> subtasks = task.getTask().get(task_id).getSubtask();
         TaskList.Task.Subtask subtask = task.getTask().get(task_id).getSubtask().get(i);
-
 
         TextView taskName = view.findViewById(R.id.taskName);
         TextView taskTimes = view.findViewById(R.id.taskTimes);
@@ -56,6 +59,20 @@ public class SubtaskAdapter extends BaseAdapter {
         taskDuration.setText("  单次时长:     " + subtask.getDuration() + " ms");
         taskVideo.setText("  开启摄像头: " + subtask.isVideo());
         taskAudio.setText("  开启麦克风: " + subtask.isAudio());
+
+        Button deleteButton = view.findViewById(R.id.deleteItemButton);
+
+        deleteButton.setOnClickListener((v) -> {
+            int id = subtask.getId();
+            for(int j = 0; j < subtasks.size(); j++) {
+                if (subtasks.get(j).getId() == id) {
+                    subtasks.remove(j);
+                }
+            }
+            task.getTask().get(task_id).resetId();
+            TaskList.saveToLocalFile(task);
+            this.notifyDataSetChanged();
+        });
 
         /*
         TextView textView = view.findViewById(R.id.taskName);

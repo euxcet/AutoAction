@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.datacollection.R;
@@ -47,12 +48,25 @@ public class TaskAdapter extends BaseAdapter {
         TextView taskDuration = view.findViewById(R.id.taskDuration);
         TextView taskVideo = view.findViewById(R.id.taskVideo);
         TextView taskAudio = view.findViewById(R.id.taskAudio);
+        Button deleteButton = view.findViewById(R.id.deleteItemButton);
 
         taskName.setText(task.getTask().get(i).getName());
         taskTimes.setText("  录制次数:     " + task.getTask().get(i).getTimes());
         taskDuration.setText("  单次时长:     " + task.getTask().get(i).getDuration() + " ms");
         taskVideo.setText("  开启摄像头: " + task.getTask().get(i).isVideo());
         taskAudio.setText("  开启麦克风: " + task.getTask().get(i).isAudio());
+
+        deleteButton.setOnClickListener((v) -> {
+            int id = task.getTask().get(i).getId();
+            for(int j = 0; j < task.getTask().size(); j++) {
+                if (task.getTask().get(j).getId() == id) {
+                    task.getTask().remove(j);
+                }
+            }
+            task.resetId();
+            TaskList.saveToLocalFile(task);
+            this.notifyDataSetChanged();
+        });
 
         view.setOnClickListener((v) -> {
             Bundle bundle = new Bundle();
