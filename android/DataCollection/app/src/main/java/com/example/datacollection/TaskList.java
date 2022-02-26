@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TaskList implements Serializable {
+    private String id;
     private String date;
     private String description;
     private List<Task> task;

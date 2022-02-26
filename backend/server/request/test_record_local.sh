@@ -1,0 +1,4 @@
+curl http://localhost:60010/delete_record -F "tasklistId=TL13r912je" -F "taskId=TKr23u1o3i" -F "subtaskId=STt3i2oi5m" -F "recordId=RD42ifoti2"
+curl http://localhost:60010/add_record -F "tasklistId=TL13r912je" -F "taskId=TKr23u1o3i" -F "subtaskId=STt3i2oi5m" -F "recordId=RD42ifoti2" -F "timestamp=1234567890"
+curl http://localhost:60010/upload_record_file -F "tasklistId=TL13r912je" -F "taskId=TKr23u1o3i" -F "subtaskId=STt3i2oi5m" -F "recordId=RD42ifoti2" -F "timestamp=1234567890" -F "file=@Sensor_tap_3_0_220213165225.json" -F "fileType=0" -F "timestamp=2222222222"
+curl http://localhost:60010/upload_record_file -F "tasklistId=TL13r912je" -F "taskId=TKr23u1o3i" -F "subtaskId=STt3i2oi5m" -F "recordId=RD42ifoti2" -F "timestamp=1234567890" -F "file=@Timestamp_tap_3_0_220213165225.json" -F "fileType=1" -F "timestamp=2222222222"
