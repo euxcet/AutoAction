@@ -47,7 +47,7 @@ Form:
 Respone:
     - List(tasktlist history)
 '''
-@app.route("/get_tasklist_history", methods=["GET"])
+@app.route("/tasklist_history", methods=["GET"])
 @cross_origin()
 def get_tasklist_history():
     tasklistId = request.form.get("tasklistId")
@@ -68,7 +68,7 @@ Form:
 Respone:
     - tasklist
 '''
-@app.route("/get_tasklist", methods=["GET"])
+@app.route("/tasklist", methods=["GET"])
 @cross_origin()
 def get_tasklist():
     tasklistId = request.form.get("tasklistId")
@@ -91,7 +91,7 @@ Form:
     - tasklist
     - timestamp
 '''
-@app.route("/update_tasklist", methods=["POST"])
+@app.route("/tasklist", methods=["POST"])
 @cross_origin()
 def update_tasklist():
     tasklist = json.loads(request.form.get("tasklist"))
@@ -135,7 +135,7 @@ Form:
 Response:
     - List(recordId)
 '''
-@app.route("/get_record_list", methods=["GET"])
+@app.route("/record_list", methods=["GET"])
 def get_record_list():
     tasklistId = request.form.get("tasklistId")
     taskId = request.form.get("taskId")
@@ -159,7 +159,7 @@ Form:
     - recordId
     - timestamp
 '''
-@app.route("/add_record", methods=["POST"])
+@app.route("/record", methods=["POST"])
 def add_record():
     tasklistId = request.form.get("tasklistId")
     taskId = request.form.get("taskId")
@@ -181,7 +181,7 @@ Form:
     - subtaskId
     - recordId
 '''
-@app.route("/delete_record", methods=["POST"])
+@app.route("/record", methods=["DELETE"])
 def delete_record():
     tasklistId = request.form.get("tasklistId")
     taskId = request.form.get("taskId")
@@ -210,7 +210,7 @@ Form:
 
 Upload files after posting to add_record.
 '''
-@app.route("/upload_record_file", methods=["POST"])
+@app.route("/record_file", methods=["POST"])
 def upload_file():
     file = request.files["file"]
     fileType = request.form.get("fileType")
@@ -254,7 +254,7 @@ Form:
 Response:
     - Number of samples
 '''
-@app.route("/get_sample_number", methods=["GET"])
+@app.route("/sample_number", methods=["GET"])
 def get_sample_number():
     pass
 
@@ -272,7 +272,7 @@ Form:
 Response:
     - sample
 '''
-@app.route("/get_sample", methods=["GET"])
+@app.route("/sample", methods=["GET"])
 def get_sample():
     pass
 
@@ -287,10 +287,15 @@ Form:
     - subtaskId
     - recordId
 '''
-@app.route("/delete_sample", methods=["POST"])
+@app.route("/sample", methods=["DELETE"])
 def delete_sample():
     pass
 
+
+# train related
+@app.route("/cutter_type", methods=["GET"])
+def get_cutter_type():
+    pass
 
 
 @app.route("/")
