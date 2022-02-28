@@ -1,7 +1,7 @@
 import numpy as np
 import random
-import utils
 import os
+import process.utils
 
 class Dataset:
     def __init__(self):
@@ -68,7 +68,7 @@ class Dataset:
             pass
 
         print('\n\nSpliting data...', end=' ')
-        train_data, val_data, test_data = utils.split(self.data, 10, 0, 0)
+        train_data, val_data, test_data = process.utils.split(self.data, 10, 0, 0)
         print('\tDone')
 
         print('\nExporting y_train.csv...', end=' ')

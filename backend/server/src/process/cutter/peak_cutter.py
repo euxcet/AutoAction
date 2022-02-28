@@ -1,4 +1,4 @@
-from cutter.range_cutter import RangeCutter
+from process.cutter.range_cutter import RangeCutter
 import random
 
 class PeakCutter():
@@ -50,3 +50,6 @@ class PeakCutter():
 
     def generate_noise(self, noise):
         return random.randint(-noise, noise)
+
+    def to_json(self):
+        return {'name': 'PeakCutter', 'param': [{'name': 'length', 'type': 'int', 'description': 'Length of cut samples', 'default': 128}, {'name': 'forward', 'type': 'int', 'description': 'Position of the peak in the sample', 'default': 80}, {'name': 'noise', 'type': 'int', 'description': 'Random disturbance size of peak position', 'default': 10}]}

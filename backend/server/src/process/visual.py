@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import os
-from record import Record
-from cutter.peak_cutter import PeakCutter
-from cutter.random_cutter import RandomCutter
-from dataset import Dataset
+from process.record import Record
+from process.cutter.peak_cutter import PeakCutter
+from process.cutter.random_cutter import RandomCutter
+from process.dataset import Dataset
 
 def load_record():
     cutter_dict = {

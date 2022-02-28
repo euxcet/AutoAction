@@ -6,6 +6,12 @@ import json
 import fileUtils
 import os
 
+from process.cutter.peak_cutter import PeakCutter
+from process.cutter.random_cutter import RandomCutter
+
+from process.export import export_csv
+from process.train.train import train_model
+
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -13,6 +19,8 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 saver = ThreadPoolExecutor(max_workers=1)
 saver_future_list = []
+
+trainer = ThreadPoolExecutor(max_workers=1)
 
 '''
 Data structure:
@@ -73,14 +81,7 @@ Respone:
 def get_tasklist():
     tasklistId = request.form.get("tasklistId")
     timestamp = request.form.get("timestamp")
-    tasklist_path = fileUtils.get_tasklist_path(tasklistId)
-    print(tasklistId, timestamp)
-    tasklist_info_path = fileUtils.get_tasklist_info_path(tasklistId, timestamp)
-    if not os.path.exists(tasklist_info_path):
-        return {}
-    with open(tasklist_info_path, 'r') as f:
-        data = json.load(f)
-        return data
+    return fileUtils.load_tasklist_info(tasklistId, timestamp)
 
 
 '''
@@ -169,11 +170,12 @@ def add_record():
     record_path = fileUtils.get_record_path(tasklistId, taskId, subtaskId, recordId)
     fileUtils.mkdir(record_path)
     fileUtils.save_json({}, os.path.join(record_path, str(timestamp)+ ".json"))
+    fileUtils.append_recordlist(tasklistId, taskId, subtaskId, recordId)
     return {}
 
 '''
 Name: delete_record
-Method: Post
+Method: Delete
 Content-Type: multipart/form-data
 Form:
     - tasklistId
@@ -279,7 +281,7 @@ def get_sample():
 
 '''
 Name: delete_sample
-Method: Get
+Method: Delete
 Content-Type: multipart/form-data
 Form:
     - tasklistId
@@ -293,15 +295,41 @@ def delete_sample():
 
 
 # train related
+'''
+Name: get_cutter_type
+Method: Get
+Content-Type: multipart/form-data
+Response: 
+    - cutter_type
+'''
 @app.route("/cutter_type", methods=["GET"])
 def get_cutter_type():
-    pass
+    response = []
+    cutters = [PeakCutter(0), RandomCutter()]
+    for cutter in cutters:
+        response.append(cutter.to_json())
+    return {"result": response}
 
+'''
+Name: start_train
+Method: Post
+Content-Type: multipart/form-data
+Form:
+    - tasklistId
+    - List(taskId)
+    - timestamp
+'''
+@app.route("/train", methods=["POST"])
+def start_train():
+    train_model('9087654321', False)
+    '''
+    tasklistId = request.form.get("tasklistId")
+    taskIds = request.form.get("taskId").strip().split(',')
+    timestamp = request.form.get("timestamp")
+    export_csv(tasklistId, taskIds, timestamp)
+    '''
+    return {}
 
-@app.route("/")
-@cross_origin()
-def hello():
-  return "Hello!"
 
 if __name__ == '__main__':
     app.run(port=60010, host="0.0.0.0")

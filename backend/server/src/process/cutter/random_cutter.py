@@ -1,4 +1,4 @@
-from cutter.range_cutter import RangeCutter
+from process.cutter.range_cutter import RangeCutter
 import random
 
 class RandomCutter():
@@ -28,3 +28,6 @@ class RandomCutter():
             final_cut_range.append((start_pos, start_pos + self.length))
 
         return final_cut_range
+
+    def to_json(self):
+        return {'name': 'RandomCutter', 'param': [{'name': 'length', 'type': 'int', 'description': 'Length of randomly cut samples', 'default': 128}]}
