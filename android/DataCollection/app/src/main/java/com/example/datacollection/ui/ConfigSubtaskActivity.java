@@ -2,6 +2,7 @@ package com.example.datacollection.ui;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
@@ -12,25 +13,32 @@ import com.example.datacollection.R;
 import com.example.datacollection.TaskList;
 import com.example.datacollection.ui.adapter.SubtaskAdapter;
 import com.example.datacollection.ui.adapter.TaskAdapter;
+import com.example.datacollection.utils.NetworkUtils;
+import com.example.datacollection.utils.bean.StringListBean;
+import com.google.gson.Gson;
+import com.lzy.okgo.callback.StringCallback;
+import com.lzy.okgo.model.Response;
 
 public class ConfigSubtaskActivity extends AppCompatActivity {
+    private Context mContext;
     private ListView subtaskListView;
     private Button addButton;
     private Button backButton;
     private TaskList taskList;
     private SubtaskAdapter subtaskAdapter;
+    private TextView taskNameView;
     private int task_id;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_config_subtask);
+        mContext = this;
 
         backButton = findViewById(R.id.subtaskBackButton);
         backButton.setOnClickListener((v) -> this.finish());
 
         subtaskListView = findViewById(R.id.subtaskListView);
-        taskList = TaskList.parseFromLocalFile();
 
         Bundle bundle = getIntent().getExtras();
         task_id = bundle.getInt("task_id");
@@ -44,20 +52,35 @@ public class ConfigSubtaskActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        TextView taskNameView = findViewById(R.id.taskNameView);
-        if (taskList != null) {
-            taskNameView.setText("Task name: " + taskList.getTask().get(task_id).getName());
-        }
+        taskNameView = findViewById(R.id.taskNameView);
 
-        subtaskAdapter = new SubtaskAdapter(this, taskList, task_id);
-        subtaskListView.setAdapter(subtaskAdapter);
+        loadTaskListViaNetwork();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        taskList = TaskList.parseFromLocalFile();
-        subtaskAdapter = new SubtaskAdapter(this, taskList, task_id);
-        subtaskListView.setAdapter(subtaskAdapter);
+        loadTaskListViaNetwork();
+    }
+
+    private void loadTaskListViaNetwork() {
+        NetworkUtils.getAllTaskList(mContext, new StringCallback() {
+            @Override
+            public void onSuccess(Response<String> response) {
+                StringListBean taskLists = new Gson().fromJson(response.body(), StringListBean.class);
+                if (taskLists.getResult().size() > 0) {
+                    String taskListId = taskLists.getResult().get(0);
+                    NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
+                        @Override
+                        public void onSuccess(Response<String> response) {
+                            taskList = new Gson().fromJson(response.body(), TaskList.class);
+                            taskNameView.setText("Task name: " + taskList.getTask().get(task_id).getName());
+                            subtaskAdapter = new SubtaskAdapter(mContext, taskList, task_id);
+                            subtaskListView.setAdapter(subtaskAdapter);
+                        }
+                    });
+                }
+            }
+        });
     }
 }

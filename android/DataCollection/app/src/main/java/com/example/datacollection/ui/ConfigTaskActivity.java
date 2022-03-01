@@ -3,6 +3,7 @@ package com.example.datacollection.ui;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,6 +13,11 @@ import android.widget.ListView;
 import com.example.datacollection.R;
 import com.example.datacollection.TaskList;
 import com.example.datacollection.ui.adapter.TaskAdapter;
+import com.example.datacollection.utils.NetworkUtils;
+import com.example.datacollection.utils.bean.StringListBean;
+import com.google.gson.Gson;
+import com.lzy.okgo.callback.StringCallback;
+import com.lzy.okgo.model.Response;
 
 public class ConfigTaskActivity extends AppCompatActivity {
     private ListView taskListView;
@@ -21,10 +27,14 @@ public class ConfigTaskActivity extends AppCompatActivity {
     private TaskList taskList;
     private TaskAdapter taskAdapter;
 
+    private Context mContext;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_config);
+
+        mContext = this;
 
         backButton = findViewById(R.id.taskBackButton);
         backButton.setOnClickListener((v) -> this.finish());
@@ -36,17 +46,32 @@ public class ConfigTaskActivity extends AppCompatActivity {
         });
 
         taskListView = findViewById(R.id.taskListView);
-
-        taskList = TaskList.parseFromLocalFile();
-        taskAdapter = new TaskAdapter(this, taskList);
-        taskListView.setAdapter(taskAdapter);
+        loadTaskListViaNetwork();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        taskList = TaskList.parseFromLocalFile();
-        taskAdapter = new TaskAdapter(this, taskList);
-        taskListView.setAdapter(taskAdapter);
+        loadTaskListViaNetwork();
+    }
+
+    private void loadTaskListViaNetwork() {
+        NetworkUtils.getAllTaskList(mContext, new StringCallback() {
+            @Override
+            public void onSuccess(Response<String> response) {
+                StringListBean taskLists = new Gson().fromJson(response.body(), StringListBean.class);
+                if (taskLists.getResult().size() > 0) {
+                    String taskListId = taskLists.getResult().get(0);
+                    NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
+                        @Override
+                        public void onSuccess(Response<String> response) {
+                            taskList = new Gson().fromJson(response.body(), TaskList.class);
+                            taskAdapter = new TaskAdapter(mContext, taskList);
+                            taskListView.setAdapter(taskAdapter);
+                        }
+                    });
+                }
+            }
+        });
     }
 }

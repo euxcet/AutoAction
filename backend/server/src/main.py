@@ -27,10 +27,10 @@ Data structure:
 
 /data
     /record
-        /{tasklistId}
-            - {tasklistId}.json
-            - {tasklistId}_{timestamp0}.json
-            - {tasklistId}_{timestamp1}.json
+        /{taskListId}
+            - {taskListId}.json
+            - {taskListId}_{timestamp0}.json
+            - {taskListId}_{timestamp1}.json
             - ...
             /{taskId}
                 - {taskId}.json
@@ -45,78 +45,95 @@ Data structure:
 '''
 
 
-# tasklist related
+# taskList related
 '''
-Name: get_tasklist_history
+Name: get_all_taskList
+Method: Get
+Respone:
+    - List(tasktListId)
+'''
+@app.route("/all_taskList", methods=["GET"])
+@cross_origin()
+def get_all_taskList():
+    response = []
+    for dir in os.listdir(fileUtils.DATA_RECORD_ROOT):
+        if dir.startswith("TL"):
+            response.append(dir)
+    return {"result": response}
+
+'''
+Name: get_taskList_history
 Method: Get
 Form:
-    - tasklistId
+    - taskListId
 
 Respone:
     - List(tasktlist history)
 '''
-@app.route("/tasklist_history", methods=["GET"])
+@app.route("/taskList_history", methods=["GET"])
 @cross_origin()
-def get_tasklist_history():
-    tasklistId = request.form.get("tasklistId")
-    tasklist_path = fileUtils.get_tasklist_path(tasklistId)
+def get_taskList_history():
+    taskListId = request.args.get("taskListId")
+
+    taskList_path = fileUtils.get_taskList_path(taskListId)
     response = []
-    for file_name in os.listdir(tasklist_path):
+    for file_name in os.listdir(taskList_path):
         if file_name.startswith("TL") and len(file_name.split('_')) == 2:
             response.append(file_name)
     return {"result": response}
 
 '''
-Name: get_tasklist
+Name: get_taskList
 Method: Get
 Form:
-    - tasklistId
+    - taskListId
     - timestamp (Optional)
 
 Respone:
-    - tasklist
+    - taskList
 '''
-@app.route("/tasklist", methods=["GET"])
+@app.route("/taskList", methods=["GET"])
 @cross_origin()
-def get_tasklist():
-    tasklistId = request.form.get("tasklistId")
-    timestamp = request.form.get("timestamp")
-    return fileUtils.load_tasklist_info(tasklistId, timestamp)
+def get_taskList():
+    taskListId = request.args.get("taskListId")
+    timestamp = request.args.get("timestamp")
+    print(taskListId, timestamp)
+    return fileUtils.load_taskList_info(taskListId, timestamp)
 
 
 '''
-Name: update_tasklist
+Name: update_taskList
 Method: Post
 Content-Type: multipart/form-data
 Form:
-    - tasklist
+    - taskList
     - timestamp
 '''
-@app.route("/tasklist", methods=["POST"])
+@app.route("/taskList", methods=["POST"])
 @cross_origin()
-def update_tasklist():
-    tasklist = json.loads(request.form.get("tasklist"))
+def update_taskList():
+    taskList = json.loads(request.form.get("taskList"))
     timestamp = int(request.form.get("timestamp"))
-    tasklistId = tasklist['id']
+    taskListId = taskList['id']
 
-    tasklist_info_path = fileUtils.get_tasklist_info_path(tasklistId)
-    tasklist_info_timestamp_path = fileUtils.get_tasklist_info_path(tasklistId, timestamp)
-    fileUtils.save_json(tasklist, tasklist_info_path)
-    fileUtils.save_json(tasklist, tasklist_info_timestamp_path)
+    taskList_info_path = fileUtils.get_taskList_info_path(taskListId)
+    taskList_info_timestamp_path = fileUtils.get_taskList_info_path(taskListId, timestamp)
+    fileUtils.save_json(taskList, taskList_info_path)
+    fileUtils.save_json(taskList, taskList_info_timestamp_path)
 
-    print('tasklist id:', tasklistId)
-    for task in tasklist['task']:
+    print('taskList id:', taskListId)
+    for task in taskList['task']:
         taskId = task['id']
         print('task id:', taskId)
-        task_path = fileUtils.get_task_path(tasklistId, taskId)
-        task_info_path = fileUtils.get_task_info_path(tasklistId, taskId)
+        task_path = fileUtils.get_task_path(taskListId, taskId)
+        task_info_path = fileUtils.get_task_info_path(taskListId, taskId)
         fileUtils.mkdir(task_path)
         fileUtils.save_json(task, task_info_path)
         print(task_path)
         for subtask in task['subtask']:
             subtaskId = subtask['id']
-            subtask_path = fileUtils.get_subtask_path(tasklistId, taskId, subtaskId)
-            subtask_info_path = fileUtils.get_subtask_info_path(tasklistId, taskId, subtaskId)
+            subtask_path = fileUtils.get_subtask_path(taskListId, taskId, subtaskId)
+            subtask_info_path = fileUtils.get_subtask_info_path(taskListId, taskId, subtaskId)
             fileUtils.mkdir(subtask_path)
             fileUtils.save_json(subtask, subtask_info_path)
             print(subtask)
@@ -129,7 +146,7 @@ Name: get_record_list
 Method: Get
 Content-Type: multipart/form-data
 Form:
-    - tasklistId
+    - taskListId
     - taskId
     - subtaskId
 
@@ -138,10 +155,10 @@ Response:
 '''
 @app.route("/record_list", methods=["GET"])
 def get_record_list():
-    tasklistId = request.form.get("tasklistId")
-    taskId = request.form.get("taskId")
-    subtaskId = request.form.get("subtaskId")
-    subtask_path = fileUtils.get_subtask_path(tasklistId, taskId, subtaskId)
+    taskListId = request.args.get("taskListId")
+    taskId = request.args.get("taskId")
+    subtaskId = request.args.get("subtaskId")
+    subtask_path = fileUtils.get_subtask_path(taskListId, taskId, subtaskId)
     recordIds = []
     for file_name in os.listdir(subtask_path):
         if file_name.startswith("RD"):
@@ -154,7 +171,7 @@ Name: add_record
 Method: Post
 Content-Type: multipart/form-data
 Form:
-    - tasklistId
+    - taskListId
     - taskId
     - subtaskId
     - recordId
@@ -162,15 +179,15 @@ Form:
 '''
 @app.route("/record", methods=["POST"])
 def add_record():
-    tasklistId = request.form.get("tasklistId")
+    taskListId = request.form.get("taskListId")
     taskId = request.form.get("taskId")
     subtaskId = request.form.get("subtaskId")
     recordId = request.form.get("recordId")
     timestamp = int(request.form.get("timestamp"))
-    record_path = fileUtils.get_record_path(tasklistId, taskId, subtaskId, recordId)
+    record_path = fileUtils.get_record_path(taskListId, taskId, subtaskId, recordId)
     fileUtils.mkdir(record_path)
     fileUtils.save_json({}, os.path.join(record_path, str(timestamp)+ ".json"))
-    fileUtils.append_recordlist(tasklistId, taskId, subtaskId, recordId)
+    fileUtils.append_recordlist(taskListId, taskId, subtaskId, recordId)
     return {}
 
 '''
@@ -178,18 +195,18 @@ Name: delete_record
 Method: Delete
 Content-Type: multipart/form-data
 Form:
-    - tasklistId
+    - taskListId
     - taskId
     - subtaskId
     - recordId
 '''
 @app.route("/record", methods=["DELETE"])
 def delete_record():
-    tasklistId = request.form.get("tasklistId")
+    taskListId = request.form.get("taskListId")
     taskId = request.form.get("taskId")
     subtaskId = request.form.get("subtaskId")
     recordId = request.form.get("recordId")
-    record_path = fileUtils.get_record_path(tasklistId, taskId, subtaskId, recordId)
+    record_path = fileUtils.get_record_path(taskListId, taskId, subtaskId, recordId)
     fileUtils.delete_dir(record_path)
     return {}
 
@@ -204,7 +221,7 @@ Form:
         - 1 timestamp json
         - 2 audio mp4
         - 3 video mp4
-    - tasklistId
+    - taskListId
     - taskId
     - subtaskId
     - recordId
@@ -216,13 +233,14 @@ Upload files after posting to add_record.
 def upload_file():
     file = request.files["file"]
     fileType = request.form.get("fileType")
-    tasklistId = request.form.get("tasklistId")
+    taskListId = request.form.get("taskListId")
     taskId = request.form.get("taskId")
     subtaskId = request.form.get("subtaskId")
     recordId = request.form.get("recordId")
     timestamp = request.form.get("timestamp")
 
-    record_path = fileUtils.get_record_path(tasklistId, taskId, subtaskId, recordId)
+    record_path = fileUtils.get_record_path(taskListId, taskId, subtaskId, recordId)
+    print("Filename", file.filename)
 
     if file and fileUtils.allowed_file(file.filename):
         filename = ""
@@ -248,7 +266,7 @@ Name: get_sample_number
 Method: Get
 Content-Type: multipart/form-data
 Form:
-    - tasklistId
+    - taskListId
     - taskId
     - subtaskId
     - recordId
@@ -265,7 +283,7 @@ Name: get_sample
 Method: Get
 Content-Type: multipart/form-data
 Form:
-    - tasklistId
+    - taskListId
     - taskId
     - subtaskId
     - recordId
@@ -284,7 +302,7 @@ Name: delete_sample
 Method: Delete
 Content-Type: multipart/form-data
 Form:
-    - tasklistId
+    - taskListId
     - taskId
     - subtaskId
     - recordId
@@ -315,7 +333,7 @@ Name: start_train
 Method: Post
 Content-Type: multipart/form-data
 Form:
-    - tasklistId
+    - taskListId
     - List(taskId)
     - timestamp
 '''
@@ -323,10 +341,10 @@ Form:
 def start_train():
     train_model('9087654321', False)
     '''
-    tasklistId = request.form.get("tasklistId")
+    taskListId = request.form.get("taskListId")
     taskIds = request.form.get("taskId").strip().split(',')
     timestamp = request.form.get("timestamp")
-    export_csv(tasklistId, taskIds, timestamp)
+    export_csv(taskListId, taskIds, timestamp)
     '''
     return {}
 

@@ -5,10 +5,14 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.util.Log;
 
+import com.example.datacollection.TaskList;
 import com.example.datacollection.utils.FileUtils;
 import com.example.datacollection.utils.NetworkUtils;
 import com.google.gson.Gson;
+import com.lzy.okgo.callback.StringCallback;
+import com.lzy.okgo.model.Response;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -93,9 +97,13 @@ public class SensorController {
         return lastTimestamp;
     }
 
-    public void upload() {
+    public void upload(String taskListId, String taskId, String subtaskId, String recordId, long timestamp) {
         if (saveFile != null) {
-            NetworkUtils.uploadFile(mContext, saveFile);
+            NetworkUtils.uploadRecordFile(mContext, saveFile, TaskList.FILE_TYPE.SENSOR.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
+                @Override
+                public void onSuccess(Response<String> response) {
+                }
+            });
         }
     }
 }

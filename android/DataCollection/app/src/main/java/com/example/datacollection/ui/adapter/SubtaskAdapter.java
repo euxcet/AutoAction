@@ -10,25 +10,28 @@ import android.widget.TextView;
 
 import com.example.datacollection.R;
 import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.NetworkUtils;
+import com.lzy.okgo.callback.StringCallback;
+import com.lzy.okgo.model.Response;
 
 import java.util.List;
 
 public class SubtaskAdapter extends BaseAdapter {
-    private Context context;
+    private Context mContext;
     private LayoutInflater inflater;
-    private TaskList task;
+    private TaskList taskList;
     private int task_id;
 
-    public SubtaskAdapter(Context context, TaskList task, int task_id) {
-        this.context = context;
-        this.task = task;
+    public SubtaskAdapter(Context context, TaskList taskList, int task_id) {
+        this.mContext = context;
+        this.taskList = taskList;
         this.task_id = task_id;
         this.inflater = LayoutInflater.from(context);
     }
 
     @Override
     public int getCount() {
-        return task.getTask().get(task_id).getSubtask().size();
+        return taskList.getTask().get(task_id).getSubtask().size();
     }
 
     @Override
@@ -45,9 +48,10 @@ public class SubtaskAdapter extends BaseAdapter {
     public View getView(int i, View view, ViewGroup viewGroup) {
         view = inflater.inflate(R.layout.fragment_task, null);
 
-        List<TaskList.Task.Subtask> subtasks = task.getTask().get(task_id).getSubtask();
-        TaskList.Task.Subtask subtask = task.getTask().get(task_id).getSubtask().get(i);
+        List<TaskList.Task.Subtask> subtasks = taskList.getTask().get(task_id).getSubtask();
+        TaskList.Task.Subtask subtask = taskList.getTask().get(task_id).getSubtask().get(i);
 
+        TextView taskId = view.findViewById(R.id.taskId);
         TextView taskName = view.findViewById(R.id.taskName);
         TextView taskTimes = view.findViewById(R.id.taskTimes);
         TextView taskDuration = view.findViewById(R.id.taskDuration);
@@ -55,6 +59,7 @@ public class SubtaskAdapter extends BaseAdapter {
         TextView taskAudio = view.findViewById(R.id.taskAudio);
 
         taskName.setText(subtask.getName());
+        taskId.setText("  编号:            " + subtask.getId());
         taskTimes.setText("  录制次数:     " + subtask.getTimes());
         taskDuration.setText("  单次时长:     " + subtask.getDuration() + " ms");
         taskVideo.setText("  开启摄像头: " + subtask.isVideo());
@@ -63,30 +68,20 @@ public class SubtaskAdapter extends BaseAdapter {
         Button deleteButton = view.findViewById(R.id.deleteItemButton);
 
         deleteButton.setOnClickListener((v) -> {
-            int id = subtask.getId();
+            String id = subtask.getId();
             for(int j = 0; j < subtasks.size(); j++) {
                 if (subtasks.get(j).getId() == id) {
                     subtasks.remove(j);
                 }
             }
-            task.getTask().get(task_id).resetId();
-            TaskList.saveToLocalFile(task);
+            NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
+                @Override
+                public void onSuccess(Response<String> response) {
+                }
+            });
             this.notifyDataSetChanged();
         });
 
-        /*
-        TextView textView = view.findViewById(R.id.taskName);
-        textView.setText(subtask.getName());
-         */
-        /*
-        view.setOnClickListener((v) -> {
-            Bundle bundle = new Bundle();
-            bundle.putInt("task_id", i);
-            Intent intent = new Intent();
-            intent.putExtras(bundle);
-            context.startActivity(intent);
-        });
-         */
         return view;
     }
 }

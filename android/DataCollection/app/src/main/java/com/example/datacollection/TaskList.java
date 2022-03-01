@@ -17,12 +17,46 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class TaskList implements Serializable {
     private String id;
     private String date;
     private String description;
     private List<Task> task;
+    private static final String ID_ALLOWED_CHARACTERS = "0123456789qwertyuiopasdfghjklzxcvbnm";
+
+    public enum FILE_TYPE {
+        SENSOR,
+        TIMESTAMP,
+        AUDIO,
+        VIDEO
+    }
+
+    public static String generateRandomId(int size) {
+        Random random = new Random();
+        StringBuilder builder = new StringBuilder(size);
+        for(int i = 0; i < size; i++) {
+            builder.append(ID_ALLOWED_CHARACTERS.charAt(random.nextInt(ID_ALLOWED_CHARACTERS.length())));
+        }
+        return builder.toString();
+    }
+
+    public static String generateRandomTaskListId() {
+        return "TL" + generateRandomId(8);
+    }
+
+    public static String generateRandomTaskId() {
+        return "TK" + generateRandomId(8);
+    }
+
+    public static String generateRandomSubtaskId() {
+        return "ST" + generateRandomId(8);
+    }
+
+    public static String generateRandomRecordId() {
+        return "RD" + generateRandomId(8);
+    }
 
     public static TaskList parseFromFile(InputStream is) {
         try {
@@ -41,7 +75,7 @@ public class TaskList implements Serializable {
             String jsonString = writer.toString();
             Gson gson = new GsonBuilder().create();
             TaskList taskList = gson.fromJson(jsonString, TaskList.class);
-            taskList.updateSubtask();
+            // taskList.updateSubtask();
             return taskList;
         } catch (IOException e) {
             e.printStackTrace();
@@ -74,6 +108,7 @@ public class TaskList implements Serializable {
         return taskName;
     }
 
+    /*
     private void updateSubtask() {
         for(Task task: getTask()) {
             for(Task.Subtask subtask: task.getSubtask()) {
@@ -88,19 +123,22 @@ public class TaskList implements Serializable {
             }
         }
     }
+     */
 
     public void addTask(Task newTask) {
         task.add(newTask);
     }
 
+    /*
     public void resetId() {
         for (int i = 0; i < task.size(); i++) {
             task.get(i).id = i + 1;
         }
     }
+     */
 
     public static class Task implements Serializable {
-        private int id;
+        private String id;
         private String name;
         private int times;
         private int duration;
@@ -108,7 +146,7 @@ public class TaskList implements Serializable {
         public boolean video;
         public List<Subtask> subtask;
 
-        public Task(int id, String name, int times, int duration, boolean audio, boolean video) {
+        public Task(String id, String name, int times, int duration, boolean audio, boolean video) {
             this.id = id;
             this.name = name;
             this.times = times;
@@ -122,11 +160,13 @@ public class TaskList implements Serializable {
             subtask.add(newSubtask);
         }
 
+        /*
         public void resetId() {
             for(int i = 0; i < subtask.size(); i++) {
                 subtask.get(i).id = i + 1;
             }
         }
+         */
 
         public String[] getSubtaskName() {
             int size = getSubtask().size();
@@ -140,13 +180,13 @@ public class TaskList implements Serializable {
 
         public static class Subtask implements Serializable {
             private String name;
-            private int id;
+            private String id;
             private int times;
             private int duration;
             private boolean audio;
             private boolean video;
 
-            public Subtask(int id, String name, int times, int duration, boolean audio, boolean video) {
+            public Subtask(String id, String name, int times, int duration, boolean audio, boolean video) {
                 this.id = id;
                 this.name = name;
                 this.times = times;
@@ -167,7 +207,7 @@ public class TaskList implements Serializable {
                 this.name = name;
             }
 
-            public void setId(int id) {
+            public void setId(String id) {
                 this.id = id;
             }
 
@@ -187,7 +227,7 @@ public class TaskList implements Serializable {
                 return times;
             }
 
-            public int getId() {
+            public String getId() {
                 return id;
             }
 
@@ -216,7 +256,7 @@ public class TaskList implements Serializable {
             return duration;
         }
 
-        public int getId() {
+        public String getId() {
             return id;
         }
 
@@ -240,7 +280,7 @@ public class TaskList implements Serializable {
             this.duration = duration;
         }
 
-        public void setId(int id) {
+        public void setId(String id) {
             this.id = id;
         }
 
@@ -265,12 +305,24 @@ public class TaskList implements Serializable {
         return task;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public String getDate() {
         return date;
     }
 
     public String getDescription() {
         return description;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setTask(List<Task> task) {
+        this.task = task;
     }
 
     public void setDate(String date) {

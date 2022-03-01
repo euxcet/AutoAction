@@ -13,7 +13,7 @@
         android:layout_marginStart="60dp"
         android:layout_marginTop="55dp"
         android:text="录制次数"
-        android:textSize="20sp"
+        android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addSubtaskNameLabel" />
 
@@ -24,7 +24,7 @@
         android:layout_marginStart="60dp"
         android:layout_marginTop="55dp"
         android:text="是否开启麦克风"
-        android:textSize="20sp"
+        android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addSubtaskVideoLabel" />
 
@@ -35,7 +35,7 @@
         android:layout_marginStart="60dp"
         android:layout_marginTop="160dp"
         android:text="名称"
-        android:textSize="20sp"
+        android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -46,7 +46,7 @@
         android:layout_marginStart="60dp"
         android:layout_marginTop="55dp"
         android:text="是否开启摄像头"
-        android:textSize="20sp"
+        android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addSubtaskDurationLabel" />
 
@@ -57,7 +57,7 @@
         android:layout_marginStart="60dp"
         android:layout_marginTop="55dp"
         android:text="单次时长(ms)"
-        android:textSize="20sp"
+        android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addSubtaskTimesLabel" />
 
@@ -79,7 +79,7 @@
         android:layout_marginTop="153dp"
         android:layout_marginEnd="40dp"
         android:text="Name"
-        android:textSize="20sp"
+        android:textSize="18sp"
         app:layout_constraintBaseline_toBaselineOf="@id/addSubtaskNameLabel"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -90,10 +90,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="40dp"
-        android:text="0"
         android:digits="0123456789"
         android:inputType="number"
-        android:textSize="20sp"
+        android:text="0"
+        android:textSize="18sp"
         app:layout_constraintBaseline_toBaselineOf="@id/addSubtaskTimesLabel"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addSubtaskNameEdit" />
@@ -104,10 +104,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="60dp"
         android:layout_marginEnd="40dp"
-        android:text="0"
         android:digits="0123456789"
         android:inputType="number"
-        android:textSize="20sp"
+        android:text="0"
+        android:textSize="18sp"
         app:layout_constraintBaseline_toBaselineOf="@id/addSubtaskDurationLabel"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addSubtaskTimesEdit" />
@@ -116,8 +116,8 @@
         android:id="@+id/addSubtaskVideoCheckbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="41dp"
-        android:layout_marginEnd="144dp"
+        android:layout_marginTop="44dp"
+        android:layout_marginEnd="112dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addSubtaskDurationEdit" />
 
@@ -125,8 +125,8 @@
         android:id="@+id/addSubtaskAudioCheckbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
-        android:layout_marginEnd="144dp"
+        android:layout_marginTop="44dp"
+        android:layout_marginEnd="112dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addSubtaskVideoCheckbox" />
 

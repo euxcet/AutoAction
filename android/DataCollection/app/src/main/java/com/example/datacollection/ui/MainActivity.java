@@ -24,7 +24,11 @@ import com.example.datacollection.TaskList;
 import com.example.datacollection.TransferData;
 import com.example.datacollection.data.Recorder;
 import com.example.datacollection.utils.FileUtils;
+import com.example.datacollection.utils.NetworkUtils;
+import com.example.datacollection.utils.bean.StringListBean;
 import com.google.gson.Gson;
+import com.lzy.okgo.callback.StringCallback;
+import com.lzy.okgo.model.Response;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayAdapter<String> subtaskAdapter;
 
     private Button configButton;
+    private Button trainButton;
 
     // task
     private TaskList taskList;
@@ -60,23 +65,12 @@ public class MainActivity extends AppCompatActivity {
     private String[] subtaskName;
     private int curTaskId = 0;
     private int curSubtaskId = 0;
-    private TaskList.Task.Subtask curTask;
 
     private boolean isVideo;
 
     private CheckBox cameraSwitch;
 
-    // each action takes 3s = 3000ms
-    /*
-    private int interval = 3000;
-    private int repeatTimes = 5;
-    private int actionTime = interval * repeatTimes;
-     */
-
-    // save file path
-
     private Recorder recorder;
-
 
     // permission
     private static final int RC_PERMISSIONS = 0;
@@ -102,23 +96,49 @@ public class MainActivity extends AppCompatActivity {
         transferData = TransferData.getInstance();
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
+        /*
         taskList = TaskList.parseFromFile(getResources().openRawResource(R.raw.tasklist));
         TaskList.saveToLocalFile(taskList);
         taskList = TaskList.parseFromLocalFile();
+         */
+        // taskList = NetworkUtils.getTaskList(this, );
 
-        initView();
+        loadTaskListViaNetwork();
 
         vibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
 
         recorder = new Recorder(this, new Recorder.RecorderListener() {
             @Override
-            public void onTick(int tickCount) {
+            public void onTick(int tickCount, int times) {
+                Log.e("TEST", "onTick " + tickCount);
+                counter.setText(tickCount + " / " + times);
                 vibrator.vibrate(VibrationEffect.createOneShot(200, 128));
             }
 
             @Override
             public void onFinish() {
+                Log.e("TEST", "onFinish ");
                 vibrator.vibrate(VibrationEffect.createOneShot(600, 128));
+                enableButtons(false);
+            }
+        });
+    }
+
+    private void loadTaskListViaNetwork() {
+        NetworkUtils.getAllTaskList(this, new StringCallback() {
+            @Override
+            public void onSuccess(Response<String> response) {
+                StringListBean taskLists = new Gson().fromJson(response.body(), StringListBean.class);
+                if (taskLists.getResult().size() > 0) {
+                    String taskListId = taskLists.getResult().get(0);
+                    NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
+                        @Override
+                        public void onSuccess(Response<String> response) {
+                            taskList = new Gson().fromJson(response.body(), TaskList.class);
+                            initView();
+                        }
+                    });
+                }
             }
         });
     }
@@ -126,8 +146,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        taskList = TaskList.parseFromLocalFile();
-        initView();
+        loadTaskListViaNetwork();
     }
 
     @Override
@@ -156,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initView() {
         user = findViewById(R.id.user);
-        user.setText("aa");
+        user.setText("a");
         description = findViewById(R.id.description);
         counter = findViewById(R.id.counter);
 
@@ -197,8 +216,8 @@ public class MainActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 curSubtaskId = position;
                 description.setText(subtaskName[curSubtaskId]);
-                curTask = taskList.getTask().get(curTaskId).getSubtask().get(curSubtaskId);
-                isVideo = taskList.getTask().get(curTaskId).getSubtask().get(curSubtaskId).isVideo();
+                isVideo = taskList.getTask().get(curTaskId).getSubtask().get(curSubtaskId).isVideo() |
+                          taskList.getTask().get(curTaskId).isAudio();
                 cameraSwitch.setChecked(isVideo);
             }
 
@@ -216,6 +235,7 @@ public class MainActivity extends AppCompatActivity {
         startButton = findViewById(R.id.start);
         stopButton = findViewById(R.id.stop);
         configButton = findViewById(R.id.configButton);
+        trainButton = findViewById(R.id.trainButton);
 
         startButton.setOnClickListener(view -> {
             enableButtons(true);
@@ -223,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
                     user.getText().toString(),
                     curTaskId,
                     curSubtaskId,
-                    curTask
+                    taskList
             );
         });
 
@@ -234,6 +254,11 @@ public class MainActivity extends AppCompatActivity {
 
         configButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, ConfigTaskActivity.class);
+            startActivity(intent);
+        });
+
+        trainButton.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, TrainActivity.class);
             startActivity(intent);
         });
 
@@ -253,169 +278,3 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
-
-            /*
-        startButton.setOnClickListener(view -> {
-            if (!sensorController.isSensorSupport()) {
-                Toast.makeText(mContext, "传感器缺失", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            if (user.getText().toString().length() == 0 || curTask == -1) {
-                Toast.makeText(mContext, "请填写用户名并选择任务", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            filenameFormat.setFilename(user.getText().toString(), String.valueOf(curTask), String.valueOf(curSubtask));
-
-            // save time stamp
-            curIdx = 0;
-
-            idxTimer = new CountDownTimer(actionTime, interval) {
-                @Override
-                public void onTick(long l) {
-                    if (l <= interval / 10)
-                        return;
-                    transferData.addTimestampData();
-                    counter.setText(String.format("%d/%d", curIdx, repeatTimes));
-
-                    if (isVideo) {
-                        if (curIdx > 0) {
-                            cameraController.stopRecording();
-                            cameraController.closeCamera();
-                        }
-
-                        new Handler().postDelayed(() -> {
-                            Log.e("TAG", "vibrate");
-                            vibrator.vibrate(VibrationEffect.createOneShot(200, 128));
-                            cameraController.openCamera();
-                        },300);
-                        new Handler().postDelayed(() -> {
-                            cameraController.startRecording(
-                                    new File(filenameFormat.getPathName(),
-                                            filenameFormat.getVideoFilename(curIdx) + ".mp4")
-                            );
-                            curIdx++;
-                        }, 600);
-
-                    } else {
-                        vibrator.vibrate(VibrationEffect.createOneShot(200, 128));
-                        curIdx++;
-                    }
-                }
-
-                @Override
-                public void onFinish() {
-                    if (isVideo) {
-                        cameraController.stopRecording();
-                        cameraController.closeCamera();
-                    }
-                    done();
-                    counter.setText(String.format("%d/%d", repeatTimes, repeatTimes));
-                    vibrator.vibrate(VibrationEffect.createOneShot(600, 128));
-                }
-            };
-
-            // microphone
-            setupMediaRecorder();
-
-            // start
-            enableButtons(true);
-            counter.setText("");
-
-            if (isVideo) {
-                cameraController.closeCamera();
-            }
-
-            new Handler().postDelayed(() -> {
-                transferData.startRecording();
-                startAudioRecording();
-                idxTimer.start();
-            }, 3000);
-        });
-
-        stopButton.setOnClickListener(view -> {
-            idxTimer.cancel();
-            stop();
-        });
-             */
-    /*
-    // microphone
-    private void createDataFile() {
-        makeRootDirectory(filenameFormat.getPathName());
-        String fileName = filenameFormat.getMicrophoneFilename();
-        file = new File(filenameFormat.getPathName(), fileName + ".txt");
-        try {
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        audioFile = new File(filenameFormat.getPathName(), fileName + ".mp4");
-    }
-
-    @SuppressLint({"MissingPermission", "CheckResult"})
-    private void setupMediaRecorder() {
-        try {
-            createDataFile();
-            mMediaRecorder = new MediaRecorder();
-            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            mMediaRecorder.setAudioChannels(2);
-            mMediaRecorder.setAudioSamplingRate(44100);
-            mMediaRecorder.setAudioEncodingBitRate(16 * 44100);
-            mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-            mMediaRecorder.setOutputFile(audioFile);
-            mMediaRecorder.prepare();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-     */
-    /*
-    private void stopRecording() {
-        if (mMediaRecorder != null) {
-            mMediaRecorder.stop();
-            mMediaRecorder.release();
-            mMediaRecorder = null;
-            MediaScannerConnection.scanFile(mContext,
-                    new String[] {file.getAbsolutePath(), audioFile.getAbsolutePath()},
-                    null, null);
-        }
-    }
-     */
-
-    /*
-    private void stop() {
-        stopRecording();
-        transferData.stopRecording();
-
-        // clear data
-        transferData.clear();
-        counter.setText("");
-
-        enableButtons(false);
-    }
-
-    private void done() {
-        stopRecording();
-        transferData.stopRecording();
-
-        // upload data
-        transferData.upload(mContext);
-        counter.setText("");
-
-        enableButtons(false);
-    }
-
-    private static void makeRootDirectory(String filePath) {
-        try {
-            File file = new File(filePath);
-            if (!file.exists())
-                file.mkdir();
-        } catch (Exception e) {
-            Log.e("error:", e + "");
-        }
-    }
-     */

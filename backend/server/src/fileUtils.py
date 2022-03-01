@@ -8,31 +8,31 @@ DATA_ROOT = '../data/'
 DATA_RECORD_ROOT = os.path.join(DATA_ROOT, "record")
 DATA_TRAIN_ROOT = os.path.join(DATA_ROOT, "train")
 
-def get_tasklist_path(tasklistId):
-    return os.path.join(DATA_RECORD_ROOT, tasklistId)
+def get_taskList_path(taskListId):
+    return os.path.join(DATA_RECORD_ROOT, taskListId)
 
-def get_task_path(tasklistId, taskId):
-    return os.path.join(get_tasklist_path(tasklistId), taskId)
+def get_task_path(taskListId, taskId):
+    return os.path.join(get_taskList_path(taskListId), taskId)
 
-def get_subtask_path(tasklistId, taskId, subtaskId):
-    return os.path.join(get_task_path(tasklistId, taskId), subtaskId)
+def get_subtask_path(taskListId, taskId, subtaskId):
+    return os.path.join(get_task_path(taskListId, taskId), subtaskId)
 
-def get_recordlist_path(tasklistId, taskId, subtaskId):
-    return os.path.join(get_subtask_path(tasklistId, taskId, subtaskId), 'recordlist.txt')
+def get_recordlist_path(taskListId, taskId, subtaskId):
+    return os.path.join(get_subtask_path(taskListId, taskId, subtaskId), 'recordlist.txt')
 
-def get_record_path(tasklistId, taskId, subtaskId, recordId):
-    return os.path.join(get_subtask_path(tasklistId, taskId, subtaskId), recordId)
+def get_record_path(taskListId, taskId, subtaskId, recordId):
+    return os.path.join(get_subtask_path(taskListId, taskId, subtaskId), recordId)
 
-def get_tasklist_info_path(tasklistId, timestamp = None):
-    if timestamp is None or timestamp == 0:
-        return os.path.join(get_tasklist_path(tasklistId), tasklistId + ".json")
-    return os.path.join(get_tasklist_path(tasklistId), tasklistId + "_" + str(timestamp) + ".json")
+def get_taskList_info_path(taskListId, timestamp = None):
+    if timestamp is None or str(timestamp) == "0":
+        return os.path.join(get_taskList_path(taskListId), taskListId + ".json")
+    return os.path.join(get_taskList_path(taskListId), taskListId + "_" + str(timestamp) + ".json")
 
-def get_task_info_path(tasklistid, taskid):
-    return os.path.join(get_task_path(tasklistid, taskid), taskid + ".json")
+def get_task_info_path(taskListid, taskid):
+    return os.path.join(get_task_path(taskListid, taskid), taskid + ".json")
 
-def get_subtask_info_path(tasklistid, taskid, subtaskId):
-    return os.path.join(get_subtask_path(tasklistid, taskid, subtaskId), subtaskId + ".json")
+def get_subtask_info_path(taskListid, taskid, subtaskId):
+    return os.path.join(get_subtask_path(taskListid, taskid, subtaskId), subtaskId + ".json")
 
 def get_train_path(timestamp):
     return os.path.join(DATA_TRAIN_ROOT, str(timestamp))
@@ -51,16 +51,16 @@ def save_json(obj, path):
     with open(path, 'w') as fout:
         json.dump(obj, fout, indent=4)
 
-def load_tasklist_info(tasklistId, timestamp = None):
-    tasklist_info_path = get_tasklist_info_path(tasklistId, timestamp)
-    if not os.path.exists(tasklist_info_path):
+def load_taskList_info(taskListId, timestamp = None):
+    taskList_info_path = get_taskList_info_path(taskListId, timestamp)
+    if not os.path.exists(taskList_info_path):
         return {}
-    with open(tasklist_info_path, 'r') as f:
+    with open(taskList_info_path, 'r') as f:
         data = json.load(f)
         return data
 
-def load_recordlist(tasklistId, taskId, subtaskId):
-    recordlist_path = get_recordlist_path(tasklistId, taskId, subtaskId)
+def load_recordlist(taskListId, taskId, subtaskId):
+    recordlist_path = get_recordlist_path(taskListId, taskId, subtaskId)
     if not os.path.exists(recordlist_path):
         return []
     recordlist = []
@@ -72,8 +72,8 @@ def load_recordlist(tasklistId, taskId, subtaskId):
                 recordlist.append(recordId)
     return recordlist
 
-def append_recordlist(tasklistId, taskId, subtaskId, recordId):
-    recordlist_path = get_recordlist_path(tasklistId, taskId, subtaskId)
+def append_recordlist(taskListId, taskId, subtaskId, recordId):
+    recordlist_path = get_recordlist_path(taskListId, taskId, subtaskId)
     with open(recordlist_path, 'a') as f:
         f.write(recordId.strip() + '\n')
 

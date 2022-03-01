@@ -13,21 +13,24 @@ import android.widget.TextView;
 import com.example.datacollection.R;
 import com.example.datacollection.TaskList;
 import com.example.datacollection.ui.ConfigSubtaskActivity;
+import com.example.datacollection.utils.NetworkUtils;
+import com.lzy.okgo.callback.StringCallback;
+import com.lzy.okgo.model.Response;
 
 public class TaskAdapter extends BaseAdapter {
-    private Context context;
-    private TaskList task;
+    private Context mContext;
+    private TaskList taskList;
     private LayoutInflater inflater;
 
-    public TaskAdapter(Context context, TaskList task) {
-        this.context = context;
-        this.task = task;
+    public TaskAdapter(Context context, TaskList taskList) {
+        this.mContext = context;
+        this.taskList = taskList;
         this.inflater = LayoutInflater.from(context);
     }
 
     @Override
     public int getCount() {
-        return task.getTask().size();
+        return taskList.getTask().size();
     }
 
     @Override
@@ -43,6 +46,7 @@ public class TaskAdapter extends BaseAdapter {
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
         view = inflater.inflate(R.layout.fragment_task, null);
+        TextView taskId = view.findViewById(R.id.taskId);
         TextView taskName = view.findViewById(R.id.taskName);
         TextView taskTimes = view.findViewById(R.id.taskTimes);
         TextView taskDuration = view.findViewById(R.id.taskDuration);
@@ -50,30 +54,35 @@ public class TaskAdapter extends BaseAdapter {
         TextView taskAudio = view.findViewById(R.id.taskAudio);
         Button deleteButton = view.findViewById(R.id.deleteItemButton);
 
-        taskName.setText(task.getTask().get(i).getName());
-        taskTimes.setText("  录制次数:     " + task.getTask().get(i).getTimes());
-        taskDuration.setText("  单次时长:     " + task.getTask().get(i).getDuration() + " ms");
-        taskVideo.setText("  开启摄像头: " + task.getTask().get(i).isVideo());
-        taskAudio.setText("  开启麦克风: " + task.getTask().get(i).isAudio());
+        TaskList.Task task = taskList.getTask().get(i);
+        taskName.setText(task.getName());
+        taskId.setText("  编号:            " + task.getId());
+        taskTimes.setText("  录制次数:     " + task.getTimes());
+        taskDuration.setText("  单次时长:     " + task.getDuration() + " ms");
+        taskVideo.setText("  开启摄像头: " + task.isVideo());
+        taskAudio.setText("  开启麦克风: " + task.isAudio());
 
         deleteButton.setOnClickListener((v) -> {
-            int id = task.getTask().get(i).getId();
-            for(int j = 0; j < task.getTask().size(); j++) {
-                if (task.getTask().get(j).getId() == id) {
-                    task.getTask().remove(j);
+            String id = task.getId();
+            for(int j = 0; j < taskList.getTask().size(); j++) {
+                if (taskList.getTask().get(j).getId().equals(id)) {
+                    taskList.getTask().remove(j);
                 }
             }
-            task.resetId();
-            TaskList.saveToLocalFile(task);
+            NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
+                @Override
+                public void onSuccess(Response<String> response) {
+                }
+            });
             this.notifyDataSetChanged();
         });
 
         view.setOnClickListener((v) -> {
             Bundle bundle = new Bundle();
             bundle.putInt("task_id", i);
-            Intent intent = new Intent(context, ConfigSubtaskActivity.class);
+            Intent intent = new Intent(mContext, ConfigSubtaskActivity.class);
             intent.putExtras(bundle);
-            context.startActivity(intent);
+            mContext.startActivity(intent);
         });
         return view;
     }

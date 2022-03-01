@@ -25,8 +25,11 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.example.datacollection.R;
+import com.example.datacollection.TaskList;
 import com.example.datacollection.utils.NetworkUtils;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.lzy.okgo.callback.StringCallback;
+import com.lzy.okgo.model.Response;
 
 import java.io.File;
 import java.util.Arrays;
@@ -109,9 +112,13 @@ public class CameraController {
         }
     }
 
-    public void upload() {
+    public void upload(String taskListId, String taskId, String subtaskId, String recordId, long timestamp) {
         if (saveFile != null) {
-            NetworkUtils.uploadFile(mActivity, saveFile);
+            NetworkUtils.uploadRecordFile(mActivity, saveFile, TaskList.FILE_TYPE.VIDEO.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
+                @Override
+                public void onSuccess(Response<String> response) {
+                }
+            });
         }
     }
 }

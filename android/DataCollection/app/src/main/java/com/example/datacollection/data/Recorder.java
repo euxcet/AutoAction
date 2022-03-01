@@ -13,6 +13,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.datacollection.BuildConfig;
 import com.example.datacollection.TaskList;
 import com.example.datacollection.utils.FileUtils;
+import com.example.datacollection.utils.NetworkUtils;
+import com.lzy.okgo.callback.StringCallback;
+import com.lzy.okgo.model.Response;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -33,9 +36,13 @@ public class Recorder {
     private File microphoneFile;
     private File timestampFile;
 
+    private TaskList taskList;
+    private TaskList.Task task;
     private TaskList.Task.Subtask subtask;
     private CountDownTimer timer;
     private RecorderListener listener;
+
+    private String recordId;
 
     private int tickCount = 0;
 
@@ -59,24 +66,48 @@ public class Recorder {
         }
     }
 
-    public void start(String name, int taskId, int subtaskId, TaskList.Task.Subtask subtask) {
-        this.subtask = subtask;
+    public void start(String name, int taskId, int subtaskId, TaskList taskList) {
+        this.taskList = taskList;
+        this.task = taskList.getTask().get(taskId);
+        this.subtask = task.getSubtask().get(subtaskId);
         this.tickCount = 0;
+        this.recordId = TaskList.generateRandomRecordId();
+
+        if (subtask.getTimes() == 0) {
+            subtask.setTimes(task.getTimes());
+        }
+        if (subtask.getDuration() == 0) {
+            subtask.setDuration(task.getDuration());
+        }
+        subtask.setAudio(subtask.isAudio() | task.isAudio());
+        subtask.setVideo(subtask.isVideo() | task.isVideo());
+
+
+        NetworkUtils.addRecord(mContext, taskList.getId(), task.getId(), subtask.getId(), recordId, System.currentTimeMillis(), new StringCallback() {
+            @Override
+            public void onSuccess(Response<String> response) {
+
+            }
+        });
 
         createFile(name, taskId, subtaskId);
 
         long duration = subtask.getDuration();
-        long actionTime = subtask.getTimes() * subtask.getDuration();
+        int times = subtask.getTimes();
+        long actionTime = times * subtask.getDuration();
+
+        Log.e("TEST", "Start " + name + " " + taskId + " " + subtaskId + " " + duration + " " + actionTime);
 
         timer = new CountDownTimer(actionTime, duration) {
             @Override
             public void onTick(long l) {
+                Log.e("TEST", "  " + l);
                 if (l < duration / 10) { // skip first tick
                     return;
                 }
                 timestampController.add(sensorController.getLastTimestamp());
                 tickCount += 1;
-                listener.onTick(tickCount);
+                listener.onTick(tickCount, times);
             }
 
             @Override
@@ -88,47 +119,54 @@ public class Recorder {
 
         new Handler().postDelayed(() -> {
             sensorController.start(sensorFile);
+            /*
             if (subtask.isAudio()) {
                 microphoneController.start(microphoneFile);
             }
+             */
             if (subtask.isVideo()) {
                 cameraController.start(cameraFile);
             }
             timestampController.start(timestampFile);
+            timer.start();
         }, 3000);
     }
 
     public void stop() {
         sensorController.stop();
+        /*
         if (subtask != null && subtask.isAudio()) {
             microphoneController.stop();
         }
+         */
         if (subtask != null && subtask.isVideo()) {
             cameraController.stop();
         }
         timestampController.stop();
         new Handler().postDelayed(() -> {
-            sensorController.upload();
+            sensorController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, System.currentTimeMillis());
+            /*
             if (subtask != null && subtask.isAudio()) {
-                microphoneController.upload();
+                microphoneController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, System.currentTimeMillis());
             }
+             */
             if (subtask != null && subtask.isVideo()) {
-                cameraController.upload();
+                cameraController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, System.currentTimeMillis());
             }
-            timestampController.upload();
+            timestampController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, System.currentTimeMillis());
         }, 3000);
     }
 
     public void createFile(String name, int taskId, int subtaskId) {
         String suffix = "_" + name + "_" + taskId + "_" + subtaskId + "_" + dateFormat.format(new Date());
-        timestampFile = new File(BuildConfig.SAVE_PATH, "Timestamp" + suffix + ".txt");
+        timestampFile = new File(BuildConfig.SAVE_PATH, "Timestamp" + suffix + ".json");
         sensorFile = new File(BuildConfig.SAVE_PATH, "Sensor" + suffix + ".json");
         microphoneFile = new File(BuildConfig.SAVE_PATH, "Microphone" + suffix + ".mp4");
         cameraFile = new File(BuildConfig.SAVE_PATH, "Camera" + suffix + ".mp4");
     }
 
     public interface RecorderListener {
-        void onTick(int tickCount);
+        void onTick(int tickCount, int times);
         void onFinish();
     }
 }
