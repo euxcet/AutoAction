@@ -77,12 +77,12 @@ def cosine(t_max, eta_min=0):
     return scheduler
 
 
-def train_model(timestamp, use_cuda):
+def train_model(trainId, timestamp, use_cuda):
     if use_cuda:
         torch.cuda.set_device(0)
     np.random.seed(1)
 
-    ROOT = fileUtils.get_train_path(timestamp)
+    ROOT = fileUtils.get_train_path(trainId)
     print(ROOT)
     TRAIN = os.path.join(ROOT, 'X_train.csv')
     TARGET = os.path.join(ROOT, 'y_train.csv')
@@ -217,4 +217,5 @@ def train_model(timestamp, use_cuda):
 
 
 if __name__ == '__main__':
-    train('9087654321', False)
+    pass
+    # train('9087654321', False)

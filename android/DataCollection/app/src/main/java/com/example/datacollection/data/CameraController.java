@@ -2,9 +2,7 @@ package com.example.datacollection.data;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.Camera;
@@ -18,14 +16,13 @@ import androidx.camera.video.QualitySelector;
 import androidx.camera.video.Recorder;
 import androidx.camera.video.Recording;
 import androidx.camera.video.VideoCapture;
-import androidx.camera.video.VideoRecordEvent;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.example.datacollection.R;
-import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.utils.NetworkUtils;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.lzy.okgo.callback.StringCallback;
@@ -33,8 +30,6 @@ import com.lzy.okgo.model.Response;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 
 public class CameraController {
@@ -114,7 +109,7 @@ public class CameraController {
 
     public void upload(String taskListId, String taskId, String subtaskId, String recordId, long timestamp) {
         if (saveFile != null) {
-            NetworkUtils.uploadRecordFile(mActivity, saveFile, TaskList.FILE_TYPE.VIDEO.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
+            NetworkUtils.uploadRecordFile(mActivity, saveFile, TaskListBean.FILE_TYPE.VIDEO.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
                 @Override
                 public void onSuccess(Response<String> response) {
                 }

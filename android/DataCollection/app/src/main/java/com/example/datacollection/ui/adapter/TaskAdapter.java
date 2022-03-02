@@ -11,7 +11,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.datacollection.R;
-import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.ui.ConfigSubtaskActivity;
 import com.example.datacollection.utils.NetworkUtils;
 import com.lzy.okgo.callback.StringCallback;
@@ -19,10 +19,10 @@ import com.lzy.okgo.model.Response;
 
 public class TaskAdapter extends BaseAdapter {
     private Context mContext;
-    private TaskList taskList;
+    private TaskListBean taskList;
     private LayoutInflater inflater;
 
-    public TaskAdapter(Context context, TaskList taskList) {
+    public TaskAdapter(Context context, TaskListBean taskList) {
         this.mContext = context;
         this.taskList = taskList;
         this.inflater = LayoutInflater.from(context);
@@ -54,7 +54,7 @@ public class TaskAdapter extends BaseAdapter {
         TextView taskAudio = view.findViewById(R.id.taskAudio);
         Button deleteButton = view.findViewById(R.id.deleteItemButton);
 
-        TaskList.Task task = taskList.getTask().get(i);
+        TaskListBean.Task task = taskList.getTask().get(i);
         taskName.setText(task.getName());
         taskId.setText("  编号:            " + task.getId());
         taskTimes.setText("  录制次数:     " + task.getTimes());

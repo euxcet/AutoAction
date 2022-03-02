@@ -5,7 +5,7 @@ from process.cutter.peak_cutter import PeakCutter
 from process.cutter.random_cutter import RandomCutter
 from process.dataset import Dataset
 
-def export_csv(tasklistId, taskIds, timestamp):
+def export_csv(tasklistId, taskIds, trainId, timestamp):
     dataset = Dataset()
     cutter_dict = {
         'peak': [PeakCutter(0)],
@@ -36,7 +36,7 @@ def export_csv(tasklistId, taskIds, timestamp):
 
 
     dataset.insert_records(records)
-    dataset.export_csv(fileUtils.get_train_path(timestamp))
+    dataset.export_csv(fileUtils.get_train_path(trainId))
     '''
     for record_folder in os.listdir(dataset_root):
         if not record_folder.startswith('.'): # ignore .DS_Store

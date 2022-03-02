@@ -39,7 +39,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ListView
-        android:id="@+id/taskListView"
+        android:id="@+id/trainListView"
         android:layout_width="392dp"
         android:layout_height="400dp"
         android:layout_marginStart="8dp"

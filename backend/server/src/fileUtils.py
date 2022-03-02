@@ -34,8 +34,11 @@ def get_task_info_path(taskListid, taskid):
 def get_subtask_info_path(taskListid, taskid, subtaskId):
     return os.path.join(get_subtask_path(taskListid, taskid, subtaskId), subtaskId + ".json")
 
-def get_train_path(timestamp):
-    return os.path.join(DATA_TRAIN_ROOT, str(timestamp))
+def get_train_path(trainId):
+    return os.path.join(DATA_TRAIN_ROOT, trainId)
+
+def get_train_info_path(trainId):
+    return os.path.join(get_train_path(trainId), trainId + '.json')
 
 def delete_dir(path):
     try:
@@ -50,6 +53,10 @@ def mkdir(path):
 def save_json(obj, path):
     with open(path, 'w') as fout:
         json.dump(obj, fout, indent=4)
+
+def load_json(path):
+    with open(path, 'r') as fin:
+        return json.load(path)
 
 def load_taskList_info(taskListId, timestamp = None):
     taskList_info_path = get_taskList_info_path(taskListId, timestamp)

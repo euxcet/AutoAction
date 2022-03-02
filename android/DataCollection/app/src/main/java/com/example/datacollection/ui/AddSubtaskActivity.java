@@ -4,13 +4,13 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
 import com.example.datacollection.R;
-import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.RandomUtils;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.bean.StringListBean;
 import com.google.gson.Gson;
@@ -21,16 +21,13 @@ public class AddSubtaskActivity extends AppCompatActivity {
     private Context mContext;
     private AppCompatActivity mActivity;
 
-    private TaskList taskList;
+    private TaskListBean taskList;
 
     private EditText nameEditText;
     private EditText timesEditText;
     private EditText durationEditText;
     private CheckBox videoCheckbox;
     private CheckBox audioCheckbox;
-
-    private Button confirmButton;
-    private Button cancelButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,9 +43,9 @@ public class AddSubtaskActivity extends AppCompatActivity {
         videoCheckbox = findViewById(R.id.addSubtaskVideoCheckbox);
         audioCheckbox = findViewById(R.id.addSubtaskAudioCheckbox);
 
-        confirmButton = findViewById(R.id.addSubtaskConfirmButton);
+        Button confirmButton = findViewById(R.id.addSubtaskConfirmButton);
 
-        cancelButton = findViewById(R.id.addSubtaskCancelButton);
+        Button cancelButton = findViewById(R.id.addSubtaskCancelButton);
         cancelButton.setOnClickListener((v) -> this.finish());
 
         Bundle bundle = getIntent().getExtras();
@@ -69,10 +66,10 @@ public class AddSubtaskActivity extends AppCompatActivity {
                     NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
                         @Override
                         public void onSuccess(Response<String> response) {
-                            taskList = new Gson().fromJson(response.body(), TaskList.class);
+                            taskList = new Gson().fromJson(response.body(), TaskListBean.class);
 
-                            TaskList.Task.Subtask newSubtask = new TaskList.Task.Subtask(
-                                    TaskList.generateRandomSubtaskId(),
+                            TaskListBean.Task.Subtask newSubtask = new TaskListBean.Task.Subtask(
+                                    RandomUtils.generateRandomSubtaskId(),
                                     nameEditText.getText().toString(),
                                     Integer.parseInt(timesEditText.getText().toString()),
                                     Integer.parseInt(durationEditText.getText().toString()),

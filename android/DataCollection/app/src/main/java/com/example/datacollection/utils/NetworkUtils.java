@@ -1,20 +1,13 @@
 package com.example.datacollection.utils;
 
 import android.content.Context;
-import android.util.Log;
 
-import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.google.gson.Gson;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.callback.StringCallback;
-import com.lzy.okgo.model.Response;
 
 import java.io.File;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class NetworkUtils {
     private static final String TAG = "NetworkUtils";
@@ -28,6 +21,7 @@ public class NetworkUtils {
     private static final String SAMPLE_NUMBER_URL = ROOT_URL + "/sample_number";
     private static final String SAMPLE_URL = ROOT_URL + "/sample";
     private static final String CUTTER_TYPE_URL = ROOT_URL + "/cutter_type";
+    private static final String TRAIN_LIST_URL = ROOT_URL + "/train_list";
     private static final String TRAIN_URL = ROOT_URL + "/train";
 
     private static Gson gson = new Gson();
@@ -64,7 +58,7 @@ public class NetworkUtils {
                 .execute(callback);
     }
 
-    public static void updateTaskList(Context context, TaskList tasklist, long timestamp, StringCallback callback) {
+    public static void updateTaskList(Context context, TaskListBean tasklist, long timestamp, StringCallback callback) {
         OkGo.<String>post(TASKLIST_URL)
                 .tag(context)
                 .params("taskList", gson.toJson(tasklist))
@@ -114,6 +108,30 @@ public class NetworkUtils {
                 .params("taskId", taskId)
                 .params("subtaskId", subtaskId)
                 .params("recordId", recordId)
+                .params("timestamp", timestamp)
+                .isMultipart(true)
+                .execute(callback);
+    }
+
+    public static void getCutterType(Context context, StringCallback callback) {
+        OkGo.<String>get(CUTTER_TYPE_URL)
+                .tag(context)
+                .execute(callback);
+    }
+
+    public static void getTrainList(Context context, StringCallback callback) {
+        OkGo.<String>get(TRAIN_LIST_URL)
+                .tag(context)
+                .execute(callback);
+    }
+
+    public static void startTrain(Context context, String trainId, String trainName, String taskListId, String taskIdList, long timestamp, StringCallback callback) {
+        OkGo.<String>post(TRAIN_URL)
+                .tag(context)
+                .params("trainId", trainId)
+                .params("trainName", trainName)
+                .params("taskListId", taskListId)
+                .params("taskIdList", taskIdList)
                 .params("timestamp", timestamp)
                 .isMultipart(true)
                 .execute(callback);

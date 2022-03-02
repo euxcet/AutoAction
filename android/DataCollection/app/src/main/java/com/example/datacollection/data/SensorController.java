@@ -5,9 +5,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.util.Log;
 
-import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.utils.FileUtils;
 import com.example.datacollection.utils.NetworkUtils;
 import com.google.gson.Gson;
@@ -99,7 +98,7 @@ public class SensorController {
 
     public void upload(String taskListId, String taskId, String subtaskId, String recordId, long timestamp) {
         if (saveFile != null) {
-            NetworkUtils.uploadRecordFile(mContext, saveFile, TaskList.FILE_TYPE.SENSOR.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
+            NetworkUtils.uploadRecordFile(mContext, saveFile, TaskListBean.FILE_TYPE.SENSOR.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
                 @Override
                 public void onSuccess(Response<String> response) {
                 }

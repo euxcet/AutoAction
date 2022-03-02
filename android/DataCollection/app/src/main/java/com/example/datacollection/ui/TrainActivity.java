@@ -2,6 +2,7 @@ package com.example.datacollection.ui;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -18,14 +19,18 @@ public class TrainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_train);
-        Button button = findViewById(R.id.button);
+        Button button = findViewById(R.id.newProgramButton);
         button.setOnClickListener(view -> {
+            Intent intent = new Intent(TrainActivity.this, NewTrainingProgramActivity.class);
+            startActivity(intent);
+            /*
             NetworkUtils.getTaskList(this, "TL13r912je", 0, new StringCallback() {
                 @Override
                 public void onSuccess(Response<String> response) {
                     Log.e(TAG, response.body());
                 }
             });
+             */
         });
     }
 }

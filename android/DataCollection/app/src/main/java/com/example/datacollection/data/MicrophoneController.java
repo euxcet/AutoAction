@@ -2,9 +2,8 @@ package com.example.datacollection.data;
 
 import android.content.Context;
 import android.media.MediaRecorder;
-import android.media.MediaScannerConnection;
 
-import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.utils.NetworkUtils;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
@@ -52,7 +51,7 @@ public class MicrophoneController {
 
     public void upload(String taskListId, String taskId, String subtaskId, String recordId, long timestamp) {
         if (saveFile != null) {
-            NetworkUtils.uploadRecordFile(mContext, saveFile, TaskList.FILE_TYPE.AUDIO.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
+            NetworkUtils.uploadRecordFile(mContext, saveFile, TaskListBean.FILE_TYPE.AUDIO.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
                 @Override
                 public void onSuccess(Response<String> response) {
                 }

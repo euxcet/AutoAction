@@ -19,6 +19,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".NewTrainingProgramActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.TrainActivity"
             android:exported="false" />
         <activity

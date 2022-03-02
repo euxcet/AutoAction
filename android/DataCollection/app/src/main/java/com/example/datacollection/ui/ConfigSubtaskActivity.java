@@ -10,9 +10,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.datacollection.R;
-import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.ui.adapter.SubtaskAdapter;
-import com.example.datacollection.ui.adapter.TaskAdapter;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.bean.StringListBean;
 import com.google.gson.Gson;
@@ -22,9 +21,7 @@ import com.lzy.okgo.model.Response;
 public class ConfigSubtaskActivity extends AppCompatActivity {
     private Context mContext;
     private ListView subtaskListView;
-    private Button addButton;
-    private Button backButton;
-    private TaskList taskList;
+    private TaskListBean taskList;
     private SubtaskAdapter subtaskAdapter;
     private TextView taskNameView;
     private int task_id;
@@ -35,7 +32,7 @@ public class ConfigSubtaskActivity extends AppCompatActivity {
         setContentView(R.layout.activity_config_subtask);
         mContext = this;
 
-        backButton = findViewById(R.id.subtaskBackButton);
+        Button backButton = findViewById(R.id.subtaskBackButton);
         backButton.setOnClickListener((v) -> this.finish());
 
         subtaskListView = findViewById(R.id.subtaskListView);
@@ -43,7 +40,7 @@ public class ConfigSubtaskActivity extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         task_id = bundle.getInt("task_id");
 
-        addButton = findViewById(R.id.addSubtaskButton);
+        Button addButton = findViewById(R.id.addSubtaskButton);
         addButton.setOnClickListener((v) -> {
             Bundle addBundle = new Bundle();
             addBundle.putInt("task_id", task_id);
@@ -73,7 +70,7 @@ public class ConfigSubtaskActivity extends AppCompatActivity {
                     NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
                         @Override
                         public void onSuccess(Response<String> response) {
-                            taskList = new Gson().fromJson(response.body(), TaskList.class);
+                            taskList = new Gson().fromJson(response.body(), TaskListBean.class);
                             taskNameView.setText("Task name: " + taskList.getTask().get(task_id).getName());
                             subtaskAdapter = new SubtaskAdapter(mContext, taskList, task_id);
                             subtaskListView.setAdapter(subtaskAdapter);

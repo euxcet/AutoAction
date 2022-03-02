@@ -7,12 +7,32 @@
     tools:context=".ui.TrainActivity">
 
     <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:layout_marginTop="5dp"
-        android:text="Button"
+        android:id="@+id/newProgramButton"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:layout_marginEnd="190dp"
+        android:layout_marginBottom="84dp"
+        android:text="New Program"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/trainTitleView"
+        android:layout_width="66dp"
+        android:layout_height="43dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Train"
+        android:textSize="24dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ListView
+        android:id="@+id/trainListView"
+        android:layout_width="394dp"
+        android:layout_height="432dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="28dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/trainTitleView" />
 </androidx.constraintlayout.widget.ConstraintLayout>

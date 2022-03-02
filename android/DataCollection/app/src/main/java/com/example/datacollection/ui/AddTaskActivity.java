@@ -4,37 +4,30 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
-import com.example.datacollection.BuildConfig;
 import com.example.datacollection.R;
-import com.example.datacollection.TaskList;
-import com.example.datacollection.ui.adapter.TaskAdapter;
+import com.example.datacollection.utils.RandomUtils;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.bean.StringListBean;
 import com.google.gson.Gson;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
-import java.io.FileInputStream;
-
 public class AddTaskActivity extends AppCompatActivity {
     private AppCompatActivity mActivity;
     private Context mContext;
 
-    private TaskList taskList;
+    private TaskListBean taskList;
 
     private EditText nameEditText;
     private EditText timesEditText;
     private EditText durationEditText;
     private CheckBox videoCheckbox;
     private CheckBox audioCheckbox;
-
-    private Button confirmButton;
-    private Button cancelButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +43,9 @@ public class AddTaskActivity extends AppCompatActivity {
         videoCheckbox = findViewById(R.id.addTaskVideoCheckbox);
         audioCheckbox = findViewById(R.id.addTaskAudioCheckbox);
 
-        confirmButton = findViewById(R.id.addTaskConfirmButton);
+        Button confirmButton = findViewById(R.id.addTaskConfirmButton);
 
-        cancelButton = findViewById(R.id.addTaskCancelButton);
+        Button cancelButton = findViewById(R.id.addTaskCancelButton);
         cancelButton.setOnClickListener((v) -> this.finish());
         confirmButton.setOnClickListener((v) -> {
             addNewTask();
@@ -69,11 +62,11 @@ public class AddTaskActivity extends AppCompatActivity {
                     NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
                         @Override
                         public void onSuccess(Response<String> response) {
-                            taskList = new Gson().fromJson(response.body(), TaskList.class);
+                            taskList = new Gson().fromJson(response.body(), TaskListBean.class);
 
                             // taskList = TaskList.parseFromLocalFile();
-                            TaskList.Task newTask = new TaskList.Task(
-                                    TaskList.generateRandomTaskId(),
+                            TaskListBean.Task newTask = new TaskListBean.Task(
+                                    RandomUtils.generateRandomTaskId(),
                                     nameEditText.getText().toString(),
                                     Integer.parseInt(timesEditText.getText().toString()),
                                     Integer.parseInt(durationEditText.getText().toString()),

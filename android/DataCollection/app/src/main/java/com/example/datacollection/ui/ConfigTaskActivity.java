@@ -2,16 +2,14 @@ package com.example.datacollection.ui;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.ListView;
 
 import com.example.datacollection.R;
-import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.ui.adapter.TaskAdapter;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.bean.StringListBean;
@@ -21,10 +19,8 @@ import com.lzy.okgo.model.Response;
 
 public class ConfigTaskActivity extends AppCompatActivity {
     private ListView taskListView;
-    private Button backButton;
-    private Button addTaskButton;
 
-    private TaskList taskList;
+    private TaskListBean taskList;
     private TaskAdapter taskAdapter;
 
     private Context mContext;
@@ -36,16 +32,16 @@ public class ConfigTaskActivity extends AppCompatActivity {
 
         mContext = this;
 
-        backButton = findViewById(R.id.taskBackButton);
+        Button backButton = findViewById(R.id.taskBackButton);
         backButton.setOnClickListener((v) -> this.finish());
 
-        addTaskButton = findViewById(R.id.addTaskButton);
+        Button addTaskButton = findViewById(R.id.addTaskButton);
         addTaskButton.setOnClickListener((v) -> {
             Intent intent = new Intent(ConfigTaskActivity.this, AddTaskActivity.class);
             startActivity(intent);
         });
 
-        taskListView = findViewById(R.id.taskListView);
+        taskListView = findViewById(R.id.trainListView);
         loadTaskListViaNetwork();
     }
 
@@ -65,7 +61,7 @@ public class ConfigTaskActivity extends AppCompatActivity {
                     NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
                         @Override
                         public void onSuccess(Response<String> response) {
-                            taskList = new Gson().fromJson(response.body(), TaskList.class);
+                            taskList = new Gson().fromJson(response.body(), TaskListBean.class);
                             taskAdapter = new TaskAdapter(mContext, taskList);
                             taskListView.setAdapter(taskAdapter);
                         }

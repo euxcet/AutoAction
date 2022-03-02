@@ -18,20 +18,15 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.example.datacollection.BuildConfig;
 import com.example.datacollection.R;
-import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.TransferData;
 import com.example.datacollection.data.Recorder;
-import com.example.datacollection.utils.FileUtils;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.bean.StringListBean;
 import com.google.gson.Gson;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
-
-import java.io.File;
-import java.io.FileInputStream;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -60,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private Button trainButton;
 
     // task
-    private TaskList taskList;
+    private TaskListBean taskList;
     private String[] taskName;
     private String[] subtaskName;
     private int curTaskId = 0;
@@ -134,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
                     NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
                         @Override
                         public void onSuccess(Response<String> response) {
-                            taskList = new Gson().fromJson(response.body(), TaskList.class);
+                            taskList = new Gson().fromJson(response.body(), TaskListBean.class);
                             initView();
                         }
                     });

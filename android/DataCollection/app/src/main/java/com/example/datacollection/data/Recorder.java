@@ -1,17 +1,15 @@
 package com.example.datacollection.data;
 
 import android.content.Context;
-import android.media.MediaRecorder;
-import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.os.Vibrator;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.datacollection.BuildConfig;
-import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.RandomUtils;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.utils.FileUtils;
 import com.example.datacollection.utils.NetworkUtils;
 import com.lzy.okgo.callback.StringCallback;
@@ -36,9 +34,9 @@ public class Recorder {
     private File microphoneFile;
     private File timestampFile;
 
-    private TaskList taskList;
-    private TaskList.Task task;
-    private TaskList.Task.Subtask subtask;
+    private TaskListBean taskList;
+    private TaskListBean.Task task;
+    private TaskListBean.Task.Subtask subtask;
     private CountDownTimer timer;
     private RecorderListener listener;
 
@@ -66,12 +64,12 @@ public class Recorder {
         }
     }
 
-    public void start(String name, int taskId, int subtaskId, TaskList taskList) {
+    public void start(String name, int taskId, int subtaskId, TaskListBean taskList) {
         this.taskList = taskList;
         this.task = taskList.getTask().get(taskId);
         this.subtask = task.getSubtask().get(subtaskId);
         this.tickCount = 0;
-        this.recordId = TaskList.generateRandomRecordId();
+        this.recordId = RandomUtils.generateRandomRecordId();
 
         if (subtask.getTimes() == 0) {
             subtask.setTimes(task.getTimes());

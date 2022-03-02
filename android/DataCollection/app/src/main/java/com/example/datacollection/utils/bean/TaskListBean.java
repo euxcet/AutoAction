@@ -1,7 +1,6 @@
-package com.example.datacollection;
+package com.example.datacollection.utils.bean;
 
-import android.util.Log;
-
+import com.example.datacollection.BuildConfig;
 import com.example.datacollection.utils.FileUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -19,12 +18,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class TaskList implements Serializable {
+public class TaskListBean implements Serializable {
     private String id;
     private String date;
     private String description;
     private List<Task> task;
-    private static final String ID_ALLOWED_CHARACTERS = "0123456789qwertyuiopasdfghjklzxcvbnm";
 
     public enum FILE_TYPE {
         SENSOR,
@@ -33,32 +31,8 @@ public class TaskList implements Serializable {
         VIDEO
     }
 
-    public static String generateRandomId(int size) {
-        Random random = new Random();
-        StringBuilder builder = new StringBuilder(size);
-        for(int i = 0; i < size; i++) {
-            builder.append(ID_ALLOWED_CHARACTERS.charAt(random.nextInt(ID_ALLOWED_CHARACTERS.length())));
-        }
-        return builder.toString();
-    }
-
-    public static String generateRandomTaskListId() {
-        return "TL" + generateRandomId(8);
-    }
-
-    public static String generateRandomTaskId() {
-        return "TK" + generateRandomId(8);
-    }
-
-    public static String generateRandomSubtaskId() {
-        return "ST" + generateRandomId(8);
-    }
-
-    public static String generateRandomRecordId() {
-        return "RD" + generateRandomId(8);
-    }
-
-    public static TaskList parseFromFile(InputStream is) {
+    @Deprecated
+    public static TaskListBean parseFromFile(InputStream is) {
         try {
             Writer writer = new StringWriter();
             char[] buffer = new char[1024];
@@ -74,7 +48,7 @@ public class TaskList implements Serializable {
 
             String jsonString = writer.toString();
             Gson gson = new GsonBuilder().create();
-            TaskList taskList = gson.fromJson(jsonString, TaskList.class);
+            TaskListBean taskList = gson.fromJson(jsonString, TaskListBean.class);
             // taskList.updateSubtask();
             return taskList;
         } catch (IOException e) {
@@ -83,10 +57,11 @@ public class TaskList implements Serializable {
         return null;
     }
 
-    public static TaskList parseFromLocalFile() {
-        TaskList taskList = null;
+    @Deprecated
+    public static TaskListBean parseFromLocalFile() {
+        TaskListBean taskList = null;
         try {
-            taskList = TaskList.parseFromFile(new FileInputStream(BuildConfig.SAVE_PATH + "tasklist.json"));
+            taskList = TaskListBean.parseFromFile(new FileInputStream(BuildConfig.SAVE_PATH + "tasklist.json"));
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -94,7 +69,8 @@ public class TaskList implements Serializable {
         return taskList;
     }
 
-    public static void saveToLocalFile(TaskList taskList) {
+    @Deprecated
+    public static void saveToLocalFile(TaskListBean taskList) {
         FileUtils.writeStringToFile(new Gson().toJson(taskList), new File(BuildConfig.SAVE_PATH + "tasklist.json"));
     }
 

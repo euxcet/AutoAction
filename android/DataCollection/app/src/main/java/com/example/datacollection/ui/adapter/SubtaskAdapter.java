@@ -9,7 +9,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.datacollection.R;
-import com.example.datacollection.TaskList;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.utils.NetworkUtils;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
@@ -19,10 +19,10 @@ import java.util.List;
 public class SubtaskAdapter extends BaseAdapter {
     private Context mContext;
     private LayoutInflater inflater;
-    private TaskList taskList;
+    private TaskListBean taskList;
     private int task_id;
 
-    public SubtaskAdapter(Context context, TaskList taskList, int task_id) {
+    public SubtaskAdapter(Context context, TaskListBean taskList, int task_id) {
         this.mContext = context;
         this.taskList = taskList;
         this.task_id = task_id;
@@ -48,8 +48,8 @@ public class SubtaskAdapter extends BaseAdapter {
     public View getView(int i, View view, ViewGroup viewGroup) {
         view = inflater.inflate(R.layout.fragment_task, null);
 
-        List<TaskList.Task.Subtask> subtasks = taskList.getTask().get(task_id).getSubtask();
-        TaskList.Task.Subtask subtask = taskList.getTask().get(task_id).getSubtask().get(i);
+        List<TaskListBean.Task.Subtask> subtasks = taskList.getTask().get(task_id).getSubtask();
+        TaskListBean.Task.Subtask subtask = taskList.getTask().get(task_id).getSubtask().get(i);
 
         TextView taskId = view.findViewById(R.id.taskId);
         TextView taskName = view.findViewById(R.id.taskName);

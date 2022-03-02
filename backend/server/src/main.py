@@ -1,4 +1,3 @@
-from time import time
 from flask import Flask, request
 from flask_cors import CORS, cross_origin
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -144,7 +143,6 @@ def update_taskList():
 '''
 Name: get_record_list
 Method: Get
-Content-Type: multipart/form-data
 Form:
     - taskListId
     - taskId
@@ -264,7 +262,6 @@ def upload_file():
 '''
 Name: get_sample_number
 Method: Get
-Content-Type: multipart/form-data
 Form:
     - taskListId
     - taskId
@@ -281,7 +278,6 @@ def get_sample_number():
 '''
 Name: get_sample
 Method: Get
-Content-Type: multipart/form-data
 Form:
     - taskListId
     - taskId
@@ -316,7 +312,6 @@ def delete_sample():
 '''
 Name: get_cutter_type
 Method: Get
-Content-Type: multipart/form-data
 Response: 
     - cutter_type
 '''
@@ -329,18 +324,53 @@ def get_cutter_type():
     return {"result": response}
 
 '''
+Name: get_train_list
+Method: Get
+Response:
+    - List(trainId)
+'''
+@app.route("/train_list", methods=["GET"])
+def get_train_list():
+    response = []
+    for trainId in os.listdir(fileUtils.DATA_TRAIN_ROOT):
+        if trainId.startswith('XT'):
+            train_info_path = fileUtils.get_train_info_path(trainId)
+            response.append(fileUtils.load_json(train_info_path))
+    return {"result": response}
+
+'''
 Name: start_train
 Method: Post
 Content-Type: multipart/form-data
 Form:
+    - trainId
+    - trainName
     - taskListId
-    - List(taskId)
+    - taskIdList  List(taskId)
     - timestamp
 '''
 @app.route("/train", methods=["POST"])
 def start_train():
-    train_model('9087654321', False)
+    trainId = request.form.get("trainId")
+    trainName = request.form.get("trainName")
+    taskListId = request.form.get("taskListId")
+    taskIdList = request.form.get("taskIdList").strip().split(',')
+    timestamp = request.form.get("timestamp")
+    train_path = fileUtils.get_train_path(trainId)
+    fileUtils.mkdir(train_path)
+    train_info_path = fileUtils.get_train_info_path(trainId)
+    train_info = {
+        'name': trainName,
+        'id': trainId,
+        'taskListId': taskListId,
+        'taskIdList': taskIdList,
+        'timestamp': timestamp
+    }
+    fileUtils.save_json(train_info, train_info_path)
+    export_csv(taskListId, taskIdList, trainId, timestamp)
+
     '''
+    train_model('9087654321', False)
     taskListId = request.form.get("taskListId")
     taskIds = request.form.get("taskId").strip().split(',')
     timestamp = request.form.get("timestamp")
