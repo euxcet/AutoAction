@@ -5,6 +5,7 @@ import android.content.Context;
 import com.example.datacollection.utils.bean.TaskListBean;
 import com.google.gson.Gson;
 import com.lzy.okgo.OkGo;
+import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.callback.StringCallback;
 
 import java.io.File;
@@ -23,6 +24,7 @@ public class NetworkUtils {
     private static final String CUTTER_TYPE_URL = ROOT_URL + "/cutter_type";
     private static final String TRAIN_LIST_URL = ROOT_URL + "/train_list";
     private static final String TRAIN_URL = ROOT_URL + "/train";
+    private static final String DOWNLOAD_JAR_URL = ROOT_URL + "/download_jar";
 
     private static Gson gson = new Gson();
     /*
@@ -135,5 +137,12 @@ public class NetworkUtils {
                 .params("timestamp", timestamp)
                 .isMultipart(true)
                 .execute(callback);
+    }
+
+    public static void downloadJar(Context context, FileCallback callback) {
+        OkGo.<File>get(DOWNLOAD_JAR_URL)
+                .tag(context)
+                .execute(callback);
+
     }
 }

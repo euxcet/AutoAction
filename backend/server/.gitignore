@@ -6,3 +6,4 @@ data/
 *.onnx
 *.param
 *.bin
+*.jar

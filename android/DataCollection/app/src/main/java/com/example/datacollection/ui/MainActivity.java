@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Network;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -18,16 +19,23 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.example.datacollection.BuildConfig;
 import com.example.datacollection.R;
+import com.example.datacollection.utils.FileUtils;
 import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.TransferData;
 import com.example.datacollection.data.Recorder;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.bean.StringListBean;
 import com.google.gson.Gson;
+import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
+import java.io.File;
+import java.lang.reflect.Method;
+
+import dalvik.system.DexClassLoader;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 import pub.devrel.easypermissions.PermissionRequest;
@@ -258,6 +266,32 @@ public class MainActivity extends AppCompatActivity {
         });
 
         enableButtons(false);
+
+        NetworkUtils.downloadJar(this, new FileCallback() {
+            @Override
+            public void onSuccess(Response<File> response) {
+                File file = response.body();
+                File saveFile = new File(BuildConfig.SAVE_PATH, "simplelibrary.jar");
+                try {
+                    FileUtils.copy(file, saveFile);
+                } catch (Exception ignored) {
+                }
+
+                final File tmpDir = getDir("dex", 0);
+                final DexClassLoader classLoader = new DexClassLoader("/storage/emulated/0/PlaceData/simplelibrary.jar", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
+                Log.e("BUG", "RUN");
+                try {
+                    final Class<Object> classToLoad = (Class<Object>) classLoader.loadClass("com.example.simplelibrary.SimpleClass");
+                    final Object myInstance = classToLoad.newInstance();
+                    final Method simpleFunction = classToLoad.getMethod("simpleFunction");
+
+                    simpleFunction.invoke(myInstance);
+                } catch (Exception e) {
+                    Log.e("BUG", "BUG");
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     private void enableButtons(boolean isRecording) {

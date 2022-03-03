@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, send_file
 from flask_cors import CORS, cross_origin
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
@@ -336,7 +336,7 @@ def get_train_list():
         if trainId.startswith('XT'):
             train_info_path = fileUtils.get_train_info_path(trainId)
             response.append(fileUtils.load_json(train_info_path))
-    return {"result": response}
+    return {"trainList": response}
 
 '''
 Name: start_train
@@ -355,19 +355,32 @@ def start_train():
     trainName = request.form.get("trainName")
     taskListId = request.form.get("taskListId")
     taskIdList = request.form.get("taskIdList").strip().split(',')
-    timestamp = request.form.get("timestamp")
+    timestamp = int(request.form.get("timestamp"))
     train_path = fileUtils.get_train_path(trainId)
     fileUtils.mkdir(train_path)
     train_info_path = fileUtils.get_train_info_path(trainId)
+
     train_info = {
         'name': trainName,
         'id': trainId,
         'taskListId': taskListId,
         'taskIdList': taskIdList,
-        'timestamp': timestamp
+        'timestamp': timestamp,
+        'status': 'Preprocessing'
     }
     fileUtils.save_json(train_info, train_info_path)
     export_csv(taskListId, taskIdList, trainId, timestamp)
+
+    train_info = fileUtils.load_json(train_info_path)
+    train_info['status'] = 'Training'
+    fileUtils.save_json(train_info, train_info_path)
+
+    train_model(trainId, timestamp, False)
+
+    train_info = fileUtils.load_json(train_info_path)
+    train_info['status'] = 'Done'
+    fileUtils.save_json(train_info, train_info_path)
+
 
     '''
     train_model('9087654321', False)
@@ -378,6 +391,9 @@ def start_train():
     '''
     return {}
 
+@app.route("/download_jar", methods=['GET'])
+def download_jar():
+    return send_file(os.path.join(fileUtils.DATA_JAR_ROOT, 'classes.dex'))
 
 if __name__ == '__main__':
     app.run(port=60010, host="0.0.0.0")

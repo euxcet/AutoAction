@@ -7,6 +7,7 @@ from process.record import Record
 DATA_ROOT = '../data/'
 DATA_RECORD_ROOT = os.path.join(DATA_ROOT, "record")
 DATA_TRAIN_ROOT = os.path.join(DATA_ROOT, "train")
+DATA_JAR_ROOT = os.path.join(DATA_ROOT, 'jar')
 
 def get_taskList_path(taskListId):
     return os.path.join(DATA_RECORD_ROOT, taskListId)
