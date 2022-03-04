@@ -20,6 +20,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.example.datacollection.BuildConfig;
+import com.example.datacollection.NcnnInstance;
 import com.example.datacollection.R;
 import com.example.datacollection.utils.FileUtils;
 import com.example.datacollection.utils.bean.TaskListBean;
@@ -34,6 +35,7 @@ import com.lzy.okgo.model.Response;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 import dalvik.system.DexClassLoader;
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -98,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
         transferData = TransferData.getInstance();
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
 
         /*
         taskList = TaskList.parseFromFile(getResources().openRawResource(R.raw.tasklist));
@@ -267,24 +270,57 @@ public class MainActivity extends AppCompatActivity {
 
         enableButtons(false);
 
-        NetworkUtils.downloadJar(this, new FileCallback() {
+        /*
+        NetworkUtils.downloadFile(mContext, "best.bin", new FileCallback() {
             @Override
             public void onSuccess(Response<File> response) {
                 File file = response.body();
-                File saveFile = new File(BuildConfig.SAVE_PATH, "simplelibrary.jar");
-                try {
-                    FileUtils.copy(file, saveFile);
-                } catch (Exception ignored) {
-                }
+                File saveFile = new File(BuildConfig.SAVE_PATH, "best.bin");
+                FileUtils.copy(file, saveFile);
+
+                NetworkUtils.downloadFile(mContext, "best.param", new FileCallback() {
+                    @Override
+                    public void onSuccess(Response<File> response) {
+                        File file = response.body();
+                        File saveFile = new File(BuildConfig.SAVE_PATH, "best.param");
+                        FileUtils.copy(file, saveFile);
+                    }
+                });
+            }
+        });
+         */
+
+        NcnnInstance.init(this,
+                BuildConfig.SAVE_PATH + "best.param",
+                BuildConfig.SAVE_PATH + "best.bin",
+                4,
+                128,
+                6,
+                1,
+                2);
+        NcnnInstance ncnnInstance = NcnnInstance.getInstance();
+        ncnnInstance.print();
+        float[] data = new float[128 * 6];
+        Arrays.fill(data, 0.1f);
+        Log.e("result", ncnnInstance.actionDetect(data) + " ");
+
+        NetworkUtils.downloadFile(this, "classes.dex", new FileCallback() {
+            @Override
+            public void onSuccess(Response<File> response) {
+                File file = response.body();
+                File saveFile = new File(BuildConfig.SAVE_PATH, "classes.dex");
+                FileUtils.copy(file, saveFile);
 
                 final File tmpDir = getDir("dex", 0);
-                final DexClassLoader classLoader = new DexClassLoader("/storage/emulated/0/PlaceData/simplelibrary.jar", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
+                final DexClassLoader classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
                 Log.e("BUG", "RUN");
                 try {
-                    final Class<Object> classToLoad = (Class<Object>) classLoader.loadClass("com.example.simplelibrary.SimpleClass");
-                    final Object myInstance = classToLoad.newInstance();
-                    final Method simpleFunction = classToLoad.getMethod("simpleFunction");
-
+                    final Class classToLoad = classLoader.loadClass("com.example.contextactionlibrary.contextaction.ContextActionContainer");
+                    final Object myInstance = classToLoad.getDeclaredConstructor(Context.class).newInstance(mContext);
+                    //final Object myInstance = classToLoad.getClass().getDeclaredConstructor(String.class);
+                    // final Object myInstance = classToLoad.getClass().getDeclaredConstructor(Context.class).newInstance(mContext);
+                    // final Object myInstance = classToLoad.getClass().newInstance();
+                    final Method simpleFunction = classToLoad.getMethod("start");
                     simpleFunction.invoke(myInstance);
                 } catch (Exception e) {
                     Log.e("BUG", "BUG");

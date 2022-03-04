@@ -391,9 +391,18 @@ def start_train():
     '''
     return {}
 
-@app.route("/download_jar", methods=['GET'])
-def download_jar():
-    return send_file(os.path.join(fileUtils.DATA_JAR_ROOT, 'classes.dex'))
+@app.route("/download_file", methods=['GET'])
+def download_file():
+    filename = request.args.get("filename")
+    return send_file(os.path.join(fileUtils.DATA_FILE_ROOT, filename))
+    
+    #return send_file(os.path.join(fileUtils.DATA_JAR_ROOT, 'classes.dex'))
+
+'''
+@app.route("/download_so", methods=['GET'])
+def download_so():
+    return send_file(os.path.join(fileUtils.DATA_JAR_ROOT, 'libOcrLite.so'))
+'''
 
 if __name__ == '__main__':
     app.run(port=60010, host="0.0.0.0")

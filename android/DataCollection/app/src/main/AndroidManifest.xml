@@ -19,7 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".NewTrainingProgramActivity"
+            android:name=".ui.NewTrainingProgramActivity"
             android:exported="false" />
         <activity
             android:name=".ui.TrainActivity"
@@ -36,7 +36,8 @@
         <activity
             android:name=".ui.ConfigTaskActivity"
             android:exported="false" />
-        <activity android:name=".ui.MainActivity">
+        <activity android:name=".ui.MainActivity"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
