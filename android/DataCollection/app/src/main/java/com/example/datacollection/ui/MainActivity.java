@@ -290,6 +290,7 @@ public class MainActivity extends AppCompatActivity {
         });
          */
 
+        /*
         NcnnInstance.init(this,
                 BuildConfig.SAVE_PATH + "best.param",
                 BuildConfig.SAVE_PATH + "best.bin",
@@ -303,6 +304,7 @@ public class MainActivity extends AppCompatActivity {
         float[] data = new float[128 * 6];
         Arrays.fill(data, 0.1f);
         Log.e("result", ncnnInstance.actionDetect(data) + " ");
+        */
 
         NetworkUtils.downloadFile(this, "classes.dex", new FileCallback() {
             @Override

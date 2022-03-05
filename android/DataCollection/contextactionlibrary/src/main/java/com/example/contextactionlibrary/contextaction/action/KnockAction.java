@@ -5,7 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.util.Log;
 
-import com.example.datacollection.NcnnInstance;
+import com.example.contextactionlibrary.model.NcnnInstance;
 
 public class KnockAction extends ActionBase {
 
@@ -70,8 +70,6 @@ public class KnockAction extends ActionBase {
     public void getAction() {
         if (!isStarted)
             return;
-        Log.e("KnockAction", "getAction");
-        Log.e("KnockAction", NcnnInstance.getInstance() + " ");
         if (NcnnInstance.getInstance() != null) {
             int result = NcnnInstance.getInstance().actionDetect(data);
             Log.e("KnockAction", "Result " + result);

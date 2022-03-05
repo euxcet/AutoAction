@@ -5,11 +5,13 @@ import android.content.pm.ShortcutManager;
 import android.hardware.SensorManager;
 import android.util.Log;
 
+import com.example.contextactionlibrary.BuildConfig;
 import com.example.contextactionlibrary.contextaction.action.KnockAction;
 import com.example.contextactionlibrary.contextaction.action.TapTapAction;
 import com.example.contextactionlibrary.contextaction.context.ProximityContext;
 import com.example.contextactionlibrary.data.AlwaysOnSensorManager;
 import com.example.contextactionlibrary.data.ProxSensorManager;
+import com.example.contextactionlibrary.model.NcnnInstance;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +52,22 @@ public class ContextActionContainer {
                 new LinkedBlockingDeque<>(2),
                 new ThreadPoolExecutor.DiscardOldestPolicy());
         Log.e("ContextAction", "context constructor");
+
+        NcnnInstance.init(context,
+                BuildConfig.SAVE_PATH + "best.param",
+                BuildConfig.SAVE_PATH + "best.bin",
+                4,
+                128,
+                6,
+                1,
+                2);
+        Log.e("result", "init done");
+        NcnnInstance ncnnInstance = NcnnInstance.getInstance();
+        Log.e("result", ncnnInstance + " ");
+        ncnnInstance.print();
+        float[] data = new float[128 * 6];
+        Arrays.fill(data, 0.1f);
+        Log.e("result", ncnnInstance.actionDetect(data) + " ");
     }
 
     @Override
