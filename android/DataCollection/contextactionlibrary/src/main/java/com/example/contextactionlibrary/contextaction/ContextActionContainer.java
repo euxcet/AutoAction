@@ -27,7 +27,7 @@ public class ContextActionContainer {
     private AlwaysOnSensorManager alwaysOnSensorManager;
     private ProxSensorManager proxSensorManager;
 
-    // private TapTapAction taptapAction;
+    private TapTapAction taptapAction;
     private KnockAction knockAction;
     private ProximityContext proximityContext;
 
@@ -99,12 +99,10 @@ public class ContextActionContainer {
 
     private void initialize() {
         // init action
-        /*
         taptapAction = new TapTapAction(mContext,
                 (actionBase, action) -> updateContextAction(action),
                 50,
                 new String[]{"None", "TapTap"});
-         */
 
         knockAction = new KnockAction(mContext,
                 (actionBase, action) -> updateContextAction(action),
@@ -115,8 +113,8 @@ public class ContextActionContainer {
         alwaysOnSensorManager = new AlwaysOnSensorManager(mContext,
                 SensorManager.SENSOR_DELAY_FASTEST,
                 "AlwaysOnSensorManager",
-                Arrays.asList(knockAction)
-                // Arrays.asList(taptapAction, knockAction)
+                // Arrays.asList(knockAction)
+                Arrays.asList(taptapAction, knockAction)
         );
 
         proxSensorManager = new ProxSensorManager(mContext, SensorManager.SENSOR_DELAY_FASTEST, "ProxSensorManager");
@@ -137,12 +135,12 @@ public class ContextActionContainer {
     }
 
     private void startAction() {
-        // taptapAction.start();
+        taptapAction.start();
         knockAction.start();
     }
 
     private void stopAction() {
-        // taptapAction.stop();
+        taptapAction.stop();
         knockAction.stop();
     }
 
@@ -158,8 +156,8 @@ public class ContextActionContainer {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                // taptapAction.getAction();
-                executor.execute(() -> knockAction.getAction());
+                taptapAction.getAction();
+                // executor.execute(() -> knockAction.getAction());
             }
         }, 5000, 5);
     }
@@ -178,6 +176,7 @@ public class ContextActionContainer {
             return;
         switch (type) {
             case "TapTap":
+                Log.e("Action", "Taptap");
                 proxSensorManager.start();
                 proxSensorManager.stopLater(3000);
                 break;

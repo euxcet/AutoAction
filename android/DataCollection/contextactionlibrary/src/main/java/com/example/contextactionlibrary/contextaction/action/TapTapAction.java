@@ -5,8 +5,9 @@ import android.hardware.SensorEvent;
 import android.util.Log;
 
 import com.example.contextactionlibrary.data.Preprocess;
-import com.google.android.systemui.columbus.sensors.TfClassifier;
-import com.google.android.systemui.columbus.sensors.Util;
+import com.example.contextactionlibrary.utils.TfClassifier;
+import com.example.contextactionlibrary.utils.Util;
+
 
 import java.util.ArrayList;
 import java.util.List;

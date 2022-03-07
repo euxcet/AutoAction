@@ -62,5 +62,6 @@ dependencies {
     implementation "androidx.camera:camera-view:1.0.0-alpha32"
     // If you want to additionally use the CameraX Extensions library
 
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation('org.tensorflow:tensorflow-lite:0.0.0-nightly') { changing = true }
+    implementation('org.tensorflow:tensorflow-lite-support:0.0.0-nightly') { changing = true }
 }

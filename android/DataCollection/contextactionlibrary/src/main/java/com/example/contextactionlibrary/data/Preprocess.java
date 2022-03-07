@@ -1,16 +1,14 @@
 package com.example.contextactionlibrary.data;
 
-import android.util.Log;
-
-import com.google.android.systemui.columbus.sensors.Highpass1C;
-import com.google.android.systemui.columbus.sensors.Highpass3C;
-import com.google.android.systemui.columbus.sensors.Lowpass1C;
-import com.google.android.systemui.columbus.sensors.Lowpass3C;
-import com.google.android.systemui.columbus.sensors.PeakDetector;
-import com.google.android.systemui.columbus.sensors.Point3f;
-import com.google.android.systemui.columbus.sensors.Resample3C;
-import com.google.android.systemui.columbus.sensors.Sample3C;
-import com.google.android.systemui.columbus.sensors.Slope3C;
+import com.example.contextactionlibrary.utils.Highpass1C;
+import com.example.contextactionlibrary.utils.Highpass3C;
+import com.example.contextactionlibrary.utils.Lowpass1C;
+import com.example.contextactionlibrary.utils.Lowpass3C;
+import com.example.contextactionlibrary.utils.PeakDetector;
+import com.example.contextactionlibrary.utils.Point3f;
+import com.example.contextactionlibrary.utils.Resample3C;
+import com.example.contextactionlibrary.utils.Sample3C;
+import com.example.contextactionlibrary.utils.Slope3C;
 
 import java.util.ArrayList;
 import java.util.List;
