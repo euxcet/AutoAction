@@ -21,10 +21,13 @@ public class TapTapAction extends ActionBase {
 
     private Preprocess preprocess;
 
-    public TapTapAction(Context context, ActionListener actionListener, int seqLength, String[] actions) {
-        super(context, actionListener, seqLength, actions);
+    private int seqLength;
+
+    public TapTapAction(Context context, ActionConfig config, ActionListener actionListener) {
+        super(context, config, actionListener);
         tflite = new TfClassifier(mContext.getAssets(), "tap7cls_pixel4.tflite");
         preprocess = Preprocess.getInstance();
+        seqLength = (int)config.getValue("SeqLength");
     }
 
     @Override
@@ -70,7 +73,7 @@ public class TapTapAction extends ActionBase {
         }
     }
     
-    private int checkDoubleTapTiming(long timestamp) {
+    private boolean checkDoubleTapTiming(long timestamp) {
         // remove old timestamps
         int idx = 0;
         for (; idx < tapTimestamps.size(); idx++) {
@@ -80,31 +83,31 @@ public class TapTapAction extends ActionBase {
         tapTimestamps = tapTimestamps.subList(idx, tapTimestamps.size());
 
         // just check no tap && double tap now
-        if (tapTimestamps.isEmpty())
-            return 0;
-        else {
+        if (!tapTimestamps.isEmpty()) {
             if (tapTimestamps.get(tapTimestamps.size() - 1) - tapTimestamps.get(0) > 100000000L) {
                 tapTimestamps.clear();
-                return 1;
+                return true;
             }
-            return 0;
         }
+        return false;
     }
 
     @Override
     public void getAction() {
-        if (!isStarted)
-            return;
         int[] idxes = preprocess.shouldRunTapModel(seqLength);
-        if (idxes[0] == -1)
+        if (!isStarted || idxes[0] == -1) {
             return;
+        }
         ArrayList<Float> input = getInput(idxes[0], idxes[1]);
         int result = Util.getMaxId((ArrayList)tflite.predict(input, 7).get(0));
         long timestamp = preprocess.getTimestamps().get(seqLength);
         if (result == 1) {
             tapTimestamps.add(timestamp);
-            if (actionListener != null)
-                actionListener.onAction(this, actions[checkDoubleTapTiming(timestamp)]);
+            if (actionListener != null) {
+                if (checkDoubleTapTiming(timestamp)) {
+                    actionListener.onAction(this, "TapTap");
+                }
+            }
         }
     }
 }

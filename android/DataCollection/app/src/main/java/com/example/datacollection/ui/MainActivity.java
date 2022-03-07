@@ -3,8 +3,10 @@ package com.example.datacollection.ui;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Network;
 import android.os.Bundle;
 import android.os.VibrationEffect;
@@ -22,6 +24,7 @@ import android.widget.TextView;
 import com.example.datacollection.BuildConfig;
 import com.example.datacollection.NcnnInstance;
 import com.example.datacollection.R;
+import com.example.datacollection.contextaction.ContextActionLoader;
 import com.example.datacollection.utils.FileUtils;
 import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.TransferData;
@@ -77,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Recorder recorder;
 
+    private DexClassLoader classLoader;
+
     // permission
     private static final int RC_PERMISSIONS = 0;
     private String[] permissions = new String[]{
@@ -88,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
+    private ContextActionLoader loader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,14 +106,6 @@ public class MainActivity extends AppCompatActivity {
 
         transferData = TransferData.getInstance();
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-
-
-        /*
-        taskList = TaskList.parseFromFile(getResources().openRawResource(R.raw.tasklist));
-        TaskList.saveToLocalFile(taskList);
-        taskList = TaskList.parseFromLocalFile();
-         */
-        // taskList = NetworkUtils.getTaskList(this, );
 
         loadTaskListViaNetwork();
 
@@ -128,6 +126,8 @@ public class MainActivity extends AppCompatActivity {
                 enableButtons(false);
             }
         });
+
+        loadContextActionLibrary();
     }
 
     private void loadTaskListViaNetwork() {
@@ -149,10 +149,35 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void loadContextActionLibrary() {
+        NetworkUtils.downloadFile(this, "classes.dex", new FileCallback() {
+            @Override
+            public void onSuccess(Response<File> response) {
+                File file = response.body();
+                File saveFile = new File(BuildConfig.SAVE_PATH, "classes.dex");
+                FileUtils.copy(file, saveFile);
+
+                final File tmpDir = getDir("dex", 0);
+                classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
+                loader = new ContextActionLoader(mContext, classLoader);
+                loader.load();
+            }
+        });
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
         loadTaskListViaNetwork();
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("contextactionlibrary");
+        mContext.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.e("MainActivity", intent.getExtras().getString("Action"));
+            }
+        }, filter);
     }
 
     @Override
@@ -306,30 +331,6 @@ public class MainActivity extends AppCompatActivity {
         Log.e("result", ncnnInstance.actionDetect(data) + " ");
         */
 
-        NetworkUtils.downloadFile(this, "classes.dex", new FileCallback() {
-            @Override
-            public void onSuccess(Response<File> response) {
-                File file = response.body();
-                File saveFile = new File(BuildConfig.SAVE_PATH, "classes.dex");
-                FileUtils.copy(file, saveFile);
-
-                final File tmpDir = getDir("dex", 0);
-                final DexClassLoader classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
-                Log.e("BUG", "RUN");
-                try {
-                    final Class classToLoad = classLoader.loadClass("com.example.contextactionlibrary.contextaction.ContextActionContainer");
-                    final Object myInstance = classToLoad.getDeclaredConstructor(Context.class).newInstance(mContext);
-                    //final Object myInstance = classToLoad.getClass().getDeclaredConstructor(String.class);
-                    // final Object myInstance = classToLoad.getClass().getDeclaredConstructor(Context.class).newInstance(mContext);
-                    // final Object myInstance = classToLoad.getClass().newInstance();
-                    final Method simpleFunction = classToLoad.getMethod("start");
-                    simpleFunction.invoke(myInstance);
-                } catch (Exception e) {
-                    Log.e("BUG", "BUG");
-                    e.printStackTrace();
-                }
-            }
-        });
     }
 
     private void enableButtons(boolean isRecording) {

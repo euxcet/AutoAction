@@ -1,13 +1,17 @@
 package com.example.contextactionlibrary.contextaction;
 
+import android.app.Notification;
 import android.content.Context;
-import android.content.pm.ShortcutManager;
+import android.content.Intent;
 import android.hardware.SensorManager;
 import android.util.Log;
 
 import com.example.contextactionlibrary.BuildConfig;
+import com.example.contextactionlibrary.contextaction.action.ActionBase;
+import com.example.contextactionlibrary.contextaction.action.ActionListener;
 import com.example.contextactionlibrary.contextaction.action.KnockAction;
 import com.example.contextactionlibrary.contextaction.action.TapTapAction;
+import com.example.contextactionlibrary.contextaction.action.ActionConfig;
 import com.example.contextactionlibrary.contextaction.context.ProximityContext;
 import com.example.contextactionlibrary.data.AlwaysOnSensorManager;
 import com.example.contextactionlibrary.data.ProxSensorManager;
@@ -15,11 +19,10 @@ import com.example.contextactionlibrary.model.NcnnInstance;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -27,31 +30,29 @@ public class ContextActionContainer {
     private AlwaysOnSensorManager alwaysOnSensorManager;
     private ProxSensorManager proxSensorManager;
 
-    private TapTapAction taptapAction;
-    private KnockAction knockAction;
+//    private TapTapAction taptapAction;
+//    private KnockAction knockAction;
     private ProximityContext proximityContext;
 
-    private ShortcutManager THUPatShortcutManager;
     private Context mContext;
 
     private ThreadPoolExecutor executor;
 
-    public ContextActionContainer() {
+    private List<ActionBase> actions;
 
-    }
+    private boolean fromDex = false;
+    private List<String> dexActions;
 
-    public ContextActionContainer(String s) {
-        Log.e("ContextAction", "string constructor");
-    }
-
-    public ContextActionContainer(Context context) {
+    public ContextActionContainer(Context context, List<String> actions, boolean fromDex) {
         this.mContext = context;
+        this.dexActions = actions;
+        this.actions = new ArrayList<>();
+        this.fromDex = fromDex;
         this.executor = new ThreadPoolExecutor(1,
                 1,
                 1000, TimeUnit.MILLISECONDS,
                 new LinkedBlockingDeque<>(2),
                 new ThreadPoolExecutor.DiscardOldestPolicy());
-        Log.e("ContextAction", "context constructor");
 
         NcnnInstance.init(context,
                 BuildConfig.SAVE_PATH + "best.param",
@@ -61,13 +62,25 @@ public class ContextActionContainer {
                 6,
                 1,
                 2);
-        Log.e("result", "init done");
-        NcnnInstance ncnnInstance = NcnnInstance.getInstance();
-        Log.e("result", ncnnInstance + " ");
-        ncnnInstance.print();
-        float[] data = new float[128 * 6];
-        Arrays.fill(data, 0.1f);
-        Log.e("result", ncnnInstance.actionDetect(data) + " ");
+    }
+
+    public ContextActionContainer(Context context, List<ActionBase> actions) {
+        this.mContext = context;
+        this.actions = actions;
+        this.executor = new ThreadPoolExecutor(1,
+                1,
+                1000, TimeUnit.MILLISECONDS,
+                new LinkedBlockingDeque<>(2),
+                new ThreadPoolExecutor.DiscardOldestPolicy());
+
+        NcnnInstance.init(context,
+                BuildConfig.SAVE_PATH + "best.param",
+                BuildConfig.SAVE_PATH + "best.bin",
+                4,
+                128,
+                6,
+                1,
+                2);
     }
 
     @Override
@@ -77,7 +90,6 @@ public class ContextActionContainer {
     }
 
     public void start() {
-        Log.e("ContextAction", "start?");
         initialize();
 
         startSensor();
@@ -86,35 +98,41 @@ public class ContextActionContainer {
 
         monitorAction();
         monitorContext();
-        Log.e("ContextAction", "start");
     }
 
     public void stop() {
-        Log.e("ContextAction", "stop?");
         stopSensor();
         stopAction();
         stopContext();
-        Log.e("ContextAction", "stop");
+    }
+
+    private void initializeDexActions() {
+        for(String name: dexActions) {
+            if (name.equals("TapTap")) {
+                ActionConfig taptapConfig = new ActionConfig();
+                taptapConfig.putValue("SeqLength", 50);
+                TapTapAction taptapAction = new TapTapAction(mContext, taptapConfig, (actionBase, action) -> {
+                    Log.e("Action", "TapTap");
+                    Intent intent = new Intent();
+                    intent.setAction("contextactionlibrary");
+                    intent.putExtra("Action", "TapTap");
+                    mContext.sendBroadcast(intent);
+                });
+                actions.add(taptapAction);
+            }
+        }
     }
 
     private void initialize() {
-        // init action
-        taptapAction = new TapTapAction(mContext,
-                (actionBase, action) -> updateContextAction(action),
-                50,
-                new String[]{"None", "TapTap"});
-
-        knockAction = new KnockAction(mContext,
-                (actionBase, action) -> updateContextAction(action),
-                128,
-                new String[]{"None", "Knock"});
+        if (fromDex) {
+            initializeDexActions();
+        }
 
         // init sensor
         alwaysOnSensorManager = new AlwaysOnSensorManager(mContext,
                 SensorManager.SENSOR_DELAY_FASTEST,
                 "AlwaysOnSensorManager",
-                // Arrays.asList(knockAction)
-                Arrays.asList(taptapAction, knockAction)
+                actions
         );
 
         proxSensorManager = new ProxSensorManager(mContext, SensorManager.SENSOR_DELAY_FASTEST, "ProxSensorManager");
@@ -135,13 +153,23 @@ public class ContextActionContainer {
     }
 
     private void startAction() {
+        for(ActionBase action: actions) {
+            action.start();
+        }
+        /*
         taptapAction.start();
         knockAction.start();
+         */
     }
 
     private void stopAction() {
+        for(ActionBase action: actions) {
+            action.stop();
+        }
+        /*
         taptapAction.stop();
         knockAction.stop();
+        */
     }
 
     private void startContext() {
@@ -156,8 +184,15 @@ public class ContextActionContainer {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                taptapAction.getAction();
-                // executor.execute(() -> knockAction.getAction());
+                executor.execute(() -> {
+                    for(ActionBase action: actions) {
+                        action.getAction();
+                    }
+                    /*
+                    taptapAction.getAction();
+                    knockAction.getAction();
+                     */
+                });
             }
         }, 5000, 5);
     }
@@ -176,7 +211,6 @@ public class ContextActionContainer {
             return;
         switch (type) {
             case "TapTap":
-                Log.e("Action", "Taptap");
                 proxSensorManager.start();
                 proxSensorManager.stopLater(3000);
                 break;

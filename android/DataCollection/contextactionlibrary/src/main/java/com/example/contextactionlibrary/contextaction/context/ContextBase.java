@@ -24,6 +24,5 @@ public abstract class ContextBase {
 
     public abstract void start();
     public abstract void stop();
-
     public abstract void getContext();
 }

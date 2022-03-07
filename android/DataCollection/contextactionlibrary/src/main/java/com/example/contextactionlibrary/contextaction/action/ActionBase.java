@@ -7,20 +7,14 @@ public abstract class ActionBase {
 
     protected Context mContext;
 
+    protected ActionConfig config;
     protected ActionListener actionListener;
-
-    protected int seqLength;
-    protected int classNum;
-    protected String[] actions;
 
     protected boolean isStarted = false;
 
-    public ActionBase(Context context, ActionListener actionListener, int seqLength, String[] actions) {
+    public ActionBase(Context context, ActionConfig config, ActionListener actionListener) {
         this.mContext = context;
         this.actionListener = actionListener;
-        this.seqLength = seqLength;
-        this.classNum = actions.length;
-        this.actions = actions;
     }
 
     public abstract void start();

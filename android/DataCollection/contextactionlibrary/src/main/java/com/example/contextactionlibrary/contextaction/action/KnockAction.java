@@ -17,8 +17,8 @@ public class KnockAction extends ActionBase {
     private long lastTimestampGyro = 0;
     private long lastTimestampLinear = 0;
 
-    public KnockAction(Context context, ActionListener actionListener, int seqLength, String[] actions) {
-        super(context, actionListener, seqLength, actions);
+    public KnockAction(Context context, ActionConfig config, ActionListener actionListener) {
+        super(context, config, actionListener);
     }
 
     @Override
@@ -72,9 +72,8 @@ public class KnockAction extends ActionBase {
             return;
         if (NcnnInstance.getInstance() != null) {
             int result = NcnnInstance.getInstance().actionDetect(data);
-            Log.e("KnockAction", "Result " + result);
             if (result == 0) {
-                Log.e("knock", result + " ");
+                actionListener.onAction(this, "Knock");
             }
         }
     }
