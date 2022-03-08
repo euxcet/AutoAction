@@ -36,6 +36,7 @@ public class Preprocess {
     private List<Float> ysGyro = new ArrayList<>();
     private List<Float> zsGyro = new ArrayList<>();
     private List<Long> timestamps = new ArrayList<>();
+    private long lastTimestamp = -1;
 
     private Highpass1C highpassKey = new Highpass1C();
     private Lowpass1C lowpassKey = new Lowpass1C();
@@ -95,6 +96,7 @@ public class Preprocess {
         ysAcc.add(point3.y);
         zsAcc.add(point3.z);
         timestamps.add(sample.t);
+        lastTimestamp = sample.t;
         int size = (int)(WINDOW_NS / resampleAcc.getInterval());
 
         while(xsAcc.size() > size) {
@@ -182,7 +184,6 @@ public class Preprocess {
     }
 
     public long checkLastNear(long threshold, long lastRecognized) {
-        long lastTimestamp = timestamps.get(timestamps.size() - 1);
         if (lastTimestamp - lastNearTime < threshold && lastTimestamp - lastRecognized > 5 * 1e9)
             return lastTimestamp;
         return -1;
@@ -199,5 +200,6 @@ public class Preprocess {
         ysGyro.clear();
         zsGyro.clear();
         timestamps.clear();
+        lastTimestamp = -1;
     }
 }
