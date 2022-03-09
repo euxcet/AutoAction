@@ -8,13 +8,23 @@
 
     <Button
         android:id="@+id/newProgramButton"
-        android:layout_width="200dp"
-        android:layout_height="60dp"
-        android:layout_marginEnd="190dp"
-        android:layout_marginBottom="84dp"
+        android:layout_width="116dp"
+        android:layout_height="53dp"
+        android:layout_marginStart="21dp"
+        android:layout_marginBottom="80dp"
         android:text="New Program"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/backButton"
+        android:layout_width="116dp"
+        android:layout_height="53dp"
+        android:layout_marginStart="180dp"
+        android:layout_marginBottom="80dp"
+        android:text="Back"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/trainTitleView"

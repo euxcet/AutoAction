@@ -10,7 +10,7 @@ public class TrainListBean {
         private String name;
         private String status;
         private String taskListId;
-        private String taskIdList;
+        private List<String> taskIdList;
         private long timestamp;
 
         public String getId() {
@@ -25,7 +25,7 @@ public class TrainListBean {
             return status;
         }
 
-        public String getTaskIdList() {
+        public List<String> getTaskIdList() {
             return taskIdList;
         }
 
@@ -49,7 +49,7 @@ public class TrainListBean {
             this.status = status;
         }
 
-        public void setTaskIdList(String taskIdList) {
+        public void setTaskIdList(List<String> taskIdList) {
             this.taskIdList = taskIdList;
         }
 

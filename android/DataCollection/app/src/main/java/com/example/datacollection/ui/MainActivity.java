@@ -20,6 +20,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.datacollection.BuildConfig;
 import com.example.datacollection.NcnnInstance;
@@ -31,6 +32,10 @@ import com.example.datacollection.TransferData;
 import com.example.datacollection.data.Recorder;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.bean.StringListBean;
+import com.example.ncnnlibrary.communicate.ActionConfig;
+import com.example.ncnnlibrary.communicate.ActionListener;
+import com.example.ncnnlibrary.communicate.ActionResult;
+import com.example.ncnnlibrary.communicate.BuiltInActionEnum;
 import com.google.gson.Gson;
 import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.callback.StringCallback;
@@ -47,7 +52,8 @@ import pub.devrel.easypermissions.PermissionRequest;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static Context mContext;
+    private Context mContext;
+    private AppCompatActivity mActivity;
     private static TransferData transferData;
     private Vibrator vibrator;
 
@@ -103,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
         requestPermissions();
 
         mContext = this;
+        mActivity = this;
 
         transferData = TransferData.getInstance();
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -114,14 +121,12 @@ public class MainActivity extends AppCompatActivity {
         recorder = new Recorder(this, new Recorder.RecorderListener() {
             @Override
             public void onTick(int tickCount, int times) {
-                Log.e("TEST", "onTick " + tickCount);
                 counter.setText(tickCount + " / " + times);
                 vibrator.vibrate(VibrationEffect.createOneShot(200, 128));
             }
 
             @Override
             public void onFinish() {
-                Log.e("TEST", "onFinish ");
                 vibrator.vibrate(VibrationEffect.createOneShot(600, 128));
                 enableButtons(false);
             }
@@ -160,7 +165,15 @@ public class MainActivity extends AppCompatActivity {
                 final File tmpDir = getDir("dex", 0);
                 classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
                 loader = new ContextActionLoader(mContext, classLoader);
-                loader.load();
+
+                ActionConfig tapTapConfig = new ActionConfig();
+                tapTapConfig.setAction(BuiltInActionEnum.TapTap);
+                tapTapConfig.putValue("SeqLength", 50);
+                ActionListener listener = action ->
+                        mActivity.runOnUiThread(
+                                () -> Toast.makeText(mContext, action.getAction(), Toast.LENGTH_SHORT).show()
+                        );
+                loader.startDetection(Arrays.asList(tapTapConfig), listener);
             }
         });
     }
@@ -169,15 +182,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadTaskListViaNetwork();
-
+        /*
         IntentFilter filter = new IntentFilter();
         filter.addAction("contextactionlibrary");
         mContext.registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.e("MainActivity", intent.getExtras().getString("Action"));
+                String action = intent.getExtras().getString("Action");
+                if (action.equals("TapTap")) {
+                    Toast.makeText(mContext, "TapTap", Toast.LENGTH_SHORT).show();
+                }
             }
         }, filter);
+         */
     }
 
     @Override

@@ -12,7 +12,7 @@ def export_csv(tasklistId, taskIds, trainId, timestamp):
         'random': [RandomCutter(), RandomCutter()],
         'peakrandom': [RandomCutter(), PeakCutter(0)]
     }
-    tasklist = fileUtils.load_tasklist_info(tasklistId)
+    tasklist = fileUtils.load_taskList_info(tasklistId)
     records = []
     for task in tasklist['task']:
         taskId = task['id']
@@ -23,16 +23,17 @@ def export_csv(tasklistId, taskIds, trainId, timestamp):
                 for recordId in recordlist:
                     group_name = task['name']
                     group_id = taskIds.index(taskId)
-                    cutter_type = 'peak' # TODO
+                    cutter_type = 'random' # TODO
 
                     record_path = fileUtils.get_record_path(tasklistId, taskId, subtaskId, recordId)
-                    
-                    for record_filename in os.listdir(record_path):
-                        if record_filename.startswith('Sensor') and record_filename.endswith('json'):
-                            r_fn = os.path.join(record_path, record_filename)
-                            t_fn = os.path.join(record_path, 'Timestamp' + record_filename[6:])
-                            for c in cutter_dict[cutter_type]:
-                                records.append(Record(r_fn, t_fn, group_id, group_name, cutter=c))
+
+                    if os.path.exists(record_path):
+                        for record_filename in os.listdir(record_path):
+                            if record_filename.startswith('Sensor') and record_filename.endswith('json'):
+                                r_fn = os.path.join(record_path, record_filename)
+                                t_fn = os.path.join(record_path, 'Timestamp' + record_filename[6:])
+                                for c in cutter_dict[cutter_type]:
+                                    records.append(Record(r_fn, t_fn, group_id, group_name, cutter=c))
 
 
     dataset.insert_records(records)

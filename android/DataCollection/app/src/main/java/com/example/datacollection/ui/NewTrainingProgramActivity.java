@@ -4,12 +4,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
 import com.example.datacollection.R;
-import com.example.datacollection.ui.adapter.TaskAdapter;
 import com.example.datacollection.ui.adapter.TrainTaskAdapter;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.RandomUtils;
@@ -19,10 +19,9 @@ import com.google.gson.Gson;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
-import java.util.Random;
-
 public class NewTrainingProgramActivity extends AppCompatActivity {
     private Context mContext;
+    private AppCompatActivity mActivity;
     private ListView trainTaskListView;
     private TaskListBean taskList;
     private TrainTaskAdapter trainTaskAdapter;
@@ -34,10 +33,10 @@ public class NewTrainingProgramActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_training_program);
         mContext = this;
+        mActivity = this;
         trainTaskListView = findViewById(R.id.trainTaskListView);
         nameEditText = findViewById(R.id.newTrainingNameEdit);
         loadTaskListViaNetwork();
-
 
         trainId = RandomUtils.generateRandomTrainId();
 
@@ -61,7 +60,7 @@ public class NewTrainingProgramActivity extends AppCompatActivity {
                         new StringCallback() {
                             @Override
                             public void onSuccess(Response<String> response) {
-
+                                mActivity.finish();
                             }
                         });
             }

@@ -142,16 +142,17 @@ public class Recorder {
         }
         timestampController.stop();
         new Handler().postDelayed(() -> {
-            sensorController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, System.currentTimeMillis());
+            long timestamp = System.currentTimeMillis();
+            sensorController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
             /*
             if (subtask != null && subtask.isAudio()) {
                 microphoneController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, System.currentTimeMillis());
             }
              */
             if (subtask != null && subtask.isVideo()) {
-                cameraController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, System.currentTimeMillis());
+                cameraController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
             }
-            timestampController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, System.currentTimeMillis());
+            timestampController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
         }, 3000);
     }
 

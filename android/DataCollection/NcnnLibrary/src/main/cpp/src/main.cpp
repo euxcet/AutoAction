@@ -42,21 +42,15 @@ JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *reserved) {
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_benjaminwan_ocrlibrary_NcnnFunction_initByAsset(JNIEnv *env, jobject thiz, jobject assetManager,
+Java_com_example_ncnnlibrary_NcnnFunction_initByAsset(JNIEnv *env, jobject thiz, jobject assetManager,
                                                   jint numThread) {
     loadActionNetByAsset(env, assetManager, 4);
     return JNI_TRUE;
 }
 
 extern "C"
-JNIEXPORT void JNICALL
-Java_com_benjaminwan_ocrlibrary_NcnnFunction_print(JNIEnv *env, jobject thiz) {
-    LOGE("TEST");
-}
-
-extern "C"
 JNIEXPORT jint JNICALL
-Java_com_benjaminwan_ocrlibrary_NcnnFunction_actionDetect(JNIEnv *env, jobject thiz,
+Java_com_example_ncnnlibrary_NcnnFunction_actionDetect(JNIEnv *env, jobject thiz,
                                                           jfloatArray data) {
     if (g_actionnet != nullptr) {
         float *n_data = (float *) env->GetFloatArrayElements(data, 0);
@@ -69,7 +63,7 @@ Java_com_benjaminwan_ocrlibrary_NcnnFunction_actionDetect(JNIEnv *env, jobject t
 }
 extern "C"
 JNIEXPORT jboolean JNICALL
-Java_com_benjaminwan_ocrlibrary_NcnnFunction_init(JNIEnv *env, jobject thiz, jstring param_path,
+Java_com_example_ncnnlibrary_NcnnFunction_init(JNIEnv *env, jobject thiz, jstring param_path,
                                                   jstring bin_path, jint num_thread, int width, int height, int channel, int classNum) {
     loadActionNet(env, env -> GetStringUTFChars(param_path, 0),  env -> GetStringUTFChars(bin_path, 0), 4);
     input_width = width;

@@ -1,8 +1,9 @@
-package com.example.datacollection;
+package com.example.contextactionlibrary.model;
 
 import android.content.Context;
 
 import com.example.ncnnlibrary.NcnnFunction;
+
 
 public class NcnnInstance {
     private volatile static NcnnInstance mInstance;

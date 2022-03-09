@@ -1,3 +1,4 @@
+from time import time
 from flask import Flask, request, send_file
 from flask_cors import CORS, cross_origin
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -10,6 +11,8 @@ from process.cutter.random_cutter import RandomCutter
 
 from process.export import export_csv
 from process.train.train import train_model
+
+from multiprocessing import Process
 
 
 app = Flask(__name__)
@@ -338,6 +341,30 @@ def get_train_list():
             response.append(fileUtils.load_json(train_info_path))
     return {"trainList": response}
 
+
+class TrainProcess(Process):
+    def __init__(self, train_info_path, taskListId, taskIdList, trainId, timestamp):
+        super(TrainProcess, self).__init__()
+        self.train_info_path = train_info_path
+        self.taskListId = taskListId
+        self.taskIdList = taskIdList
+        self.trainId = trainId
+        self.timestamp = timestamp
+
+    def run(self):
+        export_csv(self.taskListId, self.taskIdList, self.trainId, self.timestamp)
+
+        train_info = fileUtils.load_json(self.train_info_path)
+        train_info['status'] = 'Training'
+        fileUtils.save_json(train_info, self.train_info_path)
+
+        train_model(self.trainId, self.timestamp, False)
+
+        train_info = fileUtils.load_json(self.train_info_path)
+        train_info['status'] = 'Done'
+        fileUtils.save_json(train_info, self.train_info_path)
+
+
 '''
 Name: start_train
 Method: Post
@@ -369,6 +396,10 @@ def start_train():
         'status': 'Preprocessing'
     }
     fileUtils.save_json(train_info, train_info_path)
+
+    TrainProcess(train_info_path, taskListId, taskIdList, trainId, timestamp).start()
+
+    '''
     export_csv(taskListId, taskIdList, trainId, timestamp)
 
     train_info = fileUtils.load_json(train_info_path)
@@ -380,6 +411,7 @@ def start_train():
     train_info = fileUtils.load_json(train_info_path)
     train_info['status'] = 'Done'
     fileUtils.save_json(train_info, train_info_path)
+    '''
 
 
     '''

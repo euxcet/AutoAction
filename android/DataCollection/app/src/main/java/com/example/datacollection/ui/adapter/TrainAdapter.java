@@ -5,11 +5,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.example.datacollection.R;
-import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.utils.bean.TrainListBean;
 
 
@@ -26,7 +24,7 @@ public class TrainAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return 0;
+        return trainList.getTrainList().size();
     }
 
     @Override

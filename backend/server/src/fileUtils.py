@@ -57,7 +57,7 @@ def save_json(obj, path):
 
 def load_json(path):
     with open(path, 'r') as fin:
-        return json.load(path)
+        return json.load(fin)
 
 def load_taskList_info(taskListId, timestamp = None):
     taskList_info_path = get_taskList_info_path(taskListId, timestamp)

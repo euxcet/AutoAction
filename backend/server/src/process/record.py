@@ -31,6 +31,7 @@ class Record:
             self.do_sampling()
             self.cut()
 
+            print(filename, np.array(self.ex_acc).shape)
             self.ex_acc = np.array(self.ex_acc)[:, :, :3]
             self.ex_gyro = np.array(self.ex_gyro)[:, :, :3]
             self.ex_linear = np.array(self.ex_linear)[:, :, :3]

@@ -1,8 +1,12 @@
 package com.example.datacollection.contextaction;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
+import android.widget.Toast;
+
+import com.example.ncnnlibrary.communicate.ActionConfig;
+import com.example.ncnnlibrary.communicate.ActionListener;
+import com.example.ncnnlibrary.communicate.ActionResult;
+import com.example.ncnnlibrary.communicate.BuiltInActionEnum;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -15,8 +19,6 @@ public class ContextActionLoader {
     private Context mContext;
     private ClassLoader classLoader;
 
-    private Class actionConfigClass;
-    private Class actionListenerClass;
     private Class containerClass;
 
     public ContextActionLoader(Context context, DexClassLoader classLoader) {
@@ -29,9 +31,9 @@ public class ContextActionLoader {
         }
     }
 
-    private Object newContainer(List<String> actions) {
+    private Object newContainer(List<ActionConfig> config, ActionListener listener) {
         try {
-            return containerClass.getDeclaredConstructor(Context.class, List.class, boolean.class).newInstance(mContext, actions, true);
+            return containerClass.getDeclaredConstructor(Context.class, List.class, ActionListener.class, boolean.class).newInstance(mContext, config, listener, true);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -44,12 +46,13 @@ public class ContextActionLoader {
             start.invoke(container);
         } catch (Exception e) {
             e.printStackTrace();
+
         }
     }
 
-    public void load() {
+    public void startDetection(List<ActionConfig> config, ActionListener actionListener) {
         try {
-            Object container = newContainer(Arrays.asList("TapTap"));
+            Object container = newContainer(config, actionListener);
             startContainer(container);
         } catch (Exception e) {
             e.printStackTrace();

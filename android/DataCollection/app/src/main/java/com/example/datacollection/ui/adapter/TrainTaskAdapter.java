@@ -36,7 +36,7 @@ public class TrainTaskAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return 0;
+        return taskList.getTask().size();
     }
 
     @Override

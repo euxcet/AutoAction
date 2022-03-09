@@ -33,11 +33,14 @@ public class TrainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_train);
 
         mContext = this;
-        Button button = findViewById(R.id.newProgramButton);
-        button.setOnClickListener(view -> {
+        Button newProgramButton = findViewById(R.id.newProgramButton);
+        newProgramButton.setOnClickListener(view -> {
             Intent intent = new Intent(TrainActivity.this, NewTrainingProgramActivity.class);
             startActivity(intent);
         });
+
+        Button backButton = findViewById(R.id.backButton);
+        backButton.setOnClickListener(view -> this.finish());
 
         trainListView = findViewById(R.id.trainListView);
 
