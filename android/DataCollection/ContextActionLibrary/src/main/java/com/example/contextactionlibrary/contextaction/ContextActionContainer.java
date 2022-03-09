@@ -1,7 +1,10 @@
 package com.example.contextactionlibrary.contextaction;
 
 import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
+import android.util.Log;
 
 import com.example.contextactionlibrary.BuildConfig;
 import com.example.contextactionlibrary.contextaction.action.ActionBase;
@@ -90,7 +93,7 @@ public class ContextActionContainer {
     public void start() {
         initialize();
 
-        startSensor();
+        // startSensor();
         startAction();
         startContext();
 
@@ -99,7 +102,7 @@ public class ContextActionContainer {
     }
 
     public void stop() {
-        stopSensor();
+        // stopSensor();
         stopAction();
         stopContext();
     }
@@ -112,24 +115,6 @@ public class ContextActionContainer {
                 actions.add(tapTapAction);
             }
         }
-            /*
-        for(ActionConfig config: dexActionConfig) {
-            if (config.getActionEnum() == BuiltInActionEnum.TapTap) {
-            }
-            if (name.equals("TapTap")) {
-                ActionConfig taptapConfig = new ActionConfig();
-                taptapConfig.putValue("SeqLength", 50);
-                TapTapAction taptapAction = new TapTapAction(mContext, taptapConfig, (action) -> {
-                    Log.e("Action", "TapTap");
-                    Intent intent = new Intent();
-                    intent.setAction("contextactionlibrary");
-                    intent.putExtra("Action", "TapTap");
-                    mContext.sendBroadcast(intent);
-                });
-                actions.add(taptapAction);
-            }
-        }
-             */
     }
 
     private void initialize() {
@@ -144,13 +129,19 @@ public class ContextActionContainer {
                 actions
         );
 
-        proxSensorManager = new ProxSensorManager(mContext, SensorManager.SENSOR_DELAY_FASTEST, "ProxSensorManager");
+        proxSensorManager = new ProxSensorManager(mContext,
+                SensorManager.SENSOR_DELAY_FASTEST,
+                "ProxSensorManager"
+        );
 
         // init context
+        /*
         proximityContext = new ProximityContext(mContext,
                 (contextBase, context) -> updateContextAction(context),
                 0,
                 new String[]{"None", "Proximity"});
+
+         */
     }
 
     private void startSensor() {
@@ -182,11 +173,11 @@ public class ContextActionContainer {
     }
 
     private void startContext() {
-        proximityContext.start();
+        // proximityContext.start();
     }
 
     private void stopContext() {
-        proximityContext.stop();
+        // proximityContext.stop();
     }
 
     private void monitorAction() {
@@ -210,9 +201,26 @@ public class ContextActionContainer {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                proximityContext.getContext();
+                // proximityContext.getContext();
             }
         }, 5000, 1000);
+    }
+
+    public void onSensorChangedDex(SensorEvent event) {
+        int type = event.sensor.getType();
+        switch (type) {
+            case Sensor.TYPE_GYROSCOPE:
+            case Sensor.TYPE_ACCELEROMETER:
+                if (alwaysOnSensorManager != null) {
+                    alwaysOnSensorManager.onSensorChangedDex(event);
+                }
+            case Sensor.TYPE_PROXIMITY:
+                if (proxSensorManager != null) {
+                    proxSensorManager.onSensorChangedDex(event);
+                }
+            default:
+                break;
+        }
     }
 
     private void updateContextAction(String type) {

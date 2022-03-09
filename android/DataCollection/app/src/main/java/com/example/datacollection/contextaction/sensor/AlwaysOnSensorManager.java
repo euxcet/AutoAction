@@ -1,4 +1,4 @@
-package com.example.contextactionlibrary.data;
+package com.example.datacollection.contextaction.sensor;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -7,15 +7,13 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
-import com.example.contextactionlibrary.contextaction.action.ActionBase;
-
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 
 public class AlwaysOnSensorManager extends MySensorManager implements SensorEventListener {
 
     private Context mContext;
-
-    private Preprocess preprocess;
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
@@ -23,14 +21,13 @@ public class AlwaysOnSensorManager extends MySensorManager implements SensorEven
     private Sensor mLinear;
     private Sensor mMagnetic;
     private int samplingPeriod;
-    private List<ActionBase> actions;
 
-    public AlwaysOnSensorManager(Context context, int samplingPeriod, String name, List<ActionBase> actions) {
+    public AlwaysOnSensorManager(Context context, int samplingPeriod, String name, Object container, Method onSensorChanged) {
         this.mContext = context;
         this.samplingPeriod = samplingPeriod;
         this.setName(name);
-        this.actions = actions;
-        preprocess = Preprocess.getInstance();
+        this.setContainer(container);
+        this.setOnSensorChanged(onSensorChanged);
         initialize();
     }
 
@@ -104,12 +101,13 @@ public class AlwaysOnSensorManager extends MySensorManager implements SensorEven
     }
 
     @Override
-    public void onSensorChangedDex(SensorEvent event) {
-        onSensorChanged(event);
-    }
-
-    @Override
     public void onSensorChanged(SensorEvent event) {
+        try {
+            onSensorChanged.invoke(container, event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        /*
         for (ActionBase action: actions) {
             action.onAlwaysOnSensorChanged(event);
         }
@@ -122,6 +120,7 @@ public class AlwaysOnSensorManager extends MySensorManager implements SensorEven
             default:
                 break;
         }
+         */
     }
 
     @Override

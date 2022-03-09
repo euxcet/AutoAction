@@ -1,4 +1,4 @@
-package com.example.contextactionlibrary.data;
+package com.example.datacollection.contextaction.sensor;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -7,21 +7,22 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
+import java.lang.reflect.Method;
+
 public class ProxSensorManager extends MySensorManager implements SensorEventListener {
 
     private Context mContext;
-
-    private Preprocess preprocess;
 
     private SensorManager mSensorManager;
     private Sensor mProx;
     private int samplingPeriod;
 
-    public ProxSensorManager(Context context, int samplingPeriod, String name) {
+    public ProxSensorManager(Context context, int samplingPeriod, String name, Object container, Method onSensorChanged) {
         this.mContext = context;
         this.samplingPeriod = samplingPeriod;
         this.setName(name);
-        preprocess = Preprocess.getInstance();
+        this.setContainer(container);
+        this.setOnSensorChanged(onSensorChanged);
         initialize();
     }
 
@@ -86,15 +87,17 @@ public class ProxSensorManager extends MySensorManager implements SensorEventLis
     }
 
     @Override
-    public void onSensorChangedDex(SensorEvent event) {
-        onSensorChanged(event);
-    }
-
-    @Override
     public void onSensorChanged(SensorEvent event) {
+        try {
+            onSensorChanged.invoke(container, event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        /*
         int type = event.sensor.getType();
         if (type == Sensor.TYPE_PROXIMITY)
             preprocess.preprocessProx(event.values[0], event.timestamp);
+         */
     }
 
     @Override

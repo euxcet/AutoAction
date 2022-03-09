@@ -132,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        loadContextActionLibrary();
     }
 
     private void loadTaskListViaNetwork() {
@@ -152,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        loadContextActionLibrary();
     }
 
     private void loadContextActionLibrary() {
@@ -358,6 +358,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (loader != null) {
+            loader.stopDetection();
+        }
         if (vibrator != null) {
             vibrator.cancel();
         }
