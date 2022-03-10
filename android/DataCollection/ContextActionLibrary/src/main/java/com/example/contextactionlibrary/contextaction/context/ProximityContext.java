@@ -1,9 +1,13 @@
 package com.example.contextactionlibrary.contextaction.context;
 
 import android.content.Context;
+import android.hardware.SensorEvent;
 import android.util.Log;
 
 import com.example.contextactionlibrary.data.Preprocess;
+import com.example.ncnnlibrary.communicate.config.ContextConfig;
+import com.example.ncnnlibrary.communicate.listener.ContextListener;
+import com.example.ncnnlibrary.communicate.result.ContextResult;
 
 public class ProximityContext extends ContextBase {
     private String TAG = "ProximityContext";
@@ -12,8 +16,8 @@ public class ProximityContext extends ContextBase {
 
     private long lastRecognized = 0L;
 
-    public ProximityContext(Context context, ContextListener contextListener, int seqLength, String[] contexts) {
-        super(context, contextListener, seqLength, contexts);
+    public ProximityContext(Context context, ContextConfig config, ContextListener contextListener) {
+        super(context, config, contextListener);
         preprocess = Preprocess.getInstance();
     }
 
@@ -36,14 +40,26 @@ public class ProximityContext extends ContextBase {
     }
 
     @Override
+    public void onIMUSensorChanged(SensorEvent event) {
+
+    }
+
+    @Override
+    public void onProximitySensorChanged(SensorEvent event) {
+        // TODO: Split the logic of Preprocess here
+    }
+
+    @Override
     public void getContext() {
-        if (!isStarted)
+        if (!isStarted) {
             return;
+        }
         long tmp = preprocess.checkLastNear((long)(1.5 * 1e9), lastRecognized);
         if (tmp != -1) {
             lastRecognized = tmp;
-            if (contextListener != null)
-                contextListener.onContext(this, contexts[1]);
+            if (contextListener != null) {
+                contextListener.onContext(new ContextResult("Proximity"));
+            }
         }
     }
 }

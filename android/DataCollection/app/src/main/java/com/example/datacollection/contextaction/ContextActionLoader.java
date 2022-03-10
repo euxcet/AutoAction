@@ -3,18 +3,15 @@ package com.example.datacollection.contextaction;
 import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
-import android.widget.Toast;
 
-import com.example.datacollection.contextaction.sensor.AlwaysOnSensorManager;
-import com.example.datacollection.contextaction.sensor.ProxSensorManager;
-import com.example.ncnnlibrary.communicate.ActionConfig;
-import com.example.ncnnlibrary.communicate.ActionListener;
-import com.example.ncnnlibrary.communicate.ActionResult;
-import com.example.ncnnlibrary.communicate.BuiltInActionEnum;
+import com.example.datacollection.contextaction.sensor.IMUSensorManager;
+import com.example.datacollection.contextaction.sensor.ProximitySensorManager;
+import com.example.ncnnlibrary.communicate.config.ActionConfig;
+import com.example.ncnnlibrary.communicate.config.ContextConfig;
+import com.example.ncnnlibrary.communicate.listener.ActionListener;
+import com.example.ncnnlibrary.communicate.listener.ContextListener;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import dalvik.system.DexClassLoader;
@@ -27,8 +24,8 @@ public class ContextActionLoader {
 
     private Object container;
 
-    private AlwaysOnSensorManager alwaysOnSensorManager;
-    private ProxSensorManager proxSensorManager;
+    private IMUSensorManager imuSensorManager;
+    private ProximitySensorManager proximitySensorManager;
 
 
     public ContextActionLoader(Context context, DexClassLoader classLoader) {
@@ -41,9 +38,9 @@ public class ContextActionLoader {
         }
     }
 
-    private Object newContainer(List<ActionConfig> config, ActionListener listener) {
+    private Object newContainer(List<ActionConfig> actionConfig, ActionListener actionListener, List<ContextConfig> contextConfig, ContextListener contextListener) {
         try {
-            return containerClass.getDeclaredConstructor(Context.class, List.class, ActionListener.class, boolean.class).newInstance(mContext, config, listener, true);
+            return containerClass.getDeclaredConstructor(Context.class, List.class, ActionListener.class, List.class, ContextListener.class, boolean.class).newInstance(mContext, actionConfig, actionListener, contextConfig, contextListener, true);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -80,40 +77,40 @@ public class ContextActionLoader {
     }
 
     private void startSensorManager(Object container, Method onSensorChanged) {
-        alwaysOnSensorManager = new AlwaysOnSensorManager(mContext,
+        imuSensorManager = new IMUSensorManager(mContext,
                 SensorManager.SENSOR_DELAY_FASTEST,
                 "AlwaysOnSensorManager",
                 container,
                 onSensorChanged
                 );
 
-        proxSensorManager = new ProxSensorManager(mContext,
+        proximitySensorManager = new ProximitySensorManager(mContext,
                 SensorManager.SENSOR_DELAY_FASTEST,
-                "ProxSensorManager",
+                "ProximitySensorManager",
                 container,
                 onSensorChanged
         );
     }
 
-    public void startDetection(List<ActionConfig> config, ActionListener actionListener) {
+    public void startDetection(List<ActionConfig> actionConfig, ActionListener actionListener, List<ContextConfig> contextConfig, ContextListener contextListener) {
         try {
-            container = newContainer(config, actionListener);
+            container = newContainer(actionConfig, actionListener, contextConfig, contextListener);
             Method onSensorChanged = getOnSensorChanged(container);
             startSensorManager(container, onSensorChanged);
             startContainer(container);
-            alwaysOnSensorManager.start();
-            proxSensorManager.start();
+            imuSensorManager.start();
+            proximitySensorManager.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public void stopDetection() {
-        if (alwaysOnSensorManager != null) {
-            alwaysOnSensorManager.stop();
+        if (imuSensorManager != null) {
+            imuSensorManager.stop();
         }
-        if (proxSensorManager != null) {
-            proxSensorManager.stop();
+        if (proximitySensorManager != null) {
+            proximitySensorManager.stop();
         }
         if (container != null) {
             stopContainer(container);

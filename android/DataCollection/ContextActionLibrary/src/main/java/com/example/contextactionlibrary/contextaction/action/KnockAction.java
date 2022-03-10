@@ -3,12 +3,11 @@ package com.example.contextactionlibrary.contextaction.action;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
-import android.util.Log;
 
 import com.example.contextactionlibrary.model.NcnnInstance;
-import com.example.ncnnlibrary.communicate.ActionConfig;
-import com.example.ncnnlibrary.communicate.ActionListener;
-import com.example.ncnnlibrary.communicate.ActionResult;
+import com.example.ncnnlibrary.communicate.config.ActionConfig;
+import com.example.ncnnlibrary.communicate.listener.ActionListener;
+import com.example.ncnnlibrary.communicate.result.ActionResult;
 
 public class KnockAction extends ActionBase {
 
@@ -35,7 +34,7 @@ public class KnockAction extends ActionBase {
     }
 
     @Override
-    public void onAlwaysOnSensorChanged(SensorEvent event) {
+    public void onIMUSensorChanged(SensorEvent event) {
         int type = event.sensor.getType();
         switch (type) {
             case Sensor.TYPE_GYROSCOPE:
@@ -67,6 +66,11 @@ public class KnockAction extends ActionBase {
             default:
                 break;
         }
+    }
+
+    @Override
+    public void onProximitySensorChanged(SensorEvent event) {
+
     }
 
     @Override

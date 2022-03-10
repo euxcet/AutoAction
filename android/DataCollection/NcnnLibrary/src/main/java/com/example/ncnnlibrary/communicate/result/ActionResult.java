@@ -1,4 +1,4 @@
-package com.example.ncnnlibrary.communicate;
+package com.example.ncnnlibrary.communicate.result;
 
 public class ActionResult {
     private String action;

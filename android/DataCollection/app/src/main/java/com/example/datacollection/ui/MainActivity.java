@@ -3,15 +3,11 @@ package com.example.datacollection.ui;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.Network;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -23,7 +19,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.datacollection.BuildConfig;
-import com.example.datacollection.NcnnInstance;
 import com.example.datacollection.R;
 import com.example.datacollection.contextaction.ContextActionLoader;
 import com.example.datacollection.utils.FileUtils;
@@ -32,17 +27,18 @@ import com.example.datacollection.TransferData;
 import com.example.datacollection.data.Recorder;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.bean.StringListBean;
-import com.example.ncnnlibrary.communicate.ActionConfig;
-import com.example.ncnnlibrary.communicate.ActionListener;
-import com.example.ncnnlibrary.communicate.ActionResult;
+import com.example.ncnnlibrary.communicate.BuiltInContextEnum;
+import com.example.ncnnlibrary.communicate.config.ActionConfig;
+import com.example.ncnnlibrary.communicate.config.ContextConfig;
+import com.example.ncnnlibrary.communicate.listener.ActionListener;
 import com.example.ncnnlibrary.communicate.BuiltInActionEnum;
+import com.example.ncnnlibrary.communicate.listener.ContextListener;
 import com.google.gson.Gson;
 import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import dalvik.system.DexClassLoader;
@@ -169,11 +165,20 @@ public class MainActivity extends AppCompatActivity {
                 ActionConfig tapTapConfig = new ActionConfig();
                 tapTapConfig.setAction(BuiltInActionEnum.TapTap);
                 tapTapConfig.putValue("SeqLength", 50);
-                ActionListener listener = action ->
+
+                ActionListener actionListener = action ->
                         mActivity.runOnUiThread(
                                 () -> Toast.makeText(mContext, action.getAction(), Toast.LENGTH_SHORT).show()
                         );
-                loader.startDetection(Arrays.asList(tapTapConfig), listener);
+
+                ContextConfig proximityConfig = new ContextConfig();
+                proximityConfig.setContext(BuiltInContextEnum.Proximity);
+
+                ContextListener contextListener = context ->
+                        mActivity.runOnUiThread(
+                                () -> Toast.makeText(mContext, context.getContext(), Toast.LENGTH_SHORT).show()
+                        );
+                loader.startDetection(Arrays.asList(tapTapConfig), actionListener, Arrays.asList(proximityConfig), contextListener);
             }
         });
     }

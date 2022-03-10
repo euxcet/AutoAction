@@ -1,28 +1,33 @@
 package com.example.contextactionlibrary.contextaction.context;
 
 import android.content.Context;
+import android.hardware.SensorEvent;
+
+import com.example.ncnnlibrary.communicate.config.ContextConfig;
+import com.example.ncnnlibrary.communicate.listener.ContextListener;
 
 public abstract class ContextBase {
 
     protected Context mContext;
 
+    protected ContextConfig config;
     protected ContextListener contextListener;
-
-    protected int seqLength;
-    protected int classNum;
-    protected String[] contexts;
 
     protected boolean isStarted = false;
 
-    public ContextBase(Context context, ContextListener contextListener, int seqLength, String[] contexts) {
+    public ContextBase(Context context, ContextConfig config, ContextListener contextListener) {
         this.mContext = context;
         this.contextListener = contextListener;
-        this.seqLength = seqLength;
-        this.classNum = contexts.length;
-        this.contexts = contexts;
     }
 
     public abstract void start();
     public abstract void stop();
+    public abstract void onIMUSensorChanged(SensorEvent event);
+    public abstract void onProximitySensorChanged(SensorEvent event);
+
     public abstract void getContext();
+
+    public ContextConfig getConfig() {
+        return config;
+    }
 }

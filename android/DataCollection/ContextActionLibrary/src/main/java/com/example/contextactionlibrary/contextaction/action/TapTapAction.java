@@ -7,9 +7,9 @@ import android.util.Log;
 import com.example.contextactionlibrary.data.Preprocess;
 import com.example.contextactionlibrary.utils.TfClassifier;
 import com.example.contextactionlibrary.utils.Util;
-import com.example.ncnnlibrary.communicate.ActionConfig;
-import com.example.ncnnlibrary.communicate.ActionListener;
-import com.example.ncnnlibrary.communicate.ActionResult;
+import com.example.ncnnlibrary.communicate.config.ActionConfig;
+import com.example.ncnnlibrary.communicate.listener.ActionListener;
+import com.example.ncnnlibrary.communicate.result.ActionResult;
 
 
 import java.util.ArrayList;
@@ -52,7 +52,12 @@ public class TapTapAction extends ActionBase {
     }
 
     @Override
-    public void onAlwaysOnSensorChanged(SensorEvent event) {
+    public void onIMUSensorChanged(SensorEvent event) {
+        // TODO: Split the logic of Preprocess here
+    }
+
+    @Override
+    public void onProximitySensorChanged(SensorEvent event) {
 
     }
 

@@ -177,10 +177,12 @@ public class Preprocess {
     }
 
     public void preprocessProx(float prox, long timestamp) {
-        if ((int)prox < proxThreshold)
+        if ((int)prox < proxThreshold) {
             lastNearTime = timestamp;
-        else
+        }
+        else {
             lastFarTime = timestamp;
+        }
     }
 
     public long checkLastNear(long threshold, long lastRecognized) {

@@ -1,20 +1,16 @@
-package com.example.ncnnlibrary.communicate;
+package com.example.ncnnlibrary.communicate.config;
+
+import com.example.ncnnlibrary.communicate.SensorType;
 
 import java.util.HashMap;
+import java.util.List;
 
-public class ActionConfig {
-    private BuiltInActionEnum action;
+public class Config {
     private final HashMap<String, Integer> integerConfig = new HashMap<>();
     private final HashMap<String, Long> longConfig = new HashMap<>();
     private final HashMap<String, Float> floatConfig = new HashMap<>();
 
-    public BuiltInActionEnum getAction() {
-        return action;
-    }
-
-    public void setAction(BuiltInActionEnum action) {
-        this.action = action;
-    }
+    private List<SensorType> sensorType;
 
     public void putValue(String key, Integer value) {
         integerConfig.put(key, value);
@@ -39,5 +35,13 @@ public class ActionConfig {
             return floatConfig.get(key);
         }
         return null;
+    }
+
+    public List<SensorType> getSensorType() {
+        return sensorType;
+    }
+
+    public void setSensorType(List<SensorType> sensorType) {
+        this.sensorType = sensorType;
     }
 }

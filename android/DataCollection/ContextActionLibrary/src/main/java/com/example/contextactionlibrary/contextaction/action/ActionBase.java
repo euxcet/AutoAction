@@ -3,8 +3,8 @@ package com.example.contextactionlibrary.contextaction.action;
 import android.content.Context;
 import android.hardware.SensorEvent;
 
-import com.example.ncnnlibrary.communicate.ActionConfig;
-import com.example.ncnnlibrary.communicate.ActionListener;
+import com.example.ncnnlibrary.communicate.config.ActionConfig;
+import com.example.ncnnlibrary.communicate.listener.ActionListener;
 
 public abstract class ActionBase {
 
@@ -22,7 +22,12 @@ public abstract class ActionBase {
 
     public abstract void start();
     public abstract void stop();
-    public abstract void onAlwaysOnSensorChanged(SensorEvent event);
+    public abstract void onIMUSensorChanged(SensorEvent event);
+    public abstract void onProximitySensorChanged(SensorEvent event);
 
     public abstract void getAction();
+
+    public ActionConfig getConfig() {
+        return config;
+    }
 }

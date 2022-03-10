@@ -8,28 +8,21 @@ import android.hardware.SensorManager;
 import android.util.Log;
 
 import com.example.contextactionlibrary.contextaction.action.ActionBase;
+import com.example.contextactionlibrary.contextaction.context.ContextBase;
 
 import java.util.List;
 
-public class AlwaysOnSensorManager extends MySensorManager implements SensorEventListener {
-
-    private Context mContext;
+public class ProximitySensorManager extends MySensorManager implements SensorEventListener {
 
     private Preprocess preprocess;
 
     private SensorManager mSensorManager;
-    private Sensor mAccelerometer;
-    private Sensor mGyroscope;
-    private Sensor mLinear;
-    private Sensor mMagnetic;
+    private Sensor mProximity;
     private int samplingPeriod;
-    private List<ActionBase> actions;
 
-    public AlwaysOnSensorManager(Context context, int samplingPeriod, String name, List<ActionBase> actions) {
-        this.mContext = context;
+    public ProximitySensorManager(Context context, String name, List<ActionBase> actions, List<ContextBase> contexts, int samplingPeriod) {
+        super(context, name, actions, contexts);
         this.samplingPeriod = samplingPeriod;
-        this.setName(name);
-        this.actions = actions;
         preprocess = Preprocess.getInstance();
         initialize();
     }
@@ -37,14 +30,11 @@ public class AlwaysOnSensorManager extends MySensorManager implements SensorEven
     public boolean initialize() {
         if (mSensorManager == null) {
             mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
-            mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            mGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-            mLinear = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-            mMagnetic = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+            mProximity = mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         }
 
         if (!isSensorSupport()) {
-            Log.e(TAG, "At least one sensor is not supported in this phone.");
+            Log.e(TAG, "Proximity sensor is not supported in this phone.");
             // ToastUtils.showInWindow(mContext, "没有检测到相关传感器");
             return false;
         }
@@ -58,24 +48,18 @@ public class AlwaysOnSensorManager extends MySensorManager implements SensorEven
 
     public void registerSensorListener() {
         if (isSensorOpened) {
-            mSensorManager.registerListener(this, mAccelerometer, samplingPeriod);
-            mSensorManager.registerListener(this, mGyroscope, samplingPeriod);
-            mSensorManager.registerListener(this, mLinear, samplingPeriod);
-            mSensorManager.registerListener(this, mMagnetic, samplingPeriod);
+            mSensorManager.registerListener(this, mProximity, samplingPeriod);
         }
     }
 
     public void unRegisterSensorListener() {
         if (isSensorOpened) {
-            mSensorManager.unregisterListener(this, mAccelerometer);
-            mSensorManager.unregisterListener(this, mGyroscope);
-            mSensorManager.unregisterListener(this, mLinear);
-            mSensorManager.unregisterListener(this, mMagnetic);
+            mSensorManager.unregisterListener(this, mProximity);
         }
     }
 
     public boolean isSensorSupport() {
-        return mAccelerometer != null && mGyroscope != null && mLinear != null;
+        return mProximity != null;
     }
 
     @Override
@@ -111,16 +95,14 @@ public class AlwaysOnSensorManager extends MySensorManager implements SensorEven
     @Override
     public void onSensorChanged(SensorEvent event) {
         for (ActionBase action: actions) {
-            action.onAlwaysOnSensorChanged(event);
+            action.onProximitySensorChanged(event);
+        }
+        for (ContextBase context: contexts) {
+            context.onIMUSensorChanged(event);
         }
         int type = event.sensor.getType();
-        switch (type) {
-            case Sensor.TYPE_GYROSCOPE:
-            case Sensor.TYPE_ACCELEROMETER:
-                preprocess.preprocessIMU(type, event.values[0], event.values[1], event.values[2], event.timestamp);
-                break;
-            default:
-                break;
+        if (type == Sensor.TYPE_PROXIMITY) {
+            preprocess.preprocessProx(event.values[0], event.timestamp);
         }
     }
 

@@ -1,4 +1,4 @@
-package com.example.datacollection.contextaction.sensor;
+package com.example.contextactionlibrary.data;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -7,13 +7,14 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import com.example.contextactionlibrary.contextaction.action.ActionBase;
+import com.example.contextactionlibrary.contextaction.context.ContextBase;
+
 import java.util.List;
 
-public class AlwaysOnSensorManager extends MySensorManager implements SensorEventListener {
+public class IMUSensorManager extends MySensorManager implements SensorEventListener {
 
-    private Context mContext;
+    private Preprocess preprocess;
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
@@ -22,12 +23,10 @@ public class AlwaysOnSensorManager extends MySensorManager implements SensorEven
     private Sensor mMagnetic;
     private int samplingPeriod;
 
-    public AlwaysOnSensorManager(Context context, int samplingPeriod, String name, Object container, Method onSensorChanged) {
-        this.mContext = context;
+    public IMUSensorManager(Context context, String name, List<ActionBase> actions, List<ContextBase> contexts, int samplingPeriod) {
+        super(context, name, actions, contexts);
         this.samplingPeriod = samplingPeriod;
-        this.setName(name);
-        this.setContainer(container);
-        this.setOnSensorChanged(onSensorChanged);
+        preprocess = Preprocess.getInstance();
         initialize();
     }
 
@@ -101,15 +100,17 @@ public class AlwaysOnSensorManager extends MySensorManager implements SensorEven
     }
 
     @Override
+    public void onSensorChangedDex(SensorEvent event) {
+        onSensorChanged(event);
+    }
+
+    @Override
     public void onSensorChanged(SensorEvent event) {
-        try {
-            onSensorChanged.invoke(container, event);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        /*
         for (ActionBase action: actions) {
-            action.onAlwaysOnSensorChanged(event);
+            action.onIMUSensorChanged(event);
+        }
+        for (ContextBase context: contexts) {
+            context.onIMUSensorChanged(event);
         }
         int type = event.sensor.getType();
         switch (type) {
@@ -120,7 +121,6 @@ public class AlwaysOnSensorManager extends MySensorManager implements SensorEven
             default:
                 break;
         }
-         */
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.example.contextactionlibrary.data;
+package com.example.datacollection.contextaction.sensor;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -7,21 +7,22 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
-public class ProxSensorManager extends MySensorManager implements SensorEventListener {
+import java.lang.reflect.Method;
+
+public class ProximitySensorManager extends MySensorManager implements SensorEventListener {
 
     private Context mContext;
-
-    private Preprocess preprocess;
 
     private SensorManager mSensorManager;
     private Sensor mProx;
     private int samplingPeriod;
 
-    public ProxSensorManager(Context context, int samplingPeriod, String name) {
+    public ProximitySensorManager(Context context, int samplingPeriod, String name, Object container, Method onSensorChanged) {
         this.mContext = context;
         this.samplingPeriod = samplingPeriod;
-        this.setName(name);
-        preprocess = Preprocess.getInstance();
+        this.name = name;
+        this.container = container;
+        this.onSensorChanged = onSensorChanged;
         initialize();
     }
 
@@ -33,7 +34,6 @@ public class ProxSensorManager extends MySensorManager implements SensorEventLis
 
         if (!isSensorSupport()) {
             Log.e(TAG, "Proximity sensor is not supported in this phone.");
-            // ToastUtils.showInWindow(mContext, "没有检测到相关传感器");
             return false;
         }
 
@@ -86,15 +86,12 @@ public class ProxSensorManager extends MySensorManager implements SensorEventLis
     }
 
     @Override
-    public void onSensorChangedDex(SensorEvent event) {
-        onSensorChanged(event);
-    }
-
-    @Override
     public void onSensorChanged(SensorEvent event) {
-        int type = event.sensor.getType();
-        if (type == Sensor.TYPE_PROXIMITY)
-            preprocess.preprocessProx(event.values[0], event.timestamp);
+        try {
+            onSensorChanged.invoke(container, event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
