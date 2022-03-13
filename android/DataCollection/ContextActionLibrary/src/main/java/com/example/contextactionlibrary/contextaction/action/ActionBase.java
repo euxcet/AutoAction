@@ -6,16 +6,18 @@ import android.hardware.SensorEvent;
 import com.example.ncnnlibrary.communicate.config.ActionConfig;
 import com.example.ncnnlibrary.communicate.listener.ActionListener;
 
+import java.util.List;
+
 public abstract class ActionBase {
 
     protected Context mContext;
 
     protected ActionConfig config;
-    protected ActionListener actionListener;
+    protected List<ActionListener> actionListener;
 
     protected boolean isStarted = false;
 
-    public ActionBase(Context context, ActionConfig config, ActionListener actionListener) {
+    public ActionBase(Context context, ActionConfig config, List<ActionListener> actionListener) {
         this.mContext = context;
         this.config = config;
         this.actionListener = actionListener;

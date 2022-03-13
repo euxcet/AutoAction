@@ -9,6 +9,8 @@ import com.example.ncnnlibrary.communicate.config.ActionConfig;
 import com.example.ncnnlibrary.communicate.listener.ActionListener;
 import com.example.ncnnlibrary.communicate.result.ActionResult;
 
+import java.util.List;
+
 public class KnockAction extends ActionBase {
 
     private final int DATA_LENGTH = 128 * 6;
@@ -19,7 +21,7 @@ public class KnockAction extends ActionBase {
     private long lastTimestampGyro = 0;
     private long lastTimestampLinear = 0;
 
-    public KnockAction(Context context, ActionConfig config, ActionListener actionListener) {
+    public KnockAction(Context context, ActionConfig config, List<ActionListener> actionListener) {
         super(context, config, actionListener);
     }
 
@@ -80,7 +82,9 @@ public class KnockAction extends ActionBase {
         if (NcnnInstance.getInstance() != null) {
             int result = NcnnInstance.getInstance().actionDetect(data);
             if (result == 0) {
-                actionListener.onAction(new ActionResult("Knock"));
+                for (ActionListener listener: actionListener) {
+                    listener.onAction(new ActionResult("Knock"));
+                }
             }
         }
     }

@@ -6,7 +6,10 @@ import android.util.Log;
 import com.example.contextactionlibrary.collect.collector.Collector;
 import com.example.contextactionlibrary.collect.collector.CompleteIMUCollector;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -84,8 +87,11 @@ public class ClickTrigger extends Trigger {
         public void run() {
             synchronized (ClickTrigger.class) {
                 Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
-                for (Collector collector : collectors) {
-                    collector.setSavePath();
+                String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+                for (Collector collector: collectors) {
+                    collector.setSavePath(timestamp);
+                }
+                for (Collector collector: collectors) {
                     collector.collect();
                 }
                 Log.d(TAG, "数据收集结束: [" + System.currentTimeMillis() + "]");

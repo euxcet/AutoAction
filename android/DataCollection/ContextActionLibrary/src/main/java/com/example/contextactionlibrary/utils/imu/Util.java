@@ -1,4 +1,4 @@
-package com.example.contextactionlibrary.utils;
+package com.example.contextactionlibrary.utils.imu;
 
 import java.util.ArrayList;
 

@@ -86,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
 
     private Recorder recorder;
 
-    private DexClassLoader classLoader;
 
     // permission
     private static final int RC_PERMISSIONS = 0;
@@ -99,7 +98,6 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
-    private ContextActionLoader loader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,8 +111,6 @@ public class MainActivity extends AppCompatActivity {
 
         transferData = TransferData.getInstance();
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-
-        loadTaskListViaNetwork();
 
         vibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
 
@@ -132,6 +128,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Intent intent = new Intent(MainActivity.this, MainService.class);
+        startService(intent);
     }
 
     private void loadTaskListViaNetwork() {
@@ -149,63 +147,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                 }
-            }
-        });
-        loadContextActionLibrary();
-    }
-
-    private RequestResult handleRequest(RequestConfig config) {
-        RequestResult result = new RequestResult();
-        String packageName = config.getString("getAppTapBlockValue");
-        if (packageName != null) {
-            result.putValue("getAppTapBlockValueResult", 0);
-        }
-
-        Boolean request = config.getBoolean("getCanTapTap");
-        if (request != null) {
-            result.putValue("getCanTapTapResult", true);
-        }
-
-        request = config.getBoolean("getCanTopTap");
-        if (request != null) {
-            result.putValue("getCanTopTapResult", true);
-        }
-        return result;
-    }
-
-    private void loadContextActionLibrary() {
-        NetworkUtils.downloadFile(this, "classes.dex", new FileCallback() {
-            @Override
-            public void onSuccess(Response<File> response) {
-                File file = response.body();
-                File saveFile = new File(BuildConfig.SAVE_PATH, "classes.dex");
-                FileUtils.copy(file, saveFile);
-
-                final File tmpDir = getDir("dex", 0);
-                classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
-                loader = new ContextActionLoader(mContext, classLoader);
-
-                ActionConfig tapTapConfig = new ActionConfig();
-                tapTapConfig.setAction(BuiltInActionEnum.TapTap);
-                tapTapConfig.putValue("SeqLength", 50);
-                tapTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
-
-                ActionListener actionListener = action ->
-                        mActivity.runOnUiThread(
-                                () -> Toast.makeText(mContext, action.getAction(), Toast.LENGTH_SHORT).show()
-                        );
-
-                ContextConfig proximityConfig = new ContextConfig();
-                proximityConfig.setContext(BuiltInContextEnum.Proximity);
-                proximityConfig.setSensorType(Arrays.asList(SensorType.PROXIMITY));
-
-                ContextListener contextListener = context ->
-                        mActivity.runOnUiThread(
-                                () -> Toast.makeText(mContext, context.getContext(), Toast.LENGTH_SHORT).show()
-                        );
-
-                RequestListener requestListener = config -> handleRequest(config);
-                loader.startDetection(Arrays.asList(tapTapConfig), actionListener, Arrays.asList(proximityConfig), contextListener);
             }
         });
     }
@@ -363,23 +304,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
          */
-
-        /*
-        NcnnInstance.init(this,
-                BuildConfig.SAVE_PATH + "best.param",
-                BuildConfig.SAVE_PATH + "best.bin",
-                4,
-                128,
-                6,
-                1,
-                2);
-        NcnnInstance ncnnInstance = NcnnInstance.getInstance();
-        ncnnInstance.print();
-        float[] data = new float[128 * 6];
-        Arrays.fill(data, 0.1f);
-        Log.e("result", ncnnInstance.actionDetect(data) + " ");
-        */
-
     }
 
     private void enableButtons(boolean isRecording) {
@@ -390,9 +314,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (loader != null) {
-            loader.stopDetection();
-        }
         if (vibrator != null) {
             vibrator.cancel();
         }

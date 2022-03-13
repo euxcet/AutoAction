@@ -3,4 +3,5 @@
     <string name="rationale_ask_ok">允许</string>
     <string name="rationale_ask_cancel">取消</string>
     <string name="rationale">This app needs access to your microphone for data collection.</string>
+    <string name="accessibility_service_description">Description</string>
 </resources>

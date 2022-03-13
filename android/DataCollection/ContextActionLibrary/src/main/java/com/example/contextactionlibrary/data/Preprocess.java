@@ -1,14 +1,14 @@
 package com.example.contextactionlibrary.data;
 
-import com.example.contextactionlibrary.utils.Highpass1C;
-import com.example.contextactionlibrary.utils.Highpass3C;
-import com.example.contextactionlibrary.utils.Lowpass1C;
-import com.example.contextactionlibrary.utils.Lowpass3C;
-import com.example.contextactionlibrary.utils.PeakDetector;
-import com.example.contextactionlibrary.utils.Point3f;
-import com.example.contextactionlibrary.utils.Resample3C;
-import com.example.contextactionlibrary.utils.Sample3C;
-import com.example.contextactionlibrary.utils.Slope3C;
+import com.example.contextactionlibrary.utils.imu.Highpass1C;
+import com.example.contextactionlibrary.utils.imu.Highpass3C;
+import com.example.contextactionlibrary.utils.imu.Lowpass1C;
+import com.example.contextactionlibrary.utils.imu.Lowpass3C;
+import com.example.contextactionlibrary.utils.imu.PeakDetector;
+import com.example.contextactionlibrary.utils.imu.Point3f;
+import com.example.contextactionlibrary.utils.imu.Resample3C;
+import com.example.contextactionlibrary.utils.imu.Sample3C;
+import com.example.contextactionlibrary.utils.imu.Slope3C;
 
 import java.util.ArrayList;
 import java.util.List;

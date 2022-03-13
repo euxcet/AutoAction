@@ -1,4 +1,4 @@
-package com.example.contextactionlibrary.utils;
+package com.example.contextactionlibrary.utils.imu;
 
 public class Highpass1C {
     private float para = 1.0F;

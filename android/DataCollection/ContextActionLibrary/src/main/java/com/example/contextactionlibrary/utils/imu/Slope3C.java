@@ -1,4 +1,4 @@
-package com.example.contextactionlibrary.utils;
+package com.example.contextactionlibrary.utils.imu;
 
 public class Slope3C {
     private Slope1C _slopeX = new Slope1C();

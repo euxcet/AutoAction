@@ -5,8 +5,8 @@ import android.hardware.SensorEvent;
 import android.util.Log;
 
 import com.example.contextactionlibrary.data.Preprocess;
-import com.example.contextactionlibrary.utils.TfClassifier;
-import com.example.contextactionlibrary.utils.Util;
+import com.example.contextactionlibrary.utils.imu.TfClassifier;
+import com.example.contextactionlibrary.utils.imu.Util;
 import com.example.ncnnlibrary.communicate.config.ActionConfig;
 import com.example.ncnnlibrary.communicate.listener.ActionListener;
 import com.example.ncnnlibrary.communicate.result.ActionResult;
@@ -26,7 +26,7 @@ public class TapTapAction extends ActionBase {
 
     private int seqLength;
 
-    public TapTapAction(Context context, ActionConfig config, ActionListener actionListener) {
+    public TapTapAction(Context context, ActionConfig config, List<ActionListener> actionListener) {
         super(context, config, actionListener);
         tflite = new TfClassifier(mContext.getAssets(), "tap7cls_pixel4.tflite");
         preprocess = Preprocess.getInstance();
@@ -113,7 +113,9 @@ public class TapTapAction extends ActionBase {
             tapTimestamps.add(timestamp);
             if (actionListener != null) {
                 if (checkDoubleTapTiming(timestamp)) {
-                    actionListener.onAction(new ActionResult("TapTap"));
+                    for (ActionListener listener: actionListener) {
+                        listener.onAction(new ActionResult("TapTap"));
+                    }
                 }
             }
         }

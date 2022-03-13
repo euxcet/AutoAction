@@ -6,16 +6,18 @@ import android.hardware.SensorEvent;
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
 
+import java.util.List;
+
 public abstract class ContextBase {
 
     protected Context mContext;
 
     protected ContextConfig config;
-    protected ContextListener contextListener;
+    protected List<ContextListener> contextListener;
 
     protected boolean isStarted = false;
 
-    public ContextBase(Context context, ContextConfig config, ContextListener contextListener) {
+    public ContextBase(Context context, ContextConfig config, List<ContextListener> contextListener) {
         this.mContext = context;
         this.config = config;
         this.contextListener = contextListener;

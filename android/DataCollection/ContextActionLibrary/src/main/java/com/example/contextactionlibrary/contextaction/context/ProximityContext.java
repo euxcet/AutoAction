@@ -9,6 +9,8 @@ import com.example.ncnnlibrary.communicate.config.ContextConfig;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
 import com.example.ncnnlibrary.communicate.result.ContextResult;
 
+import java.util.List;
+
 public class ProximityContext extends ContextBase {
     private String TAG = "ProximityContext";
 
@@ -16,7 +18,7 @@ public class ProximityContext extends ContextBase {
 
     private long lastRecognized = 0L;
 
-    public ProximityContext(Context context, ContextConfig config, ContextListener contextListener) {
+    public ProximityContext(Context context, ContextConfig config, List<ContextListener> contextListener) {
         super(context, config, contextListener);
         preprocess = Preprocess.getInstance();
     }
@@ -58,7 +60,9 @@ public class ProximityContext extends ContextBase {
         if (tmp != -1) {
             lastRecognized = tmp;
             if (contextListener != null) {
-                contextListener.onContext(new ContextResult("Proximity"));
+                for (ContextListener listener: contextListener) {
+                    listener.onContext(new ContextResult("Proximity"));
+                }
             }
         }
     }

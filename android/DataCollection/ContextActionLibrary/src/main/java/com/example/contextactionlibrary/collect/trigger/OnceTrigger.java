@@ -9,8 +9,11 @@ import androidx.annotation.RequiresApi;
 import com.example.contextactionlibrary.collect.collector.Collector;
 import com.example.contextactionlibrary.collect.data.Data;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 public class OnceTrigger extends Trigger {
@@ -27,9 +30,10 @@ public class OnceTrigger extends Trigger {
     @Override
     public List<Pair<String, CompletableFuture<Data>>> triggerAsync() {
         List<Pair<String, CompletableFuture<Data>>> futures = new LinkedList<>();
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
         collectors.forEach(collector -> {
             // TODO: correct?
-            collector.setSavePath();
+            collector.setSavePath(timestamp);
             Pair<String, CompletableFuture<Data>> pair = new Pair<>(collector.getClass().getName(), collector.collect());
             futures.add(pair);
         });

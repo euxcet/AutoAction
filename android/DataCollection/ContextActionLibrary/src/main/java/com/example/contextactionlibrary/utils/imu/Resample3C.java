@@ -1,4 +1,4 @@
-package com.example.contextactionlibrary.utils;
+package com.example.contextactionlibrary.utils.imu;
 
 public class Resample3C extends Resample1C {
     private float yRawLast;

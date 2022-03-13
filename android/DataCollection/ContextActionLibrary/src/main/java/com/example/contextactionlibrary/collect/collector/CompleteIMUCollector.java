@@ -3,9 +3,12 @@ package com.example.contextactionlibrary.collect.collector;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Process;
+
+import androidx.annotation.RequiresApi;
 
 import com.example.contextactionlibrary.collect.data.Data;
 import com.example.contextactionlibrary.collect.data.IMUData;
@@ -93,10 +96,11 @@ public class CompleteIMUCollector extends SensorCollector {
     }
 
     @Override
-    public void setSavePath() {
-        saver.setSavePath(new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + "_1027v.bin");
+    public void setSavePath(String timestamp) {
+        saver.setSavePath(timestamp + "_imu.bin");
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public synchronized CompletableFuture<Data> collect() {
         Gson gson = new Gson();

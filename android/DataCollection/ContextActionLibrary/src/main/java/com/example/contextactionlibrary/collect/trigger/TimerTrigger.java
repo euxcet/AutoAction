@@ -4,7 +4,10 @@ import android.content.Context;
 
 import com.example.contextactionlibrary.collect.collector.Collector;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -23,8 +26,9 @@ public class TimerTrigger extends Trigger {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
+                String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
                 for (Collector collector: collectors) {
-                    collector.setSavePath();
+                    collector.setSavePath(timestamp);
                     collector.collect();
                 }
             }

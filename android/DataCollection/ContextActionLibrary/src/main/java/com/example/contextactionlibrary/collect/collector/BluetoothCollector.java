@@ -57,11 +57,13 @@ public class BluetoothCollector extends Collector {
     }
 
     @Override
-    public void setSavePath() {
-        if (data instanceof List)
-            saver.setSavePath(new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".bin");
-        else
-            saver.setSavePath(new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".txt");
+    public void setSavePath(String timestamp) {
+        if (data instanceof List) {
+            saver.setSavePath(timestamp + "_bluetooth.bin");
+        }
+        else {
+            saver.setSavePath(timestamp + "_bluetooth.txt");
+        }
     }
 
     @Override

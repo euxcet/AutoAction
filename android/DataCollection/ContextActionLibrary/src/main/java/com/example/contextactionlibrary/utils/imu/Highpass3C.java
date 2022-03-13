@@ -1,4 +1,4 @@
-package com.example.contextactionlibrary.utils;
+package com.example.contextactionlibrary.utils.imu;
 
 public class Highpass3C {
     private Highpass1C xHighpass = new Highpass1C();

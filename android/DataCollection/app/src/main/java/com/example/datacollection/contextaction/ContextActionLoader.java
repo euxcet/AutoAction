@@ -10,6 +10,7 @@ import com.example.ncnnlibrary.communicate.config.ActionConfig;
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
 import com.example.ncnnlibrary.communicate.listener.ActionListener;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
+import com.example.ncnnlibrary.communicate.listener.RequestListener;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -38,15 +39,17 @@ public class ContextActionLoader {
         }
     }
 
-    private Object newContainer(List<ActionConfig> actionConfig, ActionListener actionListener, List<ContextConfig> contextConfig, ContextListener contextListener) {
+    private Object newContainer(List<ActionConfig> actionConfig, ActionListener actionListener, List<ContextConfig> contextConfig, ContextListener contextListener, RequestListener requestListener) {
         try {
             return containerClass.getDeclaredConstructor(Context.class,
                     List.class, ActionListener.class,
                     List.class, ContextListener.class,
+                    RequestListener.class,
                     boolean.class, boolean.class)
                     .newInstance(mContext,
                             actionConfig, actionListener,
                             contextConfig, contextListener,
+                            requestListener,
                             true, false);
         } catch (Exception e) {
             e.printStackTrace();
@@ -99,9 +102,9 @@ public class ContextActionLoader {
         );
     }
 
-    public void startDetection(List<ActionConfig> actionConfig, ActionListener actionListener, List<ContextConfig> contextConfig, ContextListener contextListener) {
+    public void startDetection(List<ActionConfig> actionConfig, ActionListener actionListener, List<ContextConfig> contextConfig, ContextListener contextListener, RequestListener requestListener) {
         try {
-            container = newContainer(actionConfig, actionListener, contextConfig, contextListener);
+            container = newContainer(actionConfig, actionListener, contextConfig, contextListener, requestListener);
             Method onSensorChanged = getOnSensorChanged(container);
             startSensorManager(container, onSensorChanged);
             startContainer(container);

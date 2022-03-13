@@ -72,11 +72,13 @@ public class NonIMUCollector extends SensorCollector {
     }
 
     @Override
-    public void setSavePath() {
-        if (data instanceof java.util.List)
-            saver.setSavePath(new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".bin");
-        else
-            saver.setSavePath(new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".txt");
+    public void setSavePath(String timestamp) {
+        if (data instanceof java.util.List) {
+            saver.setSavePath(timestamp + "_non_imu.bin");
+        }
+        else {
+            saver.setSavePath(timestamp + "_non_imu.txt");
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

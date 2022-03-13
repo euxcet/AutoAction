@@ -1,4 +1,4 @@
-package com.example.contextactionlibrary.utils;
+package com.example.contextactionlibrary.utils.imu;
 
 public class PeakDetector {
     private float _amplitudeMajorPeak = 0.0F;

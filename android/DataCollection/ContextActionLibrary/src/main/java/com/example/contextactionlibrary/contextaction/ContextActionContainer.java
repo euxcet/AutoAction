@@ -4,10 +4,15 @@ import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
+import android.util.Log;
 
 import com.example.contextactionlibrary.BuildConfig;
+import com.example.contextactionlibrary.collect.trigger.ClickTrigger;
+import com.example.contextactionlibrary.collect.trigger.Trigger;
 import com.example.contextactionlibrary.contextaction.action.ActionBase;
 import com.example.contextactionlibrary.contextaction.action.TapTapAction;
+import com.example.contextactionlibrary.contextaction.collect.BaseCollector;
+import com.example.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
 import com.example.contextactionlibrary.contextaction.context.ProximityContext;
 import com.example.contextactionlibrary.data.IMUSensorManager;
@@ -21,8 +26,12 @@ import com.example.ncnnlibrary.communicate.listener.ActionListener;
 import com.example.ncnnlibrary.communicate.BuiltInActionEnum;
 import com.example.ncnnlibrary.communicate.SensorType;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
+import com.example.ncnnlibrary.communicate.listener.RequestListener;
+import com.example.ncnnlibrary.communicate.result.ActionResult;
+import com.example.ncnnlibrary.communicate.result.ContextResult;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -30,7 +39,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class ContextActionContainer {
+public class ContextActionContainer implements ActionListener, ContextListener {
     // private IMUSensorManager imuSensorManager;
     // private ProximitySensorManager proximitySensorManager;
 
@@ -49,8 +58,13 @@ public class ContextActionContainer {
     private List<ContextConfig> contextConfig;
     private ActionListener actionListener;
     private ContextListener contextListener;
+    private RequestListener requestListener;
 
-    public ContextActionContainer(Context context, List<ActionBase> actions, List<ContextBase> contexts) {
+    private ClickTrigger clickTrigger;
+
+    private List<BaseCollector> collectors;
+
+    public ContextActionContainer(Context context, List<ActionBase> actions, List<ContextBase> contexts, RequestListener requestListener) {
         this.mContext = context;
         this.actions = actions;
         this.contexts = contexts;
@@ -61,25 +75,32 @@ public class ContextActionContainer {
                 new ThreadPoolExecutor.DiscardOldestPolicy());
         this.sensorManagers = new ArrayList<>();
 
-        NcnnInstance.init(context,
-                BuildConfig.SAVE_PATH + "best.param",
-                BuildConfig.SAVE_PATH + "best.bin",
-                4,
-                128,
-                6,
-                1,
-                2);
+        if (NcnnInstance.getInstance() == null) {
+            NcnnInstance.init(context,
+                    BuildConfig.SAVE_PATH + "best.param",
+                    BuildConfig.SAVE_PATH + "best.bin",
+                    4,
+                    128,
+                    6,
+                    1,
+                    2);
+        }
+
+        clickTrigger = new ClickTrigger(context, Trigger.CollectorType.CompleteIMU);
+        collectors = Arrays.asList(new TapTapCollector(context, requestListener, clickTrigger));
     }
 
     public ContextActionContainer(Context context,
                                   List<ActionConfig> actionConfig, ActionListener actionListener,
                                   List<ContextConfig> contextConfig, ContextListener contextListener,
+                                  RequestListener requestListener,
                                   boolean fromDex, boolean openSensor) {
-        this(context, new ArrayList<>(), new ArrayList<>());
+        this(context, new ArrayList<>(), new ArrayList<>(), requestListener);
         this.actionConfig = actionConfig;
         this.actionListener = actionListener;
         this.contextConfig = contextConfig;
         this.contextListener = contextListener;
+        this.requestListener = requestListener;
         this.fromDex = fromDex;
         this.openSensor = openSensor;
     }
@@ -148,14 +169,14 @@ public class ContextActionContainer {
             for (int i = 0; i < actionConfig.size(); i++) {
                 ActionConfig config = actionConfig.get(i);
                 if (config.getAction() == BuiltInActionEnum.TapTap) {
-                    TapTapAction tapTapAction = new TapTapAction(mContext, config, actionListener);
+                    TapTapAction tapTapAction = new TapTapAction(mContext, config, Arrays.asList(this, actionListener));
                     actions.add(tapTapAction);
                 }
             }
             for (int i = 0; i < contextConfig.size(); i++) {
                 ContextConfig config = contextConfig.get(i);
                 if (config.getContext() == BuiltInContextEnum.Proximity) {
-                    ProximityContext proximityContext = new ProximityContext(mContext, config, contextListener);
+                    ProximityContext proximityContext = new ProximityContext(mContext, config, Arrays.asList(this, contextListener));
                     contexts.add(proximityContext);
                 }
             }
@@ -212,20 +233,41 @@ public class ContextActionContainer {
         }
     }
 
+    /*
     private void updateContextAction(String type) {
         if (type.equals("None"))
             return;
         switch (type) {
             case "TapTap":
-                /*
                 proximitySensorManager.start();
                 proximitySensorManager.stopLater(3000);
-                 */
                 break;
             case "Proximity":
                 break;
             default:
                 break;
+        }
+    }
+     */
+
+    @Override
+    public void onAction(ActionResult action) {
+        if (action.getAction().equals("TapTap")) {
+            clickTrigger.trigger();
+        }
+        if (collectors != null) {
+            for (BaseCollector collector: collectors) {
+                collector.onAction(action);
+            }
+        }
+    }
+
+    @Override
+    public void onContext(ContextResult context) {
+        if (collectors != null) {
+            for (BaseCollector collector: collectors) {
+                collector.onContext(context);
+            }
         }
     }
 }

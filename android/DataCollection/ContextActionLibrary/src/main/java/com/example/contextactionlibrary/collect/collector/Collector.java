@@ -19,7 +19,7 @@ public abstract class Collector {
 
     public abstract void initialize();
 
-    public abstract void setSavePath();
+    public abstract void setSavePath(String timestamp);
 
     public abstract CompletableFuture<Data> collect();
 

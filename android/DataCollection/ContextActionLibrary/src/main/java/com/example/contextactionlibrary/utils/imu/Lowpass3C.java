@@ -1,4 +1,4 @@
-package com.example.contextactionlibrary.utils;
+package com.example.contextactionlibrary.utils.imu;
 
 public class Lowpass3C extends Lowpass1C {
     private Lowpass1C xLowpass = new Lowpass1C();

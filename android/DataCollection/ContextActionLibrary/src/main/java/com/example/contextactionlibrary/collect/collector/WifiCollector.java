@@ -69,11 +69,12 @@ public class WifiCollector extends Collector {
     }
 
     @Override
-    public void setSavePath() {
-        if (data instanceof List)
-            saver.setSavePath(new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".bin");
+    public void setSavePath(String timestamp) {
+        if (data instanceof List) {
+            saver.setSavePath(timestamp + "_wifi.bin");
+        }
         else
-            saver.setSavePath(new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".txt");
+            saver.setSavePath(timestamp + "_wifi.txt");
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
