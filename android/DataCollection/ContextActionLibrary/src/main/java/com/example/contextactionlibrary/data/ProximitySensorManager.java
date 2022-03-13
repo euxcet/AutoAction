@@ -10,6 +10,7 @@ import android.util.Log;
 import com.example.contextactionlibrary.contextaction.action.ActionBase;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class ProximitySensorManager extends MySensorManager implements SensorEventListener {
@@ -60,6 +61,11 @@ public class ProximitySensorManager extends MySensorManager implements SensorEve
 
     public boolean isSensorSupport() {
         return mProximity != null;
+    }
+
+    @Override
+    public List<Integer> getSensorTypeList() {
+        return Arrays.asList(Sensor.TYPE_PROXIMITY);
     }
 
     @Override

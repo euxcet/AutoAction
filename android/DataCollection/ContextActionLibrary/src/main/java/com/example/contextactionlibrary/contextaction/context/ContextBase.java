@@ -17,6 +17,7 @@ public abstract class ContextBase {
 
     public ContextBase(Context context, ContextConfig config, ContextListener contextListener) {
         this.mContext = context;
+        this.config = config;
         this.contextListener = contextListener;
     }
 

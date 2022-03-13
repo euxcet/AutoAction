@@ -28,11 +28,15 @@ import com.example.datacollection.data.Recorder;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.bean.StringListBean;
 import com.example.ncnnlibrary.communicate.BuiltInContextEnum;
+import com.example.ncnnlibrary.communicate.SensorType;
 import com.example.ncnnlibrary.communicate.config.ActionConfig;
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
+import com.example.ncnnlibrary.communicate.config.RequestConfig;
 import com.example.ncnnlibrary.communicate.listener.ActionListener;
 import com.example.ncnnlibrary.communicate.BuiltInActionEnum;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
+import com.example.ncnnlibrary.communicate.listener.RequestListener;
+import com.example.ncnnlibrary.communicate.result.RequestResult;
 import com.google.gson.Gson;
 import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.callback.StringCallback;
@@ -150,6 +154,25 @@ public class MainActivity extends AppCompatActivity {
         loadContextActionLibrary();
     }
 
+    private RequestResult handleRequest(RequestConfig config) {
+        RequestResult result = new RequestResult();
+        String packageName = config.getString("getAppTapBlockValue");
+        if (packageName != null) {
+            result.putValue("getAppTapBlockValueResult", 0);
+        }
+
+        Boolean request = config.getBoolean("getCanTapTap");
+        if (request != null) {
+            result.putValue("getCanTapTapResult", true);
+        }
+
+        request = config.getBoolean("getCanTopTap");
+        if (request != null) {
+            result.putValue("getCanTopTapResult", true);
+        }
+        return result;
+    }
+
     private void loadContextActionLibrary() {
         NetworkUtils.downloadFile(this, "classes.dex", new FileCallback() {
             @Override
@@ -165,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
                 ActionConfig tapTapConfig = new ActionConfig();
                 tapTapConfig.setAction(BuiltInActionEnum.TapTap);
                 tapTapConfig.putValue("SeqLength", 50);
+                tapTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
 
                 ActionListener actionListener = action ->
                         mActivity.runOnUiThread(
@@ -173,11 +197,14 @@ public class MainActivity extends AppCompatActivity {
 
                 ContextConfig proximityConfig = new ContextConfig();
                 proximityConfig.setContext(BuiltInContextEnum.Proximity);
+                proximityConfig.setSensorType(Arrays.asList(SensorType.PROXIMITY));
 
                 ContextListener contextListener = context ->
                         mActivity.runOnUiThread(
                                 () -> Toast.makeText(mContext, context.getContext(), Toast.LENGTH_SHORT).show()
                         );
+
+                RequestListener requestListener = config -> handleRequest(config);
                 loader.startDetection(Arrays.asList(tapTapConfig), actionListener, Arrays.asList(proximityConfig), contextListener);
             }
         });

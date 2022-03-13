@@ -1,12 +1,8 @@
-package com.example.ncnnlibrary.communicate.config;
-
-import com.example.ncnnlibrary.communicate.SensorType;
+package com.example.ncnnlibrary.communicate.result;
 
 import java.util.HashMap;
-import java.util.List;
 
-public class Config {
-    private final HashMap<String, String> stringConfig = new HashMap<>();
+public class RequestResult {
     private final HashMap<String, Boolean> booleanConfig = new HashMap<>();
     private final HashMap<String, Integer> integerConfig = new HashMap<>();
     private final HashMap<String, Long> longConfig = new HashMap<>();
@@ -28,10 +24,6 @@ public class Config {
         floatConfig.put(key, value);
     }
 
-    public void putString(String key, String value) {
-        stringConfig.put(key, value);
-    }
-
     public Boolean getBoolean(String key) {
         if (booleanConfig.containsKey(key)) {
             return booleanConfig.get(key);
@@ -48,13 +40,6 @@ public class Config {
         }
         if (floatConfig.containsKey(key)) {
             return floatConfig.get(key);
-        }
-        return null;
-    }
-
-    public String getString(String key) {
-        if (stringConfig.containsKey(key)) {
-            return stringConfig.get(key);
         }
         return null;
     }

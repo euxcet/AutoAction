@@ -17,6 +17,7 @@ public abstract class ActionBase {
 
     public ActionBase(Context context, ActionConfig config, ActionListener actionListener) {
         this.mContext = context;
+        this.config = config;
         this.actionListener = actionListener;
     }
 

@@ -1,11 +1,13 @@
 package com.example.contextactionlibrary.data;
 
 import android.content.Context;
+import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 
 import com.example.contextactionlibrary.contextaction.action.ActionBase;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -32,9 +34,12 @@ public abstract class MySensorManager {
     public void setName(String name) {
         this.name = name;
     }
+
     public String getName() {
         return name;
-    };
+    }
+
+    public abstract List<Integer> getSensorTypeList();
 
     public abstract void start();
     public abstract void stop();

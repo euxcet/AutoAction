@@ -40,7 +40,14 @@ public class ContextActionLoader {
 
     private Object newContainer(List<ActionConfig> actionConfig, ActionListener actionListener, List<ContextConfig> contextConfig, ContextListener contextListener) {
         try {
-            return containerClass.getDeclaredConstructor(Context.class, List.class, ActionListener.class, List.class, ContextListener.class, boolean.class).newInstance(mContext, actionConfig, actionListener, contextConfig, contextListener, true);
+            return containerClass.getDeclaredConstructor(Context.class,
+                    List.class, ActionListener.class,
+                    List.class, ContextListener.class,
+                    boolean.class, boolean.class)
+                    .newInstance(mContext,
+                            actionConfig, actionListener,
+                            contextConfig, contextListener,
+                            true, false);
         } catch (Exception e) {
             e.printStackTrace();
         }

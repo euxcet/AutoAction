@@ -11,6 +11,7 @@ import com.example.contextactionlibrary.contextaction.action.TapTapAction;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
 import com.example.contextactionlibrary.contextaction.context.ProximityContext;
 import com.example.contextactionlibrary.data.IMUSensorManager;
+import com.example.contextactionlibrary.data.MySensorManager;
 import com.example.contextactionlibrary.data.ProximitySensorManager;
 import com.example.contextactionlibrary.model.NcnnInstance;
 import com.example.ncnnlibrary.communicate.BuiltInContextEnum;
@@ -30,8 +31,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class ContextActionContainer {
-    private IMUSensorManager imuSensorManager;
-    private ProximitySensorManager proximitySensorManager;
+    // private IMUSensorManager imuSensorManager;
+    // private ProximitySensorManager proximitySensorManager;
 
     private Context mContext;
 
@@ -40,7 +41,10 @@ public class ContextActionContainer {
     private List<ActionBase> actions;
     private List<ContextBase> contexts;
 
+    private List<MySensorManager> sensorManagers;
+
     private boolean fromDex = false;
+    private boolean openSensor = true;
     private List<ActionConfig> actionConfig;
     private List<ContextConfig> contextConfig;
     private ActionListener actionListener;
@@ -55,6 +59,7 @@ public class ContextActionContainer {
                 1000, TimeUnit.MILLISECONDS,
                 new LinkedBlockingDeque<>(2),
                 new ThreadPoolExecutor.DiscardOldestPolicy());
+        this.sensorManagers = new ArrayList<>();
 
         NcnnInstance.init(context,
                 BuildConfig.SAVE_PATH + "best.param",
@@ -69,13 +74,14 @@ public class ContextActionContainer {
     public ContextActionContainer(Context context,
                                   List<ActionConfig> actionConfig, ActionListener actionListener,
                                   List<ContextConfig> contextConfig, ContextListener contextListener,
-                                  boolean fromDex) {
+                                  boolean fromDex, boolean openSensor) {
         this(context, new ArrayList<>(), new ArrayList<>());
         this.actionConfig = actionConfig;
         this.actionListener = actionListener;
         this.contextConfig = contextConfig;
         this.contextListener = contextListener;
         this.fromDex = fromDex;
+        this.openSensor = openSensor;
     }
 
     @Override
@@ -87,34 +93,33 @@ public class ContextActionContainer {
     public void start() {
         initialize();
 
-        // startSensor();
-        startAction();
-        startContext();
+        if (openSensor) {
+            for (MySensorManager sensorManager: sensorManagers) {
+                sensorManager.start();
+            }
+        }
 
+        for (ActionBase action: actions) {
+            action.start();
+        }
+        for (ContextBase context: contexts) {
+            context.start();
+        }
         monitorAction();
         monitorContext();
     }
 
     public void stop() {
-        // stopSensor();
-        stopAction();
-        stopContext();
-    }
-
-    private void initializeDexContextActions() {
-        for (int i = 0; i < actionConfig.size(); i++) {
-            ActionConfig config = actionConfig.get(i);
-            if (config.getAction() == BuiltInActionEnum.TapTap) {
-                TapTapAction tapTapAction = new TapTapAction(mContext, config, actionListener);
-                actions.add(tapTapAction);
+        if (openSensor) {
+            for (MySensorManager sensorManager: sensorManagers) {
+                sensorManager.stop();
             }
         }
-        for (int i = 0; i < contextConfig.size(); i++) {
-            ContextConfig config = contextConfig.get(i);
-            if (config.getContext() == BuiltInContextEnum.Proximity) {
-                ProximityContext proximityContext = new ProximityContext(mContext, config, contextListener);
-                contexts.add(proximityContext);
-            }
+        for (ActionBase action: actions) {
+            action.stop();
+        }
+        for (ContextBase context: contexts) {
+            context.stop();
         }
     }
 
@@ -140,68 +145,36 @@ public class ContextActionContainer {
 
     private void initialize() {
         if (fromDex) {
-            initializeDexContextActions();
+            for (int i = 0; i < actionConfig.size(); i++) {
+                ActionConfig config = actionConfig.get(i);
+                if (config.getAction() == BuiltInActionEnum.TapTap) {
+                    TapTapAction tapTapAction = new TapTapAction(mContext, config, actionListener);
+                    actions.add(tapTapAction);
+                }
+            }
+            for (int i = 0; i < contextConfig.size(); i++) {
+                ContextConfig config = contextConfig.get(i);
+                if (config.getContext() == BuiltInContextEnum.Proximity) {
+                    ProximityContext proximityContext = new ProximityContext(mContext, config, contextListener);
+                    contexts.add(proximityContext);
+                }
+            }
         }
 
         // init sensor
-        imuSensorManager = new IMUSensorManager(mContext,
-                "AlwaysOnSensorManager",
+        sensorManagers.add(new IMUSensorManager(mContext,
+                "IMUSensorManager",
                 selectBySensorTypeAction(actions, SensorType.IMU),
                 selectBySensorTypeContext(contexts, SensorType.IMU),
                 SensorManager.SENSOR_DELAY_FASTEST
-        );
+        ));
 
-        proximitySensorManager = new ProximitySensorManager(mContext,
+        sensorManagers.add(new ProximitySensorManager(mContext,
                 "ProximitySensorManager",
                 selectBySensorTypeAction(actions, SensorType.PROXIMITY),
                 selectBySensorTypeContext(contexts, SensorType.PROXIMITY),
                 SensorManager.SENSOR_DELAY_FASTEST
-        );
-
-        // init context
-        /*
-        proximityContext = new ProximityContext(mContext,
-                (contextBase, context) -> updateContextAction(context),
-                0,
-                new String[]{"None", "Proximity"});
-
-         */
-    }
-
-    private void startSensor() {
-        imuSensorManager.start();
-    }
-
-    private void stopSensor() {
-        imuSensorManager.stop();
-    }
-
-    private void startAction() {
-        for(ActionBase action: actions) {
-            action.start();
-        }
-        /*
-        taptapAction.start();
-        knockAction.start();
-         */
-    }
-
-    private void stopAction() {
-        for(ActionBase action: actions) {
-            action.stop();
-        }
-        /*
-        taptapAction.stop();
-        knockAction.stop();
-        */
-    }
-
-    private void startContext() {
-        // proximityContext.start();
-    }
-
-    private void stopContext() {
-        // proximityContext.stop();
+        ));
     }
 
     private void monitorAction() {
@@ -209,37 +182,33 @@ public class ContextActionContainer {
             @Override
             public void run() {
                 executor.execute(() -> {
-                    for(ActionBase action: actions) {
+                    for (ActionBase action: actions) {
                         action.getAction();
                     }
                 });
             }
-        }, 5000, 5);
+        }, 5000, 20);
     }
 
     private void monitorContext() {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                // proximityContext.getContext();
+                executor.execute(() -> {
+                    for (ContextBase context: contexts) {
+                        context.getContext();
+                    }
+                });
             }
         }, 5000, 1000);
     }
 
     public void onSensorChangedDex(SensorEvent event) {
         int type = event.sensor.getType();
-        switch (type) {
-            case Sensor.TYPE_GYROSCOPE:
-            case Sensor.TYPE_ACCELEROMETER:
-                if (imuSensorManager != null) {
-                    imuSensorManager.onSensorChangedDex(event);
-                }
-            case Sensor.TYPE_PROXIMITY:
-                if (proximitySensorManager != null) {
-                    proximitySensorManager.onSensorChangedDex(event);
-                }
-            default:
-                break;
+        for (MySensorManager sensorManager: sensorManagers) {
+            if (sensorManager.getSensorTypeList().contains(type)) {
+                sensorManager.onSensorChangedDex(event);
+            }
         }
     }
 
@@ -248,8 +217,10 @@ public class ContextActionContainer {
             return;
         switch (type) {
             case "TapTap":
+                /*
                 proximitySensorManager.start();
                 proximitySensorManager.stopLater(3000);
+                 */
                 break;
             case "Proximity":
                 break;

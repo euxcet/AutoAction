@@ -10,6 +10,7 @@ import android.util.Log;
 import com.example.contextactionlibrary.contextaction.action.ActionBase;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class IMUSensorManager extends MySensorManager implements SensorEventListener {
@@ -41,7 +42,6 @@ public class IMUSensorManager extends MySensorManager implements SensorEventList
 
         if (!isSensorSupport()) {
             Log.e(TAG, "At least one sensor is not supported in this phone.");
-            // ToastUtils.showInWindow(mContext, "没有检测到相关传感器");
             return false;
         }
 
@@ -80,10 +80,8 @@ public class IMUSensorManager extends MySensorManager implements SensorEventList
             Log.d(TAG, name + " is already started.");
             return;
         }
-        if (!isInitialized) {
-            if (!initialize()) {
-                return;
-            }
+        if (!isInitialized && !initialize()) {
+            return;
         }
         registerSensorListener();
         isStarted = true;
@@ -125,4 +123,9 @@ public class IMUSensorManager extends MySensorManager implements SensorEventList
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {}
+
+    @Override
+    public List<Integer> getSensorTypeList() {
+        return Arrays.asList(Sensor.TYPE_GYROSCOPE, Sensor.TYPE_ACCELEROMETER);
+    }
 }
