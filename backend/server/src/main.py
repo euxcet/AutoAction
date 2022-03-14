@@ -46,6 +46,12 @@ Data structure:
                         - audio_{recordId}.mp4
                         - video_{recordId}.mp4
                         - sample_{recordId}.csv
+
+    /dex
+        /userId
+            /name
+                /timestamp
+                    - {}.bin
 '''
 
 
@@ -263,6 +269,44 @@ def upload_file():
     
     return {}
 
+
+'''
+Name: update_record_file
+Method: Post
+Content-Type: multipart/form-data
+Form:
+    - file
+    - fileType
+        - 0 sensor bin
+    - userId
+    - name
+    - commit
+    - timestamp
+
+
+    /dex
+        /userId
+            /name
+                /timestamp
+                    - {}.bin
+'''
+@app.route("/collected_data", methods=['POST'])
+def upload_collected_data():
+    file = request.files["file"]
+    fileType = request.form.get("fileType")
+    userId = request.form.get("userId")
+    name = request.form.get("name")
+    commit = request.form.get("commit")
+    timestamp = request.form.get("timestamp")
+    path = fileUtils.get_dex_path(userId, name, timestamp)
+    fileUtils.mkdir(path)
+    fileUtils.save_file(file, os.path.join(path, file.filename))
+    commit_file_path = os.path.join(path, "commit.txt")
+    with open(commit_file_path, 'w') as fout:
+        fout.write(commit)
+    return {}
+
+
 # sample related
 '''
 Name: get_sample_number
@@ -431,6 +475,7 @@ def download_file():
     return send_file(os.path.join(fileUtils.DATA_FILE_ROOT, filename))
     
     #return send_file(os.path.join(fileUtils.DATA_JAR_ROOT, 'classes.dex'))
+
 
 '''
 @app.route("/download_so", methods=['GET'])

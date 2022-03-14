@@ -16,12 +16,18 @@ public class NetworkUtils {
 
     private static Gson gson = new Gson();
 
-    public static void uploadCollectedData(Context context, File file, int fileType, String name, String commit, StringCallback callback) {
+    /*
+        fileType:
+            - 0 sensor bin
+     */
+    public static void uploadCollectedData(Context context, File file, int fileType, String name, String userId, long timestamp, String commit, StringCallback callback) {
         OkGo.<String>post(COLLECTED_DATA_URL)
                 .tag(context)
                 .params("file", file)
                 .params("fileType", fileType)
+                .params("userId", userId)
                 .params("name", name)
+                .params("timestamp", timestamp)
                 .params("commit", commit)
                 .execute(callback);
     }
