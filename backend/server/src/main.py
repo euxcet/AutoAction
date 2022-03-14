@@ -24,6 +24,8 @@ saver_future_list = []
 
 trainer = ThreadPoolExecutor(max_workers=1)
 
+fileUtils.mkdir("../data/record/TL13r912je")
+
 '''
 Data structure:
 
