@@ -2,24 +2,37 @@
 
 ## Deploy
 
-下载[数据](https://cloud.tsinghua.edu.cn/f/9c334b37d3914b1a95d8/?dl=1)，保存到backend/server/data文件夹内。其中的classes.dex文件由classes.jar通过d8编译得到。
+### 编译contextactionlibrary包
 
-Mac
+安卓应用位于android/DataCollection中，运行需要动态加载contextactionlibrary库的dex二进制包。编译二进制包分为两步，首先生成classes.jar，再将classes.jar转化为classes.dex。classes.jar由android studio生成，在左侧的Project栏中选择ContextActionLibrary库，再点击菜单栏Build下的Make Module 'DataCollection.contextactionlibrary'。编译得到的结果位于contextactionlibrary/build/outputs/aar/contextactionlibrary-debug.aar。
+
+执行DataCollection下的aar2dex.sh脚本可以将aar包中的classes.jar提取转化为classes.dex，并放到后端的指定位置供前端下载使用。
+
+执行aar2dex.sh需要配置D8\_PATH这个环境变量，即d8所在的路径。在Mac下一般位于~/Library/Android/sdk/build-tools/{sdk-version}/d8。
 
 ```bash
-~/Library/Android/sdk/build-tools/{sdk-version}/d8 classes.jar
+export D8_PATH={YOUR_PATH} # Recommend adding this file to .bashrc
+./aar2dex.sh
 ```
 
-classes.jar由android studio生成，点击菜单栏Build下的Make Module 'DataCollection.contextactionlibrary'。编译得到的结果位于contextactionlibrary/build/outputs/aar/contextactionlibrary-debug.aar，将文件的后缀名改为zip，解压后文件夹内的classes.jar即为所需文件。
-
-运行后端。
+### 运行后端
 
 ```bash
 cd backend/server/src
 python3 main.py
 ```
 
-将datacollection.utils.NetworkUtils里的ROOT\_URL改成后端的ip。
+### 网络配置
+
+手机和后端所在的电脑应该在同一个局域网内，在DataCollection的local.properties中加入字段web.server，值为后端的ip。
+
+示例：
+
+```bash
+web.server="http://192.168.31.186:60010"
+```
+
+### 测试情境和动作
 
 ## Roadmap
 

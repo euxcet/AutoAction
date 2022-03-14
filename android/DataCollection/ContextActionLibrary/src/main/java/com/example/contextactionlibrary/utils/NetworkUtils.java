@@ -2,6 +2,7 @@ package com.example.contextactionlibrary.utils;
 
 import android.content.Context;
 
+import com.example.contextactionlibrary.BuildConfig;
 import com.google.gson.Gson;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.callback.StringCallback;
@@ -10,7 +11,7 @@ import java.io.File;
 
 public class NetworkUtils {
     private static final String TAG = "NetworkUtils";
-    private static final String ROOT_URL = "http://192.168.31.186:60010";
+    private static final String ROOT_URL = BuildConfig.WEB_SERVER;
     private static final String COLLECTED_DATA_URL = ROOT_URL + "/collected_data";
 
     private static Gson gson = new Gson();

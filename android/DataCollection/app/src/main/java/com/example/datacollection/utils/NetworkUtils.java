@@ -2,6 +2,7 @@ package com.example.datacollection.utils;
 
 import android.content.Context;
 
+import com.example.datacollection.BuildConfig;
 import com.example.datacollection.utils.bean.TaskListBean;
 import com.google.gson.Gson;
 import com.lzy.okgo.OkGo;
@@ -12,7 +13,7 @@ import java.io.File;
 
 public class NetworkUtils {
     private static final String TAG = "NetworkUtils";
-    private static final String ROOT_URL = "http://192.168.31.186:60010";
+    private static final String ROOT_URL = BuildConfig.WEB_SERVER;
     private static final String ALL_TASKLIST_URL = ROOT_URL + "/all_taskList";
     private static final String TASKLIST_HISTORY_URL = ROOT_URL + "/taskList_history";
     private static final String TASKLIST_URL = ROOT_URL + "/taskList";

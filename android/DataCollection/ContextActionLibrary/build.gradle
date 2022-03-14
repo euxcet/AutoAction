@@ -3,6 +3,17 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+def getProps(String propName) {
+    def propsFile = rootProject.file("local.properties")
+    if (propsFile.exists()) {
+        def props = new Properties()
+        props.load(new FileInputStream(propsFile))
+        return props[propName]
+    } else {
+        return ""
+    }
+}
+
 android {
     namespace 'com.example.contextactionlibrary'
     compileSdk 32
@@ -21,11 +32,13 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField("String", "SAVE_PATH", "\"/storage/emulated/0/PlaceData/\"")
+            buildConfigField("String", "WEB_SERVER", getProps("web.server"))
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField("String", "SAVE_PATH", "\"/storage/emulated/0/PlaceData/\"")
+            buildConfigField("String", "WEB_SERVER", getProps("web.server"))
         }
     }
     compileOptions {
