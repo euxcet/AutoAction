@@ -28,7 +28,8 @@ import java.util.concurrent.CompletableFuture;
 public class CompleteIMUCollector extends SensorCollector {
     // For complete data, keep 1min, 1 * 60 * 100 * 4 = 24k data
     // in case sampling period is higher, maybe max 500Hz for acc and gyro
-    private int size = 72000;
+    private int size = 12000;
+    private int delayTime = 5000;
 
     private final int samplingPeriod;
     private final int collectPeriod;
@@ -115,7 +116,7 @@ public class CompleteIMUCollector extends SensorCollector {
                 saver.save(cur);
                 ft.complete(data);
             }
-        }, 30000);
+        }, delayTime);
         return ft;
     }
 

@@ -38,4 +38,8 @@ public abstract class Collector {
     public String getRecentPath() {
         return saver.getSavePath();
     }
+
+    public void cleanData() {
+        saver.deleteFolderFile(saver.getSaveFolder(), false);
+    }
 }

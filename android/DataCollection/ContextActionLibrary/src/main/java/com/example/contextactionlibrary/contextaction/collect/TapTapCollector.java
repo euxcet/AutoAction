@@ -27,14 +27,21 @@ public class TapTapCollector extends BaseCollector {
             public void run() {
                 File imuFile = new File(clickTrigger.getRecentIMUPath());
                 Log.e("TapTapCollector", imuFile.getAbsolutePath());
-                NetworkUtils.uploadCollectedData(mContext, imuFile, 0, "TapTap", getMacMoreThanM(), System.currentTimeMillis(),"Commit", new StringCallback() {
-                    @Override
-                    public void onSuccess(Response<String> response) {
-
-                    }
-                });
+                NetworkUtils.uploadCollectedData(mContext,
+                        imuFile,
+                        0,
+                        "TapTap",
+                        getMacMoreThanM(),
+                        System.currentTimeMillis(),
+                        "Commit",
+                        new StringCallback() {
+                            @Override
+                            public void onSuccess(Response<String> response) {
+                                Log.e("TapTapCollector", "Success");
+                            }
+                        });
             }
-        }, 65000);
+        }, 20000);
     }
 
     @Override

@@ -32,6 +32,8 @@ import com.example.ncnnlibrary.communicate.result.ContextResult;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -88,6 +90,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
         clickTrigger = new ClickTrigger(context, Trigger.CollectorType.CompleteIMU);
         collectors = Arrays.asList(new TapTapCollector(context, requestListener, clickTrigger));
+
+        scheduleCleanData();
     }
 
     public ContextActionContainer(Context context,
@@ -250,8 +254,27 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
      */
 
+    private void scheduleCleanData() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH),3, 0, 0);
+        Date date = calendar.getTime();
+        if (date.before(new Date())) {
+            calendar.add(Calendar.DATE, 1);
+            date = calendar.getTime();
+        }
+        Timer timer= new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                clickTrigger.cleanData();
+                Log.e("TapTapCollector", "triggered");
+            }
+        }, date, 24 * 60 * 60 * 1000);
+    }
+
     @Override
     public void onAction(ActionResult action) {
+        Log.e("TapTapCollector", "On Action");
         if (action.getAction().equals("TapTap")) {
             clickTrigger.trigger();
         }

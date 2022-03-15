@@ -140,4 +140,11 @@ public abstract class Trigger {
     public List<Collector> getCollectors() {
         return collectors;
     }
+
+    public void cleanData() {
+        Log.e("Trigger", "clean");
+        for (Collector collector: collectors) {
+            collector.cleanData();
+        }
+    }
 }
