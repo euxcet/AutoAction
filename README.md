@@ -21,7 +21,7 @@ cd script
 执行aar2dex.sh需要配置D8\_PATH这个环境变量，即d8所在的路径。在Mac下一般位于~/Library/Android/sdk/build-tools/{sdk-version}/d8。
 
 ```bash
-export D8_PATH={YOUR_PATH} # Recommend adding this file to .bashrc
+export D8_PATH={YOUR_PATH} # Recommend adding this line to .bashrc
 ./aar2dex.sh
 ```
 
