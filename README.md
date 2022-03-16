@@ -2,6 +2,16 @@
 
 ## Deploy
 
+### 下载必要文件
+
+运行script文件夹下的download\_models和download\_ncnn\_sdk两个脚本。download\_ncnn\_sdk只需要执行一次，download\_models在模型文件出现修改时需要重新执行。
+
+```bash
+cd script
+./download_models.sh
+./download_ncnn_sdk.sh
+```
+
 ### 编译contextactionlibrary包
 
 安卓应用位于android/DataCollection中，运行需要动态加载contextactionlibrary库的dex二进制包。编译二进制包分为两步，首先生成classes.jar，再将classes.jar转化为classes.dex。classes.jar由android studio生成，在左侧的Project栏中选择ContextActionLibrary库，再点击菜单栏Build下的Make Module 'DataCollection.contextactionlibrary'。编译得到的结果位于contextactionlibrary/build/outputs/aar/contextactionlibrary-debug.aar。
