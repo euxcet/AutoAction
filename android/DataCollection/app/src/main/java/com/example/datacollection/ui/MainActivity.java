@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -127,6 +128,10 @@ public class MainActivity extends AppCompatActivity {
                 enableButtons(false);
             }
         });
+
+        // jump to accessibility settings
+        Intent settingIntent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+        startActivity(settingIntent);
     }
 
     private void loadTaskListViaNetwork() {

@@ -2,6 +2,7 @@ package com.example.contextactionlibrary.collect.file;
 
 import android.content.Context;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.RequiresApi;
@@ -80,6 +81,7 @@ public class Saver {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<Void> save(Object object) {
+        Log.e("TapTapCollector", "in save");
         if (object == null) {
             return CompletableFuture.completedFuture(null);
         }
@@ -112,5 +114,34 @@ public class Saver {
 
     public String getSavePath() {
         return savePath;
+    }
+
+    public String getSaveFolder() {
+        return saveFolder;
+    }
+
+    public void deleteFolderFile(String filePath, boolean shouldDelete) {
+        if (!TextUtils.isEmpty(filePath)) {
+            try {
+                File file = new File(filePath);
+                if (file.isDirectory()) {
+                    File[] files = file.listFiles();
+                    for (File file0 : files)
+                        deleteFolderFile(file0.getAbsolutePath(), true);
+                }
+                if (shouldDelete) {
+                    Log.e("TapTapCollector delete", file.getAbsolutePath());
+                    if (!file.isDirectory()) {
+                        file.delete();
+                    } else {
+                        if (file.listFiles().length == 0) {
+                            file.delete();
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
