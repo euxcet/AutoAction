@@ -3,43 +3,55 @@ package com.example.ncnnlibrary.communicate.result;
 import java.util.HashMap;
 
 public class RequestResult {
-    private final HashMap<String, Boolean> booleanConfig = new HashMap<>();
-    private final HashMap<String, Integer> integerConfig = new HashMap<>();
-    private final HashMap<String, Long> longConfig = new HashMap<>();
-    private final HashMap<String, Float> floatConfig = new HashMap<>();
+    private final HashMap<String, Boolean> booleanResult = new HashMap<>();
+    private final HashMap<String, Integer> integerResult = new HashMap<>();
+    private final HashMap<String, Long> longResult = new HashMap<>();
+    private final HashMap<String, Float> floatResult = new HashMap<>();
+    private final HashMap<String, Object> objectResult = new HashMap<>();
 
     public void putValue(String key, Boolean value) {
-        booleanConfig.put(key, value);
+        booleanResult.put(key, value);
     }
 
     public void putValue(String key, Integer value) {
-        integerConfig.put(key, value);
+        integerResult.put(key, value);
     }
 
     public void putValue(String key, Long value) {
-        longConfig.put(key, value);
+        longResult.put(key, value);
     }
 
     public void putValue(String key, Float value) {
-        floatConfig.put(key, value);
+        floatResult.put(key, value);
+    }
+
+    public void putObject(String key, Object value) {
+        objectResult.put(key, value);
     }
 
     public Boolean getBoolean(String key) {
-        if (booleanConfig.containsKey(key)) {
-            return booleanConfig.get(key);
+        if (booleanResult.containsKey(key)) {
+            return booleanResult.get(key);
         }
         return null;
     }
 
     public Number getValue(String key) {
-        if (integerConfig.containsKey(key)) {
-            return integerConfig.get(key);
+        if (integerResult.containsKey(key)) {
+            return integerResult.get(key);
         }
-        if (longConfig.containsKey(key)) {
-            return longConfig.get(key);
+        if (longResult.containsKey(key)) {
+            return longResult.get(key);
         }
-        if (floatConfig.containsKey(key)) {
-            return floatConfig.get(key);
+        if (floatResult.containsKey(key)) {
+            return floatResult.get(key);
+        }
+        return null;
+    }
+
+    public Object getObject(String key) {
+        if (objectResult.containsKey(key)) {
+            return objectResult.get(key);
         }
         return null;
     }

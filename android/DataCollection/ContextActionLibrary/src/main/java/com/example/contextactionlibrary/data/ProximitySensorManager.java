@@ -6,9 +6,11 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
+import android.view.accessibility.AccessibilityEvent;
 
 import com.example.contextactionlibrary.contextaction.action.ActionBase;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
+import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -99,12 +101,22 @@ public class ProximitySensorManager extends MySensorManager implements SensorEve
     }
 
     @Override
+    public void onAccessibilityEventDex(AccessibilityEvent event) {
+
+    }
+
+    @Override
+    public void onButtonActionEventDex(ButtonActionEvent event) {
+
+    }
+
+    @Override
     public void onSensorChanged(SensorEvent event) {
         for (ActionBase action: actions) {
             action.onProximitySensorChanged(event);
         }
         for (ContextBase context: contexts) {
-            context.onIMUSensorChanged(event);
+            context.onProximitySensorChanged(event);
         }
         int type = event.sensor.getType();
         if (type == Sensor.TYPE_PROXIMITY) {

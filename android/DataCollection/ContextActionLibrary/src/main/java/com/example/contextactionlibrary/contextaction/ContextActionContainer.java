@@ -1,10 +1,11 @@
 package com.example.contextactionlibrary.contextaction;
 
 import android.content.Context;
-import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
+import android.icu.text.IDNA;
 import android.util.Log;
+import android.view.accessibility.AccessibilityEvent;
 
 import com.example.contextactionlibrary.BuildConfig;
 import com.example.contextactionlibrary.collect.trigger.ClickTrigger;
@@ -14,7 +15,10 @@ import com.example.contextactionlibrary.contextaction.action.TapTapAction;
 import com.example.contextactionlibrary.contextaction.collect.BaseCollector;
 import com.example.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
-import com.example.contextactionlibrary.contextaction.context.ProximityContext;
+import com.example.contextactionlibrary.contextaction.context.informational.InformationalContext;
+import com.example.contextactionlibrary.contextaction.context.physical.ProximityContext;
+import com.example.contextactionlibrary.data.AccessibilityEventManager;
+import com.example.contextactionlibrary.data.ButtonActionEventManager;
 import com.example.contextactionlibrary.data.IMUSensorManager;
 import com.example.contextactionlibrary.data.MySensorManager;
 import com.example.contextactionlibrary.data.ProximitySensorManager;
@@ -22,6 +26,7 @@ import com.example.contextactionlibrary.model.NcnnInstance;
 import com.example.ncnnlibrary.communicate.BuiltInContextEnum;
 import com.example.ncnnlibrary.communicate.config.ActionConfig;
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
+import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
 import com.example.ncnnlibrary.communicate.listener.ActionListener;
 import com.example.ncnnlibrary.communicate.BuiltInActionEnum;
 import com.example.ncnnlibrary.communicate.SensorType;
@@ -169,15 +174,18 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             for (int i = 0; i < actionConfig.size(); i++) {
                 ActionConfig config = actionConfig.get(i);
                 if (config.getAction() == BuiltInActionEnum.TapTap) {
-                    TapTapAction tapTapAction = new TapTapAction(mContext, config, Arrays.asList(this, actionListener));
+                    TapTapAction tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                     actions.add(tapTapAction);
                 }
             }
             for (int i = 0; i < contextConfig.size(); i++) {
                 ContextConfig config = contextConfig.get(i);
                 if (config.getContext() == BuiltInContextEnum.Proximity) {
-                    ProximityContext proximityContext = new ProximityContext(mContext, config, Arrays.asList(this, contextListener));
+                    ProximityContext proximityContext = new ProximityContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
                     contexts.add(proximityContext);
+                } else if (config.getContext() == BuiltInContextEnum.Informational) {
+                    InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
+                    contexts.add(informationalContext);
                 }
             }
         }
@@ -195,6 +203,18 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 selectBySensorTypeAction(actions, SensorType.PROXIMITY),
                 selectBySensorTypeContext(contexts, SensorType.PROXIMITY),
                 SensorManager.SENSOR_DELAY_FASTEST
+        ));
+
+        sensorManagers.add(new AccessibilityEventManager(mContext,
+                "AccessibilityEventManager",
+                selectBySensorTypeAction(actions, SensorType.ACCESSIBILITY),
+                selectBySensorTypeContext(contexts, SensorType.ACCESSIBILITY)
+        ));
+
+        sensorManagers.add(new ButtonActionEventManager(mContext,
+                "ButtonActionEventManager",
+                selectBySensorTypeAction(actions, SensorType.BUTTON_ACTION),
+                selectBySensorTypeContext(contexts, SensorType.BUTTON_ACTION)
         ));
     }
 
@@ -230,6 +250,19 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             if (sensorManager.getSensorTypeList().contains(type)) {
                 sensorManager.onSensorChangedDex(event);
             }
+        }
+    }
+
+    public void onAccessibilityEventDex(AccessibilityEvent event) {
+        Log.e("TEST", "New event Dex");
+        for (MySensorManager sensorManager: sensorManagers) {
+            sensorManager.onAccessibilityEventDex(event);
+        }
+    }
+
+    public void onButtonActionEventDex(ButtonActionEvent event) {
+        for (MySensorManager sensorManager: sensorManagers) {
+            sensorManager.onButtonActionEventDex(event);
         }
     }
 

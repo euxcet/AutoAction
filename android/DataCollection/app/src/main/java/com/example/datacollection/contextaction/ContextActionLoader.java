@@ -3,15 +3,20 @@ package com.example.datacollection.contextaction;
 import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
+import android.util.Log;
+import android.view.accessibility.AccessibilityEvent;
+import android.widget.Button;
 
 import com.example.datacollection.contextaction.sensor.IMUSensorManager;
 import com.example.datacollection.contextaction.sensor.ProximitySensorManager;
 import com.example.ncnnlibrary.communicate.config.ActionConfig;
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
+import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
 import com.example.ncnnlibrary.communicate.listener.ActionListener;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
 import com.example.ncnnlibrary.communicate.listener.RequestListener;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -28,6 +33,8 @@ public class ContextActionLoader {
     private IMUSensorManager imuSensorManager;
     private ProximitySensorManager proximitySensorManager;
 
+    private Method onAccessibilityEvent;
+    private Method onButtonActionEvent;
 
     public ContextActionLoader(Context context, DexClassLoader classLoader) {
         this.mContext = context;
@@ -78,8 +85,28 @@ public class ContextActionLoader {
 
     private Method getOnSensorChanged(Object container) {
         try {
-            Method onSensorChanged = containerClass.getMethod("onSensorChangedDex", SensorEvent.class);
-            return onSensorChanged;
+            Method method = containerClass.getMethod("onSensorChangedDex", SensorEvent.class);
+            return method;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private Method getOnAccessibilityEvent(Object container) {
+        try {
+            Method method = containerClass.getMethod("onAccessibilityEventDex", AccessibilityEvent.class);
+            return method;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private Method getOnButtonActionEvent(Object container) {
+        try {
+            Method method = containerClass.getMethod("onButtonActionEventDex", ButtonActionEvent.class);
+            return method;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -107,6 +134,9 @@ public class ContextActionLoader {
             container = newContainer(actionConfig, actionListener, contextConfig, contextListener, requestListener);
             Method onSensorChanged = getOnSensorChanged(container);
             startSensorManager(container, onSensorChanged);
+            onAccessibilityEvent = getOnAccessibilityEvent(container);
+            onButtonActionEvent = getOnButtonActionEvent(container);
+            // TODO: create method onAccessibilityEvent onButtonActionEvent
             startContainer(container);
             imuSensorManager.start();
             proximitySensorManager.start();
@@ -124,6 +154,26 @@ public class ContextActionLoader {
         }
         if (container != null) {
             stopContainer(container);
+        }
+    }
+
+    public void onAccessibilityEvent(AccessibilityEvent event) {
+        try {
+            if (onAccessibilityEvent != null) {
+                onAccessibilityEvent.invoke(container, event);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void onButtonActionEvent(ButtonActionEvent event) {
+        try {
+            if (onButtonActionEvent != null) {
+                onButtonActionEvent.invoke(container, event);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

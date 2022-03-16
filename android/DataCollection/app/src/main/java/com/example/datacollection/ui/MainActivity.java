@@ -127,9 +127,6 @@ public class MainActivity extends AppCompatActivity {
                 enableButtons(false);
             }
         });
-
-        Intent intent = new Intent(MainActivity.this, MainService.class);
-        startService(intent);
     }
 
     private void loadTaskListViaNetwork() {
@@ -289,6 +286,7 @@ public class MainActivity extends AppCompatActivity {
         NetworkUtils.downloadFile(mContext, "best.bin", new FileCallback() {
             @Override
             public void onSuccess(Response<File> response) {
+                // TODO: remove file
                 File file = response.body();
                 File saveFile = new File(BuildConfig.SAVE_PATH, "best.bin");
                 FileUtils.copy(file, saveFile);

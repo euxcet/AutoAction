@@ -1,12 +1,16 @@
-package com.example.contextactionlibrary.contextaction.context;
+package com.example.contextactionlibrary.contextaction.context.physical;
 
 import android.content.Context;
 import android.hardware.SensorEvent;
 import android.util.Log;
+import android.view.accessibility.AccessibilityEvent;
 
+import com.example.contextactionlibrary.contextaction.context.ContextBase;
 import com.example.contextactionlibrary.data.Preprocess;
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
+import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
+import com.example.ncnnlibrary.communicate.listener.RequestListener;
 import com.example.ncnnlibrary.communicate.result.ContextResult;
 
 import java.util.List;
@@ -18,8 +22,8 @@ public class ProximityContext extends ContextBase {
 
     private long lastRecognized = 0L;
 
-    public ProximityContext(Context context, ContextConfig config, List<ContextListener> contextListener) {
-        super(context, config, contextListener);
+    public ProximityContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener) {
+        super(context, config, requestListener, contextListener);
         preprocess = Preprocess.getInstance();
     }
 
@@ -49,6 +53,16 @@ public class ProximityContext extends ContextBase {
     @Override
     public void onProximitySensorChanged(SensorEvent event) {
         // TODO: Split the logic of Preprocess here
+    }
+
+    @Override
+    public void onAccessibilityEvent(AccessibilityEvent event) {
+
+    }
+
+    @Override
+    public void onButtonActionEvent(ButtonActionEvent event) {
+
     }
 
     @Override

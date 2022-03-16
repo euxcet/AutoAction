@@ -9,6 +9,7 @@ import com.example.contextactionlibrary.utils.imu.TfClassifier;
 import com.example.contextactionlibrary.utils.imu.Util;
 import com.example.ncnnlibrary.communicate.config.ActionConfig;
 import com.example.ncnnlibrary.communicate.listener.ActionListener;
+import com.example.ncnnlibrary.communicate.listener.RequestListener;
 import com.example.ncnnlibrary.communicate.result.ActionResult;
 
 
@@ -26,8 +27,8 @@ public class TapTapAction extends ActionBase {
 
     private int seqLength;
 
-    public TapTapAction(Context context, ActionConfig config, List<ActionListener> actionListener) {
-        super(context, config, actionListener);
+    public TapTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
+        super(context, config, requestListener, actionListener);
         tflite = new TfClassifier(mContext.getAssets(), "tap7cls_pixel4.tflite");
         preprocess = Preprocess.getInstance();
         seqLength = (int)config.getValue("SeqLength");

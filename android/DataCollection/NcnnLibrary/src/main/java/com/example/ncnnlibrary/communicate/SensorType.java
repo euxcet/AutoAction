@@ -6,5 +6,6 @@ public enum SensorType {
     VIDEO,
     LOCATION,
     PROXIMITY,
-    ACCESSIBILITY
+    ACCESSIBILITY,
+    BUTTON_ACTION
 }

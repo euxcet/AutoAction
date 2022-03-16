@@ -7,6 +7,7 @@ import android.hardware.SensorEvent;
 import com.example.contextactionlibrary.model.NcnnInstance;
 import com.example.ncnnlibrary.communicate.config.ActionConfig;
 import com.example.ncnnlibrary.communicate.listener.ActionListener;
+import com.example.ncnnlibrary.communicate.listener.RequestListener;
 import com.example.ncnnlibrary.communicate.result.ActionResult;
 
 import java.util.List;
@@ -21,8 +22,8 @@ public class KnockAction extends ActionBase {
     private long lastTimestampGyro = 0;
     private long lastTimestampLinear = 0;
 
-    public KnockAction(Context context, ActionConfig config, List<ActionListener> actionListener) {
-        super(context, config, actionListener);
+    public KnockAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
+        super(context, config, requestListener, actionListener);
     }
 
     @Override

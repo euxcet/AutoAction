@@ -6,9 +6,11 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
+import android.view.accessibility.AccessibilityEvent;
 
 import com.example.contextactionlibrary.contextaction.action.ActionBase;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
+import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -100,6 +102,16 @@ public class IMUSensorManager extends MySensorManager implements SensorEventList
     @Override
     public void onSensorChangedDex(SensorEvent event) {
         onSensorChanged(event);
+    }
+
+    @Override
+    public void onAccessibilityEventDex(AccessibilityEvent event) {
+
+    }
+
+    @Override
+    public void onButtonActionEventDex(ButtonActionEvent event) {
+
     }
 
     @Override
