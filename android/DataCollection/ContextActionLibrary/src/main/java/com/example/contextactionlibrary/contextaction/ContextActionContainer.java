@@ -216,8 +216,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
         sensorManagers.add(new BroadcastEventManager(mContext,
                 "BroadcastEventManager",
-                selectBySensorTypeAction(actions, SensorType.BUTTON_ACTION),
-                selectBySensorTypeContext(contexts, SensorType.BUTTON_ACTION)
+                selectBySensorTypeAction(actions, SensorType.BROADCAST),
+                selectBySensorTypeContext(contexts, SensorType.BROADCAST)
         ));
     }
 

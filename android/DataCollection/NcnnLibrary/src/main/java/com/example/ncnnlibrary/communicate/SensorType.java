@@ -7,5 +7,5 @@ public enum SensorType {
     LOCATION,
     PROXIMITY,
     ACCESSIBILITY,
-    BUTTON_ACTION
+    BROADCAST
 }

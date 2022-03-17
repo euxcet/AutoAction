@@ -161,7 +161,7 @@ public class MainService extends AccessibilityService {
                 // InformationalContext
                 ContextConfig informationalConfig = new ContextConfig();
                 informationalConfig.setContext(BuiltInContextEnum.Informational);
-                informationalConfig.setSensorType(Arrays.asList(SensorType.ACCESSIBILITY, SensorType.BUTTON_ACTION));
+                informationalConfig.setSensorType(Arrays.asList(SensorType.ACCESSIBILITY, SensorType.BROADCAST));
 
                 ContextListener contextListener = context ->
                         mHandler.post(() -> Toast.makeText(mContext, context.getContext(), Toast.LENGTH_SHORT).show());
