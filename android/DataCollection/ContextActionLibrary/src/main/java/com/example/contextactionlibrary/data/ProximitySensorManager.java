@@ -10,7 +10,7 @@ import android.view.accessibility.AccessibilityEvent;
 
 import com.example.contextactionlibrary.contextaction.action.ActionBase;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
-import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
+import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -106,7 +106,7 @@ public class ProximitySensorManager extends MySensorManager implements SensorEve
     }
 
     @Override
-    public void onButtonActionEventDex(ButtonActionEvent event) {
+    public void onBroadcastEventDex(BroadcastEvent event) {
 
     }
 

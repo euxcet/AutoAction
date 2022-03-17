@@ -1,20 +1,21 @@
 package com.example.datacollection.ui;
 
 import android.accessibilityservice.AccessibilityService;
-import android.app.Notification;
-import android.app.PendingIntent;
-import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.ContentObserver;
+import android.net.Uri;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
-import android.widget.Button;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
 
 import com.example.datacollection.BuildConfig;
 import com.example.datacollection.contextaction.ContextActionLoader;
@@ -26,13 +27,11 @@ import com.example.ncnnlibrary.communicate.SensorType;
 import com.example.ncnnlibrary.communicate.config.ActionConfig;
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
 import com.example.ncnnlibrary.communicate.config.RequestConfig;
-import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
+import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 import com.example.ncnnlibrary.communicate.listener.ActionListener;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
 import com.example.ncnnlibrary.communicate.listener.RequestListener;
 import com.example.ncnnlibrary.communicate.result.RequestResult;
-import com.gyf.cactus.Cactus;
-import com.gyf.cactus.callback.CactusCallback;
 import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.model.Response;
 
@@ -47,7 +46,7 @@ public class MainService extends AccessibilityService {
     private ContextActionLoader loader;
     private Handler mHandler;
 
-    private HomeWatcherReceiver mHomeKeyReceiver;
+    private CustomBroadcastReceiver mBroadcastReceiver;
 
     public MainService() {
     }
@@ -76,11 +75,16 @@ public class MainService extends AccessibilityService {
         mHandler = new Handler(Looper.getMainLooper());
         Log.e("TEST", "onServiceConnected");
 
-        mHomeKeyReceiver = new HomeWatcherReceiver();
-        final IntentFilter homeFilter = new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-        homeFilter.addAction(Intent.ACTION_SCREEN_ON);
-        homeFilter.addAction(Intent.ACTION_SCREEN_OFF);
-        registerReceiver(mHomeKeyReceiver, homeFilter);
+        mBroadcastReceiver = new CustomBroadcastReceiver();
+        final IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        filter.addAction(Intent.ACTION_CONFIGURATION_CHANGED);
+        filter.addAction(Intent.ACTION_MEDIA_BUTTON);
+        filter.addAction(Intent.ACTION_SET_WALLPAPER);
+        registerReceiver(mBroadcastReceiver, filter);
 
         String[] downloadFileNames = new String[]{"param_dicts.json", "param_max.json", "words.csv"};
         for (String fileName: downloadFileNames) {
@@ -168,28 +172,67 @@ public class MainService extends AccessibilityService {
         });
     }
 
-    class HomeWatcherReceiver extends BroadcastReceiver {
-        public static final String SYSTEM_DIALOG_REASON_KEY = "reason";
-        public static final String SYSTEM_DIALOG_REASON_HOME_KEY = "homekey";
-        public static final String SYSTEM_DIALOG_REASON_RECENT_APPS = "recentapps";
+    class CustomBroadcastReceiver extends BroadcastReceiver {
+        public static final String ACTION_TYPE_GLOBAL = "global";
+
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action.equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
-                String reason = intent.getStringExtra(SYSTEM_DIALOG_REASON_KEY);
-                if (SYSTEM_DIALOG_REASON_HOME_KEY.equals(reason)) {
-                    loader.onButtonActionEvent(new ButtonActionEvent("home","global"));
-                }
-                if (SYSTEM_DIALOG_REASON_RECENT_APPS.equals(reason)) {
-                    loader.onButtonActionEvent(new ButtonActionEvent("recentapps","global"));
-                }
+            switch (action) {
+                case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
+                    loader.onBroadcastEvent(new BroadcastEvent(
+                            action,
+                            intent.getStringExtra("reason"),
+                            ACTION_TYPE_GLOBAL));
+                    break;
+                default:
+                    loader.onBroadcastEvent(new BroadcastEvent(
+                            action,
+                            "",
+                            ACTION_TYPE_GLOBAL));
+                    break;
             }
-            /*
-            else if(action.equals(Intent.ACTION_SCREEN_ON))
-                loader.onScreenState(true);
-            else if(action.equals(Intent.ACTION_SCREEN_OFF))
-                loader.onScreenState(false);
-             */
         }
+    }
+
+    class CustomContentObserver extends ContentObserver {
+        public CustomContentObserver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            onChange(selfChange, null);
+        }
+
+        @Override
+        public void onChange(boolean selfChange, @Nullable Uri uri) {
+            String key;
+            String tag;
+            int value = 0;
+
+            if (uri == null) {
+                key = "null";
+                tag = "Unknown content change";
+            } else {
+                key = uri.toString();
+                String database_key = uri.getLastPathSegment();
+                String inter = uri.getPathSegments().get(0);
+                if (inter.equals("system")) {
+                    value = Settings.System.getInt(getContentResolver(), database_key, value);
+                } else if (inter.equals("global")) {
+                    value = Settings.Global.getInt(getContentResolver(), database_key, value);
+                }
+                tag = database_key;
+            }
+
+            loader.onBroadcastEvent(new BroadcastEvent(key, tag, "", value));
+        }
+    }
+
+    @Override
+    protected boolean onKeyEvent(KeyEvent event) {
+        loader.onBroadcastEvent(new BroadcastEvent("KeyEvent", "", "", event.getKeyCode()));
+        return super.onKeyEvent(event);
     }
 }

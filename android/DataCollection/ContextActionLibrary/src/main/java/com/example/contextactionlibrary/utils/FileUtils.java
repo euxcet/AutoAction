@@ -36,17 +36,10 @@ public class FileUtils {
         String toWrite = content + "\r\n";
         try {
             OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(saveFile));
-            /*
-            RandomAccessFile raf = new RandomAccessFile(saveFile, "rwd");
-            raf.seek(0);
-            raf.write(toWrite.getBytes());
-            raf.close();
-
-             */
             writer.write(toWrite);
             writer.close();
         } catch (Exception e) {
-            Log.e("TestFile", "Error on write File:" + e);
+            e.printStackTrace();
         }
     }
 
@@ -56,7 +49,6 @@ public class FileUtils {
             try {
                 OutputStream out = new FileOutputStream(dst);
                 try {
-                    // Transfer bytes from in to out
                     byte[] buf = new byte[1024];
                     int len;
                     while ((len = in.read(buf)) > 0) {

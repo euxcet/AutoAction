@@ -1,14 +1,12 @@
 package com.example.contextactionlibrary.data;
 
 import android.content.Context;
-import android.hardware.Sensor;
 import android.hardware.SensorEvent;
-import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.example.contextactionlibrary.contextaction.action.ActionBase;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
-import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
+import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 
 import java.util.List;
 
@@ -45,7 +43,7 @@ public class AccessibilityEventManager extends MySensorManager {
     }
 
     @Override
-    public void onButtonActionEventDex(ButtonActionEvent event) {
+    public void onBroadcastEventDex(BroadcastEvent event) {
 
     }
 }

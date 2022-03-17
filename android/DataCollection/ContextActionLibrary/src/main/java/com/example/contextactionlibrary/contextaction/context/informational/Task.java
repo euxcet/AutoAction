@@ -1,8 +1,6 @@
 package com.example.contextactionlibrary.contextaction.context.informational;
 
-import android.widget.Button;
-
-import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
+import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 
 import java.util.List;
 
@@ -12,11 +10,11 @@ public class Task {
     private String describe;
     private String mainPackage;
     private List<Page> pageList;
-    private List<ButtonActionEvent> actionSequence;
+    private List<BroadcastEvent> actionSequence;
     private double threshold = 0.5;
 
-    public Task(int id,String name,String describe,List<Page> pageList,List<ButtonActionEvent> actionSequence) {
-        this.id =id;
+    public Task(int id,String name,String describe,List<Page> pageList,List<BroadcastEvent> actionSequence) {
+        this.id = id;
         this.name = name;
         this.describe = describe;
         this.pageList = pageList;
@@ -24,7 +22,7 @@ public class Task {
     }
 
 
-    public boolean match(List<Page> pages,List<ButtonActionEvent> actions) {
+    public boolean match(List<Page> pages,List<BroadcastEvent> actions) {
         int pageDistance = minDistancePage(pages, pageList);
         int actionDistance = minDistanceAction(actions, actionSequence);
         double pageRes = (2 * pageList.size() - pageDistance) / pageList.size() * 2;
@@ -59,7 +57,7 @@ public class Task {
         return dp[m][n];
     }
 
-    public static int minDistanceAction(List<ButtonActionEvent> l1, List<ButtonActionEvent> l2) {
+    public static int minDistanceAction(List<BroadcastEvent> l1, List<BroadcastEvent> l2) {
         int m = l1.size();
         int n = l2.size();
         int[][] dp = new int[m + 1][n + 1];
@@ -73,7 +71,7 @@ public class Task {
         for(int i = 1; i <= m; i++) {
             for(int j = 1; j <= n; j++) {
                 int c = 2;
-                if (l1.get(i - 1).getText().equals(l2.get(j - 1).getText())) {
+                if (l1.get(i - 1).getTag().equals(l2.get(j - 1).getTag())) {
                     c = 0;
                 }
                 else if (l1.get(i).getType().equals(l2.get(j).getType())) {

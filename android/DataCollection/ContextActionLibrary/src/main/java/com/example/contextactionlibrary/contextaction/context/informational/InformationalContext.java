@@ -1,6 +1,7 @@
 package com.example.contextactionlibrary.contextaction.context.informational;
 
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.SensorEvent;
 import android.os.Build;
 import android.util.Log;
@@ -10,7 +11,7 @@ import androidx.annotation.RequiresApi;
 
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
-import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
+import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
 import com.example.ncnnlibrary.communicate.listener.RequestListener;
 
@@ -23,7 +24,7 @@ public class InformationalContext extends ContextBase {
     private static final String TAG = "TaskContext";
     private Map<String, List<Task>> tasks = new HashMap<>();
     private List<Page> pageList = new ArrayList<>();
-    private List<ButtonActionEvent> actionList = new ArrayList<>();
+    private List<BroadcastEvent> actionList = new ArrayList<>();
 
     private ActivityUtil activityUtil;
     private EventAnalyzer eventAnalyzer;
@@ -147,7 +148,7 @@ public class InformationalContext extends ContextBase {
                 text = event.getText().get(0).toString();
             if (event.getContentDescription() != null && text.equals(""))
                 text = event.getContentDescription().toString();
-            actionList.add(new ButtonActionEvent(text, String.valueOf(event.getEventType())));
+            actionList.add(new BroadcastEvent("", text, String.valueOf(event.getEventType())));
             windowStable = false;
         }
 
@@ -163,8 +164,10 @@ public class InformationalContext extends ContextBase {
     }
 
     @Override
-    public void onButtonActionEvent(ButtonActionEvent event) {
-        actionList.add(event);
+    public void onBroadcastEvent(BroadcastEvent event) {
+        if (event.getAction().equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
+            actionList.add(event);
+        }
     }
 
     @Override

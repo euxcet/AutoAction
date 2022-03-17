@@ -1,15 +1,13 @@
 package com.example.contextactionlibrary.data;
 
 import android.content.Context;
-import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.example.contextactionlibrary.contextaction.action.ActionBase;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
-import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
+import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -49,7 +47,7 @@ public abstract class MySensorManager {
     // TODO: refactor this
     public abstract void onSensorChangedDex(SensorEvent event);
     public abstract void onAccessibilityEventDex(AccessibilityEvent event);
-    public abstract void onButtonActionEventDex(ButtonActionEvent event);
+    public abstract void onBroadcastEventDex(BroadcastEvent event);
 
     public void stopLater(long millisecond) {
         new Timer().schedule(new TimerTask() {

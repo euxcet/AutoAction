@@ -3,20 +3,17 @@ package com.example.datacollection.contextaction;
 import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
-import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
-import android.widget.Button;
 
 import com.example.datacollection.contextaction.sensor.IMUSensorManager;
 import com.example.datacollection.contextaction.sensor.ProximitySensorManager;
 import com.example.ncnnlibrary.communicate.config.ActionConfig;
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
-import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
+import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 import com.example.ncnnlibrary.communicate.listener.ActionListener;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
 import com.example.ncnnlibrary.communicate.listener.RequestListener;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -34,7 +31,7 @@ public class ContextActionLoader {
     private ProximitySensorManager proximitySensorManager;
 
     private Method onAccessibilityEvent;
-    private Method onButtonActionEvent;
+    private Method onBroadcastEvent;
 
     public ContextActionLoader(Context context, DexClassLoader classLoader) {
         this.mContext = context;
@@ -103,9 +100,9 @@ public class ContextActionLoader {
         return null;
     }
 
-    private Method getOnButtonActionEvent(Object container) {
+    private Method getOnBroadcastEvent(Object container) {
         try {
-            Method method = containerClass.getMethod("onButtonActionEventDex", ButtonActionEvent.class);
+            Method method = containerClass.getMethod("onBroadcastEventDex", BroadcastEvent.class);
             return method;
         } catch (Exception e) {
             e.printStackTrace();
@@ -135,8 +132,7 @@ public class ContextActionLoader {
             Method onSensorChanged = getOnSensorChanged(container);
             startSensorManager(container, onSensorChanged);
             onAccessibilityEvent = getOnAccessibilityEvent(container);
-            onButtonActionEvent = getOnButtonActionEvent(container);
-            // TODO: create method onAccessibilityEvent onButtonActionEvent
+            onBroadcastEvent = getOnBroadcastEvent(container);
             startContainer(container);
             imuSensorManager.start();
             proximitySensorManager.start();
@@ -167,10 +163,10 @@ public class ContextActionLoader {
         }
     }
 
-    public void onButtonActionEvent(ButtonActionEvent event) {
+    public void onBroadcastEvent(BroadcastEvent event) {
         try {
-            if (onButtonActionEvent != null) {
-                onButtonActionEvent.invoke(container, event);
+            if (onBroadcastEvent != null) {
+                onBroadcastEvent.invoke(container, event);
             }
         } catch (Exception e) {
             e.printStackTrace();

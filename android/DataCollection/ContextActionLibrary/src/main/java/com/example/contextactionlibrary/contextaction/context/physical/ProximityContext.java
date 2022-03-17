@@ -8,7 +8,7 @@ import android.view.accessibility.AccessibilityEvent;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
 import com.example.contextactionlibrary.data.Preprocess;
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
-import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
+import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
 import com.example.ncnnlibrary.communicate.listener.RequestListener;
 import com.example.ncnnlibrary.communicate.result.ContextResult;
@@ -61,7 +61,7 @@ public class ProximityContext extends ContextBase {
     }
 
     @Override
-    public void onButtonActionEvent(ButtonActionEvent event) {
+    public void onBroadcastEvent(BroadcastEvent event) {
 
     }
 

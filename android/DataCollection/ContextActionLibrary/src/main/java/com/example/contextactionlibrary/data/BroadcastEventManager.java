@@ -6,12 +6,12 @@ import android.view.accessibility.AccessibilityEvent;
 
 import com.example.contextactionlibrary.contextaction.action.ActionBase;
 import com.example.contextactionlibrary.contextaction.context.ContextBase;
-import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
+import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 
 import java.util.List;
 
-public class ButtonActionEventManager extends MySensorManager {
-    public ButtonActionEventManager(Context context, String name, List<ActionBase> actions, List<ContextBase> contexts) {
+public class BroadcastEventManager extends MySensorManager {
+    public BroadcastEventManager(Context context, String name, List<ActionBase> actions, List<ContextBase> contexts) {
         super(context, name, actions, contexts);
     }
 
@@ -41,9 +41,9 @@ public class ButtonActionEventManager extends MySensorManager {
     }
 
     @Override
-    public void onButtonActionEventDex(ButtonActionEvent event) {
+    public void onBroadcastEventDex(BroadcastEvent event) {
         for (ContextBase context: contexts) {
-            context.onButtonActionEvent(event);
+            context.onBroadcastEvent(event);
         }
     }
 }

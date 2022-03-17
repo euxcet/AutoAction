@@ -5,7 +5,7 @@ import android.hardware.SensorEvent;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
-import com.example.ncnnlibrary.communicate.event.ButtonActionEvent;
+import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
 import com.example.ncnnlibrary.communicate.listener.RequestListener;
 
@@ -34,7 +34,7 @@ public abstract class ContextBase {
     public abstract void onProximitySensorChanged(SensorEvent event);
 
     public abstract void onAccessibilityEvent(AccessibilityEvent event);
-    public abstract void onButtonActionEvent(ButtonActionEvent event);
+    public abstract void onBroadcastEvent(BroadcastEvent event);
 
     public abstract void getContext();
 
