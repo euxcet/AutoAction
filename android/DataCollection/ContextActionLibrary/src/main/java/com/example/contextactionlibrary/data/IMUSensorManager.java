@@ -15,7 +15,7 @@ import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 import java.util.Arrays;
 import java.util.List;
 
-public class IMUSensorManager extends MySensorManager implements SensorEventListener {
+public class IMUSensorManager extends BaseSensorManager implements SensorEventListener {
 
     private Preprocess preprocess;
 

@@ -19,7 +19,7 @@ import com.example.contextactionlibrary.contextaction.context.physical.Proximity
 import com.example.contextactionlibrary.data.AccessibilityEventManager;
 import com.example.contextactionlibrary.data.BroadcastEventManager;
 import com.example.contextactionlibrary.data.IMUSensorManager;
-import com.example.contextactionlibrary.data.MySensorManager;
+import com.example.contextactionlibrary.data.BaseSensorManager;
 import com.example.contextactionlibrary.data.ProximitySensorManager;
 import com.example.contextactionlibrary.model.NcnnInstance;
 import com.example.ncnnlibrary.communicate.BuiltInContextEnum;
@@ -56,7 +56,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private List<BaseAction> actions;
     private List<BaseContext> contexts;
 
-    private List<MySensorManager> sensorManagers;
+    private List<BaseSensorManager> sensorManagers;
 
     private boolean fromDex = false;
     private boolean openSensor = true;
@@ -123,7 +123,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         initialize();
 
         if (openSensor) {
-            for (MySensorManager sensorManager: sensorManagers) {
+            for (BaseSensorManager sensorManager: sensorManagers) {
                 sensorManager.start();
             }
         }
@@ -140,7 +140,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     public void stop() {
         if (openSensor) {
-            for (MySensorManager sensorManager: sensorManagers) {
+            for (BaseSensorManager sensorManager: sensorManagers) {
                 sensorManager.stop();
             }
         }
@@ -249,7 +249,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     public void onSensorChangedDex(SensorEvent event) {
         int type = event.sensor.getType();
-        for (MySensorManager sensorManager: sensorManagers) {
+        for (BaseSensorManager sensorManager: sensorManagers) {
             if (sensorManager.getSensorTypeList() != null && sensorManager.getSensorTypeList().contains(type)) {
                 sensorManager.onSensorChangedDex(event);
             }
@@ -257,13 +257,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onAccessibilityEventDex(AccessibilityEvent event) {
-        for (MySensorManager sensorManager: sensorManagers) {
+        for (BaseSensorManager sensorManager: sensorManagers) {
             sensorManager.onAccessibilityEventDex(event);
         }
     }
 
     public void onBroadcastEventDex(BroadcastEvent event) {
-        for (MySensorManager sensorManager: sensorManagers) {
+        for (BaseSensorManager sensorManager: sensorManagers) {
             sensorManager.onBroadcastEventDex(event);
         }
     }

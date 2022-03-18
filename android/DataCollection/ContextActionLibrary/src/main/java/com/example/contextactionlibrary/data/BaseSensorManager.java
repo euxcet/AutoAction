@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public abstract class MySensorManager {
+public abstract class BaseSensorManager {
     protected String TAG = "MySensorManager";
     protected String name;
 
@@ -24,7 +24,7 @@ public abstract class MySensorManager {
     protected List<BaseAction> actions;
     protected List<BaseContext> contexts;
 
-    protected MySensorManager(Context context, String name, List<BaseAction> actions, List<BaseContext> contexts) {
+    protected BaseSensorManager(Context context, String name, List<BaseAction> actions, List<BaseContext> contexts) {
         this.mContext = context;
         this.name = name;
         this.actions = actions;

@@ -10,7 +10,7 @@ import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 
 import java.util.List;
 
-public class BroadcastEventManager extends MySensorManager {
+public class BroadcastEventManager extends BaseSensorManager {
     public BroadcastEventManager(Context context, String name, List<BaseAction> actions, List<BaseContext> contexts) {
         super(context, name, actions, contexts);
     }

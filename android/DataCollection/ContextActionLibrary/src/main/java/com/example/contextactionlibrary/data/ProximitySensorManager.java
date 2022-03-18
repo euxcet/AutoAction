@@ -15,7 +15,7 @@ import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 import java.util.Arrays;
 import java.util.List;
 
-public class ProximitySensorManager extends MySensorManager implements SensorEventListener {
+public class ProximitySensorManager extends BaseSensorManager implements SensorEventListener {
 
     private Preprocess preprocess;
 

@@ -10,7 +10,7 @@ import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 
 import java.util.List;
 
-public class AccessibilityEventManager extends MySensorManager {
+public class AccessibilityEventManager extends BaseSensorManager {
     public AccessibilityEventManager(Context context, String name, List<BaseAction> actions, List<BaseContext> contexts) {
         super(context, name, actions, contexts);
     }
