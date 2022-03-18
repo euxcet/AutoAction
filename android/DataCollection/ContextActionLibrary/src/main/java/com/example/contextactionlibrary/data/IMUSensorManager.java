@@ -8,8 +8,8 @@ import android.hardware.SensorManager;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
-import com.example.contextactionlibrary.contextaction.action.ActionBase;
-import com.example.contextactionlibrary.contextaction.context.ContextBase;
+import com.example.contextactionlibrary.contextaction.action.BaseAction;
+import com.example.contextactionlibrary.contextaction.context.BaseContext;
 import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 
 import java.util.Arrays;
@@ -26,7 +26,7 @@ public class IMUSensorManager extends MySensorManager implements SensorEventList
     private Sensor mMagnetic;
     private int samplingPeriod;
 
-    public IMUSensorManager(Context context, String name, List<ActionBase> actions, List<ContextBase> contexts, int samplingPeriod) {
+    public IMUSensorManager(Context context, String name, List<BaseAction> actions, List<BaseContext> contexts, int samplingPeriod) {
         super(context, name, actions, contexts);
         this.samplingPeriod = samplingPeriod;
         preprocess = Preprocess.getInstance();
@@ -116,10 +116,10 @@ public class IMUSensorManager extends MySensorManager implements SensorEventList
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        for (ActionBase action: actions) {
+        for (BaseAction action: actions) {
             action.onIMUSensorChanged(event);
         }
-        for (ContextBase context: contexts) {
+        for (BaseContext context: contexts) {
             context.onIMUSensorChanged(event);
         }
         int type = event.sensor.getType();

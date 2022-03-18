@@ -9,7 +9,7 @@ import com.example.ncnnlibrary.communicate.listener.RequestListener;
 
 import java.util.List;
 
-public abstract class ActionBase {
+public abstract class BaseAction {
 
     protected Context mContext;
 
@@ -19,7 +19,7 @@ public abstract class ActionBase {
 
     protected boolean isStarted = false;
 
-    public ActionBase(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
+    public BaseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
         this.mContext = context;
         this.config = config;
         this.requestListener = requestListener;

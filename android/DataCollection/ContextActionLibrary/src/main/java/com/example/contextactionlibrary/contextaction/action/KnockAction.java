@@ -12,7 +12,7 @@ import com.example.ncnnlibrary.communicate.result.ActionResult;
 
 import java.util.List;
 
-public class KnockAction extends ActionBase {
+public class KnockAction extends BaseAction {
 
     private final int DATA_LENGTH = 128 * 6;
     private final int DATA_ELEMSIZE = 6;

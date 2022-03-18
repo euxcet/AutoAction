@@ -9,7 +9,7 @@ import android.view.accessibility.AccessibilityEvent;
 
 import androidx.annotation.RequiresApi;
 
-import com.example.contextactionlibrary.contextaction.context.ContextBase;
+import com.example.contextactionlibrary.contextaction.context.BaseContext;
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
 import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 import com.example.ncnnlibrary.communicate.listener.ContextListener;
@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class InformationalContext extends ContextBase {
+public class InformationalContext extends BaseContext {
     private static final String TAG = "TaskContext";
     private Map<String, List<Task>> tasks = new HashMap<>();
     private List<Page> pageList = new ArrayList<>();

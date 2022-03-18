@@ -9,11 +9,11 @@ import android.view.accessibility.AccessibilityEvent;
 import com.example.contextactionlibrary.BuildConfig;
 import com.example.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.example.contextactionlibrary.collect.trigger.Trigger;
-import com.example.contextactionlibrary.contextaction.action.ActionBase;
+import com.example.contextactionlibrary.contextaction.action.BaseAction;
 import com.example.contextactionlibrary.contextaction.action.TapTapAction;
 import com.example.contextactionlibrary.contextaction.collect.BaseCollector;
 import com.example.contextactionlibrary.contextaction.collect.TapTapCollector;
-import com.example.contextactionlibrary.contextaction.context.ContextBase;
+import com.example.contextactionlibrary.contextaction.context.BaseContext;
 import com.example.contextactionlibrary.contextaction.context.informational.InformationalContext;
 import com.example.contextactionlibrary.contextaction.context.physical.ProximityContext;
 import com.example.contextactionlibrary.data.AccessibilityEventManager;
@@ -53,8 +53,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     private ThreadPoolExecutor executor;
 
-    private List<ActionBase> actions;
-    private List<ContextBase> contexts;
+    private List<BaseAction> actions;
+    private List<BaseContext> contexts;
 
     private List<MySensorManager> sensorManagers;
 
@@ -70,7 +70,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     private List<BaseCollector> collectors;
 
-    public ContextActionContainer(Context context, List<ActionBase> actions, List<ContextBase> contexts, RequestListener requestListener) {
+    public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener) {
         this.mContext = context;
         this.actions = actions;
         this.contexts = contexts;
@@ -128,10 +128,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             }
         }
 
-        for (ActionBase action: actions) {
+        for (BaseAction action: actions) {
             action.start();
         }
-        for (ContextBase context: contexts) {
+        for (BaseContext context: contexts) {
             context.start();
         }
         monitorAction();
@@ -144,17 +144,17 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 sensorManager.stop();
             }
         }
-        for (ActionBase action: actions) {
+        for (BaseAction action: actions) {
             action.stop();
         }
-        for (ContextBase context: contexts) {
+        for (BaseContext context: contexts) {
             context.stop();
         }
     }
 
-    private List<ActionBase> selectBySensorTypeAction(List<ActionBase> actions, SensorType sensorType) {
-        List<ActionBase> result = new ArrayList<>();
-        for (ActionBase action: actions) {
+    private List<BaseAction> selectBySensorTypeAction(List<BaseAction> actions, SensorType sensorType) {
+        List<BaseAction> result = new ArrayList<>();
+        for (BaseAction action: actions) {
             if (action.getConfig().getSensorType().contains(sensorType)) {
                 result.add(action);
             }
@@ -162,9 +162,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         return result;
     }
 
-    private List<ContextBase> selectBySensorTypeContext(List<ContextBase> contexts, SensorType sensorType) {
-        List<ContextBase> result = new ArrayList<>();
-        for (ContextBase context: contexts) {
+    private List<BaseContext> selectBySensorTypeContext(List<BaseContext> contexts, SensorType sensorType) {
+        List<BaseContext> result = new ArrayList<>();
+        for (BaseContext context: contexts) {
             if (context.getConfig().getSensorType().contains(sensorType)) {
                 result.add(context);
             }
@@ -226,7 +226,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             @Override
             public void run() {
                 executor.execute(() -> {
-                    for (ActionBase action: actions) {
+                    for (BaseAction action: actions) {
                         action.getAction();
                     }
                 });
@@ -239,7 +239,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             @Override
             public void run() {
                 executor.execute(() -> {
-                    for (ContextBase context: contexts) {
+                    for (BaseContext context: contexts) {
                         context.getContext();
                     }
                 });

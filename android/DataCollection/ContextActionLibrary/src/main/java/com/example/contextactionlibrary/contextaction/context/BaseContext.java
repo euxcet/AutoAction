@@ -11,7 +11,7 @@ import com.example.ncnnlibrary.communicate.listener.RequestListener;
 
 import java.util.List;
 
-public abstract class ContextBase {
+public abstract class BaseContext {
     protected Context mContext;
 
     protected ContextConfig config;
@@ -21,7 +21,7 @@ public abstract class ContextBase {
 
     protected boolean isStarted = false;
 
-    public ContextBase(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener) {
+    public BaseContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener) {
         this.mContext = context;
         this.config = config;
         this.requestListener = requestListener;

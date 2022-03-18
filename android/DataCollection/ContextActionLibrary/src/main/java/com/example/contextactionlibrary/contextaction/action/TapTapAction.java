@@ -16,7 +16,7 @@ import com.example.ncnnlibrary.communicate.result.ActionResult;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TapTapAction extends ActionBase {
+public class TapTapAction extends BaseAction {
 
     private String TAG = "TapTapAction";
 

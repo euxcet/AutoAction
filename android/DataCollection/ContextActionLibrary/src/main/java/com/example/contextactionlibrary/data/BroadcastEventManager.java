@@ -4,14 +4,14 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.view.accessibility.AccessibilityEvent;
 
-import com.example.contextactionlibrary.contextaction.action.ActionBase;
-import com.example.contextactionlibrary.contextaction.context.ContextBase;
+import com.example.contextactionlibrary.contextaction.action.BaseAction;
+import com.example.contextactionlibrary.contextaction.context.BaseContext;
 import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 
 import java.util.List;
 
 public class BroadcastEventManager extends MySensorManager {
-    public BroadcastEventManager(Context context, String name, List<ActionBase> actions, List<ContextBase> contexts) {
+    public BroadcastEventManager(Context context, String name, List<BaseAction> actions, List<BaseContext> contexts) {
         super(context, name, actions, contexts);
     }
 
@@ -42,7 +42,7 @@ public class BroadcastEventManager extends MySensorManager {
 
     @Override
     public void onBroadcastEventDex(BroadcastEvent event) {
-        for (ContextBase context: contexts) {
+        for (BaseContext context: contexts) {
             context.onBroadcastEvent(event);
         }
     }

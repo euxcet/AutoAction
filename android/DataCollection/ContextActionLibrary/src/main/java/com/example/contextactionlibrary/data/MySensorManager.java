@@ -4,8 +4,8 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.view.accessibility.AccessibilityEvent;
 
-import com.example.contextactionlibrary.contextaction.action.ActionBase;
-import com.example.contextactionlibrary.contextaction.context.ContextBase;
+import com.example.contextactionlibrary.contextaction.action.BaseAction;
+import com.example.contextactionlibrary.contextaction.context.BaseContext;
 import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
 
 import java.util.List;
@@ -21,10 +21,10 @@ public abstract class MySensorManager {
     protected boolean isStarted = false;
     protected boolean isSensorOpened = false;
 
-    protected List<ActionBase> actions;
-    protected List<ContextBase> contexts;
+    protected List<BaseAction> actions;
+    protected List<BaseContext> contexts;
 
-    protected MySensorManager(Context context, String name, List<ActionBase> actions, List<ContextBase> contexts) {
+    protected MySensorManager(Context context, String name, List<BaseAction> actions, List<BaseContext> contexts) {
         this.mContext = context;
         this.name = name;
         this.actions = actions;

@@ -5,7 +5,7 @@ import android.hardware.SensorEvent;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
-import com.example.contextactionlibrary.contextaction.context.ContextBase;
+import com.example.contextactionlibrary.contextaction.context.BaseContext;
 import com.example.contextactionlibrary.data.Preprocess;
 import com.example.ncnnlibrary.communicate.config.ContextConfig;
 import com.example.ncnnlibrary.communicate.event.BroadcastEvent;
@@ -15,7 +15,7 @@ import com.example.ncnnlibrary.communicate.result.ContextResult;
 
 import java.util.List;
 
-public class ProximityContext extends ContextBase {
+public class ProximityContext extends BaseContext {
     private String TAG = "ProximityContext";
 
     private Preprocess preprocess;
