@@ -22,6 +22,15 @@ public class ClickTrigger extends Trigger {
 
     public ClickTrigger(Context context, List<CollectorType> types) {
         super(context, types);
+        triggerTask = new TriggerTask();
+        this.threadPoolExecutor = new ThreadPoolExecutor(
+                1,
+                2,
+                2,
+                TimeUnit.MINUTES,
+                new PriorityBlockingQueue<>(),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.AbortPolicy());
     }
 
     public ClickTrigger(Context context, CollectorType type) {

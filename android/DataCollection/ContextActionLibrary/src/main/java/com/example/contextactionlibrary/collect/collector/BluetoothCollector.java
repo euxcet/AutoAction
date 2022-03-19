@@ -6,7 +6,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import com.example.contextactionlibrary.collect.data.BluetoothData;
 import com.example.contextactionlibrary.collect.data.Data;
@@ -34,11 +37,12 @@ public class BluetoothCollector extends Collector {
         data = new BluetoothData();
     }
 
-    private synchronized void insert(BluetoothDevice device, boolean linked) {
+    private synchronized void insert(BluetoothDevice device, short rssi, boolean linked) {
         data.insert(new SingleBluetoothData(device.getName(), device.getAddress(),
                 device.getBondState(), device.getType(),
                 device.getBluetoothClass().getDeviceClass(),
-                device.getBluetoothClass().getMajorDeviceClass(), linked));
+                device.getBluetoothClass().getMajorDeviceClass(),
+                rssi, linked));
     }
 
     @Override
@@ -47,9 +51,14 @@ public class BluetoothCollector extends Collector {
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                Log.e("onReceive", intent.getAction());
                 if (intent.getAction().equals(BluetoothDevice.ACTION_FOUND)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    insert(device, false);
+                    short rssi = 0;
+                    if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
+                        rssi = intent.getExtras().getShort(BluetoothDevice.EXTRA_RSSI);
+                    }
+                    insert(device, rssi, false);
                 }
             }
         };
@@ -66,15 +75,17 @@ public class BluetoothCollector extends Collector {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public synchronized CompletableFuture<Data> collect() {
+        Log.e("BLUE", "collect");
         CompletableFuture<Data> ft = new CompletableFuture<>();
         data.clear();
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device: pairedDevices) {
-                insert(device, true);
+                insert(device, (short)0, true);
             }
         }
 
@@ -83,6 +94,7 @@ public class BluetoothCollector extends Collector {
             @Override
             public void run() {
                 synchronized (BluetoothCollector.this) {
+                    bluetoothAdapter.cancelDiscovery();
                     saver.save(data.deepClone());
                     ft.complete(data);
                 }

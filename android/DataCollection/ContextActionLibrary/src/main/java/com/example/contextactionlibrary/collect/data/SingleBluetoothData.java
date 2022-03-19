@@ -7,6 +7,7 @@ public class SingleBluetoothData extends Data {
     private int type;
     private int deviceClass;
     private int majorDeviceClass;
+    private short rssi;
     private boolean linked;
 
     public SingleBluetoothData() {
@@ -16,12 +17,14 @@ public class SingleBluetoothData extends Data {
         this.type = 0;
         this.deviceClass = 0;
         this.majorDeviceClass = 0;
+        this.rssi = 0;
         this.linked = false;
     }
 
     public SingleBluetoothData(String name, String address,
                                int bondState, int type,
-                               int deviceClass, int majorDeviceClass, boolean linked) {
+                               int deviceClass, int majorDeviceClass,
+                               short rssi, boolean linked) {
         if (name == null) {
             this.name = "NULL";
         } else {
@@ -36,6 +39,7 @@ public class SingleBluetoothData extends Data {
         this.type = type;
         this.deviceClass = deviceClass;
         this.majorDeviceClass = majorDeviceClass;
+        this.rssi = rssi;
         this.linked = linked;
     }
 
@@ -65,6 +69,10 @@ public class SingleBluetoothData extends Data {
 
     public boolean getLinked() {
         return linked;
+    }
+
+    public short getRssi() {
+        return rssi;
     }
 
     public void setAddress(String address) {
@@ -97,6 +105,10 @@ public class SingleBluetoothData extends Data {
 
     public void setMajorDeviceClass(int majorDeviceClass) {
         this.majorDeviceClass = majorDeviceClass;
+    }
+
+    public void setRssi(short rssi) {
+        this.rssi = rssi;
     }
 
     public void setLinked(boolean linked) {

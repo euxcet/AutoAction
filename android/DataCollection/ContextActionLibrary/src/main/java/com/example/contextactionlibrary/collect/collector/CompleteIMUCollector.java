@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Process;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -104,6 +105,7 @@ public class CompleteIMUCollector extends SensorCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public synchronized CompletableFuture<Data> collect() {
+        Log.e("TapTapCollector", "collect");
         Gson gson = new Gson();
         taptapPoint = gson.toJson(data.getLastData());
         CompletableFuture<Data> ft = new CompletableFuture<>();
@@ -113,6 +115,7 @@ public class CompleteIMUCollector extends SensorCollector {
                 List<Float> cur = data.toList();
                 Gson gson = new Gson();
                 sensorData = gson.toJson(cur);
+                Log.e("TapTapCollector", "size " + cur.size());
                 saver.save(cur);
                 ft.complete(data);
             }
