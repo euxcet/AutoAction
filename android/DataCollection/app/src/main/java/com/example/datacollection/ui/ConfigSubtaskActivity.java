@@ -49,9 +49,16 @@ public class ConfigSubtaskActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        taskNameView = findViewById(R.id.taskNameView);
+        Button configButton = findViewById(R.id.configTaskButton);
+        configButton.setOnClickListener((v) -> {
+            Bundle configBundle = new Bundle();
+            configBundle.putInt("task_id", task_id);
+            Intent intent = new Intent(ConfigSubtaskActivity.this, ModifyTaskActivity.class);
+            intent.putExtras(configBundle);
+            startActivity(intent);
+        });
 
-        loadTaskListViaNetwork();
+        taskNameView = findViewById(R.id.taskNameView);
     }
 
     @Override

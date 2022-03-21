@@ -42,7 +42,6 @@ public class ConfigTaskActivity extends AppCompatActivity {
         });
 
         taskListView = findViewById(R.id.trainListView);
-        loadTaskListViaNetwork();
     }
 
     @Override

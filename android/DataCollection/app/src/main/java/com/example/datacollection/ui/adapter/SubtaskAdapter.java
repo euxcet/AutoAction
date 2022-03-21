@@ -1,6 +1,8 @@
 package com.example.datacollection.ui.adapter;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +11,8 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.datacollection.R;
+import com.example.datacollection.ui.ConfigSubtaskActivity;
+import com.example.datacollection.ui.ModifySubtaskActivity;
 import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.utils.NetworkUtils;
 import com.lzy.okgo.callback.StringCallback;
@@ -80,6 +84,15 @@ public class SubtaskAdapter extends BaseAdapter {
                 }
             });
             this.notifyDataSetChanged();
+        });
+
+        view.setOnClickListener((v) -> {
+            Bundle bundle = new Bundle();
+            bundle.putInt("task_id", task_id);
+            bundle.putInt("subtask_id", i);
+            Intent intent = new Intent(mContext, ModifySubtaskActivity.class);
+            intent.putExtras(bundle);
+            mContext.startActivity(intent);
         });
 
         return view;

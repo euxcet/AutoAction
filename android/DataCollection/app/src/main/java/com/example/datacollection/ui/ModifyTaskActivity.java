@@ -9,17 +9,18 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 
 import com.example.datacollection.R;
-import com.example.datacollection.utils.RandomUtils;
-import com.example.datacollection.utils.bean.TaskListBean;
+import com.example.datacollection.ui.adapter.TaskAdapter;
 import com.example.datacollection.utils.NetworkUtils;
+import com.example.datacollection.utils.RandomUtils;
 import com.example.datacollection.utils.bean.StringListBean;
+import com.example.datacollection.utils.bean.TaskListBean;
 import com.google.gson.Gson;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
-public class AddTaskActivity extends AppCompatActivity {
-    private AppCompatActivity mActivity;
+public class ModifyTaskActivity extends AppCompatActivity {
     private Context mContext;
+    private AppCompatActivity mActivity;
 
     private TaskListBean taskList;
 
@@ -29,13 +30,17 @@ public class AddTaskActivity extends AppCompatActivity {
     private CheckBox videoCheckbox;
     private CheckBox audioCheckbox;
 
+    private int task_id;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_task);
+        setContentView(R.layout.activity_modify_task);
+        this.mContext = this;
+        this.mActivity = this;
 
-        mActivity = this;
-        mContext = this;
+        Bundle bundle = getIntent().getExtras();
+        task_id = bundle.getInt("task_id");
 
         nameEditText = findViewById(R.id.addTaskNameEdit);
         timesEditText = findViewById(R.id.addTaskTimesEdit);
@@ -47,10 +52,16 @@ public class AddTaskActivity extends AppCompatActivity {
         Button cancelButton = findViewById(R.id.addTaskCancelButton);
 
         cancelButton.setOnClickListener((v) -> this.finish());
-        confirmButton.setOnClickListener((v) -> addNewTask());
+        confirmButton.setOnClickListener((v) -> modifyTask());
     }
 
-    private void addNewTask() {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadTaskListViaNetwork();
+    }
+
+    private void loadTaskListViaNetwork() {
         NetworkUtils.getAllTaskList(mContext, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
@@ -61,29 +72,32 @@ public class AddTaskActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(Response<String> response) {
                             taskList = new Gson().fromJson(response.body(), TaskListBean.class);
-
-                            // taskList = TaskList.parseFromLocalFile();
-                            TaskListBean.Task newTask = new TaskListBean.Task(
-                                    RandomUtils.generateRandomTaskId(),
-                                    nameEditText.getText().toString(),
-                                    Integer.parseInt(timesEditText.getText().toString()),
-                                    Integer.parseInt(durationEditText.getText().toString()),
-                                    videoCheckbox.isChecked(),
-                                    audioCheckbox.isChecked());
-                            taskList.addTask(newTask);
-                            // TaskList.saveToLocalFile(taskList);
-
-                            NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
-                                @Override
-                                public void onSuccess(Response<String> response) {
-                                    mActivity.finish();
-                                }
-                            });
+                            TaskListBean.Task task = taskList.getTask().get(task_id);
+                            nameEditText.setText(task.getName());
+                            timesEditText.setText(String.valueOf(task.getTimes()));
+                            durationEditText.setText(String.valueOf(task.getDuration()));
+                            videoCheckbox.setChecked(task.isVideo());
+                            audioCheckbox.setChecked(task.isAudio());
                         }
                     });
                 }
             }
         });
+    }
 
+    private void modifyTask() {
+        TaskListBean.Task task = taskList.getTask().get(task_id);
+        task.setName(nameEditText.getText().toString());
+        task.setTimes(Integer.parseInt(timesEditText.getText().toString()));
+        task.setDuration(Integer.parseInt(durationEditText.getText().toString()));
+        task.setVideo(videoCheckbox.isChecked());
+        task.setAudio(audioCheckbox.isChecked());
+
+        NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
+            @Override
+            public void onSuccess(Response<String> response) {
+                mActivity.finish();
+            }
+        });
     }
 }

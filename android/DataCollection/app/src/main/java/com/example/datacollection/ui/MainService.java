@@ -111,7 +111,6 @@ public class MainService extends AccessibilityService {
     }
 
     private RequestResult handleRequest(RequestConfig config) {
-        // TODO: handle getWindow
         RequestResult result = new RequestResult();
         if (config.getString("getAppTapBlockValue") != null) {
             result.putValue("getAppTapBlockValueResult", 0);

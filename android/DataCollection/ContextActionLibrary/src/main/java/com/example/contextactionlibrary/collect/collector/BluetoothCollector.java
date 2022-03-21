@@ -51,7 +51,6 @@ public class BluetoothCollector extends Collector {
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.e("onReceive", intent.getAction());
                 if (intent.getAction().equals(BluetoothDevice.ACTION_FOUND)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     short rssi = 0;
@@ -78,7 +77,6 @@ public class BluetoothCollector extends Collector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public synchronized CompletableFuture<Data> collect() {
-        Log.e("BLUE", "collect");
         CompletableFuture<Data> ft = new CompletableFuture<>();
         data.clear();
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
