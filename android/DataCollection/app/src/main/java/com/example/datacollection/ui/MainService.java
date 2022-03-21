@@ -158,6 +158,11 @@ public class MainService extends AccessibilityService {
                 proximityConfig.setContext(BuiltInContextEnum.Proximity);
                 proximityConfig.setSensorType(Arrays.asList(SensorType.PROXIMITY));
 
+                // TableContext
+                ContextConfig tableConfig = new ContextConfig();
+                tableConfig.setContext(BuiltInContextEnum.Table);
+                tableConfig.setSensorType(Arrays.asList(SensorType.IMU));
+
                 // InformationalContext
                 ContextConfig informationalConfig = new ContextConfig();
                 informationalConfig.setContext(BuiltInContextEnum.Informational);
@@ -167,7 +172,7 @@ public class MainService extends AccessibilityService {
                         mHandler.post(() -> Toast.makeText(mContext, context.getContext(), Toast.LENGTH_SHORT).show());
 
                 RequestListener requestListener = config -> handleRequest(config);
-                loader.startDetection(Arrays.asList(tapTapConfig), actionListener, Arrays.asList(proximityConfig, informationalConfig), contextListener, requestListener);
+                loader.startDetection(Arrays.asList(tapTapConfig), actionListener, Arrays.asList(proximityConfig, tableConfig, informationalConfig), contextListener, requestListener);
             }
         });
     }

@@ -138,6 +138,6 @@ public class IMUSensorManager extends BaseSensorManager implements SensorEventLi
 
     @Override
     public List<Integer> getSensorTypeList() {
-        return Arrays.asList(Sensor.TYPE_GYROSCOPE, Sensor.TYPE_ACCELEROMETER);
+        return Arrays.asList(Sensor.TYPE_GYROSCOPE, Sensor.TYPE_ACCELEROMETER, Sensor.TYPE_LINEAR_ACCELERATION, Sensor.TYPE_MAGNETIC_FIELD);
     }
 }

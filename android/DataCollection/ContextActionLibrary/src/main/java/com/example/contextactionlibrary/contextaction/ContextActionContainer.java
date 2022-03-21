@@ -16,6 +16,7 @@ import com.example.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.example.contextactionlibrary.contextaction.context.BaseContext;
 import com.example.contextactionlibrary.contextaction.context.informational.InformationalContext;
 import com.example.contextactionlibrary.contextaction.context.physical.ProximityContext;
+import com.example.contextactionlibrary.contextaction.context.physical.TableContext;
 import com.example.contextactionlibrary.data.AccessibilityEventManager;
 import com.example.contextactionlibrary.data.BroadcastEventManager;
 import com.example.contextactionlibrary.data.IMUSensorManager;
@@ -187,6 +188,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 if (config.getContext() == BuiltInContextEnum.Proximity) {
                     ProximityContext proximityContext = new ProximityContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
                     contexts.add(proximityContext);
+                } else if (config.getContext() == BuiltInContextEnum.Table) {
+                    TableContext tableContext = new TableContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
+                    contexts.add(tableContext);
                 } else if (config.getContext() == BuiltInContextEnum.Informational) {
                     InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
                     contexts.add(informationalContext);
