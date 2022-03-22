@@ -17,8 +17,6 @@ import java.util.List;
 
 public class ProximitySensorManager extends BaseSensorManager implements SensorEventListener {
 
-    private Preprocess preprocess;
-
     private SensorManager mSensorManager;
     private Sensor mProximity;
     private int samplingPeriod;
@@ -26,7 +24,6 @@ public class ProximitySensorManager extends BaseSensorManager implements SensorE
     public ProximitySensorManager(Context context, String name, List<BaseAction> actions, List<BaseContext> contexts, int samplingPeriod) {
         super(context, name, actions, contexts);
         this.samplingPeriod = samplingPeriod;
-        preprocess = Preprocess.getInstance();
         initialize();
     }
 

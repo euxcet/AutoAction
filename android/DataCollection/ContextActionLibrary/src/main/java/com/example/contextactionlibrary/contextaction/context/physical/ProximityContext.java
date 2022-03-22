@@ -1,6 +1,7 @@
 package com.example.contextactionlibrary.contextaction.context.physical;
 
 import android.content.Context;
+import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
@@ -53,6 +54,8 @@ public class ProximityContext extends BaseContext {
 
     @Override
     public void onProximitySensorChanged(SensorEvent event) {
+        if (event.sensor.getType() != Sensor.TYPE_PROXIMITY)
+            return;
         float prox = event.values[0];
         if ((int)prox < proxThreshold) {
             lastNearTime = event.timestamp;

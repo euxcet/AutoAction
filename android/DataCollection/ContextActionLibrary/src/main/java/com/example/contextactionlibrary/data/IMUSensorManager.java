@@ -17,8 +17,6 @@ import java.util.List;
 
 public class IMUSensorManager extends BaseSensorManager implements SensorEventListener {
 
-    private Preprocess preprocess;
-
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private Sensor mGyroscope;
@@ -29,7 +27,6 @@ public class IMUSensorManager extends BaseSensorManager implements SensorEventLi
     public IMUSensorManager(Context context, String name, List<BaseAction> actions, List<BaseContext> contexts, int samplingPeriod) {
         super(context, name, actions, contexts);
         this.samplingPeriod = samplingPeriod;
-        preprocess = Preprocess.getInstance();
         initialize();
     }
 
@@ -121,15 +118,6 @@ public class IMUSensorManager extends BaseSensorManager implements SensorEventLi
         }
         for (BaseContext context: contexts) {
             context.onIMUSensorChanged(event);
-        }
-        int type = event.sensor.getType();
-        switch (type) {
-            case Sensor.TYPE_GYROSCOPE:
-            case Sensor.TYPE_ACCELEROMETER:
-                preprocess.preprocessIMU(type, event.values[0], event.values[1], event.values[2], event.timestamp);
-                break;
-            default:
-                break;
         }
     }
 
