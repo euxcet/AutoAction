@@ -118,10 +118,6 @@ public class ProximitySensorManager extends BaseSensorManager implements SensorE
         for (BaseContext context: contexts) {
             context.onProximitySensorChanged(event);
         }
-        int type = event.sensor.getType();
-        if (type == Sensor.TYPE_PROXIMITY) {
-            preprocess.preprocessProx(event.values[0], event.timestamp);
-        }
     }
 
     @Override

@@ -43,10 +43,6 @@ public class Preprocess {
     private PeakDetector peakDetectorPositive = new PeakDetector();
     private boolean wasPeakApproaching = true;
 
-    private static int proxThreshold = 4;
-    private long lastNearTime = 0L;
-    private long lastFarTime = 0L;
-
     public List<Float> getXsAcc() {
         return xsAcc;
     }
@@ -174,21 +170,6 @@ public class Preprocess {
                 while(resampleGyro.update(x, y, z, timestamp))
                     processGyro();
         }
-    }
-
-    public void preprocessProx(float prox, long timestamp) {
-        if ((int)prox < proxThreshold) {
-            lastNearTime = timestamp;
-        }
-        else {
-            lastFarTime = timestamp;
-        }
-    }
-
-    public long checkLastNear(long threshold, long lastRecognized) {
-        if (lastTimestamp - lastNearTime < threshold && lastTimestamp - lastRecognized > 5 * 1e9)
-            return lastTimestamp;
-        return -1;
     }
 
     public void reset() {
