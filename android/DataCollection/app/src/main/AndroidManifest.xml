@@ -27,6 +27,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".visual.VisualizeRecordActivity"
+            android:exported="false" />
+        <activity
+            android:name=".visual.RecordListActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.ModifySubtaskActivity"
             android:exported="false" />
         <activity
@@ -34,7 +40,7 @@
             android:exported="false" />
 
         <service
-            android:name=".ui.MainService"
+            android:name=".service.MainService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">

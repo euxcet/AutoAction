@@ -1,3 +1,4 @@
+from re import sub
 from time import time
 from flask import Flask, request, send_file
 from flask_cors import CORS, cross_origin
@@ -167,13 +168,44 @@ def get_record_list():
     taskListId = request.args.get("taskListId")
     taskId = request.args.get("taskId")
     subtaskId = request.args.get("subtaskId")
-    subtask_path = fileUtils.get_subtask_path(taskListId, taskId, subtaskId)
-    recordIds = []
-    for file_name in os.listdir(subtask_path):
-        if file_name.startswith("RD"):
-            recordIds.apppend(file_name)
-    return {"result": recordIds}
 
+    if taskListId is None:
+        return {}
+
+    taskList = fileUtils.load_taskList_info(taskListId, 0)
+    records = []
+    for task in taskList['task']:
+        c_taskId = task['id']
+        if taskId is not None and taskId != "0" and c_taskId != task:
+            continue
+        for subtask in task['subtask']:
+            c_subtaskId = subtask['id']
+            if subtaskId is not None and subtaskId != "0" and c_subtaskId != subtaskId:
+                continue
+            recordlist_path = fileUtils.get_recordlist_path(taskListId, c_taskId, c_subtaskId)
+            if os.path.exists(recordlist_path):
+                with open(recordlist_path, 'r') as fin:
+                    lines = fin.readlines()
+                    for recordId in lines:
+                        recordId = recordId.strip()
+                        record_path = fileUtils.get_record_path(taskListId, c_taskId, c_subtaskId, recordId)
+                        timestamp = 0
+                        if os.path.exists(record_path):
+                            for filename in os.listdir(record_path):
+                                print(filename)
+                                if len(filename.split('_')) == 1 and filename.endswith('.json'):
+                                    timestamp = int(filename.split('.')[0])
+
+                        records.append({
+                            'taskListId': taskListId,
+                            'taskId': c_taskId,
+                            'subtaskId': c_subtaskId,
+                            'recordId': recordId.strip(),
+                            'timestamp': timestamp
+                        })
+
+                        records.sort(key = lambda x: -x['timestamp'])
+    return {'recordList': records}
 
 '''
 Name: add_record
@@ -219,6 +251,59 @@ def delete_record():
     fileUtils.delete_dir(record_path)
     return {}
 
+def get_filetype_prefix(fileType):
+    if fileType == "0": # sensor
+        return "Sensor_"
+    elif fileType == "1": # sensor
+        return "Timestamp_"
+    elif fileType == "2": # audio
+        return "Audio_"
+    elif fileType == "3": # video
+        return "Video_"
+
+def get_filetype_ext(fileType):
+    if fileType == "0": # sensor
+        return ".json"
+    elif fileType == "1": # sensor
+        return ".json"
+    elif fileType == "2": # audio
+        return ".mp4"
+    elif fileType == "3": # video
+        return ".mp4"
+
+'''
+Name: download_record_file
+Method: Post
+Content-Type: multipart/form-data
+Form:
+    - taskListId
+    - taskId
+    - subtaskId
+    - recordId
+    - fileType
+        - 0 sensor json
+        - 1 timestamp json
+        - 2 audio mp4
+        - 3 video mp4
+
+'''
+@app.route("/record_file", methods=['GET'])
+def download_record():
+    taskListId = request.args.get("taskListId")
+    taskId = request.args.get("taskId")
+    subtaskId = request.args.get("subtaskId")
+    recordId = request.args.get("recordId")
+    fileType = request.args.get("fileType")
+
+    prefix = get_filetype_prefix(fileType)
+    record_path = fileUtils.get_record_path(taskListId, taskId, subtaskId, recordId)
+    if os.path.exists(record_path):
+        for filename in os.listdir(record_path):
+            if filename.startswith(prefix):
+                return send_file(os.path.join(record_path, filename))
+
+    return {}
+
 '''
 Name: update_record_file
 Method: Post
@@ -236,7 +321,7 @@ Form:
     - recordId
     - timestamp
 
-Upload files after posting to add_record.
+Upload files after posting to record.
 '''
 @app.route("/record_file", methods=["POST"])
 def upload_file():
@@ -254,24 +339,16 @@ def upload_file():
     if file and fileUtils.allowed_file(file.filename):
         filename = ""
         print("type: ", fileType)
-        if fileType == "0": # sensor
-            filename = "Sensor_" + str(timestamp) + ".json"
-        elif fileType == "1": # sensor
-            filename = "Timestamp_" + str(timestamp) + ".json"
-        elif fileType == "2": # audio
-            filename = "Audio_" + str(timestamp) + ".mp4"
-        elif fileType == "3":
-            filename = "Video_" + str(timestamp) + ".mp4"
-
+        prefix, ext = get_filetype_prefix(fileType), get_filetype_ext(fileType)
+        filename = prefix + str(timestamp) + ext
         file_path = os.path.join(record_path, filename)
-        #saver_future_list.append(saver.submit(fileUtils.save_record_file, file, file_path))
         fileUtils.save_record_file(file, file_path)
     
     return {}
 
 
 '''
-Name: update_record_file
+Name: updload_collected_data
 Method: Post
 Content-Type: multipart/form-data
 Form:
@@ -474,7 +551,6 @@ def download_file():
     filename = request.args.get("filename")
     return send_file(os.path.join(fileUtils.DATA_FILE_ROOT, filename))
     
-    #return send_file(os.path.join(fileUtils.DATA_JAR_ROOT, 'classes.dex'))
 
 
 '''

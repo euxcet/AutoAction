@@ -23,11 +23,13 @@ import com.example.datacollection.BuildConfig;
 import com.example.datacollection.R;
 import com.example.datacollection.contextaction.ContextActionLoader;
 import com.example.datacollection.utils.FileUtils;
+import com.example.datacollection.utils.GlobalVariable;
 import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.TransferData;
 import com.example.datacollection.data.Recorder;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.bean.StringListBean;
+import com.example.datacollection.visual.RecordListActivity;
 import com.example.ncnnlibrary.communicate.BuiltInContextEnum;
 import com.example.ncnnlibrary.communicate.SensorType;
 import com.example.ncnnlibrary.communicate.config.ActionConfig;
@@ -70,9 +72,6 @@ public class MainActivity extends AppCompatActivity {
 
     private Spinner subtaskSpinner;
     private ArrayAdapter<String> subtaskAdapter;
-
-    private Button configButton;
-    private Button trainButton;
 
     // task
     private TaskListBean taskList;
@@ -143,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
                 StringListBean taskLists = new Gson().fromJson(response.body(), StringListBean.class);
                 if (taskLists.getResult().size() > 0) {
                     String taskListId = taskLists.getResult().get(0);
+                    GlobalVariable.getInstance().putString("taskListId", taskListId);
                     NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
                         @Override
                         public void onSuccess(Response<String> response) {
@@ -259,8 +259,10 @@ public class MainActivity extends AppCompatActivity {
 
         startButton = findViewById(R.id.start);
         stopButton = findViewById(R.id.stop);
-        configButton = findViewById(R.id.configButton);
-        trainButton = findViewById(R.id.trainButton);
+
+        Button configButton = findViewById(R.id.configButton);
+        Button trainButton = findViewById(R.id.trainButton);
+        Button visualButton = findViewById(R.id.visualButton);
 
         startButton.setOnClickListener(view -> {
             enableButtons(true);
@@ -284,6 +286,11 @@ public class MainActivity extends AppCompatActivity {
 
         trainButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, TrainActivity.class);
+            startActivity(intent);
+        });
+
+        visualButton.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, RecordListActivity.class);
             startActivity(intent);
         });
 

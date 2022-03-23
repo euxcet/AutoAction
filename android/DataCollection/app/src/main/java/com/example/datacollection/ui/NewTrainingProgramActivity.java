@@ -11,6 +11,7 @@ import android.widget.ListView;
 
 import com.example.datacollection.R;
 import com.example.datacollection.ui.adapter.TrainTaskAdapter;
+import com.example.datacollection.utils.GlobalVariable;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.RandomUtils;
 import com.example.datacollection.utils.bean.StringListBean;
@@ -77,21 +78,12 @@ public class NewTrainingProgramActivity extends AppCompatActivity {
     }
 
     private void loadTaskListViaNetwork() {
-        NetworkUtils.getAllTaskList(mContext, new StringCallback() {
+        NetworkUtils.getTaskList(mContext, GlobalVariable.getInstance().getString("taskListId"), 0, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                StringListBean taskLists = new Gson().fromJson(response.body(), StringListBean.class);
-                if (taskLists.getResult().size() > 0) {
-                    String taskListId = taskLists.getResult().get(0);
-                    NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
-                        @Override
-                        public void onSuccess(Response<String> response) {
-                            taskList = new Gson().fromJson(response.body(), TaskListBean.class);
-                            trainTaskAdapter = new TrainTaskAdapter(mContext, taskList);
-                            trainTaskListView.setAdapter(trainTaskAdapter);
-                        }
-                    });
-                }
+                taskList = new Gson().fromJson(response.body(), TaskListBean.class);
+                trainTaskAdapter = new TrainTaskAdapter(mContext, taskList);
+                trainTaskListView.setAdapter(trainTaskAdapter);
             }
         });
     }

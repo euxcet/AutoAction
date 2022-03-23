@@ -9,6 +9,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 
 import com.example.datacollection.R;
+import com.example.datacollection.utils.GlobalVariable;
 import com.example.datacollection.utils.RandomUtils;
 import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.utils.NetworkUtils;
@@ -57,36 +58,27 @@ public class AddSubtaskActivity extends AppCompatActivity {
     }
 
     private void addNewSubtask(int task_id) {
-        NetworkUtils.getAllTaskList(mContext, new StringCallback() {
+        NetworkUtils.getTaskList(mContext, GlobalVariable.getInstance().getString("taskListId"), 0, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                StringListBean taskLists = new Gson().fromJson(response.body(), StringListBean.class);
-                if (taskLists.getResult().size() > 0) {
-                    String taskListId = taskLists.getResult().get(0);
-                    NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
-                        @Override
-                        public void onSuccess(Response<String> response) {
-                            taskList = new Gson().fromJson(response.body(), TaskListBean.class);
+                taskList = new Gson().fromJson(response.body(), TaskListBean.class);
 
-                            TaskListBean.Task.Subtask newSubtask = new TaskListBean.Task.Subtask(
-                                    RandomUtils.generateRandomSubtaskId(),
-                                    nameEditText.getText().toString(),
-                                    Integer.parseInt(timesEditText.getText().toString()),
-                                    Integer.parseInt(durationEditText.getText().toString()),
-                                    videoCheckbox.isChecked(),
-                                    audioCheckbox.isChecked()
-                            );
-                            taskList.getTask().get(task_id).addSubtask(newSubtask);
+                TaskListBean.Task.Subtask newSubtask = new TaskListBean.Task.Subtask(
+                        RandomUtils.generateRandomSubtaskId(),
+                        nameEditText.getText().toString(),
+                        Integer.parseInt(timesEditText.getText().toString()),
+                        Integer.parseInt(durationEditText.getText().toString()),
+                        videoCheckbox.isChecked(),
+                        audioCheckbox.isChecked()
+                );
+                taskList.getTask().get(task_id).addSubtask(newSubtask);
 
-                            NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
-                                @Override
-                                public void onSuccess(Response<String> response) {
-                                    mActivity.finish();
-                                }
-                            });
-                        }
-                    });
-                }
+                NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
+                    @Override
+                    public void onSuccess(Response<String> response) {
+                        mActivity.finish();
+                    }
+                });
             }
         });
     }

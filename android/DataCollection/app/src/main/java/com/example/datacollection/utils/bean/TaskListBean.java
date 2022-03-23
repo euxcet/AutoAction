@@ -1,5 +1,7 @@
 package com.example.datacollection.utils.bean;
 
+import android.util.Log;
+
 import com.example.datacollection.BuildConfig;
 import com.example.datacollection.utils.FileUtils;
 import com.google.gson.Gson;
@@ -75,13 +77,36 @@ public class TaskListBean implements Serializable {
     }
 
     public String[] getTaskName() {
-        int size = getTask().size();
+        List<Task> tasks = getTask();
+        int size = tasks.size();
         String[] taskName = new String[size];
         for(int i = 0; i < size; i++) {
-            Task t = getTask().get(i);
+            Task t = tasks.get(i);
             taskName[i] = t.getId() + ". " + t.getName();
         }
         return taskName;
+    }
+
+    public String getTaskNameById(String taskId) {
+        List<Task> tasks = getTask();
+        for(int i = 0; i < tasks.size(); i++) {
+            Task t = tasks.get(i);
+            if (t.getId().equals(taskId)) {
+                return t.getName();
+            }
+        }
+        return null;
+    }
+
+    public Task getTaskById(String taskId) {
+        List<Task> tasks = getTask();
+        for(int i = 0; i < tasks.size(); i++) {
+            Task t = tasks.get(i);
+            if (t.getId().equals(taskId)) {
+                return t;
+            }
+        }
+        return null;
     }
 
     /*
@@ -152,6 +177,17 @@ public class TaskListBean implements Serializable {
                 taskName[i] = t.getId() + ". " + t.getName();
             }
             return taskName;
+        }
+
+        public String getSubtaskNameById(String subtaskId) {
+            List<Subtask> subtasks = getSubtask();
+            for(int i = 0; i < subtasks.size(); i++) {
+                Subtask t = subtasks.get(i);
+                if (t.getId().equals(subtaskId)) {
+                    return t.getName();
+                }
+            }
+            return null;
         }
 
         public static class Subtask implements Serializable {

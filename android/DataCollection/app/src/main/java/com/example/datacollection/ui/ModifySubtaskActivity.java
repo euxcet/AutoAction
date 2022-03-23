@@ -9,6 +9,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 
 import com.example.datacollection.R;
+import com.example.datacollection.utils.GlobalVariable;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.bean.StringListBean;
 import com.example.datacollection.utils.bean.TaskListBean;
@@ -62,25 +63,16 @@ public class ModifySubtaskActivity extends AppCompatActivity {
     }
 
     private void loadTaskListViaNetwork() {
-        NetworkUtils.getAllTaskList(mContext, new StringCallback() {
+        NetworkUtils.getTaskList(mContext, GlobalVariable.getInstance().getString("taskListId"), 0, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                StringListBean taskLists = new Gson().fromJson(response.body(), StringListBean.class);
-                if (taskLists.getResult().size() > 0) {
-                    String taskListId = taskLists.getResult().get(0);
-                    NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
-                        @Override
-                        public void onSuccess(Response<String> response) {
-                            taskList = new Gson().fromJson(response.body(), TaskListBean.class);
-                            TaskListBean.Task.Subtask subtask = taskList.getTask().get(task_id).getSubtask().get(subtask_id);
-                            nameEditText.setText(subtask.getName());
-                            timesEditText.setText(String.valueOf(subtask.getTimes()));
-                            durationEditText.setText(String.valueOf(subtask.getDuration()));
-                            videoCheckbox.setChecked(subtask.isVideo());
-                            audioCheckbox.setChecked(subtask.isAudio());
-                        }
-                    });
-                }
+                taskList = new Gson().fromJson(response.body(), TaskListBean.class);
+                TaskListBean.Task.Subtask subtask = taskList.getTask().get(task_id).getSubtask().get(subtask_id);
+                nameEditText.setText(subtask.getName());
+                timesEditText.setText(String.valueOf(subtask.getTimes()));
+                durationEditText.setText(String.valueOf(subtask.getDuration()));
+                videoCheckbox.setChecked(subtask.isVideo());
+                audioCheckbox.setChecked(subtask.isAudio());
             }
         });
     }

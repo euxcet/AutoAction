@@ -10,6 +10,7 @@ import android.widget.EditText;
 
 import com.example.datacollection.R;
 import com.example.datacollection.ui.adapter.TaskAdapter;
+import com.example.datacollection.utils.GlobalVariable;
 import com.example.datacollection.utils.NetworkUtils;
 import com.example.datacollection.utils.RandomUtils;
 import com.example.datacollection.utils.bean.StringListBean;
@@ -62,25 +63,16 @@ public class ModifyTaskActivity extends AppCompatActivity {
     }
 
     private void loadTaskListViaNetwork() {
-        NetworkUtils.getAllTaskList(mContext, new StringCallback() {
+        NetworkUtils.getTaskList(mContext, GlobalVariable.getInstance().getString("taskListId"), 0, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                StringListBean taskLists = new Gson().fromJson(response.body(), StringListBean.class);
-                if (taskLists.getResult().size() > 0) {
-                    String taskListId = taskLists.getResult().get(0);
-                    NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
-                        @Override
-                        public void onSuccess(Response<String> response) {
-                            taskList = new Gson().fromJson(response.body(), TaskListBean.class);
-                            TaskListBean.Task task = taskList.getTask().get(task_id);
-                            nameEditText.setText(task.getName());
-                            timesEditText.setText(String.valueOf(task.getTimes()));
-                            durationEditText.setText(String.valueOf(task.getDuration()));
-                            videoCheckbox.setChecked(task.isVideo());
-                            audioCheckbox.setChecked(task.isAudio());
-                        }
-                    });
-                }
+                taskList = new Gson().fromJson(response.body(), TaskListBean.class);
+                TaskListBean.Task task = taskList.getTask().get(task_id);
+                nameEditText.setText(task.getName());
+                timesEditText.setText(String.valueOf(task.getTimes()));
+                durationEditText.setText(String.valueOf(task.getDuration()));
+                videoCheckbox.setChecked(task.isVideo());
+                audioCheckbox.setChecked(task.isAudio());
             }
         });
     }

@@ -1,4 +1,4 @@
-package com.example.datacollection.ui;
+package com.example.datacollection.service;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.BroadcastReceiver;

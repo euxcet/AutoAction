@@ -10,6 +10,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.datacollection.R;
+import com.example.datacollection.utils.GlobalVariable;
 import com.example.datacollection.utils.bean.TaskListBean;
 import com.example.datacollection.ui.adapter.SubtaskAdapter;
 import com.example.datacollection.utils.NetworkUtils;
@@ -68,22 +69,13 @@ public class ConfigSubtaskActivity extends AppCompatActivity {
     }
 
     private void loadTaskListViaNetwork() {
-        NetworkUtils.getAllTaskList(mContext, new StringCallback() {
+        NetworkUtils.getTaskList(mContext, GlobalVariable.getInstance().getString("taskListId"), 0, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                StringListBean taskLists = new Gson().fromJson(response.body(), StringListBean.class);
-                if (taskLists.getResult().size() > 0) {
-                    String taskListId = taskLists.getResult().get(0);
-                    NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
-                        @Override
-                        public void onSuccess(Response<String> response) {
-                            taskList = new Gson().fromJson(response.body(), TaskListBean.class);
-                            taskNameView.setText("Task name: " + taskList.getTask().get(task_id).getName());
-                            subtaskAdapter = new SubtaskAdapter(mContext, taskList, task_id);
-                            subtaskListView.setAdapter(subtaskAdapter);
-                        }
-                    });
-                }
+                taskList = new Gson().fromJson(response.body(), TaskListBean.class);
+                taskNameView.setText("Task name: " + taskList.getTask().get(task_id).getName());
+                subtaskAdapter = new SubtaskAdapter(mContext, taskList, task_id);
+                subtaskListView.setAdapter(subtaskAdapter);
             }
         });
     }
