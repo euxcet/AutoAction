@@ -116,6 +116,17 @@ public class NetworkUtils {
                 .execute(callback);
     }
 
+    public static void downloadRecordFile(Context context, String taskListId, String taskId, String subtaskId, String recordId, int fileType, FileCallback callback) {
+        OkGo.<File>get(RECORD_FILE_URL)
+                .tag(context)
+                .params("taskListId", taskListId)
+                .params("taskId", taskId)
+                .params("subtaskId", subtaskId)
+                .params("recordId", recordId)
+                .params("fileType", fileType)
+                .execute(callback);
+    }
+
     public static void getCutterType(Context context, StringCallback callback) {
         OkGo.<String>get(CUTTER_TYPE_URL)
                 .tag(context)

@@ -29,8 +29,9 @@ public class Recorder {
     private TimestampController timestampController;
 
     // file
-    private File cameraFile;
     private File sensorFile;
+    private File sensorBinFile;
+    private File cameraFile;
     private File microphoneFile;
     private File timestampFile;
 
@@ -80,26 +81,15 @@ public class Recorder {
         subtask.setAudio(subtask.isAudio() | task.isAudio());
         subtask.setVideo(subtask.isVideo() | task.isVideo());
 
-
-        NetworkUtils.addRecord(mContext, taskList.getId(), task.getId(), subtask.getId(), recordId, System.currentTimeMillis(), new StringCallback() {
-            @Override
-            public void onSuccess(Response<String> response) {
-
-            }
-        });
-
         createFile(name, taskId, subtaskId);
 
         long duration = subtask.getDuration();
         int times = subtask.getTimes();
         long actionTime = times * subtask.getDuration();
 
-        Log.e("TEST", "Start " + name + " " + taskId + " " + subtaskId + " " + duration + " " + actionTime);
-
         timer = new CountDownTimer(actionTime, duration) {
             @Override
             public void onTick(long l) {
-                Log.e("TEST", "  " + l);
                 if (l < duration / 10) { // skip first tick
                     return;
                 }
@@ -116,7 +106,7 @@ public class Recorder {
         };
 
         new Handler().postDelayed(() -> {
-            sensorController.start(sensorFile);
+            sensorController.start(sensorFile, sensorBinFile);
             /*
             if (subtask.isAudio()) {
                 microphoneController.start(microphoneFile);
@@ -130,7 +120,8 @@ public class Recorder {
         }, 3000);
     }
 
-    public void stop() {
+    public void interrupt() {
+        timer.cancel();
         sensorController.stop();
         /*
         if (subtask != null && subtask.isAudio()) {
@@ -141,6 +132,26 @@ public class Recorder {
             cameraController.stop();
         }
         timestampController.stop();
+    }
+
+    private void stop() {
+        sensorController.stop();
+        /*
+        if (subtask != null && subtask.isAudio()) {
+            microphoneController.stop();
+        }
+         */
+        if (subtask != null && subtask.isVideo()) {
+            cameraController.stop();
+        }
+        timestampController.stop();
+
+        NetworkUtils.addRecord(mContext, taskList.getId(), task.getId(), subtask.getId(), recordId, System.currentTimeMillis(), new StringCallback() {
+            @Override
+            public void onSuccess(Response<String> response) {
+
+            }
+        });
         new Handler().postDelayed(() -> {
             long timestamp = System.currentTimeMillis();
             sensorController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
@@ -157,11 +168,12 @@ public class Recorder {
     }
 
     public void createFile(String name, int taskId, int subtaskId) {
-        String suffix = "_" + name + "_" + taskId + "_" + subtaskId + "_" + dateFormat.format(new Date());
-        timestampFile = new File(BuildConfig.SAVE_PATH, "Timestamp" + suffix + ".json");
-        sensorFile = new File(BuildConfig.SAVE_PATH, "Sensor" + suffix + ".json");
-        microphoneFile = new File(BuildConfig.SAVE_PATH, "Microphone" + suffix + ".mp4");
-        cameraFile = new File(BuildConfig.SAVE_PATH, "Camera" + suffix + ".mp4");
+        String suffix = name + "_" + taskId + "_" + subtaskId + "_" + dateFormat.format(new Date());
+        timestampFile = new File(BuildConfig.SAVE_PATH, "Timestamp_" + suffix + ".json");
+        sensorFile = new File(BuildConfig.SAVE_PATH, "Sensor_" + suffix + ".json");
+        microphoneFile = new File(BuildConfig.SAVE_PATH, "Microphone_" + suffix + ".mp4");
+        cameraFile = new File(BuildConfig.SAVE_PATH, "Camera_" + suffix + ".mp4");
+        sensorBinFile = new File(BuildConfig.SAVE_PATH, "SensorBin_" + suffix + ".bin");
     }
 
     public interface RecorderListener {

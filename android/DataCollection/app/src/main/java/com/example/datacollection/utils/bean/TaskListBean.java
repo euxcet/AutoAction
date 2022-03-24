@@ -30,7 +30,8 @@ public class TaskListBean implements Serializable {
         SENSOR,
         TIMESTAMP,
         AUDIO,
-        VIDEO
+        VIDEO,
+        SENSOR_BIN
     }
 
     @Deprecated

@@ -98,7 +98,7 @@ def append_recordlist(taskListId, taskId, subtaskId, recordId):
         f.write(recordId.strip() + '\n')
 
 def allowed_file(filename):
-    return os.path.splitext(filename)[-1] in ['.json', '.mp4']
+    return os.path.splitext(filename)[-1] in ['.json', '.mp4', '.bin']
 
 def save_record_file(file, file_path):
     file.save(file_path)

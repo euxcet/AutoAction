@@ -275,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         stopButton.setOnClickListener(view -> {
-            recorder.stop();
+            recorder.interrupt();
             enableButtons(false);
         });
 

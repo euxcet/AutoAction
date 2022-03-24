@@ -27,6 +27,10 @@ public class SensorInfo {
         this.time = time;
     }
 
+    public List<Float> getData() {
+        return data;
+    }
+
     public long getTime() {
         return time;
     }

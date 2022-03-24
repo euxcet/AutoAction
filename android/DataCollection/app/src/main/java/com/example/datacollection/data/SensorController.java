@@ -29,7 +29,8 @@ public class SensorController {
     private List<SensorInfo> sensorData = new ArrayList<>();
     private long lastTimestamp;
 
-    private File saveFile;
+    private File sensorFile;
+    private File sensorBinFile;
 
     public SensorController(Context context) {
         this.mContext = context;
@@ -61,15 +62,17 @@ public class SensorController {
         }
     }
 
-    public void start(File file) {
-        this.saveFile = file;
+    public void start(File file, File binFile) {
+        sensorFile = file;
+        sensorBinFile = binFile;
         sensorData.clear();
         resume();
     }
 
     public void stop() {
         pause();
-        FileUtils.writeStringToFile(new Gson().toJson(sensorData), this.saveFile);
+        FileUtils.writeStringToFile(new Gson().toJson(sensorData), sensorFile);
+        FileUtils.writeIMUDataToFile(sensorData, sensorBinFile);
     }
 
     public boolean isSensorSupport() {
@@ -97,8 +100,16 @@ public class SensorController {
     }
 
     public void upload(String taskListId, String taskId, String subtaskId, String recordId, long timestamp) {
-        if (saveFile != null) {
-            NetworkUtils.uploadRecordFile(mContext, saveFile, TaskListBean.FILE_TYPE.SENSOR.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
+        if (sensorFile != null) {
+            NetworkUtils.uploadRecordFile(mContext, sensorFile, TaskListBean.FILE_TYPE.SENSOR.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
+                @Override
+                public void onSuccess(Response<String> response) {
+                }
+            });
+        }
+
+        if (sensorBinFile != null) {
+            NetworkUtils.uploadRecordFile(mContext, sensorBinFile, TaskListBean.FILE_TYPE.SENSOR_BIN.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
                 @Override
                 public void onSuccess(Response<String> response) {
                 }

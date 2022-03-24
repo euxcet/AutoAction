@@ -260,6 +260,8 @@ def get_filetype_prefix(fileType):
         return "Audio_"
     elif fileType == "3": # video
         return "Video_"
+    elif fileType == "4": # sensor bin
+        return "SensorBin_"
 
 def get_filetype_ext(fileType):
     if fileType == "0": # sensor
@@ -270,6 +272,8 @@ def get_filetype_ext(fileType):
         return ".mp4"
     elif fileType == "3": # video
         return ".mp4"
+    elif fileType == "4": # sensor bin
+        return ".bin"
 
 '''
 Name: download_record_file
@@ -285,6 +289,7 @@ Form:
         - 1 timestamp json
         - 2 audio mp4
         - 3 video mp4
+        - 4 sensor bin
 
 '''
 @app.route("/record_file", methods=['GET'])
@@ -315,6 +320,7 @@ Form:
         - 1 timestamp json
         - 2 audio mp4
         - 3 video mp4
+        - 4 sensor bin
     - taskListId
     - taskId
     - subtaskId
