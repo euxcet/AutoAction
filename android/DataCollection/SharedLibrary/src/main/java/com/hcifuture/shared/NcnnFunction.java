@@ -8,7 +8,7 @@ public class NcnnFunction {
     private int height;
     private int channel;
     public NcnnFunction(Context context, String paramPath, String binPath, int numThread, int width, int height, int channel, int class_num) {
-        System.loadLibrary("OcrLite");
+        System.loadLibrary("NcnnLib");
         init(paramPath, binPath, numThread, width, height, channel, class_num);
     }
 

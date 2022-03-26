@@ -18,9 +18,11 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 
 import com.hcifuture.datacollection.BuildConfig;
+import com.hcifuture.datacollection.NcnnInstance;
 import com.hcifuture.datacollection.contextaction.ContextActionLoader;
 import com.hcifuture.datacollection.utils.FileUtils;
 import com.hcifuture.datacollection.utils.NetworkUtils;
+import com.hcifuture.shared.NcnnFunction;
 import com.hcifuture.shared.communicate.BuiltInActionEnum;
 import com.hcifuture.shared.communicate.BuiltInContextEnum;
 import com.hcifuture.shared.communicate.SensorType;
@@ -73,8 +75,6 @@ public class MainService extends AccessibilityService {
         super.onServiceConnected();
         mContext = this;
         mHandler = new Handler(Looper.getMainLooper());
-        Log.e("TEST", "onServiceConnected");
-
         mBroadcastReceiver = new CustomBroadcastReceiver();
         final IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
@@ -86,19 +86,14 @@ public class MainService extends AccessibilityService {
         filter.addAction(Intent.ACTION_SET_WALLPAPER);
         registerReceiver(mBroadcastReceiver, filter);
 
-        String[] downloadFileNames = new String[]{"param_dicts.json", "param_max.json", "words.csv"};
-        for (String fileName: downloadFileNames) {
-            NetworkUtils.downloadFile(this, fileName, new FileCallback() {
-                @Override
-                public void onSuccess(Response<File> response) {
-                    File file = response.body();
-                    File saveFile = new File(BuildConfig.SAVE_PATH, fileName);
-                    FileUtils.copy(file, saveFile);
-                }
-            });
-        }
-
-        loadContextActionLibrary();
+        FileUtils.downloadFiles(this, Arrays.asList(
+                "param_dicts.json",
+                "param_max.json",
+                "words.csv",
+                "best.bin",
+                "best.param",
+                "classes.dex"
+        ), this::loadContextActionLibrary);
     }
 
     @Override
@@ -132,48 +127,53 @@ public class MainService extends AccessibilityService {
     }
 
     private void loadContextActionLibrary() {
-        NetworkUtils.downloadFile(this, "classes.dex", new FileCallback() {
-            @Override
-            public void onSuccess(Response<File> response) {
-                File file = response.body();
-                File saveFile = new File(BuildConfig.SAVE_PATH, "classes.dex");
-                FileUtils.copy(file, saveFile);
+        final File tmpDir = getDir("dex", 0);
+        classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
+        loader = new ContextActionLoader(mContext, classLoader);
 
-                final File tmpDir = getDir("dex", 0);
-                classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
-                loader = new ContextActionLoader(mContext, classLoader);
+        // TapTapAction
+        ActionConfig tapTapConfig = new ActionConfig();
+        tapTapConfig.setAction(BuiltInActionEnum.TapTap);
+        tapTapConfig.putValue("SeqLength", 50);
+        tapTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
 
-                // TapTapAction
-                ActionConfig tapTapConfig = new ActionConfig();
-                tapTapConfig.setAction(BuiltInActionEnum.TapTap);
-                tapTapConfig.putValue("SeqLength", 50);
-                tapTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
+        ActionListener actionListener = action ->
+                mHandler.post(() -> Toast.makeText(mContext, action.getAction(), Toast.LENGTH_SHORT).show());
 
-                ActionListener actionListener = action ->
-                        mHandler.post(() -> Toast.makeText(mContext, action.getAction(), Toast.LENGTH_SHORT).show());
+        // ProximityContext
+        ContextConfig proximityConfig = new ContextConfig();
+        proximityConfig.setContext(BuiltInContextEnum.Proximity);
+        proximityConfig.setSensorType(Arrays.asList(SensorType.PROXIMITY));
 
-                // ProximityContext
-                ContextConfig proximityConfig = new ContextConfig();
-                proximityConfig.setContext(BuiltInContextEnum.Proximity);
-                proximityConfig.setSensorType(Arrays.asList(SensorType.PROXIMITY));
+        // TableContext
+        ContextConfig tableConfig = new ContextConfig();
+        tableConfig.setContext(BuiltInContextEnum.Table);
+        tableConfig.setSensorType(Arrays.asList(SensorType.IMU));
 
-                // TableContext
-                ContextConfig tableConfig = new ContextConfig();
-                tableConfig.setContext(BuiltInContextEnum.Table);
-                tableConfig.setSensorType(Arrays.asList(SensorType.IMU));
+        // InformationalContext
+        ContextConfig informationalConfig = new ContextConfig();
+        informationalConfig.setContext(BuiltInContextEnum.Informational);
+        informationalConfig.setSensorType(Arrays.asList(SensorType.ACCESSIBILITY, SensorType.BROADCAST));
 
-                // InformationalContext
-                ContextConfig informationalConfig = new ContextConfig();
-                informationalConfig.setContext(BuiltInContextEnum.Informational);
-                informationalConfig.setSensorType(Arrays.asList(SensorType.ACCESSIBILITY, SensorType.BROADCAST));
+        ContextListener contextListener = context ->
+                mHandler.post(() -> Toast.makeText(mContext, context.getContext(), Toast.LENGTH_SHORT).show());
 
-                ContextListener contextListener = context ->
-                        mHandler.post(() -> Toast.makeText(mContext, context.getContext(), Toast.LENGTH_SHORT).show());
+        RequestListener requestListener = config -> handleRequest(config);
+        loader.startDetection(Arrays.asList(tapTapConfig), actionListener, Arrays.asList(proximityConfig, tableConfig, informationalConfig), contextListener, requestListener);
 
-                RequestListener requestListener = config -> handleRequest(config);
-                loader.startDetection(Arrays.asList(tapTapConfig), actionListener, Arrays.asList(proximityConfig, tableConfig, informationalConfig), contextListener, requestListener);
-            }
-        });
+
+        NcnnInstance.init(mContext,
+                BuildConfig.SAVE_PATH + "best.param",
+                BuildConfig.SAVE_PATH + "best.bin",
+                4,
+                128,
+                6,
+                1,
+                2);
+        NcnnInstance ncnnInstance = NcnnInstance.getInstance();
+        float[] data = new float[128 * 6];
+        Arrays.fill(data, 0.1f);
+        Log.e("result", ncnnInstance.actionDetect(data) + " ");
     }
 
     class CustomBroadcastReceiver extends BroadcastReceiver {

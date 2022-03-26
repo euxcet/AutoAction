@@ -1,6 +1,13 @@
 package com.hcifuture.datacollection.utils;
 
+import android.content.Context;
+import android.util.Log;
+
+import com.hcifuture.datacollection.BuildConfig;
+import com.hcifuture.datacollection.NcnnInstance;
 import com.hcifuture.datacollection.data.SensorInfo;
+import com.lzy.okgo.callback.FileCallback;
+import com.lzy.okgo.model.Response;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -12,7 +19,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class FileUtils {
 
@@ -107,5 +116,26 @@ public class FileUtils {
             e.printStackTrace();
         }
         return data;
+    }
+
+    public interface DownloadListener {
+        void onFinished();
+    }
+
+    public static void downloadFiles(Context context, List<String> filename, DownloadListener listener) {
+        AtomicInteger counter = new AtomicInteger(filename.size());
+        for (String name: filename) {
+            NetworkUtils.downloadFile(context, name, new FileCallback() {
+                @Override
+                public void onSuccess(Response<File> response) {
+                    File file = response.body();
+                    File saveFile = new File(BuildConfig.SAVE_PATH, name);
+                    FileUtils.copy(file, saveFile);
+                    if (counter.decrementAndGet() == 0) {
+                        listener.onFinished();
+                    }
+                }
+            });
+        }
     }
 }

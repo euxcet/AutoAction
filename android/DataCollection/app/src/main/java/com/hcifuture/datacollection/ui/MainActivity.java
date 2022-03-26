@@ -276,27 +276,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         enableButtons(false);
-
-        /*
-        NetworkUtils.downloadFile(mContext, "best.bin", new FileCallback() {
-            @Override
-            public void onSuccess(Response<File> response) {
-                // TODO: remove file
-                File file = response.body();
-                File saveFile = new File(BuildConfig.SAVE_PATH, "best.bin");
-                FileUtils.copy(file, saveFile);
-
-                NetworkUtils.downloadFile(mContext, "best.param", new FileCallback() {
-                    @Override
-                    public void onSuccess(Response<File> response) {
-                        File file = response.body();
-                        File saveFile = new File(BuildConfig.SAVE_PATH, "best.param");
-                        FileUtils.copy(file, saveFile);
-                    }
-                });
-            }
-        });
-         */
     }
 
     private void enableButtons(boolean isRecording) {
