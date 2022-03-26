@@ -140,14 +140,12 @@ def update_taskList():
         task_info_path = fileUtils.get_task_info_path(taskListId, taskId)
         fileUtils.mkdir(task_path)
         fileUtils.save_json(task, task_info_path)
-        print(task_path)
         for subtask in task['subtask']:
             subtaskId = subtask['id']
             subtask_path = fileUtils.get_subtask_path(taskListId, taskId, subtaskId)
             subtask_info_path = fileUtils.get_subtask_info_path(taskListId, taskId, subtaskId)
             fileUtils.mkdir(subtask_path)
             fileUtils.save_json(subtask, subtask_info_path)
-            print(subtask)
     return ""
 
 
@@ -192,7 +190,6 @@ def get_record_list():
                         timestamp = 0
                         if os.path.exists(record_path):
                             for filename in os.listdir(record_path):
-                                print(filename)
                                 if len(filename.split('_')) == 1 and filename.endswith('.json'):
                                     timestamp = int(filename.split('.')[0])
 

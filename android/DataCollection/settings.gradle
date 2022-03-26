@@ -1,4 +1,4 @@
 include ':app'
 rootProject.name='DataCollection'
-include ':NcnnLibrary'
-include ':contextactionlibrary'
+include ':SharedLibrary'
+include ':ContextActionLibrary'

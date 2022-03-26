@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.datacollection">
+    package="com.hcifuture.datacollection">
 
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -27,20 +27,20 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".visual.VisualizeRecordActivity"
+            android:name="com.hcifuture.datacollection.visual.VisualizeRecordActivity"
             android:exported="false" />
         <activity
-            android:name=".visual.RecordListActivity"
+            android:name="com.hcifuture.datacollection.visual.RecordListActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ModifySubtaskActivity"
+            android:name="com.hcifuture.datacollection.ui.ModifySubtaskActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ModifyTaskActivity"
+            android:name="com.hcifuture.datacollection.ui.ModifyTaskActivity"
             android:exported="false" />
 
         <service
-            android:name=".service.MainService"
+            android:name="com.hcifuture.datacollection.service.MainService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
@@ -54,25 +54,25 @@
         </service>
 
         <activity
-            android:name=".ui.NewTrainingProgramActivity"
+            android:name="com.hcifuture.datacollection.ui.NewTrainingProgramActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.TrainActivity"
+            android:name="com.hcifuture.datacollection.ui.TrainActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.AddSubtaskActivity"
+            android:name="com.hcifuture.datacollection.ui.AddSubtaskActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.AddTaskActivity"
+            android:name="com.hcifuture.datacollection.ui.AddTaskActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ConfigSubtaskActivity"
+            android:name="com.hcifuture.datacollection.ui.ConfigSubtaskActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ConfigTaskActivity"
+            android:name="com.hcifuture.datacollection.ui.ConfigTaskActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.MainActivity"
+            android:name="com.hcifuture.datacollection.ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
