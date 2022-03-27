@@ -93,8 +93,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     2);
         }
 
-        clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Bluetooth));
-        // clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU));
+        // clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Bluetooth));
+        clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU));
         collectors = Arrays.asList(new TapTapCollector(context, requestListener, clickTrigger));
 
         scheduleCleanData();
@@ -138,6 +138,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
         monitorAction();
         monitorContext();
+        if (clickTrigger != null) {
+            clickTrigger.resume();
+        }
     }
 
     public void stop() {
@@ -151,6 +154,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
         for (BaseContext context: contexts) {
             context.stop();
+        }
+        if (clickTrigger != null) {
+            clickTrigger.pause();
         }
     }
 

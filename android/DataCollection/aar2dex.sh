@@ -1,4 +1,5 @@
-cd contextactionlibrary/build/outputs/aar
+cd ContextActionLibrary/build/outputs/aar
+ls
 rm -r contextactionlibrary-debug
 mv contextactionlibrary-debug.aar contextactionlibrary-debug.zip
 unzip contextactionlibrary-debug.zip -d contextactionlibrary-debug

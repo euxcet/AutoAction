@@ -26,6 +26,7 @@ public class BluetoothCollector extends Collector {
     private BluetoothData data;
 
     private BroadcastReceiver receiver;
+    private IntentFilter bluetoothFilter;
 
     public BluetoothCollector(Context context, String triggerFolder) {
         super(context, triggerFolder);
@@ -42,7 +43,7 @@ public class BluetoothCollector extends Collector {
 
     @Override
     public void initialize() {
-        IntentFilter bluetoothFilter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        bluetoothFilter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -119,11 +120,11 @@ public class BluetoothCollector extends Collector {
 
     @Override
     public synchronized void pause() {
-
+        mContext.unregisterReceiver(receiver);
     }
 
     @Override
     public synchronized void resume() {
-
+        mContext.registerReceiver(receiver, bluetoothFilter);
     }
 }

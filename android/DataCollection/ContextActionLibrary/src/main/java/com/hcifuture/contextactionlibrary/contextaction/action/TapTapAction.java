@@ -230,6 +230,9 @@ public class TapTapAction extends BaseAction {
     }
 
     public int[] shouldRunTapModel() {
+        if (resampleAcc.getInterval() == 0) {
+            return new int[]{-1, -1};
+        }
         int diff = (int)((resampleAcc.getResults().t - resampleGyro.getResults().t) / resampleAcc.getInterval());
         int peakIdx = peakDetectorPositive.getIdMajorPeak();
         if (peakIdx > 20)
