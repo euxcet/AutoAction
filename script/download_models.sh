@@ -2,7 +2,7 @@ mkdir tmp
 
 # models
 wget https://cloud.tsinghua.edu.cn/f/3079bd886be1482aa423/?dl=1 -O tmp/models.zip
-unzip -o tmp/models.zip -d ../android/DataCollection/NcnnLibrary/src/main/assets/
+unzip -o tmp/models.zip -d ../android/DataCollection/SharedLibrary/src/main/assets/
 
 # backend files
 mkdir -p ../backend/server/data/file/

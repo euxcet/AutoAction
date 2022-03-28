@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import fileUtils
 import os
+import hashlib
 
 from process.cutter.peak_cutter import PeakCutter
 from process.cutter.random_cutter import RandomCutter
@@ -549,11 +550,30 @@ def start_train():
     '''
     return {}
 
+'''
+Name: download_file
+Method: Post
+Content-Type: multipart/form-data
+Form:
+    - filename
+'''
 @app.route("/download_file", methods=['GET'])
 def download_file():
     filename = request.args.get("filename")
     return send_file(os.path.join(fileUtils.DATA_FILE_ROOT, filename))
     
+
+'''
+Name: get_md5
+Method: Post
+Content-Type: multipart/form-data
+Form:
+    - filename
+'''
+@app.route("/md5", methods=['GET'])
+def get_md5():
+    for filename in os.listdir(fileUtils.DATA_FILE_ROOT):
+        pass
 
 
 '''
