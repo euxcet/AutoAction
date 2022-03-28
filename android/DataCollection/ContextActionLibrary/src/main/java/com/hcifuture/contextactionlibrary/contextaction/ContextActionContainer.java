@@ -42,17 +42,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class ContextActionContainer implements ActionListener, ContextListener {
-    // private IMUSensorManager imuSensorManager;
-    // private ProximitySensorManager proximitySensorManager;
-
     private Context mContext;
 
-    private ThreadPoolExecutor executor;
+    // private ThreadPoolExecutor executor;
 
     private List<BaseAction> actions;
     private List<BaseContext> contexts;
@@ -71,15 +70,20 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     private List<BaseCollector> collectors;
 
+    private ScheduledExecutorService scheduledExecutorService;
+    private List<ScheduledFuture<?>> futureList;
+
     public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener) {
         this.mContext = context;
         this.actions = actions;
         this.contexts = contexts;
+        /*
         this.executor = new ThreadPoolExecutor(1,
                 1,
                 1000, TimeUnit.MILLISECONDS,
                 new LinkedBlockingDeque<>(2),
                 new ThreadPoolExecutor.DiscardOldestPolicy());
+         */
         this.sensorManagers = new ArrayList<>();
 
         if (NcnnInstance.getInstance() == null) {
@@ -94,10 +98,11 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
 
         // clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Bluetooth));
-        clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU));
-        collectors = Arrays.asList(new TapTapCollector(context, requestListener, clickTrigger));
+        this.clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU));
+        this.collectors = Arrays.asList(new TapTapCollector(context, requestListener, clickTrigger));
 
-        scheduleCleanData();
+        this.futureList = new ArrayList<>();
+        // scheduleCleanData();
     }
 
     public ContextActionContainer(Context context,
@@ -158,6 +163,11 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         if (clickTrigger != null) {
             clickTrigger.pause();
         }
+        for (ScheduledFuture<?> future: futureList) {
+            future.cancel(true);
+        }
+        futureList.clear();
+        scheduledExecutorService.shutdownNow();
     }
 
     private List<BaseAction> selectBySensorTypeAction(List<BaseAction> actions, SensorType sensorType) {
@@ -181,6 +191,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     private void initialize() {
+        this.scheduledExecutorService = Executors.newScheduledThreadPool(5);
+        ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
         if (fromDex) {
             for (int i = 0; i < actionConfig.size(); i++) {
                 ActionConfig config = actionConfig.get(i);
@@ -233,6 +245,12 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     private void monitorAction() {
+        futureList.add(scheduledExecutorService.scheduleAtFixedRate(() -> {
+            for (BaseAction action: actions) {
+                action.getAction();
+            }
+        }, 3000L, 20L, TimeUnit.MILLISECONDS));
+        /*
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
@@ -243,9 +261,16 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 });
             }
         }, 5000, 20);
+         */
     }
 
     private void monitorContext() {
+        futureList.add(scheduledExecutorService.scheduleAtFixedRate(() -> {
+            for (BaseContext context: contexts) {
+                context.getContext();
+            }
+        }, 3000L, 1000L, TimeUnit.MILLISECONDS));
+        /*
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
@@ -256,6 +281,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 });
             }
         }, 5000, 1000);
+         */
     }
 
     public void onSensorChangedDex(SensorEvent event) {
@@ -304,6 +330,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             calendar.add(Calendar.DATE, 1);
             date = calendar.getTime();
         }
+
         Timer timer= new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -312,6 +339,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 Log.e("TapTapCollector", "triggered");
             }
         }, date, 24 * 60 * 60 * 1000);
+
     }
 
     @Override

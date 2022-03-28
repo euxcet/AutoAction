@@ -1,12 +1,16 @@
 package com.hcifuture.datacollection.utils;
 
+import static android.content.Context.MODE_PRIVATE;
+
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.hcifuture.datacollection.BuildConfig;
 import com.hcifuture.datacollection.NcnnInstance;
 import com.hcifuture.datacollection.data.SensorInfo;
 import com.lzy.okgo.callback.FileCallback;
+import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
 import java.io.DataInputStream;
@@ -21,6 +25,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FileUtils {
@@ -122,17 +127,71 @@ public class FileUtils {
         void onFinished();
     }
 
-    public static void downloadFiles(Context context, List<String> filename, DownloadListener listener) {
+    public interface CheckListener {
+        void onChanged();
+    }
+
+    public static void downloadFiles(Context context, List<String> filename, boolean triggerWhenModified, DownloadListener listener) {
         AtomicInteger counter = new AtomicInteger(filename.size());
+        AtomicBoolean modified = new AtomicBoolean(false);
         for (String name: filename) {
-            NetworkUtils.downloadFile(context, name, new FileCallback() {
+            NetworkUtils.getMD5(context, name, new StringCallback() {
                 @Override
-                public void onSuccess(Response<File> response) {
-                    File file = response.body();
-                    File saveFile = new File(BuildConfig.SAVE_PATH, name);
-                    FileUtils.copy(file, saveFile);
+                public void onSuccess(Response<String> response) {
+                    String serverMD5 = response.body();
+                    SharedPreferences fileMD5 = context.getSharedPreferences("FILE_MD5", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = fileMD5.edit();
+                    String localMD5 = fileMD5.getString(name, null);
+                    if (localMD5 != null && localMD5.equals(serverMD5)) {
+                        if (counter.decrementAndGet() == 0) {
+                            if (!triggerWhenModified || modified.get()) {
+                                listener.onFinished();
+                            }
+                        }
+                        return;
+                    }
+                    NetworkUtils.downloadFile(context, name, new FileCallback() {
+                        @Override
+                        public void onSuccess(Response<File> response) {
+                            File file = response.body();
+                            File saveFile = new File(BuildConfig.SAVE_PATH, name);
+                            FileUtils.copy(file, saveFile);
+                            editor.putString(name, serverMD5);
+                            editor.apply();
+                            modified.set(true);
+                            if (counter.decrementAndGet() == 0) {
+                                if (!triggerWhenModified || modified.get()) {
+                                    listener.onFinished();
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    public static void checkFiles(Context context, List<String> filename, CheckListener listener) {
+        AtomicInteger counter = new AtomicInteger(filename.size());
+        AtomicBoolean modified = new AtomicBoolean(false);
+        for (String name: filename) {
+            NetworkUtils.getMD5(context, name, new StringCallback() {
+                @Override
+                public void onSuccess(Response<String> response) {
+                    String serverMD5 = response.body();
+                    SharedPreferences fileMD5 = context.getSharedPreferences("FILE_MD5", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = fileMD5.edit();
+                    String localMD5 = fileMD5.getString(name, null);
+                    if (localMD5 == null || !localMD5.equals(serverMD5)) {
+                        modified.set(true);
+                    }
                     if (counter.decrementAndGet() == 0) {
-                        listener.onFinished();
+                        listener.onChanged();
+                        /*
+                        if (modified.get()) {
+                            listener.onChanged();
+                        }
+                         */
                     }
                 }
             });

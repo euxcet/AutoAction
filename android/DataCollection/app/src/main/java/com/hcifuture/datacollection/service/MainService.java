@@ -93,12 +93,11 @@ public class MainService extends AccessibilityService {
                 "best.bin",
                 "best.param",
                 "classes.dex"
-        ), this::loadContextActionLibrary);
+        ), false, this::loadContextActionLibrary);
     }
 
     @Override
     public void onDestroy() {
-        Log.e("TEST", "onDestroy");
         super.onDestroy();
         if (loader != null) {
             loader.stopDetection();
@@ -138,7 +137,33 @@ public class MainService extends AccessibilityService {
         tapTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
 
         ActionListener actionListener = action ->
-                mHandler.post(() -> Toast.makeText(mContext, action.getAction(), Toast.LENGTH_SHORT).show());
+                mHandler.post(() -> {
+                    Toast.makeText(mContext, action.getAction(), Toast.LENGTH_SHORT).show();
+                    FileUtils.checkFiles(this, Arrays.asList(
+                            "param_dicts.json",
+                            "param_max.json",
+                            "words.csv",
+                            "best.bin",
+                            "best.param",
+                            "classes.dex",
+                            "tap7cls_pixel4.tflite",
+                            "ResultModel.tflite"
+                    ), () -> {
+                        loader.stopDetection();
+                        loader = null;
+                        classLoader = null;
+                        FileUtils.downloadFiles(this, Arrays.asList(
+                                "param_dicts.json",
+                                "param_max.json",
+                                "words.csv",
+                                "best.bin",
+                                "best.param",
+                                "classes.dex",
+                                "tap7cls_pixel4.tflite",
+                                "ResultModel.tflite"
+                        ), false, this::loadContextActionLibrary);
+                    });
+                });
 
         // ProximityContext
         ContextConfig proximityConfig = new ContextConfig();
@@ -184,16 +209,20 @@ public class MainService extends AccessibilityService {
             String action = intent.getAction();
             switch (action) {
                 case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
-                    loader.onBroadcastEvent(new BroadcastEvent(
-                            action,
-                            intent.getStringExtra("reason"),
-                            ACTION_TYPE_GLOBAL));
+                    if (loader != null) {
+                        loader.onBroadcastEvent(new BroadcastEvent(
+                                action,
+                                intent.getStringExtra("reason"),
+                                ACTION_TYPE_GLOBAL));
+                    }
                     break;
                 default:
-                    loader.onBroadcastEvent(new BroadcastEvent(
-                            action,
-                            "",
-                            ACTION_TYPE_GLOBAL));
+                    if (loader != null) {
+                        loader.onBroadcastEvent(new BroadcastEvent(
+                                action,
+                                "",
+                                ACTION_TYPE_GLOBAL));
+                    }
                     break;
             }
         }

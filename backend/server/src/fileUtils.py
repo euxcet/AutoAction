@@ -1,6 +1,7 @@
 import os
 import json
 import shutil
+import hashlib
 from time import time
 from process.record import Record
 
@@ -9,6 +10,8 @@ DATA_RECORD_ROOT = os.path.join(DATA_ROOT, "record")
 DATA_TRAIN_ROOT = os.path.join(DATA_ROOT, "train")
 DATA_FILE_ROOT = os.path.join(DATA_ROOT, "file")
 DATA_DEX_ROOT = os.path.join(DATA_ROOT, "dex")
+
+md5 = dict()
 
 def get_dex_user_path(userId):
     return os.path.join(DATA_DEX_ROOT, userId)
@@ -98,7 +101,7 @@ def append_recordlist(taskListId, taskId, subtaskId, recordId):
         f.write(recordId.strip() + '\n')
 
 def allowed_file(filename):
-    return os.path.splitext(filename)[-1] in ['.json', '.mp4', '.bin']
+    return os.path.splitext(filename)[-1] in ['.json', '.mp4', '.bin', '.csv', '.param', '.dex', '.jar']
 
 def save_record_file(file, file_path):
     file.save(file_path)
@@ -118,3 +121,26 @@ def save_record_file(file, file_path):
 
 def save_file(file, file_path):
     file.save(file_path)
+
+def calc_file_md5(file_name):
+    m = hashlib.md5()
+    with open(file_name, 'rb') as f:
+        while True:
+            data = f.read(4096)
+            if not data:
+                break
+            m.update(data)
+    return m.hexdigest()
+
+def update_md5():
+    global md5
+    for filename in os.listdir(DATA_FILE_ROOT):
+        md5[filename] = calc_file_md5(os.path.join(DATA_FILE_ROOT, filename))
+
+def get_md5(filename):
+    global md5
+    if filename in md5:
+        return md5[filename]
+    return ""
+
+    

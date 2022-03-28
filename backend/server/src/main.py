@@ -28,6 +28,7 @@ trainer = ThreadPoolExecutor(max_workers=1)
 
 fileUtils.mkdir("../data/record/TL13r912je")
 
+
 '''
 Data structure:
 
@@ -328,7 +329,7 @@ Form:
 Upload files after posting to record.
 '''
 @app.route("/record_file", methods=["POST"])
-def upload_file():
+def upload_record_file():
     file = request.files["file"]
     fileType = request.form.get("fileType")
     taskListId = request.form.get("taskListId")
@@ -352,7 +353,7 @@ def upload_file():
 
 
 '''
-Name: updload_collected_data
+Name: upload_collected_data
 Method: Post
 Content-Type: multipart/form-data
 Form:
@@ -557,11 +558,26 @@ Content-Type: multipart/form-data
 Form:
     - filename
 '''
-@app.route("/download_file", methods=['GET'])
+@app.route("/file", methods=['GET'])
 def download_file():
     filename = request.args.get("filename")
     return send_file(os.path.join(fileUtils.DATA_FILE_ROOT, filename))
     
+'''
+Name: update_file
+Method: Post
+Content-Type: multipart/form-data
+Form:
+    - file
+'''
+@app.route("/file", methods=["POST"])
+def upload_file():
+    file = request.files["file"]
+    if file:
+        fileUtils.save_file(file, os.path.join(fileUtils.DATA_FILE_ROOT, file.filename))
+        fileUtils.update_md5()
+    
+    return {}
 
 '''
 Name: get_md5
@@ -572,15 +588,22 @@ Form:
 '''
 @app.route("/md5", methods=['GET'])
 def get_md5():
-    for filename in os.listdir(fileUtils.DATA_FILE_ROOT):
-        pass
-
+    filename = request.args.get("filename")
+    return fileUtils.get_md5(filename)
 
 '''
-@app.route("/download_so", methods=['GET'])
-def download_so():
-    return send_file(os.path.join(fileUtils.DATA_JAR_ROOT, 'libOcrLite.so'))
+Name: update_md5
+Method: Post
+Content-Type: multipart/form-data
+Form:
 '''
+@app.route("/md5", methods=['POST'])
+def update_md5():
+    fileUtils.update_md5()
+    return {}
+        
+
 
 if __name__ == '__main__':
+    update_md5()
     app.run(port=60010, host="0.0.0.0")
