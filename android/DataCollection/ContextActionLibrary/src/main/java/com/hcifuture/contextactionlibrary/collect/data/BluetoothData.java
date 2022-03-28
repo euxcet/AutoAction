@@ -24,7 +24,7 @@ public class BluetoothData extends Data {
 
     public void insert(SingleBluetoothData single) {
         for (int i = 0; i < data.size(); i++) {
-            if (data.get(i).getName().equals(single.getName()) && data.get(i).getLinked() == single.getLinked()) {
+            if (data.get(i).getAddress().equals(single.getAddress()) && data.get(i).getLinked() == single.getLinked()) {
                 data.set(i, single);
                 return;
             }
