@@ -98,8 +98,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
 
         // clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Bluetooth));
-        this.clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU));
-        this.collectors = Arrays.asList(new TapTapCollector(context, requestListener, clickTrigger));
+        // this.clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU));
+        // this.collectors = Arrays.asList(new TapTapCollector(context, requestListener, clickTrigger));
+        this.collectors = Arrays.asList();
 
         this.futureList = new ArrayList<>();
         // scheduleCleanData();
@@ -335,7 +336,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                clickTrigger.cleanData();
+                if (clickTrigger != null) {
+                    clickTrigger.cleanData();
+                }
                 Log.e("TapTapCollector", "triggered");
             }
         }, date, 24 * 60 * 60 * 1000);
@@ -346,7 +349,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     public void onAction(ActionResult action) {
         Log.e("TapTapCollector", "On Action  " + action.getAction());
         if (action.getAction().equals("TapTap")) {
-            clickTrigger.trigger();
+            if (clickTrigger != null) {
+                clickTrigger.trigger();
+            }
         }
         if (collectors != null) {
             for (BaseCollector collector: collectors) {

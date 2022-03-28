@@ -39,6 +39,8 @@ import com.lzy.okgo.model.Response;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import dalvik.system.DexClassLoader;
 
@@ -152,16 +154,22 @@ public class MainService extends AccessibilityService {
                         loader.stopDetection();
                         loader = null;
                         classLoader = null;
-                        FileUtils.downloadFiles(this, Arrays.asList(
-                                "param_dicts.json",
-                                "param_max.json",
-                                "words.csv",
-                                "best.bin",
-                                "best.param",
-                                "classes.dex",
-                                "tap7cls_pixel4.tflite",
-                                "ResultModel.tflite"
-                        ), false, this::loadContextActionLibrary);
+                        new Timer().schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                FileUtils.downloadFiles(mContext, Arrays.asList(
+                                        "param_dicts.json",
+                                        "param_max.json",
+                                        "words.csv",
+                                        "best.bin",
+                                        "best.param",
+                                        "classes.dex",
+                                        "tap7cls_pixel4.tflite",
+                                        "ResultModel.tflite"
+                                ), false, () -> loadContextActionLibrary());
+                            }
+                        }, 2000);
+
                     });
                 });
 

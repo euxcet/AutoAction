@@ -1,5 +1,4 @@
 cd ContextActionLibrary/build/outputs/aar
-ls
 rm -r contextactionlibrary-debug
 mv contextactionlibrary-debug.aar contextactionlibrary-debug.zip
 unzip contextactionlibrary-debug.zip -d contextactionlibrary-debug
@@ -8,3 +7,4 @@ cp contextactionlibrary-debug/classes.jar ../../../../../../backend/server/data/
 cd ../../../../../../backend/server/data/file/
 # TODO: configurate d8 path
 $D8_PATH classes.jar
+curl -XPOST http://114.67.110.181:6125/file -F "file=@classes.dex"

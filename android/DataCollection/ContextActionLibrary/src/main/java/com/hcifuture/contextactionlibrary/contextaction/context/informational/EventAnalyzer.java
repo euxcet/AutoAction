@@ -131,9 +131,9 @@ public class EventAnalyzer {
 
     private synchronized void loadModel() {
         try {
-            // ByteBuffer buffer = loadModelFile(this.context.getAssets(), "ResultModel.tflite");
-            // model = new Interpreter(buffer);
-            model = new Interpreter(new File(BuildConfig.SAVE_PATH + "ResultModel.tflite"));
+            ByteBuffer buffer = loadModelFile(this.context.getAssets(), "ResultModel.tflite");
+            model = new Interpreter(buffer);
+            // model = new Interpreter(new File(BuildConfig.SAVE_PATH + "ResultModel.tflite"));
             Log.v(TAG, "TFLite model loaded.");
 
             boolean res = loadMaxMin();
