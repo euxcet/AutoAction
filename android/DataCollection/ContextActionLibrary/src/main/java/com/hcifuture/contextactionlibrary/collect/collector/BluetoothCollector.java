@@ -1,7 +1,13 @@
 package com.hcifuture.contextactionlibrary.collect.collector;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -28,6 +34,10 @@ public class BluetoothCollector extends Collector {
     private BroadcastReceiver receiver;
     private IntentFilter bluetoothFilter;
 
+    private BluetoothAdapter bluetoothAdapter;
+    private BluetoothManager bluetoothManager;
+    private ScanCallback leScanCallback;
+
     public BluetoothCollector(Context context, String triggerFolder) {
         super(context, triggerFolder);
         data = new BluetoothData();
@@ -43,6 +53,11 @@ public class BluetoothCollector extends Collector {
 
     @Override
     public void initialize() {
+        // initializes Bluetooth manager and adapter
+        bluetoothManager = (BluetoothManager) mContext.getSystemService(Context.BLUETOOTH_SERVICE);
+        bluetoothAdapter = bluetoothManager.getAdapter();
+
+        // set classic bluetooth scan callback
         bluetoothFilter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         receiver = new BroadcastReceiver() {
             @Override
@@ -58,6 +73,17 @@ public class BluetoothCollector extends Collector {
             }
         };
         mContext.registerReceiver(receiver, bluetoothFilter);
+
+        // ref: https://developer.android.com/guide/topics/connectivity/bluetooth-le#find
+        // set BLE scan callback
+        leScanCallback = new ScanCallback() {
+            @Override
+            public void onScanResult (int callbackType, ScanResult result) {
+                BluetoothDevice device = result.getDevice();
+                int rssi = result.getRssi();
+                insert(device, (short) rssi, false);
+            }
+        };
     }
 
     @Override
@@ -75,7 +101,8 @@ public class BluetoothCollector extends Collector {
     public synchronized CompletableFuture<Data> collect() {
         CompletableFuture<Data> ft = new CompletableFuture<>();
         data.clear();
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        // scan bonded (paired) devices
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device: pairedDevices) {
@@ -83,11 +110,24 @@ public class BluetoothCollector extends Collector {
             }
         }
 
+        // scan connected BLE devices
+        List<BluetoothDevice> connectedDevices = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
+        for (BluetoothDevice device : connectedDevices) {
+            insert(device, (short)0, true);
+        }
+
+        // start classic bluetooth scanning
         bluetoothAdapter.startDiscovery();
+        // start BLE scanning
+        BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+        bluetoothLeScanner.startScan(leScanCallback);
+
+        // Stops scanning after 10 seconds
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
                 synchronized (BluetoothCollector.this) {
+                    bluetoothLeScanner.stopScan(leScanCallback);
                     bluetoothAdapter.cancelDiscovery();
                     saver.save(data.deepClone());
                     ft.complete(data);
