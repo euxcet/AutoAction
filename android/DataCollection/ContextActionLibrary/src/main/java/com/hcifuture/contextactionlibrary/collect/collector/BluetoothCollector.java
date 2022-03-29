@@ -1,6 +1,5 @@
 package com.hcifuture.contextactionlibrary.collect.collector;
 
-import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -43,12 +42,12 @@ public class BluetoothCollector extends Collector {
         data = new BluetoothData();
     }
 
-    private synchronized void insert(BluetoothDevice device, short rssi, boolean linked) {
+    private synchronized void insert(BluetoothDevice device, short rssi, boolean linked, String scanResult, String intentExtra) {
         data.insert(new SingleBluetoothData(device.getName(), device.getAddress(),
                 device.getBondState(), device.getType(),
                 device.getBluetoothClass().getDeviceClass(),
                 device.getBluetoothClass().getMajorDeviceClass(),
-                rssi, linked));
+                rssi, linked, scanResult, intentExtra));
     }
 
     @Override
@@ -68,7 +67,8 @@ public class BluetoothCollector extends Collector {
                     if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
                         rssi = intent.getExtras().getShort(BluetoothDevice.EXTRA_RSSI);
                     }
-                    insert(device, rssi, false);
+
+                    insert(device, rssi, false, null, intent.getExtras().toString());
                 }
             }
         };
@@ -81,7 +81,7 @@ public class BluetoothCollector extends Collector {
             public void onScanResult (int callbackType, ScanResult result) {
                 BluetoothDevice device = result.getDevice();
                 int rssi = result.getRssi();
-                insert(device, (short) rssi, false);
+                insert(device, (short) rssi, false, result.toString(), null);
             }
         };
     }
@@ -106,14 +106,14 @@ public class BluetoothCollector extends Collector {
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device: pairedDevices) {
-                insert(device, (short)0, true);
+                insert(device, (short)0, true, null, null);
             }
         }
 
         // scan connected BLE devices
         List<BluetoothDevice> connectedDevices = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
         for (BluetoothDevice device : connectedDevices) {
-            insert(device, (short)0, true);
+            insert(device, (short)0, true, null, null);
         }
 
         // start classic bluetooth scanning
