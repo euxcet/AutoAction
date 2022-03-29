@@ -150,23 +150,15 @@ public class MainService extends AccessibilityService {
                             "classes.dex",
                             "tap7cls_pixel4.tflite",
                             "ResultModel.tflite"
-                    ), () -> {
+                    ), (changedFilename) -> {
                         loader.stopDetection();
                         loader = null;
                         classLoader = null;
                         new Timer().schedule(new TimerTask() {
                             @Override
                             public void run() {
-                                FileUtils.downloadFiles(mContext, Arrays.asList(
-                                        "param_dicts.json",
-                                        "param_max.json",
-                                        "words.csv",
-                                        "best.bin",
-                                        "best.param",
-                                        "classes.dex",
-                                        "tap7cls_pixel4.tflite",
-                                        "ResultModel.tflite"
-                                ), false, () -> loadContextActionLibrary());
+                                FileUtils.downloadFiles(mContext, changedFilename, false,
+                                        () -> loadContextActionLibrary());
                             }
                         }, 2000);
 

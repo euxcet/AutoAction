@@ -16,14 +16,17 @@ import com.hcifuture.contextactionlibrary.collect.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.collect.listener.NonIMUSensorEventListener;
 import com.google.gson.Gson;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class NonIMUCollector extends SensorCollector {
 
     private NonIMUData data;
 
-    public NonIMUCollector(Context context, String triggerFolder) {
-        super(context, triggerFolder);
+    public NonIMUCollector(Context context, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, triggerFolder, scheduledExecutorService, futureList);
         data = new NonIMUData();
     }
 
@@ -61,9 +64,11 @@ public class NonIMUCollector extends SensorCollector {
         pressureListener = new NonIMUSensorEventListener(this, Sensor.TYPE_PRESSURE);
         lightListener = new NonIMUSensorEventListener(this, Sensor.TYPE_LIGHT);
 
+        /*
         sensorThread = new HandlerThread("NonIMU Thread", Process.THREAD_PRIORITY_MORE_FAVORABLE);
         sensorThread.start();
         sensorHandler = new Handler(sensorThread.getLooper());
+         */
 
         this.resume();
     }
@@ -94,8 +99,10 @@ public class NonIMUCollector extends SensorCollector {
     public void close() {
         sensorManager.unregisterListener(pressureListener);
         sensorManager.unregisterListener(lightListener);
+        /*
         if (sensorThread != null)
             sensorThread.quitSafely();
+         */
     }
 
     @Override

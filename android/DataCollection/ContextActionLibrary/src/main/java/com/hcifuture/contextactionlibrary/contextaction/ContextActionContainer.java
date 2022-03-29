@@ -98,11 +98,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
 
         // clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Bluetooth));
-        // this.clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU));
-        // this.collectors = Arrays.asList(new TapTapCollector(context, requestListener, clickTrigger));
-        this.collectors = Arrays.asList();
-
         this.futureList = new ArrayList<>();
+
         // scheduleCleanData();
     }
 
@@ -129,7 +126,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     public void start() {
         initialize();
-
         if (openSensor) {
             for (BaseSensorManager sensorManager: sensorManagers) {
                 sensorManager.start();
@@ -163,6 +159,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
         if (clickTrigger != null) {
             clickTrigger.pause();
+            clickTrigger.close();
         }
         for (ScheduledFuture<?> future: futureList) {
             future.cancel(true);
@@ -192,8 +189,11 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     private void initialize() {
-        this.scheduledExecutorService = Executors.newScheduledThreadPool(5);
+        this.scheduledExecutorService = Executors.newScheduledThreadPool(10);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
+        this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU), scheduledExecutorService, futureList);
+        this.collectors = Arrays.asList(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
+
         if (fromDex) {
             for (int i = 0; i < actionConfig.size(); i++) {
                 ActionConfig config = actionConfig.get(i);
@@ -251,18 +251,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 action.getAction();
             }
         }, 3000L, 20L, TimeUnit.MILLISECONDS));
-        /*
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                executor.execute(() -> {
-                    for (BaseAction action: actions) {
-                        action.getAction();
-                    }
-                });
-            }
-        }, 5000, 20);
-         */
     }
 
     private void monitorContext() {
@@ -271,18 +259,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 context.getContext();
             }
         }, 3000L, 1000L, TimeUnit.MILLISECONDS));
-        /*
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                executor.execute(() -> {
-                    for (BaseContext context: contexts) {
-                        context.getContext();
-                    }
-                });
-            }
-        }, 5000, 1000);
-         */
     }
 
     public void onSensorChangedDex(SensorEvent event) {
@@ -347,7 +323,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     @Override
     public void onAction(ActionResult action) {
-        Log.e("TapTapCollector", "On Action  " + action.getAction());
         if (action.getAction().equals("TapTap")) {
             if (clickTrigger != null) {
                 clickTrigger.trigger();

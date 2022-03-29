@@ -10,16 +10,23 @@ import com.hcifuture.shared.communicate.result.ContextResult;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public abstract class BaseCollector {
     protected Context mContext;
     protected RequestListener requestListener;
     protected ClickTrigger clickTrigger;
+    protected ScheduledExecutorService scheduledExecutorService;
+    protected List<ScheduledFuture<?>> futureList;
 
-    public BaseCollector(Context context, RequestListener requestListener, ClickTrigger clickTrigger) {
+    public BaseCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger) {
         this.mContext = context;
+        this.scheduledExecutorService = scheduledExecutorService;
         this.requestListener = requestListener;
         this.clickTrigger = clickTrigger;
+        this.futureList = futureList;
     }
 
     public abstract void onAction(ActionResult action);

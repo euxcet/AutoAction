@@ -20,6 +20,8 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class BluetoothCollector extends Collector {
 
@@ -28,8 +30,8 @@ public class BluetoothCollector extends Collector {
     private BroadcastReceiver receiver;
     private IntentFilter bluetoothFilter;
 
-    public BluetoothCollector(Context context, String triggerFolder) {
-        super(context, triggerFolder);
+    public BluetoothCollector(Context context, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, triggerFolder, scheduledExecutorService, futureList);
         data = new BluetoothData();
     }
 

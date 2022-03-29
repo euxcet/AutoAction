@@ -12,37 +12,38 @@ import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
 import java.io.File;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class TapTapCollector extends BaseCollector {
-    public TapTapCollector(Context context, RequestListener requestListener, ClickTrigger clickTrigger) {
-        super(context, requestListener, clickTrigger);
+    public TapTapCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger) {
+        super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
     }
 
     @Override
     public void onAction(ActionResult action) {
-        if (clickTrigger != null) {
-            new Timer().schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    File imuFile = new File(clickTrigger.getRecentIMUPath());
-                    Log.e("TapTapCollector", imuFile.getAbsolutePath());
-                    NetworkUtils.uploadCollectedData(mContext,
-                            imuFile,
-                            0,
-                            "TapTap",
-                            getMacMoreThanM(),
-                            System.currentTimeMillis(),
-                            "Commit",
-                            new StringCallback() {
-                                @Override
-                                public void onSuccess(Response<String> response) {
-                                    Log.e("TapTapCollector", "Success");
-                                }
-                            });
-                }
-            }, 20000);
+        if (clickTrigger != null && scheduledExecutorService != null) {
+            futureList.add(scheduledExecutorService.schedule(() -> {
+                File imuFile = new File(clickTrigger.getRecentIMUPath());
+                Log.e("TapTapCollector", imuFile.getAbsolutePath());
+                NetworkUtils.uploadCollectedData(mContext,
+                        imuFile,
+                        0,
+                        "TapTap",
+                        getMacMoreThanM(),
+                        System.currentTimeMillis(),
+                        "Commit",
+                        new StringCallback() {
+                            @Override
+                            public void onSuccess(Response<String> response) {
+                                Log.e("TapTapCollector", "Success");
+                            }
+                        });
+            }, 20000L, TimeUnit.MILLISECONDS));
         }
     }
 
