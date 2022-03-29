@@ -1,21 +1,23 @@
-package com.example.simpleexample.utils;
+package com.example.simpleexample.contextaction.utils;
+
+import static android.content.Context.MODE_PRIVATE;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import com.example.simpleexample.BuildConfig;
 import com.lzy.okgo.callback.FileCallback;
+import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -78,7 +80,15 @@ public class FileUtils {
         void onFinished();
     }
 
+    public interface CheckListener {
+        void onChanged(List<String> changedFilename, List<String> serverMD5s);
+    }
+
     public static void downloadFiles(Context context, List<String> filename, DownloadListener listener) {
+        if (filename.isEmpty()) {
+            listener.onFinished();
+            return;
+        }
         AtomicInteger counter = new AtomicInteger(filename.size());
         for (String name: filename) {
             NetworkUtils.downloadFile(context, name, new FileCallback() {
@@ -87,11 +97,42 @@ public class FileUtils {
                     File file = response.body();
                     File saveFile = new File(BuildConfig.SAVE_PATH, name);
                     FileUtils.copy(file, saveFile);
+                    file.delete();
                     if (counter.decrementAndGet() == 0) {
                         listener.onFinished();
                     }
                 }
             });
         }
+    }
+
+    public static void checkFiles(Context context, List<String> filename, CheckListener listener) {
+        if (filename.isEmpty()) {
+            listener.onChanged(new ArrayList<>(), new ArrayList<>());
+            return;
+        }
+        StringBuilder filenameBuilder = new StringBuilder();
+        for (String name: filename) {
+            filenameBuilder.append(name).append(",");
+        }
+        NetworkUtils.getMD5(context, filenameBuilder.toString(), new StringCallback() {
+            @Override
+            public void onSuccess(Response<String> response) {
+                SharedPreferences fileMD5 = context.getSharedPreferences("FILE_MD5", MODE_PRIVATE);
+                String[] md5s = response.body().split(",");
+                List<String> changedFilename = new ArrayList<>();
+                if (md5s.length != filename.size()) {
+                    return;
+                }
+                for (int i = 0; i < filename.size(); i++) {
+                    String serverMD5 = md5s[i];
+                    String localMD5 = fileMD5.getString(filename.get(i), null);
+                    if (localMD5 == null || !localMD5.equals(serverMD5)) {
+                        changedFilename.add(filename.get(i));
+                    }
+                }
+                listener.onChanged(changedFilename, Arrays.asList(md5s));
+            }
+        });
     }
 }

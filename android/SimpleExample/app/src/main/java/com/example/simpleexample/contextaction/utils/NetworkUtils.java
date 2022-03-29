@@ -1,4 +1,4 @@
-package com.example.simpleexample.utils;
+package com.example.simpleexample.contextaction.utils;
 
 import android.content.Context;
 
@@ -13,15 +13,22 @@ import java.io.File;
 public class NetworkUtils {
     private static final String TAG = "NetworkUtils";
     private static final String ROOT_URL = BuildConfig.WEB_SERVER;
-    private static final String DOWNLOAD_FILE_URL = ROOT_URL + "/download_file";
+    private static final String FILE_URL = ROOT_URL + "/file";
+    private static final String MD5_URL = ROOT_URL + "/md5";
 
     private static Gson gson = new Gson();
 
     public static void downloadFile(Context context, String filename, FileCallback callback) {
-        OkGo.<File>get(DOWNLOAD_FILE_URL)
+        OkGo.<File>get(FILE_URL)
                 .tag(context)
                 .params("filename", filename)
                 .execute(callback);
+    }
 
+    public static void getMD5(Context context, String filename, StringCallback callback) {
+        OkGo.<String>get(MD5_URL)
+                .tag(context)
+                .params("filename", filename)
+                .execute(callback);
     }
 }
