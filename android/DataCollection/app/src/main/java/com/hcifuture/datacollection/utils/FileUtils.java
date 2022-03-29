@@ -128,52 +128,36 @@ public class FileUtils {
     }
 
     public interface CheckListener {
-         void onChanged(List<String> changedFilename);
+         void onChanged(List<String> changedFilename, List<String> serverMD5s);
     }
 
-    public static void downloadFiles(Context context, List<String> filename, boolean triggerWhenModified, DownloadListener listener) {
+    public static void downloadFiles(Context context, List<String> filename, DownloadListener listener) {
+        if (filename.isEmpty()) {
+            listener.onFinished();
+            return;
+        }
         AtomicInteger counter = new AtomicInteger(filename.size());
-        AtomicBoolean modified = new AtomicBoolean(false);
         for (String name: filename) {
-            NetworkUtils.getMD5(context, name, new StringCallback() {
+            NetworkUtils.downloadFile(context, name, new FileCallback() {
                 @Override
-                public void onSuccess(Response<String> response) {
-                    String serverMD5 = response.body();
-                    SharedPreferences fileMD5 = context.getSharedPreferences("FILE_MD5", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = fileMD5.edit();
-                    String localMD5 = fileMD5.getString(name, null);
-                    if (localMD5 != null && localMD5.equals(serverMD5)) {
-                        if (counter.decrementAndGet() == 0) {
-                            if (!triggerWhenModified || modified.get()) {
-                                listener.onFinished();
-                            }
-                        }
-                        return;
+                public void onSuccess(Response<File> response) {
+                    File file = response.body();
+                    File saveFile = new File(BuildConfig.SAVE_PATH, name);
+                    FileUtils.copy(file, saveFile);
+                    file.delete();
+                    if (counter.decrementAndGet() == 0) {
+                        listener.onFinished();
                     }
-                    NetworkUtils.downloadFile(context, name, new FileCallback() {
-                        @Override
-                        public void onSuccess(Response<File> response) {
-                            File file = response.body();
-                            File saveFile = new File(BuildConfig.SAVE_PATH, name);
-                            FileUtils.copy(file, saveFile);
-                            editor.putString(name, serverMD5);
-                            editor.apply();
-                            modified.set(true);
-                            if (counter.decrementAndGet() == 0) {
-                                if (!triggerWhenModified || modified.get()) {
-                                    if (listener != null) {
-                                        listener.onFinished();
-                                    }
-                                }
-                            }
-                        }
-                    });
                 }
             });
         }
     }
 
     public static void checkFiles(Context context, List<String> filename, CheckListener listener) {
+        if (filename.isEmpty()) {
+            listener.onChanged(new ArrayList<>(), new ArrayList<>());
+            return;
+        }
         StringBuilder filenameBuilder = new StringBuilder();
         for (String name: filename) {
             filenameBuilder.append(name).append(",");
@@ -184,21 +168,17 @@ public class FileUtils {
                 SharedPreferences fileMD5 = context.getSharedPreferences("FILE_MD5", MODE_PRIVATE);
                 String[] md5s = response.body().split(",");
                 List<String> changedFilename = new ArrayList<>();
-                Log.e("TEST", md5s.length + " " + filename.size());
                 if (md5s.length != filename.size()) {
                     return;
                 }
                 for (int i = 0; i < filename.size(); i++) {
                     String serverMD5 = md5s[i];
                     String localMD5 = fileMD5.getString(filename.get(i), null);
-                    Log.e("TEST", serverMD5 + " " + localMD5);
                     if (localMD5 == null || !localMD5.equals(serverMD5)) {
                         changedFilename.add(filename.get(i));
                     }
                 }
-                if (!changedFilename.isEmpty()) {
-                    listener.onChanged(changedFilename);
-                }
+                listener.onChanged(changedFilename, Arrays.asList(md5s));
             }
         });
     }
