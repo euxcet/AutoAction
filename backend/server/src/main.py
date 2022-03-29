@@ -588,8 +588,12 @@ Form:
 '''
 @app.route("/md5", methods=['GET'])
 def get_md5():
-    filename = request.args.get("filename")
-    return fileUtils.get_md5(filename)
+    filenames = request.args.get("filename").strip().split(',')
+    result = ""
+    for filename in filenames:
+        if filename != '':
+            result += fileUtils.get_md5(filename) + ","
+    return result[:-1]
 
 '''
 Name: update_md5
