@@ -149,7 +149,7 @@ public class TopTapAction extends BaseAction {
         }
 
         peakDetectorPositive.update(highpassKeyPositive.update(lowpassKeyPositive.update(z)));
-        peakDetectorNegative.update(highpassKeyNegative.update(lowpassKeyNegative.update(y)));
+        peakDetectorNegative.update(-highpassKeyNegative.update(lowpassKeyNegative.update(y)));
     }
 
     private void processGyro(float x, float y, float z, long samplingInterval) {
@@ -226,12 +226,12 @@ public class TopTapAction extends BaseAction {
     public int recognizeTapML() {
         // for taptap
         int peakIdxPositive = peakDetectorPositive.getIdMajorPeak();
-        if (peakIdxPositive > 40)
+        if (peakIdxPositive == 32) {
             wasPositivePeakApproaching = true;
+        }
         int idxPositive = peakIdxPositive - 15;
         if (idxPositive >= 0) {
-            if (idxPositive + seqLength < zsAcc.size() && wasPositivePeakApproaching && peakIdxPositive <= 40) {
-//                Log.e("TapTap", "???111???" + idxPositive);
+            if (idxPositive + seqLength < zsAcc.size() && wasPositivePeakApproaching && peakIdxPositive <= 30) {
                 int result = Util.getMaxId(tflite.predict(getInput(idxPositive), 3).get(0));
                 if (result == 1) {
                     wasPositivePeakApproaching = false;
@@ -249,12 +249,12 @@ public class TopTapAction extends BaseAction {
             wasPositivePeakApproaching = false;
         // for toptap
         int peakIdxNegative = peakDetectorNegative.getIdMajorPeak();
-        if (peakIdxNegative > 40)
+        if (peakIdxNegative == 32) {
             wasNegativePeakApproaching = true;
+        }
         int idxNegative = peakIdxNegative - 15;
         if (idxNegative >= 0) {
-            if (idxNegative + seqLength < zsAcc.size() && wasNegativePeakApproaching && peakIdxNegative <= 40) {
-//                Log.e("TapTap", "???222???" + idxNegative);
+            if (idxNegative + seqLength < zsAcc.size() && wasNegativePeakApproaching && peakIdxNegative <= 30) {
                 int result = Util.getMaxId(tflite.predict(getInput(idxNegative), 3).get(0));
                 if (result == 1) {
                     wasPositivePeakApproaching = false;
@@ -281,13 +281,13 @@ public class TopTapAction extends BaseAction {
         long timestamp = timestamps.get(seqLength);
         if (result == 1) {
             backTapTimestamps.add(timestamp);
-            if (actionListener != null) {
-                if (checkDoubleBackTapTiming(timestamp)) {
-                    for (ActionListener listener: actionListener) {
-                        listener.onAction(new ActionResult("TapTap"));
-                    }
-                }
-            }
+//            if (actionListener != null) {
+//                if (checkDoubleBackTapTiming(timestamp)) {
+//                    for (ActionListener listener: actionListener) {
+//                        listener.onAction(new ActionResult("TapTap"));
+//                    }
+//                }
+//            }
         }
         else if (result == 2) {
             topTapTimestamps.add(timestamp);

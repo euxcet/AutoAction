@@ -234,12 +234,13 @@ public class TapTapAction extends BaseAction {
             return 0;
         int diff = (int)((resampleAcc.getResults().t - resampleGyro.getResults().t) / resampleAcc.getInterval());
         int peakIdx = peakDetectorPositive.getIdMajorPeak();
-        if (peakIdx > 20)
+        if (peakIdx > 12) {
             wasPeakApproaching = true;
+        }
         int accIdx = peakIdx - 6;
         int gyroIdx = accIdx - diff;
         if (accIdx >= 0 && gyroIdx >= 0) {
-            if (accIdx + seqLength < zsAcc.size() && gyroIdx + seqLength < zsAcc.size() && wasPeakApproaching && peakIdx <= 20) {
+            if (accIdx + seqLength < zsAcc.size() && gyroIdx + seqLength < zsAcc.size() && wasPeakApproaching && peakIdx <= 12) {
                 wasPeakApproaching = false;
                 return Util.getMaxId(tflite.predict(getInput(accIdx, gyroIdx), 7).get(0));
             }
