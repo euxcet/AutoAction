@@ -11,6 +11,7 @@ import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 import com.hcifuture.contextactionlibrary.contextaction.action.BaseAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
+import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.BaseCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
@@ -200,6 +201,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 if (config.getAction() == BuiltInActionEnum.TapTap) {
                     TapTapAction tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                     actions.add(tapTapAction);
+                } else if (config.getAction() == BuiltInActionEnum.TopTap) {
+                    TopTapAction topTapAction = new TopTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                    actions.add(topTapAction);
                 }
             }
             for (int i = 0; i < contextConfig.size(); i++) {
@@ -323,7 +327,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     @Override
     public void onAction(ActionResult action) {
-        if (action.getAction().equals("TapTap")) {
+        if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap")) {
             if (clickTrigger != null) {
                 clickTrigger.trigger();
             }

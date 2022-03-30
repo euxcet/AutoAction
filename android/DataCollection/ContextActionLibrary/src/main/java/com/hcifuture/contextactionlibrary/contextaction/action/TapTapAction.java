@@ -5,7 +5,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.util.Log;
 
-import com.hcifuture.contextactionlibrary.BuildConfig;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass3C;
 import com.hcifuture.contextactionlibrary.utils.imu.Lowpass1C;
@@ -22,8 +21,6 @@ import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 
-
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -232,10 +229,9 @@ public class TapTapAction extends BaseAction {
         return false;
     }
 
-    public int[] shouldRunTapModel() {
-        if (resampleAcc.getInterval() == 0) {
-            return new int[]{-1, -1};
-        }
+    public int recognizeTapML() {
+        if (resampleAcc.getInterval() == 0)
+            return 0;
         int diff = (int)((resampleAcc.getResults().t - resampleGyro.getResults().t) / resampleAcc.getInterval());
         int peakIdx = peakDetectorPositive.getIdMajorPeak();
         if (peakIdx > 20)
@@ -245,20 +241,17 @@ public class TapTapAction extends BaseAction {
         if (accIdx >= 0 && gyroIdx >= 0) {
             if (accIdx + seqLength < zsAcc.size() && gyroIdx + seqLength < zsAcc.size() && wasPeakApproaching && peakIdx <= 20) {
                 wasPeakApproaching = false;
-                return new int[]{accIdx, gyroIdx};
+                return Util.getMaxId(tflite.predict(getInput(accIdx, gyroIdx), 7).get(0));
             }
         }
-        return new int[]{-1, -1};
+        return 0;
     }
 
     @Override
     public void getAction() {
-        int[] idxes = shouldRunTapModel();
-        if (!isStarted || idxes[0] == -1) {
+        if (!isStarted)
             return;
-        }
-        ArrayList<Float> input = getInput(idxes[0], idxes[1]);
-        int result = Util.getMaxId(tflite.predict(input, 7).get(0));
+        int result = recognizeTapML();
         long timestamp = timestamps.get(seqLength);
         if (result == 1) {
             tapTimestamps.add(timestamp);

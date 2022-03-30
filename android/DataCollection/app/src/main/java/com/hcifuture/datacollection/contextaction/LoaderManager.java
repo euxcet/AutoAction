@@ -161,6 +161,12 @@ public class LoaderManager {
         tapTapConfig.putValue("SeqLength", 50);
         tapTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
 
+        // TopTapAction
+        ActionConfig topTapConfig = new ActionConfig();
+        topTapConfig.setAction(BuiltInActionEnum.TopTap);
+        topTapConfig.putValue("SeqLength", 25);
+        topTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
+
         // ProximityContext
         ContextConfig proximityConfig = new ContextConfig();
         proximityConfig.setContext(BuiltInContextEnum.Proximity);
@@ -177,7 +183,7 @@ public class LoaderManager {
         informationalConfig.setSensorType(Arrays.asList(SensorType.ACCESSIBILITY, SensorType.BROADCAST));
 
         RequestListener requestListener = config -> handleRequest(config);
-        loader.startDetection(Arrays.asList(tapTapConfig), actionListener, Arrays.asList(proximityConfig, tableConfig, informationalConfig), contextListener, requestListener);
+        loader.startDetection(Arrays.asList(tapTapConfig, topTapConfig), actionListener, Arrays.asList(proximityConfig, tableConfig, informationalConfig), contextListener, requestListener);
 
 
         NcnnInstance.init(mService,
