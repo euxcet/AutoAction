@@ -46,6 +46,7 @@ public class TopTapAction extends BaseAction {
     private boolean wasNegativePeakApproaching = true;
     private long[] doubleBackTapTimestamps = new long[2];
     private long[] doubleTopTapTimestamps = new long[2];
+    private int result;
 
     private List<Long> backTapTimestamps = new ArrayList();
     private List<Long> topTapTimestamps = new ArrayList();
@@ -108,6 +109,7 @@ public class TopTapAction extends BaseAction {
     public void onIMUSensorChanged(SensorEvent event) {
         if (event.sensor.getType() != Sensor.TYPE_GYROSCOPE && event.sensor.getType() != Sensor.TYPE_LINEAR_ACCELERATION)
             return;
+        result = 0;
         if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             gotAcc = true;
             if (!gotGyro)
@@ -128,6 +130,13 @@ public class TopTapAction extends BaseAction {
                 processAccAndKeySignal(event.values[0], event.values[1], event.values[2], event.timestamp, SAMPLINGINTERVALNS);
             else
                 processGyro(event.values[0], event.values[1], event.values[2], SAMPLINGINTERVALNS);
+            recognizeTapML();
+            if (result == 1) {
+                backTapTimestamps.add(event.timestamp);
+            }
+            else if (result == 2) {
+                topTapTimestamps.add(event.timestamp);
+            }
         }
     }
 
@@ -231,7 +240,7 @@ public class TopTapAction extends BaseAction {
         return 0;
     }
 
-    public int recognizeTapML() {
+    public void recognizeTapML() {
         // for taptap
         int peakIdxPositive = peakDetectorPositive.getIdMajorPeak();
         if (peakIdxPositive == 32) {
@@ -240,16 +249,16 @@ public class TopTapAction extends BaseAction {
         int idxPositive = peakIdxPositive - 15;
         if (idxPositive >= 0) {
             if (idxPositive + seqLength < zsAcc.size() && wasPositivePeakApproaching && peakIdxPositive <= 30) {
-                int result = Util.getMaxId(tflite.predict(getInput(idxPositive), 3).get(0));
-                if (result == 1) {
+                int tmp = Util.getMaxId(tflite.predict(getInput(idxPositive), 3).get(0));
+                if (tmp == 1) {
                     wasPositivePeakApproaching = false;
                     peakDetectorPositive.reset();
-                    return 1;
+                    result = 1;
                 }
-                else if (result == 2) {
+                else if (tmp == 2) {
                     wasNegativePeakApproaching = false;
                     peakDetectorNegative.reset();
-                    return 2;
+                    result = 2;
                 }
             }
         }
@@ -263,47 +272,41 @@ public class TopTapAction extends BaseAction {
         int idxNegative = peakIdxNegative - 15;
         if (idxNegative >= 0) {
             if (idxNegative + seqLength < zsAcc.size() && wasNegativePeakApproaching && peakIdxNegative <= 30) {
-                int result = Util.getMaxId(tflite.predict(getInput(idxNegative), 3).get(0));
-                if (result == 1) {
+                int tmp = Util.getMaxId(tflite.predict(getInput(idxNegative), 3).get(0));
+                if (tmp == 1) {
                     wasPositivePeakApproaching = false;
                     peakDetectorPositive.reset();
-                    return 1;
+                    result = 1;
                 }
-                else if (result == 2) {
+                else if (tmp == 2) {
                     wasNegativePeakApproaching = false;
                     peakDetectorNegative.reset();
-                    return 2;
+                    result = 2;
                 }
             }
         }
         else
             wasNegativePeakApproaching = false;
-        return 0;
     }
 
     @Override
     public void getAction() {
         if (!isStarted)
             return;
-        int result = recognizeTapML();
         long timestamp = timestamps.get(seqLength);
-        if (result == 1) {
-            backTapTimestamps.add(timestamp);
+//        int count1 = checkDoubleBackTapTiming(timestamp);
+//        if (count1 == 2) {
 //            if (actionListener != null) {
-//                if (checkDoubleBackTapTiming(timestamp) == 2) {
-//                    for (ActionListener listener: actionListener) {
-//                        listener.onAction(new ActionResult("TapTap"));
-//                    }
+//                for (ActionListener listener: actionListener) {
+//                    listener.onAction(new ActionResult("TapTap"));
 //                }
 //            }
-        }
-        else if (result == 2) {
-            topTapTimestamps.add(timestamp);
+//        }
+        int count2 = checkDoubleTopTapTiming(timestamp);
+        if (count2 == 2) {
             if (actionListener != null) {
-                if (checkDoubleTopTapTiming(timestamp) == 2) {
-                    for (ActionListener listener: actionListener) {
-                        listener.onAction(new ActionResult("TopTap"));
-                    }
+                for (ActionListener listener : actionListener) {
+                    listener.onAction(new ActionResult("TopTap"));
                 }
             }
         }

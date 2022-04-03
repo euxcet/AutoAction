@@ -54,6 +54,7 @@ public class TapTapAction extends BaseAction {
     private Lowpass1C lowpassKey = new Lowpass1C();
     private PeakDetector peakDetectorPositive = new PeakDetector();
     private boolean wasPeakApproaching = true;
+    private int result;
 
     private List<Long> tapTimestamps = new ArrayList();
     private TfClassifier tflite;
@@ -115,6 +116,7 @@ public class TapTapAction extends BaseAction {
     public void onIMUSensorChanged(SensorEvent event) {
         if (event.sensor.getType() != Sensor.TYPE_GYROSCOPE && event.sensor.getType() != Sensor.TYPE_ACCELEROMETER)
             return;
+        result = 0;
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             gotAcc = true;
             if (0L == syncTime)
@@ -147,6 +149,9 @@ public class TapTapAction extends BaseAction {
             else
                 while(resampleGyro.update(event.values[0], event.values[1], event.values[2], event.timestamp))
                     processGyro();
+            recognizeTapML();
+            if (result == 1)
+                tapTimestamps.add(event.timestamp);
         }
     }
 
@@ -232,9 +237,9 @@ public class TapTapAction extends BaseAction {
         return 0;
     }
 
-    public int recognizeTapML() {
+    public void recognizeTapML() {
         if (resampleAcc.getInterval() == 0)
-            return 0;
+            return;
         int diff = (int)((resampleAcc.getResults().t - resampleGyro.getResults().t) / resampleAcc.getInterval());
         int peakIdx = peakDetectorPositive.getIdMajorPeak();
         if (peakIdx > 12) {
@@ -245,25 +250,21 @@ public class TapTapAction extends BaseAction {
         if (accIdx >= 0 && gyroIdx >= 0) {
             if (accIdx + seqLength < zsAcc.size() && gyroIdx + seqLength < zsAcc.size() && wasPeakApproaching && peakIdx <= 12) {
                 wasPeakApproaching = false;
-                return Util.getMaxId(tflite.predict(getInput(accIdx, gyroIdx), 7).get(0));
+                result = Util.getMaxId(tflite.predict(getInput(accIdx, gyroIdx), 7).get(0));
             }
         }
-        return 0;
     }
 
     @Override
     public void getAction() {
         if (!isStarted)
             return;
-        int result = recognizeTapML();
         long timestamp = timestamps.get(seqLength);
-        if (result == 1) {
-            tapTimestamps.add(timestamp);
+        int count = checkDoubleTapTiming(timestamp);
+        if (count == 2) {
             if (actionListener != null) {
-                if (checkDoubleTapTiming(timestamp) == 2) {
-                    for (ActionListener listener: actionListener) {
-                        listener.onAction(new ActionResult("TapTap"));
-                    }
+                for (ActionListener listener: actionListener) {
+                    listener.onAction(new ActionResult("TapTap"));
                 }
             }
         }
