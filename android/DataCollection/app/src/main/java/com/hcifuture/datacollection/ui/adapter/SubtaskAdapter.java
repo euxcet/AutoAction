@@ -3,6 +3,7 @@ package com.hcifuture.datacollection.ui.adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 
 import com.hcifuture.datacollection.R;
 import com.hcifuture.datacollection.ui.ModifySubtaskActivity;
+import com.hcifuture.datacollection.ui.NormalAlertDialog;
 import com.hcifuture.datacollection.utils.bean.TaskListBean;
 import com.hcifuture.datacollection.utils.NetworkUtils;
 import com.lzy.okgo.callback.StringCallback;
@@ -71,18 +73,28 @@ public class SubtaskAdapter extends BaseAdapter {
         Button deleteButton = view.findViewById(R.id.deleteItemButton);
 
         deleteButton.setOnClickListener((v) -> {
-            String id = subtask.getId();
-            for(int j = 0; j < subtasks.size(); j++) {
-                if (subtasks.get(j).getId() == id) {
-                    subtasks.remove(j);
-                }
-            }
-            NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
-                @Override
-                public void onSuccess(Response<String> response) {
-                }
-            });
-            this.notifyDataSetChanged();
+            NormalAlertDialog dialog = new NormalAlertDialog(mContext,
+                    "Delete subtask [" + subtask.getId() + "] ?",
+                    "");
+            dialog.setPositiveButton("Yes",
+                    (dialogInterface, i1) -> {
+                        String id = subtask.getId();
+                        for(int j = 0; j < subtasks.size(); j++) {
+                            if (subtasks.get(j).getId() == id) {
+                                subtasks.remove(j);
+                            }
+                        }
+                        NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
+                            @Override
+                            public void onSuccess(Response<String> response) {
+                            }
+                        });
+                        this.notifyDataSetChanged();
+                    });
+            dialog.setNegativeButton("No",
+                    (dialogInterface, i12) -> dialog.dismiss());
+            dialog.create();
+            dialog.show();
         });
 
         view.setOnClickListener((v) -> {
