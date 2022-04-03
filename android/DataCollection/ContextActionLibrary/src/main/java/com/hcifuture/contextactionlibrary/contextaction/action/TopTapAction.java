@@ -44,6 +44,8 @@ public class TopTapAction extends BaseAction {
     private MyPeakDetector peakDetectorNegative = new MyPeakDetector();
     private boolean wasPositivePeakApproaching = true;
     private boolean wasNegativePeakApproaching = true;
+    private long[] doubleBackTapTimestamps = new long[2];
+    private long[] doubleTopTapTimestamps = new long[2];
 
     private List<Long> backTapTimestamps = new ArrayList();
     private List<Long> topTapTimestamps = new ArrayList();
@@ -185,7 +187,7 @@ public class TopTapAction extends BaseAction {
         }
     }
 
-    private boolean checkDoubleBackTapTiming(long timestamp) {
+    private int checkDoubleBackTapTiming(long timestamp) {
         // remove old timestamps
         int idx = 0;
         for (; idx < backTapTimestamps.size(); idx++) {
@@ -194,17 +196,20 @@ public class TopTapAction extends BaseAction {
         }
         backTapTimestamps = backTapTimestamps.subList(idx, backTapTimestamps.size());
 
-        // just check no tap && double tap now
-        if (!backTapTimestamps.isEmpty()) {
+        if (backTapTimestamps.isEmpty())
+            return 0;
+        else {
+            if (backTapTimestamps.size() == 1)
+                return 1;
             if (backTapTimestamps.get(backTapTimestamps.size() - 1) - backTapTimestamps.get(0) > 100000000L) {
                 backTapTimestamps.clear();
-                return true;
+                return 2;
             }
         }
-        return false;
+        return 0;
     }
 
-    private boolean checkDoubleTopTapTiming(long timestamp) {
+    private int checkDoubleTopTapTiming(long timestamp) {
         // remove old timestamps
         int idx = 0;
         for (; idx < topTapTimestamps.size(); idx++) {
@@ -213,14 +218,17 @@ public class TopTapAction extends BaseAction {
         }
         topTapTimestamps = topTapTimestamps.subList(idx, topTapTimestamps.size());
 
-        // just check no tap && double tap now
-        if (!topTapTimestamps.isEmpty()) {
+        if (topTapTimestamps.isEmpty())
+            return 0;
+        else {
+            if (topTapTimestamps.size() == 1)
+                return 1;
             if (topTapTimestamps.get(topTapTimestamps.size() - 1) - topTapTimestamps.get(0) > 100000000L) {
                 topTapTimestamps.clear();
-                return true;
+                return 2;
             }
         }
-        return false;
+        return 0;
     }
 
     public int recognizeTapML() {
@@ -282,7 +290,7 @@ public class TopTapAction extends BaseAction {
         if (result == 1) {
             backTapTimestamps.add(timestamp);
 //            if (actionListener != null) {
-//                if (checkDoubleBackTapTiming(timestamp)) {
+//                if (checkDoubleBackTapTiming(timestamp) == 2) {
 //                    for (ActionListener listener: actionListener) {
 //                        listener.onAction(new ActionResult("TapTap"));
 //                    }
@@ -292,7 +300,7 @@ public class TopTapAction extends BaseAction {
         else if (result == 2) {
             topTapTimestamps.add(timestamp);
             if (actionListener != null) {
-                if (checkDoubleTopTapTiming(timestamp)) {
+                if (checkDoubleTopTapTiming(timestamp) == 2) {
                     for (ActionListener listener: actionListener) {
                         listener.onAction(new ActionResult("TopTap"));
                     }

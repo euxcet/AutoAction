@@ -210,7 +210,7 @@ public class TapTapAction extends BaseAction {
         }
     }
     
-    private boolean checkDoubleTapTiming(long timestamp) {
+    private int checkDoubleTapTiming(long timestamp) {
         // remove old timestamps
         int idx = 0;
         for (; idx < tapTimestamps.size(); idx++) {
@@ -219,14 +219,17 @@ public class TapTapAction extends BaseAction {
         }
         tapTimestamps = tapTimestamps.subList(idx, tapTimestamps.size());
 
-        // just check no tap && double tap now
-        if (!tapTimestamps.isEmpty()) {
+        if (tapTimestamps.isEmpty())
+            return 0;
+        else {
+            if (tapTimestamps.size() == 1)
+                return 1;
             if (tapTimestamps.get(tapTimestamps.size() - 1) - tapTimestamps.get(0) > 100000000L) {
                 tapTimestamps.clear();
-                return true;
+                return 2;
             }
         }
-        return false;
+        return 0;
     }
 
     public int recognizeTapML() {
@@ -257,7 +260,7 @@ public class TapTapAction extends BaseAction {
         if (result == 1) {
             tapTimestamps.add(timestamp);
             if (actionListener != null) {
-                if (checkDoubleTapTiming(timestamp)) {
+                if (checkDoubleTapTiming(timestamp) == 2) {
                     for (ActionListener listener: actionListener) {
                         listener.onAction(new ActionResult("TapTap"));
                     }
