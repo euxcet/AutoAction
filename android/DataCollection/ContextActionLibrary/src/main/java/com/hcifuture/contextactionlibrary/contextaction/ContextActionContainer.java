@@ -74,6 +74,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private ScheduledExecutorService scheduledExecutorService;
     private List<ScheduledFuture<?>> futureList;
 
+    private TapTapAction tapTapAction;
+    private String markTimestamp;
+
     public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener) {
         this.mContext = context;
         this.actions = actions;
@@ -199,7 +202,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             for (int i = 0; i < actionConfig.size(); i++) {
                 ActionConfig config = actionConfig.get(i);
                 if (config.getAction() == BuiltInActionEnum.TapTap) {
-                    TapTapAction tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                    tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                     actions.add(tapTapAction);
                 } else if (config.getAction() == BuiltInActionEnum.TopTap) {
                     TopTapAction topTapAction = new TopTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
@@ -326,12 +329,28 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     @Override
+    public void onActionRecognized(ActionResult action) {
+        if (action.getAction().equals("TapTapConfirmed")) {
+            markTimestamp = action.getTimestamp();
+            tapTapAction.onConfirmed();
+        }
+        else if (action.getAction().equals("TopTap")) {
+            markTimestamp = action.getTimestamp();
+        }
+    }
+
+    @Override
     public void onAction(ActionResult action) {
         if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap")) {
             if (clickTrigger != null) {
                 clickTrigger.trigger();
             }
         }
+    }
+
+    @Override
+    public void onActionSave(ActionResult action) {
+        action.setTimestamp(markTimestamp);
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
                 collector.onAction(action);

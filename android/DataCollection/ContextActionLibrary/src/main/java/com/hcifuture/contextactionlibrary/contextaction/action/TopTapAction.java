@@ -5,6 +5,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.util.Log;
 
+import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.CombinedFilter;
+import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.HorizontalFilter;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.Lowpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.MyPeakDetector;
@@ -47,12 +49,14 @@ public class TopTapAction extends BaseAction {
     private long[] doubleBackTapTimestamps = new long[2];
     private long[] doubleTopTapTimestamps = new long[2];
     private int result;
-
+    private int seqLength;
     private List<Long> backTapTimestamps = new ArrayList();
     private List<Long> topTapTimestamps = new ArrayList();
     private TfClassifier tflite;
 
-    private int seqLength;
+    // filter related
+    private HorizontalFilter horizontalFilter = new HorizontalFilter();
+
 
     public TopTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
         super(context, config, requestListener, actionListener);
@@ -107,6 +111,16 @@ public class TopTapAction extends BaseAction {
 
     @Override
     public void onIMUSensorChanged(SensorEvent event) {
+        // just for horizontal / static cases' record && upload
+        horizontalFilter.onSensorChanged(event);
+        if (horizontalFilter.passWithDelay(event.timestamp) == -1) {
+            ActionResult actionResult = new ActionResult("TopTap");
+            actionResult.setReason("Static");
+            for (ActionListener listener : actionListener) {
+                listener.onActionSave(actionResult);
+            }
+        }
+
         if (event.sensor.getType() != Sensor.TYPE_GYROSCOPE && event.sensor.getType() != Sensor.TYPE_LINEAR_ACCELERATION)
             return;
         result = 0;
@@ -210,7 +224,9 @@ public class TopTapAction extends BaseAction {
         else {
             if (backTapTimestamps.size() == 1)
                 return 1;
-            if (backTapTimestamps.get(backTapTimestamps.size() - 1) - backTapTimestamps.get(0) > 100000000L) {
+            doubleBackTapTimestamps[1] = backTapTimestamps.get(backTapTimestamps.size() - 1);
+            doubleBackTapTimestamps[0] = backTapTimestamps.get(0);
+            if (doubleBackTapTimestamps[1] - doubleBackTapTimestamps[0] > 100000000L) {
                 backTapTimestamps.clear();
                 return 2;
             }
@@ -232,12 +248,30 @@ public class TopTapAction extends BaseAction {
         else {
             if (topTapTimestamps.size() == 1)
                 return 1;
-            if (topTapTimestamps.get(topTapTimestamps.size() - 1) - topTapTimestamps.get(0) > 100000000L) {
+            doubleTopTapTimestamps[1] = topTapTimestamps.get(topTapTimestamps.size() - 1);
+            doubleTopTapTimestamps[0] = topTapTimestamps.get(0);
+            if (doubleTopTapTimestamps[1] - doubleTopTapTimestamps[0] > 100000000L) {
                 topTapTimestamps.clear();
                 return 2;
             }
         }
         return 0;
+    }
+
+    public float getFirstBackTapTimestamp() {
+        return (float) (doubleBackTapTimestamps[0] / 1000000);
+    }
+
+    public float getSecondBackTapTimestamp() {
+        return (float) (doubleBackTapTimestamps[1] / 1000000);
+    }
+
+    public float getFirstTopTapTimestamp() {
+        return (float) (doubleTopTapTimestamps[0] / 1000000);
+    }
+
+    public float getSecondTopTapTimestamp() {
+        return (float) (doubleTopTapTimestamps[1] / 1000000);
     }
 
     public void recognizeTapML() {
@@ -294,20 +328,25 @@ public class TopTapAction extends BaseAction {
         if (!isStarted)
             return;
         long timestamp = timestamps.get(seqLength);
-//        int count1 = checkDoubleBackTapTiming(timestamp);
-//        if (count1 == 2) {
-//            if (actionListener != null) {
-//                for (ActionListener listener: actionListener) {
-//                    listener.onAction(new ActionResult("TapTap"));
-//                }
-//            }
-//        }
+        int count1 = checkDoubleBackTapTiming(timestamp);
+        if (count1 == 2) {
+            if (actionListener != null) {
+                for (ActionListener listener: actionListener) {
+                    ActionResult actionResult = new ActionResult("TapTapConfirmed");
+                    actionResult.setTimestamp(getFirstBackTapTimestamp() + ":" + getSecondBackTapTimestamp());
+                    listener.onActionRecognized(actionResult);
+                }
+            }
+        }
         int count2 = checkDoubleTopTapTiming(timestamp);
         if (count2 == 2) {
             if (actionListener != null) {
                 for (ActionListener listener : actionListener) {
-                    listener.onAction(new ActionResult("TopTap"));
+                    ActionResult actionResult = new ActionResult("TopTap");
+                    actionResult.setTimestamp(getFirstTopTapTimestamp() + ":" + getSecondTopTapTimestamp());
+                    listener.onAction(actionResult);
                 }
+                horizontalFilter.updateCondition();
             }
         }
     }

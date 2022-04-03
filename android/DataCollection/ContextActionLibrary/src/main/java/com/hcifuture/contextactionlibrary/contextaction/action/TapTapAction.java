@@ -5,6 +5,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.util.Log;
 
+import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.CombinedFilter;
+import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.HorizontalFilter;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass3C;
 import com.hcifuture.contextactionlibrary.utils.imu.Lowpass1C;
@@ -55,11 +57,17 @@ public class TapTapAction extends BaseAction {
     private PeakDetector peakDetectorPositive = new PeakDetector();
     private boolean wasPeakApproaching = true;
     private int result;
-
+    private int seqLength;
     private List<Long> tapTimestamps = new ArrayList();
     private TfClassifier tflite;
 
-    private int seqLength;
+    // filter related
+    private boolean flag1 = true;
+    private boolean flag2 = false;
+    private boolean existTaptapSignal = false;
+    private HorizontalFilter horizontalFilter = new HorizontalFilter();
+    private CombinedFilter combinedFilter = new CombinedFilter();
+
 
     public TapTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
         super(context, config, requestListener, actionListener);
@@ -114,6 +122,38 @@ public class TapTapAction extends BaseAction {
 
     @Override
     public void onIMUSensorChanged(SensorEvent event) {
+        // just for horizontal / static cases' record && upload
+        horizontalFilter.onSensorChanged(event);
+        if (horizontalFilter.passWithDelay(event.timestamp) == -1) {
+            ActionResult actionResult = new ActionResult("TapTap");
+            actionResult.setReason("Static");
+            for (ActionListener listener : actionListener) {
+                listener.onActionSave(actionResult);
+            }
+        }
+//        horizontalFilter.onSensorChanged(event);
+//        int tmp1 = horizontalFilter.passWithDelay(event.timestamp);
+//        if (tmp1 == -1)
+//            existTaptapSignal = false;
+//        else if (tmp1 == 1)
+//            flag1 = true;
+        combinedFilter.onSensorChanged(event);
+        int tmp2 = combinedFilter.passWithDelay(event.timestamp);
+        if (tmp2 == -1)
+            existTaptapSignal = false;
+        else if (tmp2 == 1)
+            flag2 = true;
+        if (existTaptapSignal && flag1 && flag2) {
+            if (actionListener != null) {
+                for (ActionListener listener: actionListener) {
+                    listener.onAction(new ActionResult("TapTap"));
+                }
+            }
+            existTaptapSignal = false;
+//            flag1 = false;
+            flag2 = false;
+        }
+
         if (event.sensor.getType() != Sensor.TYPE_GYROSCOPE && event.sensor.getType() != Sensor.TYPE_ACCELEROMETER)
             return;
         result = 0;
@@ -255,6 +295,16 @@ public class TapTapAction extends BaseAction {
         }
     }
 
+    private void updateCondition() {
+//        flag1 = false;
+        flag2 = false;
+        existTaptapSignal = true;
+    }
+
+    public void onConfirmed() {
+        combinedFilter.confirmed();
+    }
+
     @Override
     public void getAction() {
         if (!isStarted)
@@ -264,8 +314,12 @@ public class TapTapAction extends BaseAction {
         if (count == 2) {
             if (actionListener != null) {
                 for (ActionListener listener: actionListener) {
-                    listener.onAction(new ActionResult("TapTap"));
+                    ActionResult actionResult = new ActionResult("TapTap");
+                    listener.onActionRecognized(actionResult);
                 }
+                horizontalFilter.updateCondition();
+                combinedFilter.updateCondition();
+                this.updateCondition();
             }
         }
     }

@@ -23,6 +23,7 @@ import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
+import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.RequestResult;
 
 import java.io.File;
@@ -61,7 +62,22 @@ public class LoaderManager {
             this.contextListener = contextListener;
         }
         if (actionListener == null) {
-            this.actionListener = (p) -> {};
+            this.actionListener = new ActionListener() {
+                @Override
+                public void onActionRecognized(ActionResult action) {
+
+                }
+
+                @Override
+                public void onAction(ActionResult action) {
+
+                }
+
+                @Override
+                public void onActionSave(ActionResult action) {
+
+                }
+            };
         } else {
             this.actionListener = actionListener;
         }
