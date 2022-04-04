@@ -62,6 +62,7 @@ public class LoaderManager {
         } else {
             this.actionListener = actionListener;
         }
+        calculateLocalMD5(UPDATABLE_FILES);
     }
 
     private RequestResult handleRequest(RequestConfig config) {
@@ -144,6 +145,15 @@ public class LoaderManager {
         if (loader != null) {
             loader.stopDetection();
         }
+    }
+
+    private void calculateLocalMD5(List<String> filenames) {
+        SharedPreferences fileMD5 = mService.getSharedPreferences("FILE_MD5", MODE_PRIVATE);
+        SharedPreferences.Editor editor = fileMD5.edit();
+        for (String filename: filenames) {
+            editor.putString(filename, FileUtils.fileToMD5(BuildConfig.SAVE_PATH + filename));
+        }
+        editor.apply();
     }
 
     private void loadContextActionLibrary() {
