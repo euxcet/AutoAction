@@ -1,12 +1,20 @@
 import numpy as np
 import random
 import os
-import process.utils
+import ml.utils
 
 class Dataset:
     def __init__(self):
+        '''
+        key: group_id
+        value:
+            group_name: String
+            data: SAMPLE_NUM * LENGTH * CHANNEL
+            label: SAMPLE_NUM * record_id
+        '''
         self.group_name = dict()
         self.data = dict()
+        self.label = dict()
 
     def get_random_series(self, group_id):
         data = self.data[group_id]
@@ -34,20 +42,26 @@ class Dataset:
         else:
             self.group_name[record.group_id] = record.group_name
             self.data[record.group_id] = None
+            self.label[record.group_id] = []
 
-        data = self.data[record.group_id]
+        cur_data = self.data[record.group_id]
         new_data = np.concatenate((record.ex_acc, record.ex_gyro, record.ex_linear), axis=2)
+        cur_data = new_data if cur_data is None else np.concatenate((cur_data, new_data), axis=0)
+        self.data[record.group_id] = cur_data
 
-        if data is None:
-            data = new_data
-        else:
-            data = np.concatenate((data, new_data), axis=0)
+        if self.label[record.group_id] is not None:
+            for i in range(new_data.shape[0]):
+                self.label[record.group_id].append(record.record_id)
 
-        self.data[record.group_id] = data
+        '''
+        print(record.group_id, record.record_id, new_data.shape)
+        print(self.label[record.group_id])
+        exit(0)
+        '''
 
-    def export_train_csv(self, dir, data, file_name):
-        print('Exporting %s...' % (file_name), end=' ')
-        with open(os.path.join(dir, file_name), 'w') as fout:
+    def export_X_csv(self, dir, data, filename):
+        print('Exporting %s...' % (filename), end=' ')
+        with open(os.path.join(dir, filename), 'w') as fout:
             fout.write('row_id,series_id,measurement_number,angular_velocity_X,angular_velocity_Y,angular_velocity_Z,linear_acceleration_X,linear_acceleration_Y,linear_acceleration_Z\n')
             count = 0
             for value in data.values():
@@ -61,6 +75,17 @@ class Dataset:
                 count += value.shape[0]
         print('\tDone')
 
+    def export_Y_csv(self, dir, data, filename):
+        print('Exporting %s...' % (filename), end=' ')
+        with open(os.path.join(dir, filename), 'w') as fout:
+            fout.write('series_id,group_id,group_name,record_id\n')
+            count = 0
+            for (key, value) in data.items():
+                for i in range(len(value)):
+                    fout.write('%d,%d,%s,%s\n' % (count + i, key, self.group_name[key], value[i]))
+                count += len(value) 
+        print('\tDone')
+
     def export_csv(self, dir):
         try:
             os.makedirs(dir)
@@ -68,20 +93,12 @@ class Dataset:
             pass
 
         print('\n\nSpliting data...', end=' ')
-        train_data, val_data, test_data = process.utils.split(self.data, 10, 0, 0)
+        train_data, val_data, test_data, train_label, val_label, test_label = ml.utils.split(self.data, self.label, 10, 0, 0)
         print('\tDone')
 
-        print('\nExporting y_train.csv...', end=' ')
-        with open(os.path.join(dir, 'y_train.csv'), 'w') as fout:
-            fout.write('series_id,group_id,group_name\n')
-            count = 0
-            for (key, value) in train_data.items():
-                for _ in range(value.shape[0]):
-                    fout.write('%d,%d,%s\n' % (count + _, key, self.group_name[key]))
-                count += value.shape[0]
-        print('\tDone')
-
-
-        self.export_train_csv(dir, train_data, 'X_train.csv')
-        self.export_train_csv(dir, val_data, 'X_val.csv')
-        self.export_train_csv(dir, test_data, 'X_test.csv')
+        self.export_X_csv(dir, train_data, 'X_train.csv')
+        self.export_Y_csv(dir, train_label, 'Y_train.csv')
+        self.export_X_csv(dir, val_data, 'X_val.csv')
+        self.export_Y_csv(dir, val_label, 'Y_val.csv')
+        self.export_X_csv(dir, test_data, 'X_test.csv')
+        self.export_Y_csv(dir, test_label, 'Y_test.csv')

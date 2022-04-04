@@ -10,9 +10,10 @@ Record is parsed from the continuous collected data which may includes several a
 '''
 
 class Record:
-    def __init__(self, filename, timestamp_filename, group_id = 0, group_name = "", description = "", cutter = None, do_cut = True):
+    def __init__(self, filename, timestamp_filename, record_id, group_id = 0, group_name = "", description = "", cutter = None, do_cut = True):
         self.filename = filename
         self.timestamp_filename = timestamp_filename
+        self.record_id = record_id
         self.group_id = group_id
         self.group_name = group_name
         self.description = description
