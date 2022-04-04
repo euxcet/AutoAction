@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -206,5 +207,31 @@ public class FileUtils {
             }
         }
         return buffer.toString();
+    }
+
+    public static String fileToMD5(String path) {
+        try {
+            InputStream inputStream = new FileInputStream(path);
+            byte[] buffer = new byte[1024];
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            int numRead = 0;
+            while (numRead != -1) {
+                numRead = inputStream.read(buffer);
+                if (numRead > 0)
+                    digest.update(buffer, 0, numRead);
+            }
+            byte [] md5Bytes = digest.digest();
+            return convertHashToString(md5Bytes);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private static String convertHashToString(byte[] hashBytes) {
+        StringBuilder returnVal = new StringBuilder();
+        for (int i = 0; i < hashBytes.length; i++) {
+            returnVal.append(Integer.toString((hashBytes[i] & 0xff) + 0x100, 16).substring(1));
+        }
+        return returnVal.toString().toLowerCase();
     }
 }

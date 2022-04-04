@@ -72,6 +72,7 @@ public class LoaderManager {
         } else {
             this.actionListener = actionListener;
         }
+        calculateLocalMD5(UPDATABLE_FILES);
     }
 
     private RequestResult handleRequest(RequestConfig config) {
@@ -95,6 +96,15 @@ public class LoaderManager {
         return result;
     }
 
+    private void calculateLocalMD5(List<String> filenames) {
+        SharedPreferences fileMD5 = mService.getSharedPreferences("FILE_MD5", MODE_PRIVATE);
+        SharedPreferences.Editor editor = fileMD5.edit();
+        for (String filename: filenames) {
+            editor.putString(filename, FileUtils.fileToMD5(BuildConfig.SAVE_PATH + filename));
+        }
+        editor.apply();
+    }
+
     private void updateLocalMD5(List<String> changedFilename, List<String> serverMD5s) {
         SharedPreferences fileMD5 = mService.getSharedPreferences("FILE_MD5", MODE_PRIVATE);
         SharedPreferences.Editor editor = fileMD5.edit();
@@ -105,7 +115,6 @@ public class LoaderManager {
     }
 
     public void start() {
-        Log.e("TEST", "start");
         FileUtils.checkFiles(mService, UPDATABLE_FILES, (changedFilename, serverMD5s) -> {
             FileUtils.downloadFiles(mService, changedFilename, () -> {
                 updateLocalMD5(changedFilename, serverMD5s);
@@ -118,6 +127,7 @@ public class LoaderManager {
         if (isUpgrading.get()) {
             return;
         }
+        calculateLocalMD5(UPDATABLE_FILES);
         FileUtils.checkFiles(mService, UPDATABLE_FILES, (changedFilename, serverMD5) -> {
             if (changedFilename.isEmpty()) {
                 return;
@@ -233,7 +243,7 @@ public class LoaderManager {
         informationalConfig.setSensorType(Arrays.asList(SensorType.ACCESSIBILITY, SensorType.BROADCAST));
          */
 
-        RequestListener requestListener = r -> handleRequest(r);
+        RequestListener requestListener = this::handleRequest;
         loader.startDetection(actionConfigs, actionListener, contextConfigs, contextListener, requestListener);
 
 
