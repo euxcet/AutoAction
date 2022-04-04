@@ -52,9 +52,22 @@ if not os.path.exists("../data/file/config.json"):
                 "floatParamValue": [],
                 "booleanParamKey": [],
                 "booleanParamValue": []
+            },
+            {
+                "builtInAction": "TopTap",
+                "sensorType": ["IMU"],
+                "integerParamKey": ["SeqLength"],
+                "integerParamValue": [25],
+                "longParamKey": [],
+                "longParamValue": [],
+                "floatParamKey": [],
+                "floatParamValue": [],
+                "booleanParamKey": [],
+                "booleanParamValue": []
             }
         ]
     }
+
     file_utils.save_json(config, "../data/file/config.json")
 
 

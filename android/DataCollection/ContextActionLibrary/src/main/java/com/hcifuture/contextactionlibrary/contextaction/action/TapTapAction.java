@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.util.Log;
 
+import com.hcifuture.contextactionlibrary.BuildConfig;
 import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.CombinedFilter;
 import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.HorizontalFilter;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
@@ -23,6 +24,7 @@ import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,8 +74,8 @@ public class TapTapAction extends BaseAction {
     public TapTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
         super(context, config, requestListener, actionListener);
         init();
-        tflite = new TfClassifier(mContext.getAssets(), "tap7cls_pixel4.tflite");
-        // tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "tap7cls_pixel4.tflite"));
+        // tflite = new TfClassifier(mContext.getAssets(), "tap7cls_pixel4.tflite");
+        tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "tap7cls_pixel4.tflite"));
         seqLength = (int)config.getValue("SeqLength");
     }
 

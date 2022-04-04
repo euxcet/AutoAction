@@ -49,12 +49,11 @@ public class LoaderManager {
             "param_dicts.json",
             "param_max.json",
             "words.csv",
-            "best.bin",
-            "best.param",
             "classes.dex",
-            "tap7cls_pixel4.tflite",
             "config.json",
-            "ResultModel.tflite"
+            "tap7cls_pixel4.tflite",
+            "ResultModel.tflite",
+            "combined.tflite"
     );
     private AtomicBoolean isUpgrading;
     private ContextListener contextListener;
@@ -236,39 +235,8 @@ public class LoaderManager {
             actionConfigs.add(actionConfig);
         }
 
-        /*
-        // TapTapAction
-        ActionConfig tapTapConfig = new ActionConfig();
-        tapTapConfig.setAction(BuiltInActionEnum.TapTap);
-        tapTapConfig.putValue("SeqLength", 50);
-        tapTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
-
-        // TopTapAction
-        ActionConfig topTapConfig = new ActionConfig();
-        topTapConfig.setAction(BuiltInActionEnum.TopTap);
-        topTapConfig.putValue("SeqLength", 25);
-        topTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
-
-        // ProximityContext
-        ContextConfig proximityConfig = new ContextConfig();
-        proximityConfig.setContext(BuiltInContextEnum.Proximity);
-        proximityConfig.setSensorType(Arrays.asList(SensorType.PROXIMITY));
-
-        // TableContext
-        ContextConfig tableConfig = new ContextConfig();
-        tableConfig.setContext(BuiltInContextEnum.Table);
-        tableConfig.setSensorType(Arrays.asList(SensorType.IMU));
-
-        // InformationalContext
-        ContextConfig informationalConfig = new ContextConfig();
-        informationalConfig.setContext(BuiltInContextEnum.Informational);
-        informationalConfig.setSensorType(Arrays.asList(SensorType.ACCESSIBILITY, SensorType.BROADCAST));
-         */
-
         RequestListener requestListener = this::handleRequest;
         loader.startDetection(actionConfigs, actionListener, contextConfigs, contextListener, requestListener);
-
-
         /*
         NcnnInstance.init(mService,
                 BuildConfig.SAVE_PATH + "best.param",

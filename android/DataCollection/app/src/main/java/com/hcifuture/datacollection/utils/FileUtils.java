@@ -171,12 +171,14 @@ public class FileUtils {
                 SharedPreferences fileMD5 = context.getSharedPreferences("FILE_MD5", MODE_PRIVATE);
                 String[] md5s = response.body().split(",");
                 List<String> changedFilename = new ArrayList<>();
+                Log.e("TEST", md5s.length + " " + filename.size());
                 if (md5s.length != filename.size()) {
                     return;
                 }
                 for (int i = 0; i < filename.size(); i++) {
                     String serverMD5 = md5s[i];
                     String localMD5 = fileMD5.getString(filename.get(i), null);
+                    Log.e("TEST", serverMD5 + " " + localMD5);
                     if (localMD5 == null || !localMD5.equals(serverMD5)) {
                         changedFilename.add(filename.get(i));
                     }

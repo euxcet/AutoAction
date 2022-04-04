@@ -10,6 +10,7 @@ import android.view.accessibility.AccessibilityEvent;
 import com.example.simpleexample.BuildConfig;
 import com.example.simpleexample.NcnnInstance;
 import com.example.simpleexample.contextaction.utils.FileUtils;
+import com.google.gson.Gson;
 import com.hcifuture.shared.communicate.BuiltInActionEnum;
 import com.hcifuture.shared.communicate.BuiltInContextEnum;
 import com.hcifuture.shared.communicate.SensorType;
@@ -20,14 +21,17 @@ import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
+import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.RequestResult;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import dalvik.system.DexClassLoader;
 
@@ -39,11 +43,11 @@ public class LoaderManager {
             "param_dicts.json",
             "param_max.json",
             "words.csv",
-            "best.bin",
-            "best.param",
             "classes.dex",
+            "config.json",
             "tap7cls_pixel4.tflite",
-            "ResultModel.tflite"
+            "ResultModel.tflite",
+            "combined.tflite"
     );
     private AtomicBoolean isUpgrading;
     private ContextListener contextListener;
@@ -58,7 +62,22 @@ public class LoaderManager {
             this.contextListener = contextListener;
         }
         if (actionListener == null) {
-            this.actionListener = (p) -> {};
+            this.actionListener = new ActionListener() {
+                @Override
+                public void onActionRecognized(ActionResult action) {
+
+                }
+
+                @Override
+                public void onAction(ActionResult action) {
+
+                }
+
+                @Override
+                public void onActionSave(ActionResult action) {
+
+                }
+            };
         } else {
             this.actionListener = actionListener;
         }
@@ -108,6 +127,7 @@ public class LoaderManager {
         if (isUpgrading.get()) {
             return;
         }
+        calculateLocalMD5(UPDATABLE_FILES);
         FileUtils.checkFiles(mService, UPDATABLE_FILES, (changedFilename, serverMD5) -> {
             if (changedFilename.isEmpty()) {
                 return;
@@ -161,31 +181,57 @@ public class LoaderManager {
         classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
         loader = new ContextActionLoader(mService, classLoader);
 
-        // TapTapAction
-        ActionConfig tapTapConfig = new ActionConfig();
-        tapTapConfig.setAction(BuiltInActionEnum.TapTap);
-        tapTapConfig.putValue("SeqLength", 50);
-        tapTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
+        Gson gson = new Gson();
+        ContextActionConfigBean config = gson.fromJson(
+                FileUtils.getFileContent(BuildConfig.SAVE_PATH + "config.json"),
+                ContextActionConfigBean.class
+        );
 
-        // ProximityContext
-        ContextConfig proximityConfig = new ContextConfig();
-        proximityConfig.setContext(BuiltInContextEnum.Proximity);
-        proximityConfig.setSensorType(Arrays.asList(SensorType.PROXIMITY));
-
-        // TableContext
-        ContextConfig tableConfig = new ContextConfig();
-        tableConfig.setContext(BuiltInContextEnum.Table);
-        tableConfig.setSensorType(Arrays.asList(SensorType.IMU));
-
-        // InformationalContext
-        ContextConfig informationalConfig = new ContextConfig();
-        informationalConfig.setContext(BuiltInContextEnum.Informational);
-        informationalConfig.setSensorType(Arrays.asList(SensorType.ACCESSIBILITY, SensorType.BROADCAST));
-
-        RequestListener requestListener = config -> handleRequest(config);
-        loader.startDetection(Arrays.asList(tapTapConfig), actionListener, Arrays.asList(proximityConfig, tableConfig, informationalConfig), contextListener, requestListener);
+        List<ContextConfig> contextConfigs = new ArrayList<>();
+        List<ActionConfig> actionConfigs = new ArrayList<>();
 
 
+        for (ContextActionConfigBean.ContextConfigBean bean: config.getContext()) {
+            ContextConfig contextConfig = new ContextConfig();
+            contextConfig.setContext(BuiltInContextEnum.fromString(bean.getBuiltInContext()));
+            contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+            for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+            }
+            for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+            }
+            for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+            }
+            for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+            }
+            contextConfigs.add(contextConfig);
+        }
+
+        for (ContextActionConfigBean.ActionConfigBean bean: config.getAction()) {
+            ActionConfig actionConfig = new ActionConfig();
+            actionConfig.setAction(BuiltInActionEnum.fromString(bean.getBuiltInAction()));
+            actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+            for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+            }
+            for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+            }
+            for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+            }
+            for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+            }
+            actionConfigs.add(actionConfig);
+        }
+
+        RequestListener requestListener = this::handleRequest;
+        loader.startDetection(actionConfigs, actionListener, contextConfigs, contextListener, requestListener);
+        /*
         NcnnInstance.init(mService,
                 BuildConfig.SAVE_PATH + "best.param",
                 BuildConfig.SAVE_PATH + "best.bin",
@@ -198,6 +244,7 @@ public class LoaderManager {
         float[] data = new float[128 * 6];
         Arrays.fill(data, 0.1f);
         Log.e("result", ncnnInstance.actionDetect(data) + " ");
+         */
     }
 
     public void onAccessibilityEvent(AccessibilityEvent event) {
