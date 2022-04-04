@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.hcifuture.datacollection.BuildConfig;
 import com.hcifuture.datacollection.R;
@@ -90,6 +91,8 @@ public class VisualizeRecordActivity extends AppCompatActivity {
             return "TEMP_AUDIO_" + recordId + ".mp4";
         } else if (fileType == 3) {
             return "TEMP_VIDEO_" + recordId + ".mp4";
+        } else if (fileType == 4) {
+            return "TEMP_SENSOR_BIN_" + recordId + ".bin";
         }
         return "TEMP_UNKNOWN_" + recordId;
     }
@@ -136,6 +139,8 @@ public class VisualizeRecordActivity extends AppCompatActivity {
                 valuesList.get(2).add(new Entry(timestampDelta, d.get(3))); // LINEAR_Z
             }
         }
+
+        Log.e("VISUAL", minTimestamp + " " + valuesList.get(0).size());
 
         if (chart.getData() != null && chart.getData().getDataSetCount() > 0) {
             for (int i = 0; i < valuesList.size(); i++) {

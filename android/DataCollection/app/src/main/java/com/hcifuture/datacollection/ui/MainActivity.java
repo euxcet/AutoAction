@@ -109,8 +109,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // jump to accessibility settings
-        Intent settingIntent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-        startActivity(settingIntent);
+        Button accessibilityButton = findViewById(R.id.accessibilityButton);
+        accessibilityButton.setOnClickListener((v) -> {
+            Intent settingIntent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+            startActivity(settingIntent);
+        });
     }
 
     private void loadTaskListViaNetwork() {

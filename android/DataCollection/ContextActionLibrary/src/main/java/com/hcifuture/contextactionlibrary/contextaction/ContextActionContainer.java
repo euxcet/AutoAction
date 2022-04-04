@@ -90,6 +90,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
          */
         this.sensorManagers = new ArrayList<>();
 
+        /*
         if (NcnnInstance.getInstance() == null) {
             NcnnInstance.init(context,
                     BuildConfig.SAVE_PATH + "best.param",
@@ -100,6 +101,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     1,
                     2);
         }
+         */
 
         // clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Bluetooth));
         this.futureList = new ArrayList<>();

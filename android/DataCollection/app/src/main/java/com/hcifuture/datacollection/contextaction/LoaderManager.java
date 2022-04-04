@@ -7,9 +7,11 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.util.Pair;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.hcifuture.datacollection.BuildConfig;
 import com.hcifuture.datacollection.NcnnInstance;
 import com.hcifuture.datacollection.utils.FileUtils;
@@ -26,12 +28,16 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.RequestResult;
 
+import org.checkerframework.checker.units.qual.A;
+
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import dalvik.system.DexClassLoader;
 
@@ -47,6 +53,7 @@ public class LoaderManager {
             "best.param",
             "classes.dex",
             "tap7cls_pixel4.tflite",
+            "config.json",
             "ResultModel.tflite"
     );
     private AtomicBoolean isUpgrading;
@@ -171,6 +178,55 @@ public class LoaderManager {
         classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
         loader = new ContextActionLoader(mService, classLoader);
 
+        Gson gson = new Gson();
+        ContextActionConfigBean config = gson.fromJson(
+                FileUtils.getFileContent(BuildConfig.SAVE_PATH + "config.json"),
+                ContextActionConfigBean.class
+        );
+
+        List<ContextConfig> contextConfigs = new ArrayList<>();
+        List<ActionConfig> actionConfigs = new ArrayList<>();
+
+
+        for (ContextActionConfigBean.ContextConfigBean bean: config.getContext()) {
+            ContextConfig contextConfig = new ContextConfig();
+            contextConfig.setContext(BuiltInContextEnum.fromString(bean.getBuiltInContext()));
+            contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+            for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+            }
+            for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+            }
+            for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+            }
+            for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+            }
+            contextConfigs.add(contextConfig);
+        }
+
+        for (ContextActionConfigBean.ActionConfigBean bean: config.getAction()) {
+            ActionConfig actionConfig = new ActionConfig();
+            actionConfig.setAction(BuiltInActionEnum.fromString(bean.getBuiltInAction()));
+            actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+            for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+            }
+            for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+            }
+            for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+            }
+            for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+            }
+            actionConfigs.add(actionConfig);
+        }
+
+        /*
         // TapTapAction
         ActionConfig tapTapConfig = new ActionConfig();
         tapTapConfig.setAction(BuiltInActionEnum.TapTap);
@@ -197,11 +253,13 @@ public class LoaderManager {
         ContextConfig informationalConfig = new ContextConfig();
         informationalConfig.setContext(BuiltInContextEnum.Informational);
         informationalConfig.setSensorType(Arrays.asList(SensorType.ACCESSIBILITY, SensorType.BROADCAST));
+         */
 
-        RequestListener requestListener = config -> handleRequest(config);
-        loader.startDetection(Arrays.asList(tapTapConfig, topTapConfig), actionListener, Arrays.asList(proximityConfig, tableConfig, informationalConfig), contextListener, requestListener);
+        RequestListener requestListener = r -> handleRequest(r);
+        loader.startDetection(actionConfigs, actionListener, contextConfigs, contextListener, requestListener);
 
 
+        /*
         NcnnInstance.init(mService,
                 BuildConfig.SAVE_PATH + "best.param",
                 BuildConfig.SAVE_PATH + "best.bin",
@@ -214,6 +272,7 @@ public class LoaderManager {
         float[] data = new float[128 * 6];
         Arrays.fill(data, 0.1f);
         Log.e("result", ncnnInstance.actionDetect(data) + " ");
+         */
     }
 
     public void onAccessibilityEvent(AccessibilityEvent event) {
