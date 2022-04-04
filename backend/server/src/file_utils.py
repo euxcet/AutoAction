@@ -3,7 +3,7 @@ import json
 import shutil
 import hashlib
 from time import time
-from process.record import Record
+from ml.record import Record
 
 DATA_ROOT = '../data/'
 DATA_RECORD_ROOT = os.path.join(DATA_ROOT, "record")

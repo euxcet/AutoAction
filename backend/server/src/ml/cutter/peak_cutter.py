@@ -1,4 +1,4 @@
-from process.cutter.range_cutter import RangeCutter
+from ml.cutter.range_cutter import RangeCutter
 import random
 
 class PeakCutter():
