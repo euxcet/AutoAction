@@ -33,10 +33,10 @@ public class TapTapCollector extends BaseCollector {
                 NetworkUtils.uploadCollectedData(mContext,
                         imuFile,
                         0,
-                        "TapTap",
+                        action.getAction(),
                         getMacMoreThanM(),
                         System.currentTimeMillis(),
-                        "Commit",
+                        action.getAction() + ":" + action.getReason() + ":" + action.getTimestamp(),
                         new StringCallback() {
                             @Override
                             public void onSuccess(Response<String> response) {

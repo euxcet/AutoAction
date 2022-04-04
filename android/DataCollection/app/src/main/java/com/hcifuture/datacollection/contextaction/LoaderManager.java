@@ -25,6 +25,7 @@ import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
+import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.RequestResult;
 
 import org.checkerframework.checker.units.qual.A;
@@ -68,7 +69,22 @@ public class LoaderManager {
             this.contextListener = contextListener;
         }
         if (actionListener == null) {
-            this.actionListener = (p) -> {};
+            this.actionListener = new ActionListener() {
+                @Override
+                public void onActionRecognized(ActionResult action) {
+
+                }
+
+                @Override
+                public void onAction(ActionResult action) {
+
+                }
+
+                @Override
+                public void onActionSave(ActionResult action) {
+
+                }
+            };
         } else {
             this.actionListener = actionListener;
         }
@@ -226,6 +242,12 @@ public class LoaderManager {
         tapTapConfig.setAction(BuiltInActionEnum.TapTap);
         tapTapConfig.putValue("SeqLength", 50);
         tapTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
+
+        // TopTapAction
+        ActionConfig topTapConfig = new ActionConfig();
+        topTapConfig.setAction(BuiltInActionEnum.TopTap);
+        topTapConfig.putValue("SeqLength", 25);
+        topTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
 
         // ProximityContext
         ContextConfig proximityConfig = new ContextConfig();

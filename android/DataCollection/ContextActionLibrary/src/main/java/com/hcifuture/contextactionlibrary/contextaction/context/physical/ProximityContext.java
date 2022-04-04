@@ -83,11 +83,11 @@ public class ProximityContext extends BaseContext {
         }
         if (lastTimestamp - lastNearTime < 1.5 * 1e9 && lastTimestamp - lastRecognized > 5 * 1e9) {
             lastRecognized = lastTimestamp;
-            if (contextListener != null) {
-                for (ContextListener listener: contextListener) {
-                    listener.onContext(new ContextResult("Proximity"));
-                }
-            }
+//            if (contextListener != null) {
+//                for (ContextListener listener: contextListener) {
+//                    listener.onContext(new ContextResult("Proximity"));
+//                }
+//            }
         }
     }
 }

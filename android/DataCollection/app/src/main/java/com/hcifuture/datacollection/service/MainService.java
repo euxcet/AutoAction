@@ -104,12 +104,17 @@ public class MainService extends AccessibilityService implements ContextListener
     }
 
     @Override
+    public void onActionRecognized(ActionResult action) { }
+
+    @Override
     public void onAction(ActionResult action) {
         mHandler.post(() -> {
             Toast.makeText(mContext, action.getAction(), Toast.LENGTH_SHORT).show();
-            // loaderManager.upgrade();
         });
     }
+
+    @Override
+    public void onActionSave(ActionResult action) { }
 
     @Override
     public void onContext(ContextResult context) {
