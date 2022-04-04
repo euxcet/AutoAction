@@ -74,7 +74,7 @@ public class FileUtils {
                 for (Float value: info.getData()) {
                     dos.writeFloat(value);
                 }
-                dos.writeFloat((float)info.getTime());
+                dos.writeDouble((double)info.getTime());
             }
             dos.flush();
             dos.close();
@@ -117,7 +117,7 @@ public class FileUtils {
                 float x = dis.readFloat();
                 float y = dis.readFloat();
                 float z = dis.readFloat();
-                long timestamp = (long)dis.readFloat();
+                long timestamp = (long)dis.readDouble();
                 data.add(new SensorInfo(idx, x, y, z, timestamp));
             }
         } catch (IOException e) {

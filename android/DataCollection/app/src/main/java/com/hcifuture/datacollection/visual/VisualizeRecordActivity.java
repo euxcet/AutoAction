@@ -140,8 +140,6 @@ public class VisualizeRecordActivity extends AppCompatActivity {
             }
         }
 
-        Log.e("VISUAL", minTimestamp + " " + valuesList.get(0).size());
-
         if (chart.getData() != null && chart.getData().getDataSetCount() > 0) {
             for (int i = 0; i < valuesList.size(); i++) {
                 LineDataSet lineDataSet = (LineDataSet) chart.getData().getDataSetByIndex(i);
