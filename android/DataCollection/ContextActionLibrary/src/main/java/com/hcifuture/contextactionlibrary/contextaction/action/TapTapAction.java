@@ -123,7 +123,7 @@ public class TapTapAction extends BaseAction {
     }
 
     @Override
-    public void onIMUSensorChanged(SensorEvent event) {
+    public synchronized void onIMUSensorChanged(SensorEvent event) {
         // just for horizontal / static cases' record && upload
         horizontalFilter.onSensorChanged(event);
         if (horizontalFilter.passWithDelay(event.timestamp) == -1) {
@@ -308,7 +308,7 @@ public class TapTapAction extends BaseAction {
     }
 
     @Override
-    public void getAction() {
+    public synchronized void getAction() {
         if (!isStarted)
             return;
         long timestamp = timestamps.get(seqLength);

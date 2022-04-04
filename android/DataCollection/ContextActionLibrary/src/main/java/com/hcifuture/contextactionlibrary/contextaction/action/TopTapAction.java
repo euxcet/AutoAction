@@ -20,7 +20,10 @@ import com.hcifuture.shared.communicate.result.ActionResult;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+import kotlin.jvm.Synchronized;
 
 public class TopTapAction extends BaseAction {
 
@@ -112,7 +115,7 @@ public class TopTapAction extends BaseAction {
     }
 
     @Override
-    public void onIMUSensorChanged(SensorEvent event) {
+    public synchronized void onIMUSensorChanged(SensorEvent event) {
         // just for horizontal / static cases' record && upload
         horizontalFilter.onSensorChanged(event);
         if (horizontalFilter.passWithDelay(event.timestamp) == -1) {
@@ -326,7 +329,7 @@ public class TopTapAction extends BaseAction {
     }
 
     @Override
-    public void getAction() {
+    public synchronized void getAction() {
         if (!isStarted)
             return;
         long timestamp = timestamps.get(seqLength);
