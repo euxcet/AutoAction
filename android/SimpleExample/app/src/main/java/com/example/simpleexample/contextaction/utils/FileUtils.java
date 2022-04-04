@@ -56,6 +56,7 @@ public class FileUtils {
     }
 
     public static void copy(File src, File dst) {
+        makeDir(dst.getParent());
         try {
             InputStream in = new FileInputStream(src);
             try {
