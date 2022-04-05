@@ -18,7 +18,7 @@ public class NonIMUSensorEventListener implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        this.collector.addSensorData(event.values[0], 0, 0, sensorType, (long)(event.timestamp / 1e6));
+        this.collector.addSensorData(event.values[0], 0, 0, sensorType, event.timestamp);
     }
 
     @Override
