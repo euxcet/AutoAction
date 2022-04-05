@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import kotlin.jvm.Synchronized;
 
@@ -63,8 +64,8 @@ public class TopTapAction extends BaseAction {
     private HorizontalFilter horizontalFilter = new HorizontalFilter();
 
 
-    public TopTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
-        super(context, config, requestListener, actionListener);
+    public TopTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ThreadPoolExecutor threadPoolExecutor) {
+        super(context, config, requestListener, actionListener, threadPoolExecutor);
         init();
         // tflite = new TfClassifier(mContext.getAssets(), "combined.tflite");
         tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "combined.tflite"));

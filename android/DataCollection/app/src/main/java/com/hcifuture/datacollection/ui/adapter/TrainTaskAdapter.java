@@ -62,6 +62,7 @@ public class TrainTaskAdapter extends BaseAdapter {
         taskAudio.setText("  开启麦克风: " + task.isAudio());
 
         CheckBox checkBox = view.findViewById(R.id.taskCheckBoxTrain);
+        checkBox.setChecked(this.selected[i]);
         checkBox.setOnCheckedChangeListener((button, b) -> {
             this.selected[i] = b;
         });

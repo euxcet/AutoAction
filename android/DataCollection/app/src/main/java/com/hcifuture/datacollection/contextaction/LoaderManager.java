@@ -53,6 +53,8 @@ public class LoaderManager {
             "config.json",
             "tap7cls_pixel4.tflite",
             "ResultModel.tflite",
+            "best.bin",
+            "best.param",
             "combined.tflite"
     );
     private AtomicBoolean isUpgrading;

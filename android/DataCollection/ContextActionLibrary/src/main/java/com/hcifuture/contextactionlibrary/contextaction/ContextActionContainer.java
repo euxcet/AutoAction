@@ -10,6 +10,7 @@ import com.hcifuture.contextactionlibrary.BuildConfig;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 import com.hcifuture.contextactionlibrary.contextaction.action.BaseAction;
+import com.hcifuture.contextactionlibrary.contextaction.action.KnockAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.BaseCollector;
@@ -43,10 +44,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class ContextActionContainer implements ActionListener, ContextListener {
@@ -76,6 +79,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     private TapTapAction tapTapAction;
     private String markTimestamp;
+    private ThreadPoolExecutor threadPoolExecutor;
 
     public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener) {
         this.mContext = context;
@@ -90,18 +94,20 @@ public class ContextActionContainer implements ActionListener, ContextListener {
          */
         this.sensorManagers = new ArrayList<>();
 
-        /*
         if (NcnnInstance.getInstance() == null) {
             NcnnInstance.init(context,
                     BuildConfig.SAVE_PATH + "best.param",
                     BuildConfig.SAVE_PATH + "best.bin",
                     4,
-                    128,
                     6,
+                    128,
                     1,
-                    2);
+                    4);
+            NcnnInstance ncnnInstance = NcnnInstance.getInstance();
+            float[] data = new float[128 * 6];
+            Arrays.fill(data, 1.0f);
+            Log.e("result", ncnnInstance.actionDetect(data) + " ");
         }
-         */
 
         // clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Bluetooth));
         this.futureList = new ArrayList<>();
@@ -195,7 +201,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     private void initialize() {
-        this.scheduledExecutorService = Executors.newScheduledThreadPool(10);
+        this.scheduledExecutorService = Executors.newScheduledThreadPool(5);
+        this.threadPoolExecutor = new ThreadPoolExecutor(2, 2, 1000, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(),new ThreadPoolExecutor.DiscardOldestPolicy());
+
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
         this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU), scheduledExecutorService, futureList);
         this.collectors = Arrays.asList(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
@@ -204,11 +212,14 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             for (int i = 0; i < actionConfig.size(); i++) {
                 ActionConfig config = actionConfig.get(i);
                 if (config.getAction() == BuiltInActionEnum.TapTap) {
-                    tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                    tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener), threadPoolExecutor);
                     actions.add(tapTapAction);
                 } else if (config.getAction() == BuiltInActionEnum.TopTap) {
-                    TopTapAction topTapAction = new TopTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                    TopTapAction topTapAction = new TopTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener), threadPoolExecutor);
                     actions.add(topTapAction);
+                } else if (config.getAction() == BuiltInActionEnum.Knock) {
+                    KnockAction knockAction = new KnockAction(mContext, config, requestListener, Arrays.asList(this, actionListener), threadPoolExecutor);
+                    actions.add(knockAction);
                 }
             }
             for (int i = 0; i < contextConfig.size(); i++) {

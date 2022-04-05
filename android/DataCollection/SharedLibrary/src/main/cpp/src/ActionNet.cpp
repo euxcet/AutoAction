@@ -41,6 +41,7 @@ int ActionNet::detect(float* data, int input_width, int input_height, int input_
     ncnn::Mat out;
     extractor.extract("output", out);
     float *result = (float*)out.data;
+
     int pos = 0;
     float maxValue = -1e5;
     for (int i = 0; i < class_num; i++) {

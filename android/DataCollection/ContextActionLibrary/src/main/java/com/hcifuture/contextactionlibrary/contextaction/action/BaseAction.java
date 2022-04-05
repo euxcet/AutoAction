@@ -8,6 +8,7 @@ import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public abstract class BaseAction {
 
@@ -18,12 +19,14 @@ public abstract class BaseAction {
     protected List<ActionListener> actionListener;
 
     protected boolean isStarted = false;
+    protected ThreadPoolExecutor threadPoolExecutor;
 
-    public BaseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
+    public BaseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ThreadPoolExecutor threadPoolExecutor) {
         this.mContext = context;
         this.config = config;
         this.requestListener = requestListener;
         this.actionListener = actionListener;
+        this.threadPoolExecutor = threadPoolExecutor;
     }
 
     public abstract void start();

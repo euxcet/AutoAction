@@ -27,6 +27,7 @@ import com.hcifuture.shared.communicate.result.ActionResult;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class TapTapAction extends BaseAction {
 
@@ -71,8 +72,8 @@ public class TapTapAction extends BaseAction {
     private CombinedFilter combinedFilter = new CombinedFilter();
 
 
-    public TapTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
-        super(context, config, requestListener, actionListener);
+    public TapTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ThreadPoolExecutor threadPoolExecutor) {
+        super(context, config, requestListener, actionListener, threadPoolExecutor);
         init();
         // tflite = new TfClassifier(mContext.getAssets(), "tap7cls_pixel4.tflite");
         tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "tap7cls_pixel4.tflite"));
