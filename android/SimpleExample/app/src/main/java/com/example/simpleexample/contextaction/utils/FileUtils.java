@@ -10,12 +10,16 @@ import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -55,6 +59,7 @@ public class FileUtils {
     }
 
     public static void copy(File src, File dst) {
+        makeDir(dst.getParent());
         try {
             InputStream in = new FileInputStream(src);
             try {
@@ -134,5 +139,54 @@ public class FileUtils {
                 listener.onChanged(changedFilename, Arrays.asList(md5s));
             }
         });
+    }
+
+    public static String getFileContent(String filename) {
+        StringBuffer buffer = new StringBuffer();
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(new File(filename)));
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                buffer.append(line);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return buffer.toString();
+    }
+
+    public static String fileToMD5(String path) {
+        try {
+            InputStream inputStream = new FileInputStream(path);
+            byte[] buffer = new byte[1024];
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            int numRead = 0;
+            while (numRead != -1) {
+                numRead = inputStream.read(buffer);
+                if (numRead > 0)
+                    digest.update(buffer, 0, numRead);
+            }
+            byte [] md5Bytes = digest.digest();
+            return convertHashToString(md5Bytes);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private static String convertHashToString(byte[] hashBytes) {
+        StringBuilder returnVal = new StringBuilder();
+        for (int i = 0; i < hashBytes.length; i++) {
+            returnVal.append(Integer.toString((hashBytes[i] & 0xff) + 0x100, 16).substring(1));
+        }
+        return returnVal.toString().toLowerCase();
     }
 }

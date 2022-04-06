@@ -39,7 +39,7 @@
 
     <ListView
         android:id="@+id/trainListView"
-        android:layout_width="394dp"
+        android:layout_width="match_parent"
         android:layout_height="432dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="28dp"

@@ -152,6 +152,15 @@ public class NetworkUtils {
                 .execute(callback);
     }
 
+    public static void stopTrain(Context context, String trainId, long timestamp, StringCallback callback) {
+        OkGo.<String>delete(TRAIN_URL)
+                .tag(context)
+                .params("trainId", trainId)
+                .params("timestamp", timestamp)
+                .isMultipart(true)
+                .execute(callback);
+    }
+
     public static void downloadFile(Context context, String filename, FileCallback callback) {
         OkGo.<File>get(FILE_URL)
                 .tag(context)

@@ -6,6 +6,8 @@ import android.hardware.SensorEvent;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
+import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.CombinedFilter;
+import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.HorizontalFilter;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass3C;
 import com.hcifuture.contextactionlibrary.utils.imu.Lowpass1C;
@@ -21,7 +23,6 @@ import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
-
 
 import java.io.File;
 import java.util.ArrayList;
@@ -57,17 +58,24 @@ public class TapTapAction extends BaseAction {
     private Lowpass1C lowpassKey = new Lowpass1C();
     private PeakDetector peakDetectorPositive = new PeakDetector();
     private boolean wasPeakApproaching = true;
-
+    private int result;
+    private int seqLength;
     private List<Long> tapTimestamps = new ArrayList();
     private TfClassifier tflite;
 
-    private int seqLength;
+    // filter related
+    private boolean flag1 = true;
+    private boolean flag2 = false;
+    private boolean existTaptapSignal = false;
+    private HorizontalFilter horizontalFilter = new HorizontalFilter();
+    private CombinedFilter combinedFilter = new CombinedFilter();
+
 
     public TapTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
         super(context, config, requestListener, actionListener);
         init();
-        tflite = new TfClassifier(mContext.getAssets(), "tap7cls_pixel4.tflite");
-        // tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "tap7cls_pixel4.tflite"));
+        // tflite = new TfClassifier(mContext.getAssets(), "tap7cls_pixel4.tflite");
+        tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "tap7cls_pixel4.tflite"));
         seqLength = (int)config.getValue("SeqLength");
     }
 
@@ -115,9 +123,42 @@ public class TapTapAction extends BaseAction {
     }
 
     @Override
-    public void onIMUSensorChanged(SensorEvent event) {
+    public synchronized void onIMUSensorChanged(SensorEvent event) {
+        // just for horizontal / static cases' record && upload
+        horizontalFilter.onSensorChanged(event);
+        if (horizontalFilter.passWithDelay(event.timestamp) == -1) {
+            ActionResult actionResult = new ActionResult("TapTap");
+            actionResult.setReason("Static");
+            for (ActionListener listener : actionListener) {
+                listener.onActionSave(actionResult);
+            }
+        }
+//        horizontalFilter.onSensorChanged(event);
+//        int tmp1 = horizontalFilter.passWithDelay(event.timestamp);
+//        if (tmp1 == -1)
+//            existTaptapSignal = false;
+//        else if (tmp1 == 1)
+//            flag1 = true;
+        combinedFilter.onSensorChanged(event);
+        int tmp2 = combinedFilter.passWithDelay(event.timestamp);
+        if (tmp2 == -1)
+            existTaptapSignal = false;
+        else if (tmp2 == 1)
+            flag2 = true;
+        if (existTaptapSignal && flag1 && flag2) {
+            if (actionListener != null) {
+                for (ActionListener listener: actionListener) {
+                    listener.onAction(new ActionResult("TapTap"));
+                }
+            }
+            existTaptapSignal = false;
+//            flag1 = false;
+            flag2 = false;
+        }
+
         if (event.sensor.getType() != Sensor.TYPE_GYROSCOPE && event.sensor.getType() != Sensor.TYPE_ACCELEROMETER)
             return;
+        result = 0;
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             gotAcc = true;
             if (0L == syncTime)
@@ -150,6 +191,9 @@ public class TapTapAction extends BaseAction {
             else
                 while(resampleGyro.update(event.values[0], event.values[1], event.values[2], event.timestamp))
                     processGyro();
+            recognizeTapML();
+            if (result == 1)
+                tapTimestamps.add(event.timestamp);
         }
     }
 
@@ -213,7 +257,7 @@ public class TapTapAction extends BaseAction {
         }
     }
     
-    private boolean checkDoubleTapTiming(long timestamp) {
+    private int checkDoubleTapTiming(long timestamp) {
         // remove old timestamps
         int idx = 0;
         for (; idx < tapTimestamps.size(); idx++) {
@@ -222,52 +266,62 @@ public class TapTapAction extends BaseAction {
         }
         tapTimestamps = tapTimestamps.subList(idx, tapTimestamps.size());
 
-        // just check no tap && double tap now
-        if (!tapTimestamps.isEmpty()) {
+        if (tapTimestamps.isEmpty())
+            return 0;
+        else {
+            if (tapTimestamps.size() == 1)
+                return 1;
             if (tapTimestamps.get(tapTimestamps.size() - 1) - tapTimestamps.get(0) > 100000000L) {
                 tapTimestamps.clear();
-                return true;
+                return 2;
             }
         }
-        return false;
+        return 0;
     }
 
-    public int[] shouldRunTapModel() {
-        if (resampleAcc.getInterval() == 0) {
-            return new int[]{-1, -1};
-        }
+    public void recognizeTapML() {
+        if (resampleAcc.getInterval() == 0)
+            return;
         int diff = (int)((resampleAcc.getResults().t - resampleGyro.getResults().t) / resampleAcc.getInterval());
         int peakIdx = peakDetectorPositive.getIdMajorPeak();
-        if (peakIdx > 20)
+        if (peakIdx > 12) {
             wasPeakApproaching = true;
+        }
         int accIdx = peakIdx - 6;
         int gyroIdx = accIdx - diff;
         if (accIdx >= 0 && gyroIdx >= 0) {
-            if (accIdx + seqLength < zsAcc.size() && gyroIdx + seqLength < zsAcc.size() && wasPeakApproaching && peakIdx <= 20) {
+            if (accIdx + seqLength < zsAcc.size() && gyroIdx + seqLength < zsAcc.size() && wasPeakApproaching && peakIdx <= 12) {
                 wasPeakApproaching = false;
-                return new int[]{accIdx, gyroIdx};
+                result = Util.getMaxId(tflite.predict(getInput(accIdx, gyroIdx), 7).get(0));
             }
         }
-        return new int[]{-1, -1};
+    }
+
+    private void updateCondition() {
+//        flag1 = false;
+        flag2 = false;
+        existTaptapSignal = true;
+    }
+
+    public void onConfirmed() {
+        combinedFilter.confirmed();
     }
 
     @Override
-    public void getAction() {
-        int[] idxes = shouldRunTapModel();
-        if (!isStarted || idxes[0] == -1) {
+    public synchronized void getAction() {
+        if (!isStarted)
             return;
-        }
-        ArrayList<Float> input = getInput(idxes[0], idxes[1]);
-        int result = Util.getMaxId(tflite.predict(input, 7).get(0));
         long timestamp = timestamps.get(seqLength);
-        if (result == 1) {
-            tapTimestamps.add(timestamp);
+        int count = checkDoubleTapTiming(timestamp);
+        if (count == 2) {
             if (actionListener != null) {
-                if (checkDoubleTapTiming(timestamp)) {
-                    for (ActionListener listener: actionListener) {
-                        listener.onAction(new ActionResult("TapTap"));
-                    }
+                for (ActionListener listener: actionListener) {
+                    ActionResult actionResult = new ActionResult("TapTap");
+                    listener.onActionRecognized(actionResult);
                 }
+                horizontalFilter.updateCondition();
+                combinedFilter.updateCondition();
+                this.updateCondition();
             }
         }
     }

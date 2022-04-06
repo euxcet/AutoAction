@@ -1,14 +1,20 @@
 package com.hcifuture.datacollection.ui.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.hcifuture.datacollection.R;
+import com.hcifuture.datacollection.ui.NormalAlertDialog;
+import com.hcifuture.datacollection.utils.NetworkUtils;
 import com.hcifuture.datacollection.utils.bean.TrainListBean;
+import com.lzy.okgo.callback.StringCallback;
+import com.lzy.okgo.model.Response;
 
 
 public class TrainAdapter extends BaseAdapter {
@@ -48,6 +54,26 @@ public class TrainAdapter extends BaseAdapter {
         trainName.setText(train.getName());
         trainId.setText("  编号:            " + train.getId());
         trainStatus.setText("  状态:            " + train.getStatus());
+
+        Button deleteButton = view.findViewById(R.id.interruptButton);
+        deleteButton.setOnClickListener((v) -> {
+            NormalAlertDialog dialog = new NormalAlertDialog(mContext,
+                    "Interrupt training program [" + trainId + "] ?",
+                    "");
+            dialog.setPositiveButton("Yes",
+                    (dialogInterface, i1) -> NetworkUtils.stopTrain(mContext, train.getId(), System.currentTimeMillis(), new StringCallback() {
+                        @Override
+                        public void onSuccess(Response<String> response) {
+                        }
+                    }));
+            dialog.setNegativeButton("No",
+                    (dialogInterface, i12) -> dialog.dismiss());
+            dialog.create();
+            dialog.show();
+        });
+        if (!train.getStatus().equals("Training")) {
+            deleteButton.setVisibility(View.INVISIBLE);
+        }
 
         return view;
     }

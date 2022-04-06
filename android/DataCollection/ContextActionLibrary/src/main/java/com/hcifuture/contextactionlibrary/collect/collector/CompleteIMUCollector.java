@@ -52,7 +52,7 @@ public class CompleteIMUCollector extends SensorCollector {
         if (data != null) {
             data.insert(new ArrayList<>(Arrays.asList(
                     x, y, z,
-                    (float) (time % 100000),
+                    (float) (time / 1000000),
                     (float) idx
             )), size);
         }

@@ -1,21 +1,17 @@
+from hashlib import new
 from re import sub
 from time import time
 from flask import Flask, request, send_file
 from flask_cors import CORS, cross_origin
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
-import fileUtils
+import file_utils
 import os
-import hashlib
 
-from process.cutter.peak_cutter import PeakCutter
-from process.cutter.random_cutter import RandomCutter
+from ml.cutter.peak_cutter import PeakCutter
+from ml.cutter.random_cutter import RandomCutter
 
-from process.export import export_csv
-from process.train.train import train_model
-
-from multiprocessing import Process
-
+from train_process import TrainProcess
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -25,8 +21,54 @@ saver = ThreadPoolExecutor(max_workers=1)
 saver_future_list = []
 
 trainer = ThreadPoolExecutor(max_workers=1)
+train_processes = []
 
-fileUtils.mkdir("../data/record/TL13r912je")
+file_utils.mkdir("../data/record/TL13r912je")
+if not os.path.exists("../data/file/config.json"):
+    config = {
+        "context": [
+            {
+                "builtInContext": "Informational",
+                "sensorType": ["ACCESSIBILITY", "BROADCAST"],
+                "integerParamKey": [],
+                "integerParamValue": [],
+                "longParamKey": [],
+                "longParamValue": [],
+                "floatParamKey": [],
+                "floatParamValue": [],
+                "booleanParamKey": [],
+                "booleanParamValue": []
+            }
+        ],
+        "action": [
+            {
+                "builtInAction": "TapTap",
+                "sensorType": ["IMU"],
+                "integerParamKey": ["SeqLength"],
+                "integerParamValue": [50],
+                "longParamKey": [],
+                "longParamValue": [],
+                "floatParamKey": [],
+                "floatParamValue": [],
+                "booleanParamKey": [],
+                "booleanParamValue": []
+            },
+            {
+                "builtInAction": "TopTap",
+                "sensorType": ["IMU"],
+                "integerParamKey": ["SeqLength"],
+                "integerParamValue": [25],
+                "longParamKey": [],
+                "longParamValue": [],
+                "floatParamKey": [],
+                "floatParamValue": [],
+                "booleanParamKey": [],
+                "booleanParamValue": []
+            }
+        ]
+    }
+
+    file_utils.save_json(config, "../data/file/config.json")
 
 
 '''
@@ -69,7 +111,7 @@ Respone:
 @cross_origin()
 def get_all_taskList():
     response = []
-    for dir in os.listdir(fileUtils.DATA_RECORD_ROOT):
+    for dir in os.listdir(file_utils.DATA_RECORD_ROOT):
         if dir.startswith("TL"):
             response.append(dir)
     return {"result": response}
@@ -88,7 +130,7 @@ Respone:
 def get_taskList_history():
     taskListId = request.args.get("taskListId")
 
-    taskList_path = fileUtils.get_taskList_path(taskListId)
+    taskList_path = file_utils.get_taskList_path(taskListId)
     response = []
     for file_name in os.listdir(taskList_path):
         if file_name.startswith("TL") and len(file_name.split('_')) == 2:
@@ -111,7 +153,7 @@ def get_taskList():
     taskListId = request.args.get("taskListId")
     timestamp = request.args.get("timestamp")
     print(taskListId, timestamp)
-    return fileUtils.load_taskList_info(taskListId, timestamp)
+    return file_utils.load_taskList_info(taskListId, timestamp)
 
 
 '''
@@ -129,25 +171,25 @@ def update_taskList():
     timestamp = int(request.form.get("timestamp"))
     taskListId = taskList['id']
 
-    taskList_info_path = fileUtils.get_taskList_info_path(taskListId)
-    taskList_info_timestamp_path = fileUtils.get_taskList_info_path(taskListId, timestamp)
-    fileUtils.save_json(taskList, taskList_info_path)
-    fileUtils.save_json(taskList, taskList_info_timestamp_path)
+    taskList_info_path = file_utils.get_taskList_info_path(taskListId)
+    taskList_info_timestamp_path = file_utils.get_taskList_info_path(taskListId, timestamp)
+    file_utils.save_json(taskList, taskList_info_path)
+    file_utils.save_json(taskList, taskList_info_timestamp_path)
 
     print('taskList id:', taskListId)
     for task in taskList['task']:
         taskId = task['id']
         print('task id:', taskId)
-        task_path = fileUtils.get_task_path(taskListId, taskId)
-        task_info_path = fileUtils.get_task_info_path(taskListId, taskId)
-        fileUtils.mkdir(task_path)
-        fileUtils.save_json(task, task_info_path)
+        task_path = file_utils.get_task_path(taskListId, taskId)
+        task_info_path = file_utils.get_task_info_path(taskListId, taskId)
+        file_utils.mkdir(task_path)
+        file_utils.save_json(task, task_info_path)
         for subtask in task['subtask']:
             subtaskId = subtask['id']
-            subtask_path = fileUtils.get_subtask_path(taskListId, taskId, subtaskId)
-            subtask_info_path = fileUtils.get_subtask_info_path(taskListId, taskId, subtaskId)
-            fileUtils.mkdir(subtask_path)
-            fileUtils.save_json(subtask, subtask_info_path)
+            subtask_path = file_utils.get_subtask_path(taskListId, taskId, subtaskId)
+            subtask_info_path = file_utils.get_subtask_info_path(taskListId, taskId, subtaskId)
+            file_utils.mkdir(subtask_path)
+            file_utils.save_json(subtask, subtask_info_path)
     return ""
 
 
@@ -172,7 +214,7 @@ def get_record_list():
     if taskListId is None:
         return {}
 
-    taskList = fileUtils.load_taskList_info(taskListId, 0)
+    taskList = file_utils.load_taskList_info(taskListId, 0)
     records = []
     for task in taskList['task']:
         c_taskId = task['id']
@@ -182,13 +224,13 @@ def get_record_list():
             c_subtaskId = subtask['id']
             if subtaskId is not None and subtaskId != "0" and c_subtaskId != subtaskId:
                 continue
-            recordlist_path = fileUtils.get_recordlist_path(taskListId, c_taskId, c_subtaskId)
+            recordlist_path = file_utils.get_recordlist_path(taskListId, c_taskId, c_subtaskId)
             if os.path.exists(recordlist_path):
                 with open(recordlist_path, 'r') as fin:
                     lines = fin.readlines()
                     for recordId in lines:
                         recordId = recordId.strip()
-                        record_path = fileUtils.get_record_path(taskListId, c_taskId, c_subtaskId, recordId)
+                        record_path = file_utils.get_record_path(taskListId, c_taskId, c_subtaskId, recordId)
                         timestamp = 0
                         if os.path.exists(record_path):
                             for filename in os.listdir(record_path):
@@ -224,10 +266,10 @@ def add_record():
     subtaskId = request.form.get("subtaskId")
     recordId = request.form.get("recordId")
     timestamp = int(request.form.get("timestamp"))
-    record_path = fileUtils.get_record_path(taskListId, taskId, subtaskId, recordId)
-    fileUtils.mkdir(record_path)
-    fileUtils.save_json({}, os.path.join(record_path, str(timestamp)+ ".json"))
-    fileUtils.append_recordlist(taskListId, taskId, subtaskId, recordId)
+    record_path = file_utils.get_record_path(taskListId, taskId, subtaskId, recordId)
+    file_utils.mkdir(record_path)
+    file_utils.save_json({}, os.path.join(record_path, str(timestamp)+ ".json"))
+    file_utils.append_recordlist(taskListId, taskId, subtaskId, recordId)
     return {}
 
 '''
@@ -246,8 +288,8 @@ def delete_record():
     taskId = request.form.get("taskId")
     subtaskId = request.form.get("subtaskId")
     recordId = request.form.get("recordId")
-    record_path = fileUtils.get_record_path(taskListId, taskId, subtaskId, recordId)
-    fileUtils.delete_dir(record_path)
+    record_path = file_utils.get_record_path(taskListId, taskId, subtaskId, recordId)
+    file_utils.delete_dir(record_path)
     return {}
 
 def get_filetype_prefix(fileType):
@@ -300,7 +342,7 @@ def download_record():
     fileType = request.args.get("fileType")
 
     prefix = get_filetype_prefix(fileType)
-    record_path = fileUtils.get_record_path(taskListId, taskId, subtaskId, recordId)
+    record_path = file_utils.get_record_path(taskListId, taskId, subtaskId, recordId)
     if os.path.exists(record_path):
         for filename in os.listdir(record_path):
             if filename.startswith(prefix):
@@ -338,16 +380,16 @@ def upload_record_file():
     recordId = request.form.get("recordId")
     timestamp = request.form.get("timestamp")
 
-    record_path = fileUtils.get_record_path(taskListId, taskId, subtaskId, recordId)
+    record_path = file_utils.get_record_path(taskListId, taskId, subtaskId, recordId)
     print("Filename", file.filename)
 
-    if file and fileUtils.allowed_file(file.filename):
+    if file and file_utils.allowed_file(file.filename):
         filename = ""
         print("type: ", fileType)
         prefix, ext = get_filetype_prefix(fileType), get_filetype_ext(fileType)
         filename = prefix + str(timestamp) + ext
         file_path = os.path.join(record_path, filename)
-        fileUtils.save_record_file(file, file_path)
+        file_utils.save_record_file(file, file_path)
     
     return {}
 
@@ -380,9 +422,9 @@ def upload_collected_data():
     name = request.form.get("name")
     commit = request.form.get("commit")
     timestamp = request.form.get("timestamp")
-    path = fileUtils.get_dex_path(userId, name, timestamp)
-    fileUtils.mkdir(path)
-    fileUtils.save_file(file, os.path.join(path, file.filename))
+    path = file_utils.get_dex_path(userId, name, timestamp)
+    file_utils.mkdir(path)
+    file_utils.save_file(file, os.path.join(path, file.filename))
     commit_file_path = os.path.join(path, "commit.txt")
     with open(commit_file_path, 'w') as fout:
         fout.write(commit)
@@ -463,35 +505,12 @@ Response:
 @app.route("/train_list", methods=["GET"])
 def get_train_list():
     response = []
-    for trainId in os.listdir(fileUtils.DATA_TRAIN_ROOT):
+    for trainId in os.listdir(file_utils.DATA_TRAIN_ROOT):
         if trainId.startswith('XT'):
-            train_info_path = fileUtils.get_train_info_path(trainId)
-            response.append(fileUtils.load_json(train_info_path))
+            train_info_path = file_utils.get_train_info_path(trainId)
+            response.append(file_utils.load_json(train_info_path))
+    response.sort(key=lambda x: -x['timestamp'])
     return {"trainList": response}
-
-
-class TrainProcess(Process):
-    def __init__(self, train_info_path, taskListId, taskIdList, trainId, timestamp):
-        super(TrainProcess, self).__init__()
-        self.train_info_path = train_info_path
-        self.taskListId = taskListId
-        self.taskIdList = taskIdList
-        self.trainId = trainId
-        self.timestamp = timestamp
-
-    def run(self):
-        export_csv(self.taskListId, self.taskIdList, self.trainId, self.timestamp)
-
-        train_info = fileUtils.load_json(self.train_info_path)
-        train_info['status'] = 'Training'
-        fileUtils.save_json(train_info, self.train_info_path)
-
-        train_model(self.trainId, self.timestamp, False)
-
-        train_info = fileUtils.load_json(self.train_info_path)
-        train_info['status'] = 'Done'
-        fileUtils.save_json(train_info, self.train_info_path)
-
 
 '''
 Name: start_train
@@ -506,14 +525,15 @@ Form:
 '''
 @app.route("/train", methods=["POST"])
 def start_train():
+    global train_processes
     trainId = request.form.get("trainId")
     trainName = request.form.get("trainName")
     taskListId = request.form.get("taskListId")
     taskIdList = request.form.get("taskIdList").strip().split(',')
     timestamp = int(request.form.get("timestamp"))
-    train_path = fileUtils.get_train_path(trainId)
-    fileUtils.mkdir(train_path)
-    train_info_path = fileUtils.get_train_info_path(trainId)
+    train_path = file_utils.get_train_path(trainId)
+    file_utils.mkdir(train_path)
+    train_info_path = file_utils.get_train_info_path(trainId)
 
     train_info = {
         'name': trainName,
@@ -523,33 +543,32 @@ def start_train():
         'timestamp': timestamp,
         'status': 'Preprocessing'
     }
-    fileUtils.save_json(train_info, train_info_path)
+    file_utils.save_json(train_info, train_info_path)
 
-    TrainProcess(train_info_path, taskListId, taskIdList, trainId, timestamp).start()
-
-    '''
-    export_csv(taskListId, taskIdList, trainId, timestamp)
-
-    train_info = fileUtils.load_json(train_info_path)
-    train_info['status'] = 'Training'
-    fileUtils.save_json(train_info, train_info_path)
-
-    train_model(trainId, timestamp, False)
-
-    train_info = fileUtils.load_json(train_info_path)
-    train_info['status'] = 'Done'
-    fileUtils.save_json(train_info, train_info_path)
-    '''
-
-
-    '''
-    train_model('9087654321', False)
-    taskListId = request.form.get("taskListId")
-    taskIds = request.form.get("taskId").strip().split(',')
-    timestamp = request.form.get("timestamp")
-    export_csv(taskListId, taskIds, timestamp)
-    '''
+    new_process = TrainProcess(train_info_path, taskListId, taskIdList, trainId, timestamp)
+    train_processes.append(new_process)
+    new_process.start()
     return {}
+
+'''
+Name: stop_train
+Method: Delete
+Content-Type: multipart/form-data
+Form:
+    - trainId
+'''
+@app.route("/train", methods=["DELETE"])
+def stop_train():
+    global train_processes
+    trainId = request.form.get("trainId")
+    for process in train_processes:
+        if process is not None and process.get_trainId() == trainId:
+            process.interrupt()
+            process.terminate()
+            train_processes.remove(process)
+    train_processes = list(filter(None, train_processes))
+    return {}
+    
 
 '''
 Name: download_file
@@ -561,7 +580,7 @@ Form:
 @app.route("/file", methods=['GET'])
 def download_file():
     filename = request.args.get("filename")
-    return send_file(os.path.join(fileUtils.DATA_FILE_ROOT, filename))
+    return send_file(os.path.join(file_utils.DATA_FILE_ROOT, filename))
     
 '''
 Name: update_file
@@ -574,8 +593,8 @@ Form:
 def upload_file():
     file = request.files["file"]
     if file:
-        fileUtils.save_file(file, os.path.join(fileUtils.DATA_FILE_ROOT, file.filename))
-        fileUtils.update_md5()
+        file_utils.save_file(file, os.path.join(file_utils.DATA_FILE_ROOT, file.filename))
+        file_utils.update_md5()
     
     return {}
 
@@ -592,7 +611,7 @@ def get_md5():
     result = ""
     for filename in filenames:
         if filename != '':
-            result += fileUtils.get_md5(filename) + ","
+            result += file_utils.get_md5(filename) + ","
     return result[:-1]
 
 '''
@@ -603,7 +622,7 @@ Form:
 '''
 @app.route("/md5", methods=['POST'])
 def update_md5():
-    fileUtils.update_md5()
+    file_utils.update_md5()
     return {}
         
 

@@ -11,6 +11,7 @@ import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 import com.hcifuture.contextactionlibrary.contextaction.action.BaseAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
+import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.BaseCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
@@ -73,6 +74,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private ScheduledExecutorService scheduledExecutorService;
     private List<ScheduledFuture<?>> futureList;
 
+    private TapTapAction tapTapAction;
+    private String markTimestamp;
+
     public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener) {
         this.mContext = context;
         this.actions = actions;
@@ -86,6 +90,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
          */
         this.sensorManagers = new ArrayList<>();
 
+        /*
         if (NcnnInstance.getInstance() == null) {
             NcnnInstance.init(context,
                     BuildConfig.SAVE_PATH + "best.param",
@@ -96,6 +101,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     1,
                     2);
         }
+         */
 
         // clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Bluetooth));
         this.futureList = new ArrayList<>();
@@ -198,8 +204,11 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             for (int i = 0; i < actionConfig.size(); i++) {
                 ActionConfig config = actionConfig.get(i);
                 if (config.getAction() == BuiltInActionEnum.TapTap) {
-                    TapTapAction tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                    tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                     actions.add(tapTapAction);
+                } else if (config.getAction() == BuiltInActionEnum.TopTap) {
+                    TopTapAction topTapAction = new TopTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                    actions.add(topTapAction);
                 }
             }
             for (int i = 0; i < contextConfig.size(); i++) {
@@ -322,12 +331,28 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     @Override
+    public void onActionRecognized(ActionResult action) {
+        if (action.getAction().equals("TapTapConfirmed")) {
+            markTimestamp = action.getTimestamp();
+            tapTapAction.onConfirmed();
+        }
+        else if (action.getAction().equals("TopTap")) {
+            markTimestamp = action.getTimestamp();
+        }
+    }
+
+    @Override
     public void onAction(ActionResult action) {
-        if (action.getAction().equals("TapTap")) {
+        if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap")) {
             if (clickTrigger != null) {
                 clickTrigger.trigger();
             }
         }
+    }
+
+    @Override
+    public void onActionSave(ActionResult action) {
+        action.setTimestamp(markTimestamp);
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
                 collector.onAction(action);

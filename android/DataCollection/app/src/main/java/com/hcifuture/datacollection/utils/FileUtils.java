@@ -13,15 +13,18 @@ import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -71,7 +74,7 @@ public class FileUtils {
                 for (Float value: info.getData()) {
                     dos.writeFloat(value);
                 }
-                dos.writeFloat((float)info.getTime());
+                dos.writeDouble((double)info.getTime());
             }
             dos.flush();
             dos.close();
@@ -114,7 +117,7 @@ public class FileUtils {
                 float x = dis.readFloat();
                 float y = dis.readFloat();
                 float z = dis.readFloat();
-                long timestamp = (long)dis.readFloat();
+                long timestamp = (long)dis.readDouble();
                 data.add(new SensorInfo(idx, x, y, z, timestamp));
             }
         } catch (IOException e) {
@@ -168,12 +171,14 @@ public class FileUtils {
                 SharedPreferences fileMD5 = context.getSharedPreferences("FILE_MD5", MODE_PRIVATE);
                 String[] md5s = response.body().split(",");
                 List<String> changedFilename = new ArrayList<>();
+                Log.e("TEST", md5s.length + " " + filename.size());
                 if (md5s.length != filename.size()) {
                     return;
                 }
                 for (int i = 0; i < filename.size(); i++) {
                     String serverMD5 = md5s[i];
                     String localMD5 = fileMD5.getString(filename.get(i), null);
+                    Log.e("TEST", serverMD5 + " " + localMD5);
                     if (localMD5 == null || !localMD5.equals(serverMD5)) {
                         changedFilename.add(filename.get(i));
                     }
@@ -181,5 +186,54 @@ public class FileUtils {
                 listener.onChanged(changedFilename, Arrays.asList(md5s));
             }
         });
+    }
+
+    public static String getFileContent(String filename) {
+        StringBuffer buffer = new StringBuffer();
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(new File(filename)));
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                buffer.append(line);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return buffer.toString();
+    }
+
+    public static String fileToMD5(String path) {
+        try {
+            InputStream inputStream = new FileInputStream(path);
+            byte[] buffer = new byte[1024];
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            int numRead = 0;
+            while (numRead != -1) {
+                numRead = inputStream.read(buffer);
+                if (numRead > 0)
+                    digest.update(buffer, 0, numRead);
+            }
+            byte [] md5Bytes = digest.digest();
+            return convertHashToString(md5Bytes);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private static String convertHashToString(byte[] hashBytes) {
+        StringBuilder returnVal = new StringBuilder();
+        for (int i = 0; i < hashBytes.length; i++) {
+            returnVal.append(Integer.toString((hashBytes[i] & 0xff) + 0x100, 16).substring(1));
+        }
+        return returnVal.toString().toLowerCase();
     }
 }
