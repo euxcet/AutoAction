@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 import com.hcifuture.datacollection.BuildConfig;
 import com.hcifuture.datacollection.NcnnInstance;
 import com.hcifuture.datacollection.contextaction.ContextActionLoader;
+import com.hcifuture.datacollection.contextaction.LoaderManager;
 import com.hcifuture.datacollection.utils.FileUtils;
 import com.hcifuture.datacollection.utils.NetworkUtils;
 import com.hcifuture.shared.NcnnFunction;
@@ -33,30 +34,34 @@ import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
+import com.hcifuture.shared.communicate.result.ActionResult;
+import com.hcifuture.shared.communicate.result.ContextResult;
 import com.hcifuture.shared.communicate.result.RequestResult;
 import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.model.Response;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import dalvik.system.DexClassLoader;
 
-public class MainService extends AccessibilityService {
+public class MainService extends AccessibilityService implements ContextListener, ActionListener {
     private Context mContext;
-    private DexClassLoader classLoader;
-    private ContextActionLoader loader;
     private Handler mHandler;
 
     private CustomBroadcastReceiver mBroadcastReceiver;
+
+    private LoaderManager loaderManager;
 
     public MainService() {
     }
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        if (loader != null) {
-            loader.onAccessibilityEvent(event);
+        if (loaderManager != null) {
+            loaderManager.onAccessibilityEvent(event);
         }
     }
 
@@ -74,7 +79,6 @@ public class MainService extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         mContext = this;
-        mHandler = new Handler(Looper.getMainLooper());
         mBroadcastReceiver = new CustomBroadcastReceiver();
         final IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
@@ -86,94 +90,35 @@ public class MainService extends AccessibilityService {
         filter.addAction(Intent.ACTION_SET_WALLPAPER);
         registerReceiver(mBroadcastReceiver, filter);
 
-        FileUtils.downloadFiles(this, Arrays.asList(
-                "param_dicts.json",
-                "param_max.json",
-                "words.csv",
-                "best.bin",
-                "best.param",
-                "classes.dex"
-        ), this::loadContextActionLibrary);
+        this.mHandler = new Handler(Looper.getMainLooper());
+        this.loaderManager = new LoaderManager(this, this, this);
+        loaderManager.start();
     }
 
     @Override
     public void onDestroy() {
-        Log.e("TEST", "onDestroy");
         super.onDestroy();
-        if (loader != null) {
-            loader.stopDetection();
+        if (loaderManager != null) {
+            loaderManager.stop();
         }
     }
 
-    private RequestResult handleRequest(RequestConfig config) {
-        RequestResult result = new RequestResult();
-        if (config.getString("getAppTapBlockValue") != null) {
-            result.putValue("getAppTapBlockValueResult", 0);
-        }
+    @Override
+    public void onActionRecognized(ActionResult action) { }
 
-        if (config.getBoolean("getCanTapTap") != null) {
-            result.putValue("getCanTapTapResult", true);
-        }
-
-        if (config.getBoolean("getCanTopTap") != null) {
-            result.putValue("getCanTopTapResult", true);
-        }
-
-        if (config.getValue("getWindows") != null) {
-            result.putObject("getWindows", getWindows());
-        }
-
-        return result;
+    @Override
+    public void onAction(ActionResult action) {
+        mHandler.post(() -> {
+            Toast.makeText(mContext, action.getAction(), Toast.LENGTH_SHORT).show();
+        });
     }
 
-    private void loadContextActionLibrary() {
-        final File tmpDir = getDir("dex", 0);
-        classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
-        loader = new ContextActionLoader(mContext, classLoader);
+    @Override
+    public void onActionSave(ActionResult action) { }
 
-        // TapTapAction
-        ActionConfig tapTapConfig = new ActionConfig();
-        tapTapConfig.setAction(BuiltInActionEnum.TapTap);
-        tapTapConfig.putValue("SeqLength", 50);
-        tapTapConfig.setSensorType(Arrays.asList(SensorType.IMU));
-
-        ActionListener actionListener = action ->
-                mHandler.post(() -> Toast.makeText(mContext, action.getAction(), Toast.LENGTH_SHORT).show());
-
-        // ProximityContext
-        ContextConfig proximityConfig = new ContextConfig();
-        proximityConfig.setContext(BuiltInContextEnum.Proximity);
-        proximityConfig.setSensorType(Arrays.asList(SensorType.PROXIMITY));
-
-        // TableContext
-        ContextConfig tableConfig = new ContextConfig();
-        tableConfig.setContext(BuiltInContextEnum.Table);
-        tableConfig.setSensorType(Arrays.asList(SensorType.IMU));
-
-        // InformationalContext
-        ContextConfig informationalConfig = new ContextConfig();
-        informationalConfig.setContext(BuiltInContextEnum.Informational);
-        informationalConfig.setSensorType(Arrays.asList(SensorType.ACCESSIBILITY, SensorType.BROADCAST));
-
-        ContextListener contextListener = context ->
-                mHandler.post(() -> Toast.makeText(mContext, context.getContext(), Toast.LENGTH_SHORT).show());
-
-        RequestListener requestListener = config -> handleRequest(config);
-        loader.startDetection(Arrays.asList(tapTapConfig), actionListener, Arrays.asList(proximityConfig, tableConfig, informationalConfig), contextListener, requestListener);
-
-
-        NcnnInstance.init(mContext,
-                BuildConfig.SAVE_PATH + "best.param",
-                BuildConfig.SAVE_PATH + "best.bin",
-                4,
-                128,
-                6,
-                1,
-                2);
-        NcnnInstance ncnnInstance = NcnnInstance.getInstance();
-        float[] data = new float[128 * 6];
-        Arrays.fill(data, 0.1f);
-        Log.e("result", ncnnInstance.actionDetect(data) + " ");
+    @Override
+    public void onContext(ContextResult context) {
+        mHandler.post(() -> Toast.makeText(mContext, context.getContext(), Toast.LENGTH_SHORT).show());
     }
 
     class CustomBroadcastReceiver extends BroadcastReceiver {
@@ -184,16 +129,20 @@ public class MainService extends AccessibilityService {
             String action = intent.getAction();
             switch (action) {
                 case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
-                    loader.onBroadcastEvent(new BroadcastEvent(
-                            action,
-                            intent.getStringExtra("reason"),
-                            ACTION_TYPE_GLOBAL));
+                    if (loaderManager != null) {
+                        loaderManager.onBroadcastEvent(new BroadcastEvent(
+                                action,
+                                intent.getStringExtra("reason"),
+                                ACTION_TYPE_GLOBAL));
+                    }
                     break;
                 default:
-                    loader.onBroadcastEvent(new BroadcastEvent(
-                            action,
-                            "",
-                            ACTION_TYPE_GLOBAL));
+                    if (loaderManager != null) {
+                        loaderManager.onBroadcastEvent(new BroadcastEvent(
+                                action,
+                                "",
+                                ACTION_TYPE_GLOBAL));
+                    }
                     break;
             }
         }
@@ -230,13 +179,17 @@ public class MainService extends AccessibilityService {
                 tag = database_key;
             }
 
-            loader.onBroadcastEvent(new BroadcastEvent(key, tag, "", value));
+            if (loaderManager != null) {
+                loaderManager.onBroadcastEvent(new BroadcastEvent(key, tag, "", value));
+            }
         }
     }
 
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
-        loader.onBroadcastEvent(new BroadcastEvent("KeyEvent", "", "", event.getKeyCode()));
+        if (loaderManager != null) {
+            loaderManager.onBroadcastEvent(new BroadcastEvent("KeyEvent", "", "", event.getKeyCode()));
+        }
         return super.onKeyEvent(event);
     }
 }

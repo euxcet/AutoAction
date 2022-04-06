@@ -21,7 +21,6 @@ import android.widget.TextView;
 import com.hcifuture.datacollection.R;
 import com.hcifuture.datacollection.utils.GlobalVariable;
 import com.hcifuture.datacollection.utils.bean.TaskListBean;
-import com.hcifuture.datacollection.TransferData;
 import com.hcifuture.datacollection.data.Recorder;
 import com.hcifuture.datacollection.utils.NetworkUtils;
 import com.hcifuture.datacollection.utils.bean.StringListBean;
@@ -38,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
 
     private Context mContext;
     private AppCompatActivity mActivity;
-    private static TransferData transferData;
     private Vibrator vibrator;
 
     // ui
@@ -92,7 +90,6 @@ public class MainActivity extends AppCompatActivity {
         mContext = this;
         mActivity = this;
 
-        transferData = TransferData.getInstance();
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         vibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
@@ -112,8 +109,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // jump to accessibility settings
-        Intent settingIntent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-        startActivity(settingIntent);
+        Button accessibilityButton = findViewById(R.id.accessibilityButton);
+        accessibilityButton.setOnClickListener((v) -> {
+            Intent settingIntent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+            startActivity(settingIntent);
+        });
     }
 
     private void loadTaskListViaNetwork() {

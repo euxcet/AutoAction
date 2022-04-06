@@ -18,6 +18,7 @@ import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -132,6 +133,7 @@ public class EventAnalyzer {
         try {
             ByteBuffer buffer = loadModelFile(this.context.getAssets(), "ResultModel.tflite");
             model = new Interpreter(buffer);
+            // model = new Interpreter(new File(BuildConfig.SAVE_PATH + "ResultModel.tflite"));
             Log.v(TAG, "TFLite model loaded.");
 
             boolean res = loadMaxMin();
@@ -144,7 +146,7 @@ public class EventAnalyzer {
                 Log.v(TAG, "EncoderMap loaded.");
             }
 
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Log.e(TAG, ex.getMessage());
         }
     }

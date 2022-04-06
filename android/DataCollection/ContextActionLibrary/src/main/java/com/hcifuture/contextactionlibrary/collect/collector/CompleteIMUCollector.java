@@ -22,12 +22,15 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class CompleteIMUCollector extends SensorCollector {
     // For complete data, keep 1min, 1 * 60 * 100 * 4 = 24k data
     // in case sampling period is higher, maybe max 500Hz for acc and gyro
+    private final long DELAY_TIME = 5000;
     private int size = 12000;
-    private int delayTime = 5000;
 
     private final int samplingPeriod;
     private final int collectPeriod;
@@ -36,10 +39,10 @@ public class CompleteIMUCollector extends SensorCollector {
 
     private String sensorData;
     private String taptapPoint;
+    private Gson gson = new Gson();
 
-
-    public CompleteIMUCollector(Context context, String triggerFolder, int samplingPeriod, int collectPeriod) {
-        super(context, triggerFolder);
+    public CompleteIMUCollector(Context context, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, int samplingPeriod, int collectPeriod) {
+        super(context, triggerFolder, scheduledExecutorService, futureList);
         this.samplingPeriod = samplingPeriod;
         this.collectPeriod = collectPeriod;
         this.data = new IMUData();
@@ -49,7 +52,7 @@ public class CompleteIMUCollector extends SensorCollector {
         if (data != null) {
             data.insert(new ArrayList<>(Arrays.asList(
                     x, y, z,
-                    (float) (time % 100000),
+                    (float) (time / 1000000),
                     (float) idx
             )), size);
         }
@@ -79,9 +82,11 @@ public class CompleteIMUCollector extends SensorCollector {
         accListener = new PeriodicSensorEventListener(this, Sensor.TYPE_ACCELEROMETER, collectPeriod);
         magListener = new PeriodicSensorEventListener(this, Sensor.TYPE_MAGNETIC_FIELD, collectPeriod);
 
+        /*
         sensorThread = new HandlerThread("Complete Thread", Process.THREAD_PRIORITY_MORE_FAVORABLE);
         sensorThread.start();
         sensorHandler = new Handler(sensorThread.getLooper());
+         */
 
         this.resume();
     }
@@ -103,20 +108,15 @@ public class CompleteIMUCollector extends SensorCollector {
     @Override
     public synchronized CompletableFuture<Data> collect() {
         Log.e("TapTapCollector", "collect");
-        Gson gson = new Gson();
         taptapPoint = gson.toJson(data.getLastData());
         CompletableFuture<Data> ft = new CompletableFuture<>();
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                List<Float> cur = data.toList();
-                Gson gson = new Gson();
-                sensorData = gson.toJson(cur);
-                Log.e("TapTapCollector", "size " + cur.size());
-                saver.save(cur);
-                ft.complete(data);
-            }
-        }, delayTime);
+        futureList.add(scheduledExecutorService.schedule(() -> {
+            List<Float> cur = data.toList();
+            sensorData = gson.toJson(cur);
+            Log.e("TapTapCollector", "size " + cur.size());
+            saver.save(cur);
+            ft.complete(data);
+        }, DELAY_TIME, TimeUnit.MILLISECONDS));
         return ft;
     }
 
@@ -126,8 +126,10 @@ public class CompleteIMUCollector extends SensorCollector {
         sensorManager.unregisterListener(linearAccListener);
         sensorManager.unregisterListener(accListener);
         sensorManager.unregisterListener(magListener);
+        /*
         if (sensorThread != null)
             sensorThread.quitSafely();
+         */
     }
 
     @Override

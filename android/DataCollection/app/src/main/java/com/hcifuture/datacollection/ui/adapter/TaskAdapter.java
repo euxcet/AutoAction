@@ -1,8 +1,11 @@
 package com.hcifuture.datacollection.ui.adapter;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +14,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.hcifuture.datacollection.R;
+import com.hcifuture.datacollection.ui.NormalAlertDialog;
 import com.hcifuture.datacollection.utils.bean.TaskListBean;
 import com.hcifuture.datacollection.ui.ConfigSubtaskActivity;
 import com.hcifuture.datacollection.utils.NetworkUtils;
@@ -63,18 +67,28 @@ public class TaskAdapter extends BaseAdapter {
         taskAudio.setText("  开启麦克风: " + task.isAudio());
 
         deleteButton.setOnClickListener((v) -> {
-            String id = task.getId();
-            for(int j = 0; j < taskList.getTask().size(); j++) {
-                if (taskList.getTask().get(j).getId().equals(id)) {
-                    taskList.getTask().remove(j);
-                }
-            }
-            NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
-                @Override
-                public void onSuccess(Response<String> response) {
-                }
-            });
-            this.notifyDataSetChanged();
+            NormalAlertDialog dialog = new NormalAlertDialog(mContext,
+                    "Delete task [" + task.getId() + "] ?",
+                    "");
+            dialog.setPositiveButton("Yes",
+                    (dialogInterface, i1) -> {
+                        String id = task.getId();
+                        for(int j = 0; j < taskList.getTask().size(); j++) {
+                            if (taskList.getTask().get(j).getId().equals(id)) {
+                                taskList.getTask().remove(j);
+                            }
+                        }
+                        NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
+                            @Override
+                            public void onSuccess(Response<String> response) {
+                            }
+                        });
+                        this.notifyDataSetChanged();
+                    });
+            dialog.setNegativeButton("No",
+                    (dialogInterface, i12) -> dialog.dismiss());
+            dialog.create();
+            dialog.show();
         });
 
         view.setOnClickListener((v) -> {

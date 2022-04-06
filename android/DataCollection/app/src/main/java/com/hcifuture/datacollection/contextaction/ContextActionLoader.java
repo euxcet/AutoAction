@@ -141,6 +141,18 @@ public class ContextActionLoader {
         }
     }
 
+    public void startDetection() {
+        if (imuSensorManager != null) {
+            imuSensorManager.start();
+        }
+        if (proximitySensorManager != null) {
+            proximitySensorManager.start();
+        }
+        if (container != null) {
+            startContainer(container);
+        }
+    }
+
     public void stopDetection() {
         if (imuSensorManager != null) {
             imuSensorManager.stop();

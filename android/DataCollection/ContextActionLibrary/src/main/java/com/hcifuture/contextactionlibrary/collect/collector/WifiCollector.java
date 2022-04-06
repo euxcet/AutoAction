@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class WifiCollector extends Collector {
 
@@ -30,8 +32,8 @@ public class WifiCollector extends Collector {
 
     private BroadcastReceiver receiver;
 
-    public WifiCollector(Context context, String triggerFolder) {
-        super(context, triggerFolder);
+    public WifiCollector(Context context, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, triggerFolder, scheduledExecutorService, futureList);
         this.data = new WifiData();
     }
 

@@ -39,7 +39,7 @@ python3 main.py
 示例：
 
 ```bash
-web.server="http://192.168.31.186:60010"
+web.server="http://114.67.110.181:6125"
 ```
 
 ### 测试情境和动作

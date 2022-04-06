@@ -12,16 +12,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class ClickTrigger extends Trigger {
 
-    private ThreadPoolExecutor threadPoolExecutor;
-    private TriggerTask triggerTask;
+    // private ThreadPoolExecutor threadPoolExecutor;
+    // private TriggerTask triggerTask;
 
-    public ClickTrigger(Context context, List<CollectorType> types) {
-        super(context, types);
+    public ClickTrigger(Context context, List<CollectorType> types, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, types, scheduledExecutorService, futureList);
+        /*
         triggerTask = new TriggerTask();
         this.threadPoolExecutor = new ThreadPoolExecutor(
                 1,
@@ -31,10 +34,12 @@ public class ClickTrigger extends Trigger {
                 new PriorityBlockingQueue<>(),
                 Executors.defaultThreadFactory(),
                 new ThreadPoolExecutor.AbortPolicy());
+         */
     }
 
-    public ClickTrigger(Context context, CollectorType type) {
-        super(context, type);
+    public ClickTrigger(Context context, CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, type, scheduledExecutorService, futureList);
+        /*
         triggerTask = new TriggerTask();
         this.threadPoolExecutor = new ThreadPoolExecutor(
                 1,
@@ -44,13 +49,28 @@ public class ClickTrigger extends Trigger {
                 new PriorityBlockingQueue<>(),
                 Executors.defaultThreadFactory(),
                 new ThreadPoolExecutor.AbortPolicy());
+         */
     }
 
     @Override
     public void trigger() {
+        futureList.add(scheduledExecutorService.schedule(() -> {
+                Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
+                String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+                for (Collector collector: collectors) {
+                    collector.setSavePath(timestamp);
+                }
+                for (Collector collector: collectors) {
+                    collector.collect();
+                }
+                Log.d(TAG, "数据收集结束: [" + System.currentTimeMillis() + "]");
+            }, 0L, TimeUnit.MILLISECONDS
+        ));
+        /*
         if (threadPoolExecutor != null) {
             threadPoolExecutor.execute(triggerTask);
         }
+         */
     }
 
     @Override
@@ -85,6 +105,7 @@ public class ClickTrigger extends Trigger {
         return "";
     }
 
+    /*
     private class TriggerTask implements Runnable, Comparable {
 
         @Override
@@ -107,4 +128,6 @@ public class ClickTrigger extends Trigger {
             }
         }
     }
+
+     */
 }

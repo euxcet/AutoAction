@@ -17,6 +17,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public abstract class Trigger {
 
@@ -27,6 +29,9 @@ public abstract class Trigger {
     private final int samplingPeriod = 10000;
 
     private boolean paused;
+
+    protected ScheduledExecutorService scheduledExecutorService;
+    protected List<ScheduledFuture<?>> futureList;
 
     public enum CollectorType {
         Bluetooth,
@@ -43,26 +48,26 @@ public abstract class Trigger {
 
     private void initializeAll() {
         String triggerFolder = getName();
-        collectors.add(new BluetoothCollector(mContext, triggerFolder));
-        collectors.add(new CompleteIMUCollector(mContext, triggerFolder, samplingPeriod, 1));
-        collectors.add(new NonIMUCollector(mContext, triggerFolder));
-        collectors.add(new WifiCollector(mContext, triggerFolder));
+        collectors.add(new BluetoothCollector(mContext, triggerFolder, scheduledExecutorService, futureList));
+        collectors.add(new CompleteIMUCollector(mContext, triggerFolder, scheduledExecutorService, futureList, samplingPeriod, 1));
+        collectors.add(new NonIMUCollector(mContext, triggerFolder, scheduledExecutorService, futureList));
+        collectors.add(new WifiCollector(mContext, triggerFolder, scheduledExecutorService, futureList));
     }
 
     private void initialize(CollectorType type) {
         String triggerFolder = getName();
         switch (type) {
             case Bluetooth:
-                collectors.add(new BluetoothCollector(mContext, triggerFolder));
+                collectors.add(new BluetoothCollector(mContext, triggerFolder, scheduledExecutorService, futureList));
                 break;
             case CompleteIMU:
-                collectors.add(new CompleteIMUCollector(mContext, triggerFolder, samplingPeriod, 1));
+                collectors.add(new CompleteIMUCollector(mContext, triggerFolder, scheduledExecutorService, futureList, samplingPeriod, 1));
                 break;
             case NonIMU:
-                collectors.add(new NonIMUCollector(mContext, triggerFolder));
+                collectors.add(new NonIMUCollector(mContext, triggerFolder, scheduledExecutorService, futureList));
                 break;
             case Wifi:
-                collectors.add(new WifiCollector(mContext, triggerFolder));
+                collectors.add(new WifiCollector(mContext, triggerFolder, scheduledExecutorService, futureList));
                 break;
             case All:
                 initializeAll();
@@ -73,8 +78,10 @@ public abstract class Trigger {
         paused = false;
     }
 
-    public Trigger(Context context, List<CollectorType> types) {
+    public Trigger(Context context, List<CollectorType> types, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;
+        this.scheduledExecutorService = scheduledExecutorService;
+        this.futureList = futureList;
         try {
             for (CollectorType type : types) {
                 initialize(type);
@@ -84,8 +91,10 @@ public abstract class Trigger {
         }
     }
 
-    public Trigger(Context context, CollectorType type) {
+    public Trigger(Context context, CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;
+        this.scheduledExecutorService = scheduledExecutorService;
+        this.futureList = futureList;
         try {
             initialize(type);
         } catch (Exception e) {

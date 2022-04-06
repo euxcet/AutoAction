@@ -10,15 +10,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class TimerTrigger extends Trigger {
 
-    public TimerTrigger(Context context, List<CollectorType> types) {
-        super(context, types);
+    public TimerTrigger(Context context, List<CollectorType> types, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, types, scheduledExecutorService, futureList);
     }
 
-    public TimerTrigger(Context context, CollectorType type) {
-        super(context, type);
+    public TimerTrigger(Context context, CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, type, scheduledExecutorService, futureList);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.hcifuture.contextactionlibrary.utils.imu;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -12,6 +13,24 @@ import org.tensorflow.lite.Interpreter;
 
 public class TfClassifier {
     Interpreter interpreter = null;
+
+    public TfClassifier(File var2) {
+        try {
+            Interpreter var10 = new Interpreter(var2);
+            this.interpreter = var10;
+            StringBuilder var11 = new StringBuilder();
+            var11.append("tflite file loaded: ");
+            var11.append(var2);
+        } catch (Exception var8) {
+            StringBuilder var3 = new StringBuilder();
+            var3.append("load tflite file error: ");
+            var3.append(var2);
+            StringBuilder var12 = new StringBuilder();
+            var12.append("tflite file:");
+            var12.append(var8.toString());
+        }
+
+    }
 
     public TfClassifier(AssetManager var1, String var2) {
         try {
