@@ -20,6 +20,7 @@ import com.hcifuture.contextactionlibrary.collect.data.Data;
 import com.hcifuture.contextactionlibrary.collect.data.SingleBluetoothData;
 import com.google.gson.Gson;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -65,12 +66,8 @@ public class BluetoothCollector extends Collector {
             public void onReceive(Context context, Intent intent) {
                 if (intent.getAction().equals(BluetoothDevice.ACTION_FOUND)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    short rssi = 0;
-                    if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-                        rssi = intent.getExtras().getShort(BluetoothDevice.EXTRA_RSSI);
-                    }
-
-                    insert(device, rssi, false, null, intent.getExtras().toString());
+                    short rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short) 0);
+                    insert(device, rssi, isConnected(device), null, intent.getExtras().toString());
                 }
             }
         };
@@ -83,7 +80,7 @@ public class BluetoothCollector extends Collector {
             public void onScanResult (int callbackType, ScanResult result) {
                 BluetoothDevice device = result.getDevice();
                 int rssi = result.getRssi();
-                insert(device, (short) rssi, false, result.toString(), null);
+                insert(device, (short) rssi, isConnected(device), result.toString(), null);
             }
         };
     }
@@ -98,6 +95,16 @@ public class BluetoothCollector extends Collector {
         }
     }
 
+    // ref: https://stackoverflow.com/a/58882930/11854304
+    public static boolean isConnected(BluetoothDevice device) {
+        try {
+            Method m = device.getClass().getMethod("isConnected", (Class[]) null);
+            return (boolean) m.invoke(device, (Object[]) null);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public synchronized CompletableFuture<Data> collect() {
@@ -108,14 +115,14 @@ public class BluetoothCollector extends Collector {
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device: pairedDevices) {
-                insert(device, (short)0, true, null, null);
+                insert(device, (short)0, isConnected(device), null, null);
             }
         }
 
         // scan connected BLE devices
         List<BluetoothDevice> connectedDevices = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
         for (BluetoothDevice device : connectedDevices) {
-            insert(device, (short)0, true, null, null);
+            insert(device, (short)0, isConnected(device), null, null);
         }
 
         // start classic bluetooth scanning
