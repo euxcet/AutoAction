@@ -8,6 +8,7 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -98,7 +99,7 @@ public class Saver {
         } else {
             pool.execute(() -> {
                 try {
-                    saveString(new Gson().toJson(object));
+                    saveString(new GsonBuilder().disableHtmlEscaping().create().toJson(object));
                     ft.complete(null);
                 } catch (Exception exc) {
                     ft.completeExceptionally(exc);
