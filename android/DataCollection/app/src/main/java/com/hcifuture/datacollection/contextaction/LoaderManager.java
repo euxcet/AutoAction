@@ -40,6 +40,8 @@ public class LoaderManager {
     private ContextActionLoader loader;
     private final List<String> UPDATABLE_FILES = Arrays.asList(
             "param_dicts.json",
+            "pages.csv",
+            "tasks.csv",
             "param_max.json",
             "words.csv",
             "best.bin",
