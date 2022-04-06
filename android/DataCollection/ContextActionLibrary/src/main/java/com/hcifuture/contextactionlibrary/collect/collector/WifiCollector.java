@@ -8,6 +8,7 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.SystemClock;
 
 import androidx.annotation.RequiresApi;
 
@@ -86,7 +87,7 @@ public class WifiCollector extends Collector {
             data.insert(new SingleWifiData(info.getSSID(), info.getBSSID(),
                     "NULL",
                     0, info.getFrequency(),
-                    System.currentTimeMillis() * 1000,
+                    SystemClock.elapsedRealtimeNanos()/1000,
                     0,
                     0, 0, true));
         }
