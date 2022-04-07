@@ -6,12 +6,15 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.database.ContentObserver;
+import android.hardware.display.DisplayManager;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Display;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
@@ -145,6 +148,7 @@ public class MainService extends AccessibilityService implements ContextListener
         volume.put("volume_voice_bt_a2dp", 0);
         volume.put("volume_tts_bt_a2dp", 0);
     }
+    int brightness;
 
     public MainService() {
     }
@@ -222,28 +226,37 @@ public class MainService extends AccessibilityService implements ContextListener
     }
 
     class CustomBroadcastReceiver extends BroadcastReceiver {
-        public static final String ACTION_TYPE_GLOBAL = "global";
 
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+            BroadcastEvent event = new BroadcastEvent(action, "", "BroadcastReceive", intent.getExtras());
+
             switch (action) {
                 case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
-                    if (loaderManager != null) {
-                        loaderManager.onBroadcastEvent(new BroadcastEvent(
-                                action,
-                                intent.getStringExtra("reason"),
-                                ACTION_TYPE_GLOBAL));
+                    event.setTag(intent.getStringExtra("reason"));
+                    break;
+                case Intent.ACTION_CONFIGURATION_CHANGED:
+                    Configuration config = getResources().getConfiguration();
+                    event.getExtras().putInt("orientation", config.orientation);
+                    break;
+                case Intent.ACTION_SCREEN_OFF:
+                case Intent.ACTION_SCREEN_ON:
+                    // ref: https://stackoverflow.com/a/17348755/11854304
+                    DisplayManager dm = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
+                    if (dm != null) {
+                        Display[] displays = dm.getDisplays();
+                        int [] states = new int[displays.length];
+                        for (int i = 0; i < displays.length; i++) {
+                            states[i] = displays[i].getState();
+                        }
+                        event.getExtras().putIntArray("display", states);
                     }
                     break;
-                default:
-                    if (loaderManager != null) {
-                        loaderManager.onBroadcastEvent(new BroadcastEvent(
-                                action,
-                                "",
-                                ACTION_TYPE_GLOBAL));
-                    }
-                    break;
+            }
+
+            if (loaderManager != null) {
+                loaderManager.onBroadcastEvent(event);
             }
         }
     }
@@ -260,27 +273,54 @@ public class MainService extends AccessibilityService implements ContextListener
 
         @Override
         public void onChange(boolean selfChange, @Nullable Uri uri) {
-            String key;
-            String tag;
-            int value = 0;
+            BroadcastEvent event = new BroadcastEvent("", "", "ContentChange");
+
 
             if (uri == null) {
-                key = "null";
-                tag = "Unknown content change";
+                event.setAction("uri_null");
             } else {
-                key = uri.toString();
+                event.setAction(uri.toString());
+
                 String database_key = uri.getLastPathSegment();
                 String inter = uri.getPathSegments().get(0);
-                if (inter.equals("system")) {
-                    value = Settings.System.getInt(getContentResolver(), database_key, value);
-                } else if (inter.equals("global")) {
-                    value = Settings.Global.getInt(getContentResolver(), database_key, value);
+                if ("system".equals(inter)) {
+                    event.setTag(Settings.System.getString(getContentResolver(), database_key));
+                } else if ("global".equals(inter)) {
+                    event.setTag(Settings.Global.getString(getContentResolver(), database_key));
                 }
-                tag = database_key;
+
+                int value = Settings.System.getInt(getContentResolver(), database_key, 0);
+
+                // record special information
+                if (Settings.System.SCREEN_BRIGHTNESS.equals(database_key)) {
+                    // record brightness value difference and update
+                    int diff = value - brightness;
+                    event.getExtras().putInt("diff", diff);
+                    brightness = value;
+                    // record brightness mode
+                    int mode = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, -1);
+                    if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL) {
+                        event.getExtras().putString("mode", "man");
+                    } else if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
+                        event.getExtras().putString("mode", "auto");
+                    } else {
+                        event.getExtras().putString("mode", "unknown");
+                    }
+                }
+                if (database_key.startsWith("volume_")) {
+                    if (!volume.containsKey(database_key)) {
+                        // record new volume value
+                        volume.put(database_key, value);
+                    }
+                    // record volume value difference and update
+                    int diff = value - volume.get(database_key);
+                    event.getExtras().putInt("diff", diff);
+                    volume.put(database_key, value);
+                }
             }
 
             if (loaderManager != null) {
-                loaderManager.onBroadcastEvent(new BroadcastEvent(key, tag, "", value));
+                loaderManager.onBroadcastEvent(event);
             }
         }
     }
@@ -288,7 +328,13 @@ public class MainService extends AccessibilityService implements ContextListener
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
         if (loaderManager != null) {
-            loaderManager.onBroadcastEvent(new BroadcastEvent("KeyEvent", "", "", event.getKeyCode()));
+            BroadcastEvent bc_event = new BroadcastEvent("KeyEvent://"+event.getAction()+"/"+event.getKeyCode(), "", "KeyEvent");
+            bc_event.getExtras().putInt("action", event.getAction());
+            bc_event.getExtras().putInt("code", event.getKeyCode());
+            bc_event.getExtras().putInt("source", event.getSource());
+            bc_event.getExtras().putLong("eventTime", event.getEventTime());
+            bc_event.getExtras().putLong("downTime", event.getDownTime());
+            loaderManager.onBroadcastEvent(bc_event);
         }
         return super.onKeyEvent(event);
     }
