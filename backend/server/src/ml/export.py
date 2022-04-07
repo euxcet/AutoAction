@@ -8,9 +8,9 @@ from ml.dataset import Dataset
 def export_csv(tasklistId, taskIds, trainId, timestamp):
     dataset = Dataset()
     cutter_dict = {
-        'peak': [PeakCutter(0)],
+        'peak': [PeakCutter(2)],
         'random': [RandomCutter(), RandomCutter()],
-        'peakrandom': [RandomCutter(), PeakCutter(0)]
+        'peakrandom': [RandomCutter(), PeakCutter(2)]
     }
     tasklist = file_utils.load_taskList_info(tasklistId)
     records = []

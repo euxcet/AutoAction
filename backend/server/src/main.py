@@ -625,6 +625,11 @@ def update_md5():
     file_utils.update_md5()
     return {}
         
+@app.route("/train_log", methods=["GET"])
+def get_train_log():
+    trainId = request.args.get("trainId")
+    log_path = os.path.join(file_utils.get_train_path(trainId), "log.txt")
+    return send_file(log_path)
 
 
 if __name__ == '__main__':

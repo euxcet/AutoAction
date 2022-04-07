@@ -2,7 +2,7 @@ from ml.cutter.range_cutter import RangeCutter
 import random
 
 class PeakCutter():
-    def __init__(self, anchor, forward_extension = 80, length = 128, noise = 10):
+    def __init__(self, anchor, forward_extension = 80, length = 128, noise = 5):
         self.anchor = anchor
         self.range_cutter = RangeCutter()
         self.forward_extension = forward_extension
@@ -44,6 +44,7 @@ class PeakCutter():
                     peak_max = amplitude
                     peak_pos = i
             start_pos = max(0, peak_pos - self.forward_extension + self.generate_noise(self.noise))
+            start_pos = min(start_pos, cr[1] - cr[0] - self.length)
             final_cut_range.append((cr[0] + start_pos, cr[0] + start_pos + self.length))
 
         return final_cut_range

@@ -135,6 +135,8 @@ def calc_file_md5(file_name):
 def update_md5():
     global md5
     for filename in os.listdir(DATA_FILE_ROOT):
+        if os.path.isdir(os.path.join(DATA_FILE_ROOT, filename)):
+            continue
         md5[filename] = calc_file_md5(os.path.join(DATA_FILE_ROOT, filename))
 
 def get_md5(filename):
