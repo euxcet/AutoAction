@@ -79,12 +79,15 @@ public class KnockAction extends BaseAction {
             if (isStarted) {
                 if (NcnnInstance.getInstance() != null) {
                     int pos = getMaxPos(input_data);
-                    int result = NcnnInstance.getInstance().actionDetect(input_data);
-                    if (result == 3) {
-                        if (System.currentTimeMillis() - lastKnockTimestamp > 1500000) {
-                            lastKnockTimestamp = System.currentTimeMillis();
-                            for (ActionListener listener : actionListener) {
-                                listener.onAction(new ActionResult("Knock"));
+                    if (pos >= 70 && pos <= 90) {
+                        int result = NcnnInstance.getInstance().actionDetect(input_data);
+                        Log.e("result", " " + result);
+                        if (result == 4) {
+                            if (System.currentTimeMillis() - lastKnockTimestamp > 1500) {
+                                lastKnockTimestamp = System.currentTimeMillis();
+                                for (ActionListener listener : actionListener) {
+                                    listener.onAction(new ActionResult("Knock"));
+                                }
                             }
                         }
                     }

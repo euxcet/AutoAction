@@ -102,7 +102,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     6,
                     128,
                     1,
-                    4);
+                    5);
             NcnnInstance ncnnInstance = NcnnInstance.getInstance();
             float[] data = new float[128 * 6];
             Arrays.fill(data, 1.0f);

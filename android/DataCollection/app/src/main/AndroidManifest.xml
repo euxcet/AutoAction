@@ -27,10 +27,13 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name="com.hcifuture.datacollection.visual.VisualizeRecordActivity"
+            android:name=".visual.VisualizeTrainLogActivity"
             android:exported="false" />
         <activity
-            android:name="com.hcifuture.datacollection.visual.RecordListActivity"
+            android:name=".visual.VisualizeRecordActivity"
+            android:exported="false" />
+        <activity
+            android:name=".visual.RecordListActivity"
             android:exported="false" />
         <activity
             android:name="com.hcifuture.datacollection.ui.ModifySubtaskActivity"

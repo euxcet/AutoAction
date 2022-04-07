@@ -1,6 +1,8 @@
 package com.hcifuture.datacollection.ui.adapter;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,9 +12,11 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.hcifuture.datacollection.R;
+import com.hcifuture.datacollection.ui.ConfigSubtaskActivity;
 import com.hcifuture.datacollection.ui.NormalAlertDialog;
 import com.hcifuture.datacollection.utils.NetworkUtils;
 import com.hcifuture.datacollection.utils.bean.TrainListBean;
+import com.hcifuture.datacollection.visual.VisualizeTrainLogActivity;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
@@ -74,6 +78,14 @@ public class TrainAdapter extends BaseAdapter {
         if (!train.getStatus().equals("Training")) {
             deleteButton.setVisibility(View.INVISIBLE);
         }
+
+        view.setOnClickListener((v) -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("trainId", train.getId());
+            Intent intent = new Intent(mContext, VisualizeTrainLogActivity.class);
+            intent.putExtras(bundle);
+            mContext.startActivity(intent);
+        });
 
         return view;
     }

@@ -152,6 +152,12 @@ public class FileUtils {
                         listener.onFinished();
                     }
                 }
+
+                @Override
+                public void onError(Response<File> response) {
+                    super.onError(response);
+                    listener.onFinished();
+                }
             });
         }
     }
@@ -184,6 +190,12 @@ public class FileUtils {
                     }
                 }
                 listener.onChanged(changedFilename, Arrays.asList(md5s));
+            }
+
+            @Override
+            public void onError(Response<String> response) {
+                super.onError(response);
+                listener.onChanged(new ArrayList<>(), new ArrayList<>());
             }
         });
     }

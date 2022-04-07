@@ -34,7 +34,7 @@ Example:
 }
  */
 
-        import java.util.List;
+import java.util.List;
 
 public class ContextActionConfigBean {
     private List<ContextConfigBean> context;
