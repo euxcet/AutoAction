@@ -9,11 +9,12 @@ from torch import nn
 from torch.optim.lr_scheduler import _LRScheduler
 
 from ml.train.model import LSTMClassifier
-#from ml.train.dataset import create_datasets, create_loaders
 from ml.train.dataset import create_train_val_loader
 from ml.train.metric import calculate_metrics
 from ml.train.export import export_pt, export_onnx, export_pth
+from ml.train.logger import Logger
 import file_utils
+import json
 
 class CyclicLR(_LRScheduler):
     def __init__(self, optimizer, schedule, last_epoch=-1):
@@ -80,11 +81,15 @@ def train_model(trainId, timestamp, config):
     optimizer = torch.optim.RMSprop(model.parameters(), lr=CONFIG_LR)
     scheduler = CyclicLR(optimizer, cosine(t_max=len(train_loader) * 2, eta_min=CONFIG_LR/100))
     criterion = nn.CrossEntropyLoss()
-
-    best_acc = 0.0
-
+    best_train_acc = 0.0
+    best_val_acc = 0.0
+    logger = Logger(trainId)
+    logger.log_info("trainId " + trainId + "\n")
+ 
     print('Start training')
     for epoch in range(0, CONFIG_EPOCH):
+        batch_num = 0
+        loss_sum = 0
         for x_batch, y_batch in train_loader:
             model.train()
             if CONFIG_USE_CUDA:
@@ -96,21 +101,38 @@ def train_model(trainId, timestamp, config):
             loss.backward()
             optimizer.step()
             scheduler.step()
+            batch_num += 1
+            loss_sum += loss.item()
         model.eval()
 
-        print('train:', calculate_metrics(model, train_loader, CONFIG_USE_CUDA))
+        loss_avg = loss_sum / batch_num
+
+        train_acc = calculate_metrics(model, train_loader, CONFIG_USE_CUDA)
         val_acc = calculate_metrics(model, val_loader, CONFIG_USE_CUDA)
+        print('train:', train_acc)
         print('val:', val_acc)
 
-        if epoch % 5 == 0:
-            print(f'Epoch: {epoch:3d}. Loss: {loss.item():.4f}. Val Acc.: {val_acc:2.2%}')
+        log_content = {
+            'epoch': epoch,
+            'loss': loss_avg,
+            'train_acc': train_acc,
+            'val_acc': val_acc
+        }
 
-        if val_acc > best_acc:
-            best_acc = val_acc
+        logger.log_debug("L" + json.dumps(log_content))
+
+        if epoch % 5 == 0:
+            print(f'Epoch: {epoch:3d}. Loss: {loss_avg:.4f}. Val Acc.: {val_acc:2.2%}')
+
+        if val_acc > best_val_acc or (val_acc == best_val_acc and train_acc > best_train_acc):
+            best_train_acc = train_acc
+            best_val_acc = val_acc
             export_pth(model, OUTPUT_PTH_PATH)
             export_pt(model, OUTPUT_PT_PATH, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, CONFIG_USE_CUDA)
             export_onnx(model, OUTPUT_ONNX_PATH, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, CONFIG_USE_CUDA)
-            print(f'Epoch {epoch} best model saved with accuracy: {best_acc:2.2%}')
+            print(f'Epoch {epoch} best model saved with accuracy: {best_val_acc:2.2%}')
+
+    logger.close()
 
 
 if __name__ == '__main__':

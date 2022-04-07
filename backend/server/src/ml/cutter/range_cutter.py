@@ -1,3 +1,4 @@
+import numpy as np
 class RangeCutter():
     def __init__(self):
         pass
