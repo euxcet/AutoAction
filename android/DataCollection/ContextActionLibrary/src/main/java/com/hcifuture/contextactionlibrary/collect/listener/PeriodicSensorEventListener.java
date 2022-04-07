@@ -18,7 +18,7 @@ public class PeriodicSensorEventListener implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        this.collector.addSensorData(event.values[0], event.values[1], event.values[2], sensorType, (long)(event.timestamp / 1e6));
+        this.collector.addSensorData(event.values[0], event.values[1], event.values[2], sensorType, event.timestamp);
     }
 
     @Override
