@@ -26,6 +26,7 @@ import com.hcifuture.shared.communicate.result.ActionResult;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class TapTapAction extends BaseAction {
@@ -46,13 +47,13 @@ public class TapTapAction extends BaseAction {
     protected Slope3C slopeAcc = new Slope3C();
     protected Slope3C slopeGyro = new Slope3C();
     private long syncTime = 0L;
-    private List<Float> xsAcc = new ArrayList<>();
-    private List<Float> ysAcc = new ArrayList<>();
-    private List<Float> zsAcc = new ArrayList<>();
-    private List<Float> xsGyro = new ArrayList<>();
-    private List<Float> ysGyro = new ArrayList<>();
-    private List<Float> zsGyro = new ArrayList<>();
-    private List<Long> timestamps = new ArrayList<>();
+    private List<Float> xsAcc = Collections.synchronizedList(new ArrayList<>());
+    private List<Float> ysAcc = Collections.synchronizedList(new ArrayList<>());
+    private List<Float> zsAcc = Collections.synchronizedList(new ArrayList<>());
+    private List<Float> xsGyro = Collections.synchronizedList(new ArrayList<>());
+    private List<Float> ysGyro = Collections.synchronizedList(new ArrayList<>());
+    private List<Float> zsGyro = Collections.synchronizedList(new ArrayList<>());
+    private List<Long> timestamps = Collections.synchronizedList(new ArrayList<>());
 
     private Highpass1C highpassKey = new Highpass1C();
     private Lowpass1C lowpassKey = new Lowpass1C();
@@ -60,7 +61,7 @@ public class TapTapAction extends BaseAction {
     private boolean wasPeakApproaching = true;
     private int result;
     private int seqLength;
-    private List<Long> tapTimestamps = new ArrayList();
+    private List<Long> tapTimestamps = Collections.synchronizedList(new ArrayList<>());
     private TfClassifier tflite;
 
     // filter related
@@ -249,34 +250,39 @@ public class TapTapAction extends BaseAction {
     }
 
     private void addFeatureData(List<Float> list, int startIdx, int scale, List<Float> res) {
-        for (int i = 0; i < seqLength; i++) {
-            if (i + startIdx >= list.size())
-                res.add(0.0F);
-            else
-                res.add(scale * list.get(i + startIdx));
+        synchronized (list) {
+            for (int i = 0; i < seqLength; i++) {
+                if (i + startIdx >= list.size())
+                    res.add(0.0F);
+                else
+                    res.add(scale * list.get(i + startIdx));
+            }
         }
     }
     
     private int checkDoubleTapTiming(long timestamp) {
-        // remove old timestamps
-        int idx = 0;
-        for (; idx < tapTimestamps.size(); idx++) {
-            if (timestamp - tapTimestamps.get(idx) <= 500000000L)
-                break;
-        }
-        tapTimestamps = tapTimestamps.subList(idx, tapTimestamps.size());
+        int res = 0;
+        synchronized (tapTimestamps) {
+            // remove old timestamps
+            int idx = 0;
+            for (; idx < tapTimestamps.size(); idx++) {
+                if (timestamp - tapTimestamps.get(idx) <= 500000000L)
+                    break;
+            }
+            tapTimestamps = tapTimestamps.subList(idx, tapTimestamps.size());
 
-        if (tapTimestamps.isEmpty())
-            return 0;
-        else {
-            if (tapTimestamps.size() == 1)
-                return 1;
-            if (tapTimestamps.get(tapTimestamps.size() - 1) - tapTimestamps.get(0) > 100000000L) {
-                tapTimestamps.clear();
-                return 2;
+            if (tapTimestamps.isEmpty())
+                res = 0;
+            else {
+                if (tapTimestamps.size() == 1)
+                    res = 1;
+                if (tapTimestamps.get(tapTimestamps.size() - 1) - tapTimestamps.get(0) > 100000000L) {
+                    tapTimestamps.clear();
+                    res = 2;
+                }
             }
         }
-        return 0;
+        return res;
     }
 
     public void recognizeTapML() {
