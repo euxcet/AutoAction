@@ -107,5 +107,8 @@ public class IMUSensorManager extends MySensorManager implements SensorEventList
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {}
+    public void onAccuracyChanged(Sensor sensor, int i) {
+        
+
+    }
 }

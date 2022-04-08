@@ -9,38 +9,37 @@ public class SingleBluetoothData extends Data {
     private int majorDeviceClass;
     private short rssi;
     private boolean linked;
+    private String scanResult;
+    private String intentExtra;
 
     public SingleBluetoothData() {
-        this.name = "NULL";
-        this.address = "NULL";
+        this.name = "";
+        this.address = "";
         this.bondState = 0;
         this.type = 0;
         this.deviceClass = 0;
         this.majorDeviceClass = 0;
         this.rssi = 0;
         this.linked = false;
+        this.scanResult = "";
+        this.intentExtra = "";
     }
 
     public SingleBluetoothData(String name, String address,
                                int bondState, int type,
                                int deviceClass, int majorDeviceClass,
-                               short rssi, boolean linked) {
-        if (name == null) {
-            this.name = "NULL";
-        } else {
-            this.name = name;
-        }
-        if (address == null) {
-            this.address = "NULL";
-        } else {
-            this.address = address;
-        }
+                               short rssi, boolean linked,
+                               String scanResult, String intentExtra) {
+        setName(name);
+        setAddress(address);
         this.bondState = bondState;
         this.type = type;
         this.deviceClass = deviceClass;
         this.majorDeviceClass = majorDeviceClass;
         this.rssi = rssi;
         this.linked = linked;
+        setScanResult(scanResult);
+        setIntentExtra(intentExtra);
     }
 
     public int getBondState() {
@@ -75,9 +74,17 @@ public class SingleBluetoothData extends Data {
         return rssi;
     }
 
+    public String getScanResult() {
+        return scanResult;
+    }
+
+    public String getIntentExtra() {
+        return intentExtra;
+    }
+
     public void setAddress(String address) {
         if (address == null) {
-            this.address = "NULL";
+            this.address = "";
         } else {
             this.address = address;
         }
@@ -89,7 +96,7 @@ public class SingleBluetoothData extends Data {
 
     public void setName(String name) {
         if (name == null) {
-            this.name = "NULL";
+            this.name = "";
         } else {
             this.name = name;
         }
@@ -113,5 +120,21 @@ public class SingleBluetoothData extends Data {
 
     public void setLinked(boolean linked) {
         this.linked = linked;
+    }
+
+    public void setScanResult(String scanResult) {
+        if (scanResult == null) {
+            this.scanResult = "";
+        } else {
+            this.scanResult = scanResult;
+        }
+    }
+
+    public void setIntentExtra(String intentExtra) {
+        if (intentExtra == null) {
+            this.intentExtra = "";
+        } else {
+            this.intentExtra = intentExtra;
+        }
     }
 }
