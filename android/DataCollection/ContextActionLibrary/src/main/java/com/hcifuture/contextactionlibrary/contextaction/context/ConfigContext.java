@@ -12,6 +12,7 @@ import android.provider.Settings;
 import android.view.Display;
 import android.view.accessibility.AccessibilityEvent;
 
+import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -56,8 +57,11 @@ public class ConfigContext extends BaseContext {
     int brightness;
     String packageName = "";
 
-    public ConfigContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener) {
+    private LogCollector logCollector;
+
+    public ConfigContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector logCollector) {
         super(context, config, requestListener, contextListener);
+        this.logCollector = logCollector;
     }
 
     @Override
@@ -189,7 +193,7 @@ public class ConfigContext extends BaseContext {
         stringBuilder.append(cur_timestamp).append("\t").append(type).append("\t").append(action)
                 .append("\t").append(tag).append("\t").append(other);
         String line = stringBuilder.toString();
-        // TODO
+        logCollector.addLog(line);
     }
 
     void record_all() {

@@ -14,10 +14,12 @@ import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.BaseCollector;
+import com.hcifuture.contextactionlibrary.contextaction.collect.ConfigCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ExampleCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.InformationalContextCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
+import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.physical.ProximityContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.physical.TableContext;
@@ -200,10 +202,12 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU), scheduledExecutorService, futureList);
         LogCollector logCollector = clickTrigger.newLogCollector("Log0", 100);
         LogCollector informationLogCollector = clickTrigger.newLogCollector("Informational", 1000);
+        LogCollector configLogCollector = clickTrigger.newLogCollector("Config", 8192);
         this.collectors = Arrays.asList(
                 new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger),
                 new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector),
-                new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector)
+                new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector),
+                new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector)
         );
 
         if (fromDex) {
@@ -237,6 +241,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     case "Informational":
                         InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener),informationLogCollector);
                         contexts.add(informationalContext);
+                        break;
+                    case "Config":
+                        ConfigContext configContext = new ConfigContext(mContext, config, requestListener, Arrays.asList(this, contextListener), configLogCollector);
+                        contexts.add(configContext);
                         break;
                 }
             }
