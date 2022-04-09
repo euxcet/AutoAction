@@ -147,6 +147,7 @@ public class ConfigContext extends BaseContext {
                     // record volume value difference and update
                     int diff = value - volume.put(database_key, value);
                     jsonSilentPut(json, "diff", diff);
+                    jsonSilentPut(json, "package", packageName);
                 }
             }
         } else if ("BroadcastReceive".equals(type)) {
@@ -173,6 +174,7 @@ public class ConfigContext extends BaseContext {
             }
         } else if ("KeyEvent".equals(type)) {
             record = true;
+            jsonSilentPut(json, "package", packageName);
         }
 
         if (record) {

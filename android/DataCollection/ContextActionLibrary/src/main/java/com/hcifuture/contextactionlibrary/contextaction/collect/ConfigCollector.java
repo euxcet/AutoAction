@@ -41,7 +41,7 @@ public class ConfigCollector extends BaseCollector {
                                 });
                     }, 0, TimeUnit.MILLISECONDS));
                 },
-                0,
+                5000,
                 60000,
                 TimeUnit.MILLISECONDS));
     }
