@@ -48,6 +48,7 @@ public class ConfigContext extends BaseContext {
         volume.put("volume_tts_bt_a2dp", 0);
     }
     int brightness;
+    String packageName = "";
 
     public ConfigContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener) {
         super(context, config, requestListener, contextListener);
@@ -80,7 +81,10 @@ public class ConfigContext extends BaseContext {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-
+        CharSequence pkg = event.getPackageName();
+        if (pkg != null) {
+            packageName = event.getPackageName().toString();
+        }
     }
 
     static void jsonSilentPut(JSONObject json, String key, Object value) {
@@ -131,6 +135,7 @@ public class ConfigContext extends BaseContext {
                     } else {
                         jsonSilentPut(json, "mode", "unknown");
                     }
+                    jsonSilentPut(json, "package", packageName);
                 }
                 if (database_key.startsWith("volume_")) {
                     if (!volume.containsKey(database_key)) {
