@@ -6,7 +6,6 @@ import android.hardware.SensorManager;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
-import com.hcifuture.contextactionlibrary.BuildConfig;
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
@@ -16,6 +15,7 @@ import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.BaseCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ExampleCollector;
+import com.hcifuture.contextactionlibrary.contextaction.collect.InformationalContextCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
@@ -26,13 +26,10 @@ import com.hcifuture.contextactionlibrary.data.BroadcastEventManager;
 import com.hcifuture.contextactionlibrary.data.IMUSensorManager;
 import com.hcifuture.contextactionlibrary.data.BaseSensorManager;
 import com.hcifuture.contextactionlibrary.data.ProximitySensorManager;
-import com.hcifuture.contextactionlibrary.model.NcnnInstance;
-import com.hcifuture.shared.communicate.BuiltInContextEnum;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ActionListener;
-import com.hcifuture.shared.communicate.BuiltInActionEnum;
 import com.hcifuture.shared.communicate.SensorType;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -202,9 +199,11 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
         this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU), scheduledExecutorService, futureList);
         LogCollector logCollector = clickTrigger.newLogCollector("Log0", 100);
+        LogCollector informationLogCollector = clickTrigger.newLogCollector("Informational", 1000);
         this.collectors = Arrays.asList(
                 new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger),
-                new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector)
+                new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector),
+                new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector)
         );
 
         if (fromDex) {
@@ -236,7 +235,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         contexts.add(tableContext);
                         break;
                     case "Informational":
-                        InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
+                        InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener),informationLogCollector);
                         contexts.add(informationalContext);
                         break;
                 }

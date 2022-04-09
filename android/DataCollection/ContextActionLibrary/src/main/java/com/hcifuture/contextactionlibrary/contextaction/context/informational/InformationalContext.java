@@ -10,7 +10,7 @@ import android.view.accessibility.AccessibilityEvent;
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
-import com.hcifuture.contextactionlibrary.collect.collector.Collector;
+import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.shared.communicate.config.ContextConfig;
@@ -29,18 +29,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class InformationalContext extends BaseContext {
     private static final String TAG = "TaskContext";
@@ -58,12 +52,13 @@ public class InformationalContext extends BaseContext {
     private boolean windowStable = false;
 
     private long lastActionTime = 0;
-    private static String logFileName;
 
-    public InformationalContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener) {
+    private LogCollector logCollector;
+
+    public InformationalContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector informationalLogCollector) {
         super(context, config, requestListener, contextListener);
 
-        logFileName = context.getExternalMediaDirs()[0].getAbsolutePath()+"/informational/taskLog.txt";
+        logCollector = informationalLogCollector;
 
         activityUtil = new ActivityUtil(context);
         eventAnalyzer = new EventAnalyzer();
@@ -226,9 +221,7 @@ public class InformationalContext extends BaseContext {
     public void onBroadcastEvent(BroadcastEvent event) {
         String action = event.getAction();
         if (action.equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
-            String reason = "";
-            // todo how to get this?
-//            String reason = intent.getStringExtra(SYSTEM_DIALOG_REASON_KEY);
+            String reason = event.getTag();
             if (SYSTEM_DIALOG_REASON_HOME_KEY.equals(reason)) {
                 onAction(new Action("home","global"));
             }
@@ -356,25 +349,7 @@ public class InformationalContext extends BaseContext {
         sb.append(item.type);
         sb.append("#");
         sb.append(LogItem.formatter.format(item.getTime()));
-        sb.append("\n");
-        saveString(sb.toString());
+        logCollector.addLog(sb.toString());
     }
 
-    private void saveString(String data) {
-        try {
-            File file = new File(logFileName);
-            if (!Objects.requireNonNull(file.getParentFile()).exists()) {
-                file.getParentFile().mkdirs();
-            }
-
-            FileOutputStream fos = null;
-            FileUtils.makeDir(file.getParentFile().getAbsolutePath());
-            fos = new FileOutputStream(logFileName,true);
-            fos.write(data.getBytes());
-            fos.close();
-        } catch (IOException e) {
-            Log.e("Exception", "File write failed:" + e.toString());
-        }
-
-    }
 }
