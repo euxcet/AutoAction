@@ -10,7 +10,9 @@ import android.view.accessibility.AccessibilityEvent;
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
+import com.hcifuture.contextactionlibrary.collect.collector.Collector;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
+import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -21,14 +23,24 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class InformationalContext extends BaseContext {
     private static final String TAG = "TaskContext";
@@ -45,9 +57,14 @@ public class InformationalContext extends BaseContext {
     private Page lastPage = null;
     private boolean windowStable = false;
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
+    private long lastActionTime = 0;
+    private static String logFileName;
+
     public InformationalContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener) {
         super(context, config, requestListener, contextListener);
+
+        logFileName = context.getExternalMediaDirs()[0].getAbsolutePath()+"/informational/taskLog.txt";
+
         activityUtil = new ActivityUtil(context);
         eventAnalyzer = new EventAnalyzer();
         eventAnalyzer.initialize(context);
@@ -79,13 +96,19 @@ public class InformationalContext extends BaseContext {
 
     public void onAction(Action action)
     {
+        long nowTime = System.currentTimeMillis();
         addTaskLog(new LogItem(action.toString(),"action",new Date()));
         if(action.getType().equals("text_change"))
-        {
             action.setText("EDIT_TEXT");
-        }
+
         actionList.add(action);
 
+        if(nowTime-lastActionTime>500)
+        {
+            // todo: user do action, trigger IMU collector? @huangyanwen
+        }
+
+        lastActionTime = nowTime;
     }
 
     public void onScreenState(boolean screen_on)
@@ -122,6 +145,8 @@ public class InformationalContext extends BaseContext {
                 System.out.println("task match" + task.getName());
                 addTaskLog(new LogItem(task.getName(), "task", new Date()));
             }
+            lastTask = task;
+
         }
         lastPage = page;
     }
@@ -154,7 +179,7 @@ public class InformationalContext extends BaseContext {
 
         if(eventType==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             String packageName = event.getPackageName().toString();
-            String activityName = activityUtil.getActivityName(packageName, event.getClassName(), lastActivityName);
+            String activityName = ActivityUtil.getActivityName(packageName, event.getClassName(), lastActivityName);
             if(activityName!=null&&(lastActivityName==null || !lastActivityName.equals(activityName)))
             {
                 onActivityChange(activityName);
@@ -167,8 +192,6 @@ public class InformationalContext extends BaseContext {
                 lastPackageName = packageName;
             }
         }
-
-        AccessibilityEvent eventRecord = AccessibilityEvent.obtain(event);
 
         if(eventType == AccessibilityEvent.TYPE_VIEW_CLICKED ||
                 eventType == AccessibilityEvent.TYPE_VIEW_LONG_CLICKED ||
@@ -190,7 +213,6 @@ public class InformationalContext extends BaseContext {
         float model_result = eventAnalyzer.analyze(eventStr);
         Log.i("model_result:",eventString+"\n"+model_result);
 
-
         if(model_result>0.5 && !windowStable)
         {
             onWindowStable();
@@ -198,8 +220,6 @@ public class InformationalContext extends BaseContext {
         }
         if(model_result<=0.5)
             windowStable = false;
-
-        eventRecord.recycle();
     }
 
     @Override
@@ -337,7 +357,24 @@ public class InformationalContext extends BaseContext {
         sb.append("#");
         sb.append(LogItem.formatter.format(item.getTime()));
         sb.append("\n");
+        saveString(sb.toString());
+    }
 
-        // todo record somewhere
+    private void saveString(String data) {
+        try {
+            File file = new File(logFileName);
+            if (!Objects.requireNonNull(file.getParentFile()).exists()) {
+                file.getParentFile().mkdirs();
+            }
+
+            FileOutputStream fos = null;
+            FileUtils.makeDir(file.getParentFile().getAbsolutePath());
+            fos = new FileOutputStream(logFileName,true);
+            fos.write(data.getBytes());
+            fos.close();
+        } catch (IOException e) {
+            Log.e("Exception", "File write failed:" + e.toString());
+        }
+
     }
 }

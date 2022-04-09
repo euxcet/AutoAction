@@ -13,6 +13,7 @@ import com.hcifuture.contextactionlibrary.contextaction.action.BaseAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.BaseCollector;
+import com.hcifuture.contextactionlibrary.contextaction.collect.InformationalContextCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
@@ -199,6 +200,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
         this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU), scheduledExecutorService, futureList);
         this.collectors = Arrays.asList(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
+        this.collectors.add(new InformationalContextCollector(mContext,scheduledExecutorService,futureList,requestListener,clickTrigger));
 
         if (fromDex) {
             for (int i = 0; i < actionConfig.size(); i++) {
