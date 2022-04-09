@@ -25,6 +25,12 @@ export D8_PATH={YOUR_PATH} # Recommend adding this line to .bashrc
 ./aar2dex.sh
 ```
 
+在更新包之后需要重启后端来重新计算文件的hash值，或运行指令：
+
+```bash
+curl -XPOST http://127.0.0.1:6125/md5 # Use your backend ip address
+```
+
 ### 运行后端
 
 ```bash
@@ -46,13 +52,15 @@ web.server="http://114.67.110.181:6125"
 
 ## Roadmap
 
-- [ ] 前端编辑动作类型
-- [ ] 前端可视化样本
-- [ ] 前端可视化训练结果
-- [ ] 后端维护数据
-- [ ] 后端训练自动化流程
-- [ ] 自动生成apk
+- [x] 前端编辑动作类型
+- [x] 前端可视化样本
+- [x] 前端可视化训练结果
+- [x] 后端维护数据
+- [x] 后端训练自动化流程
 - [ ] Docker
+- [ ] 增加识别网络的数量和配置
+- [ ] 权限管理
+- [ ] 美化ui
 
 ## Reference
 
