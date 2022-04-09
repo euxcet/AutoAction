@@ -19,37 +19,12 @@ import java.util.concurrent.TimeUnit;
 
 public class ClickTrigger extends Trigger {
 
-    // private ThreadPoolExecutor threadPoolExecutor;
-    // private TriggerTask triggerTask;
-
     public ClickTrigger(Context context, List<CollectorType> types, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, types, scheduledExecutorService, futureList);
-        /*
-        triggerTask = new TriggerTask();
-        this.threadPoolExecutor = new ThreadPoolExecutor(
-                1,
-                2,
-                2,
-                TimeUnit.MINUTES,
-                new PriorityBlockingQueue<>(),
-                Executors.defaultThreadFactory(),
-                new ThreadPoolExecutor.AbortPolicy());
-         */
     }
 
     public ClickTrigger(Context context, CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
-        /*
-        triggerTask = new TriggerTask();
-        this.threadPoolExecutor = new ThreadPoolExecutor(
-                1,
-                2,
-                2,
-                TimeUnit.MINUTES,
-                new PriorityBlockingQueue<>(),
-                Executors.defaultThreadFactory(),
-                new ThreadPoolExecutor.AbortPolicy());
-         */
     }
 
     @Override
@@ -66,11 +41,38 @@ public class ClickTrigger extends Trigger {
                 Log.d(TAG, "数据收集结束: [" + System.currentTimeMillis() + "]");
             }, 0L, TimeUnit.MILLISECONDS
         ));
-        /*
-        if (threadPoolExecutor != null) {
-            threadPoolExecutor.execute(triggerTask);
-        }
-         */
+    }
+
+    @Override
+    public void trigger(List<CollectorType> types) {
+        futureList.add(scheduledExecutorService.schedule(() -> {
+                    Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
+                    String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+                    for (Collector collector: collectors) {
+                        if (types.contains(collector.getType())) {
+                            collector.setSavePath(timestamp);
+                        }
+                    }
+                    for (Collector collector: collectors) {
+                        if (types.contains(collector.getType())) {
+                            collector.collect();
+                        }
+                    }
+                    Log.d(TAG, "数据收集结束: [" + System.currentTimeMillis() + "]");
+                }, 0L, TimeUnit.MILLISECONDS
+        ));
+    }
+
+    @Override
+    public void trigger(Collector collector) {
+        futureList.add(scheduledExecutorService.schedule(() -> {
+                    Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
+                    String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+                    collector.setSavePath(timestamp);
+                    collector.collect();
+                    Log.d(TAG, "数据收集结束: [" + System.currentTimeMillis() + "]");
+                }, 0L, TimeUnit.MILLISECONDS
+        ));
     }
 
     @Override
@@ -104,30 +106,4 @@ public class ClickTrigger extends Trigger {
         }
         return "";
     }
-
-    /*
-    private class TriggerTask implements Runnable, Comparable {
-
-        @Override
-        public int compareTo(Object o) {
-            return 0;
-        }
-
-        @Override
-        public void run() {
-            synchronized (ClickTrigger.class) {
-                Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
-                String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-                for (Collector collector: collectors) {
-                    collector.setSavePath(timestamp);
-                }
-                for (Collector collector: collectors) {
-                    collector.collect();
-                }
-                Log.d(TAG, "数据收集结束: [" + System.currentTimeMillis() + "]");
-            }
-        }
-    }
-
-     */
 }

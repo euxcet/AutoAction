@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.hcifuture.contextactionlibrary.collect.data.Data;
 import com.hcifuture.contextactionlibrary.collect.file.Saver;
+import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -15,9 +16,11 @@ public abstract class Collector {
     protected Saver saver;
     protected ScheduledExecutorService scheduledExecutorService;
     protected List<ScheduledFuture<?>> futureList;
+    protected Trigger.CollectorType type;
 
-    public Collector(Context context, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+    public Collector(Context context, Trigger.CollectorType type, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;
+        this.type = type;
         this.saver = new Saver(mContext, triggerFolder, getSaveFolderName());
         this.scheduledExecutorService = scheduledExecutorService;
         this.futureList = futureList;
@@ -44,6 +47,10 @@ public abstract class Collector {
 
     public String getRecentPath() {
         return saver.getSavePath();
+    }
+
+    public Trigger.CollectorType getType() {
+        return type;
     }
 
     public void cleanData() {

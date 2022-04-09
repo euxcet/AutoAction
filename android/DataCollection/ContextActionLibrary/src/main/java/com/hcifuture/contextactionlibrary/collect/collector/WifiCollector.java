@@ -17,6 +17,7 @@ import com.hcifuture.contextactionlibrary.collect.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.collect.data.SingleWifiData;
 import com.hcifuture.contextactionlibrary.collect.data.WifiData;
 import com.google.gson.Gson;
+import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 
 import java.util.List;
 import java.util.Timer;
@@ -33,8 +34,8 @@ public class WifiCollector extends Collector {
 
     private BroadcastReceiver receiver;
 
-    public WifiCollector(Context context, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
-        super(context, triggerFolder, scheduledExecutorService, futureList);
+    public WifiCollector(Context context, Trigger.CollectorType type, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, type, triggerFolder, scheduledExecutorService, futureList);
         this.data = new WifiData();
     }
 
