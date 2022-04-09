@@ -201,7 +201,7 @@ public class LoaderManager {
 
         for (ContextActionConfigBean.ContextConfigBean bean: config.getContext()) {
             ContextConfig contextConfig = new ContextConfig();
-            contextConfig.setContext(BuiltInContextEnum.fromString(bean.getBuiltInContext()));
+            contextConfig.setContext(bean.getBuiltInContext());
             contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
             for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
                 contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
@@ -220,7 +220,7 @@ public class LoaderManager {
 
         for (ContextActionConfigBean.ActionConfigBean bean: config.getAction()) {
             ActionConfig actionConfig = new ActionConfig();
-            actionConfig.setAction(BuiltInActionEnum.fromString(bean.getBuiltInAction()));
+            actionConfig.setAction(bean.getBuiltInAction());
             actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
             for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
                 actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));

@@ -7,13 +7,15 @@ import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
+import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 import com.hcifuture.contextactionlibrary.contextaction.action.BaseAction;
+import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.BaseCollector;
-import com.hcifuture.contextactionlibrary.contextaction.collect.InformationalContextCollector;
+import com.hcifuture.contextactionlibrary.contextaction.collect.ExampleCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
@@ -199,31 +201,44 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(10);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
         this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU), scheduledExecutorService, futureList);
-        this.collectors = Arrays.asList(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
-        this.collectors.add(new InformationalContextCollector(mContext,scheduledExecutorService,futureList,requestListener,clickTrigger));
+        LogCollector logCollector = clickTrigger.newLogCollector("Log0", 100);
+        this.collectors = Arrays.asList(
+                new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger),
+                new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector)
+        );
 
         if (fromDex) {
             for (int i = 0; i < actionConfig.size(); i++) {
                 ActionConfig config = actionConfig.get(i);
-                if (config.getAction() == BuiltInActionEnum.TapTap) {
-                    tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
-                    actions.add(tapTapAction);
-                } else if (config.getAction() == BuiltInActionEnum.TopTap) {
-                    TopTapAction topTapAction = new TopTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
-                    actions.add(topTapAction);
+                switch (config.getAction()) {
+                    case "TapTap":
+                        tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                        actions.add(tapTapAction);
+                        break;
+                    case "TopTap":
+                        TopTapAction topTapAction = new TopTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                        actions.add(topTapAction);
+                        break;
+                    case "Example":
+                        ExampleAction exampleAction = new ExampleAction(mContext, config, requestListener, Arrays.asList(this, actionListener), logCollector);
+                        actions.add(exampleAction);
                 }
             }
             for (int i = 0; i < contextConfig.size(); i++) {
                 ContextConfig config = contextConfig.get(i);
-                if (config.getContext() == BuiltInContextEnum.Proximity) {
-                    ProximityContext proximityContext = new ProximityContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
-                    contexts.add(proximityContext);
-                } else if (config.getContext() == BuiltInContextEnum.Table) {
-                    TableContext tableContext = new TableContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
-                    contexts.add(tableContext);
-                } else if (config.getContext() == BuiltInContextEnum.Informational) {
-                    InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
-                    contexts.add(informationalContext);
+                switch (config.getContext()) {
+                    case "Proximity":
+                        ProximityContext proximityContext = new ProximityContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
+                        contexts.add(proximityContext);
+                        break;
+                    case "Table":
+                        TableContext tableContext = new TableContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
+                        contexts.add(tableContext);
+                        break;
+                    case "Informational":
+                        InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
+                        contexts.add(informationalContext);
+                        break;
                 }
             }
         }

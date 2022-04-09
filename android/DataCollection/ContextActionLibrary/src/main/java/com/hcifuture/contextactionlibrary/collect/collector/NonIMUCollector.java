@@ -15,6 +15,7 @@ import com.hcifuture.contextactionlibrary.collect.data.Data;
 import com.hcifuture.contextactionlibrary.collect.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.collect.listener.NonIMUSensorEventListener;
 import com.google.gson.Gson;
+import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -25,8 +26,8 @@ public class NonIMUCollector extends SensorCollector {
 
     private NonIMUData data;
 
-    public NonIMUCollector(Context context, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
-        super(context, triggerFolder, scheduledExecutorService, futureList);
+    public NonIMUCollector(Context context, Trigger.CollectorType type, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, type, triggerFolder, scheduledExecutorService, futureList);
         data = new NonIMUData();
     }
 

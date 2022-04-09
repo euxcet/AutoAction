@@ -7,6 +7,7 @@ import android.util.Pair;
 import com.hcifuture.contextactionlibrary.collect.collector.BluetoothCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.Collector;
 import com.hcifuture.contextactionlibrary.collect.collector.CompleteIMUCollector;
+import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.NonIMUCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.WifiCollector;
 import com.hcifuture.contextactionlibrary.collect.data.Data;
@@ -41,6 +42,7 @@ public abstract class Trigger {
         Location,
         Weather,
         Wifi,
+        Log,
         All
     }
 
@@ -48,26 +50,26 @@ public abstract class Trigger {
 
     private void initializeAll() {
         String triggerFolder = getName();
-        collectors.add(new BluetoothCollector(mContext, triggerFolder, scheduledExecutorService, futureList));
-        collectors.add(new CompleteIMUCollector(mContext, triggerFolder, scheduledExecutorService, futureList, samplingPeriod, 1));
-        collectors.add(new NonIMUCollector(mContext, triggerFolder, scheduledExecutorService, futureList));
-        collectors.add(new WifiCollector(mContext, triggerFolder, scheduledExecutorService, futureList));
+        collectors.add(new BluetoothCollector(mContext, CollectorType.Bluetooth, triggerFolder, scheduledExecutorService, futureList));
+        collectors.add(new CompleteIMUCollector(mContext, CollectorType.CompleteIMU, triggerFolder, scheduledExecutorService, futureList, samplingPeriod, 1));
+        collectors.add(new NonIMUCollector(mContext, CollectorType.NonIMU, triggerFolder, scheduledExecutorService, futureList));
+        collectors.add(new WifiCollector(mContext, CollectorType.Wifi, triggerFolder, scheduledExecutorService, futureList));
     }
 
     private void initialize(CollectorType type) {
         String triggerFolder = getName();
         switch (type) {
             case Bluetooth:
-                collectors.add(new BluetoothCollector(mContext, triggerFolder, scheduledExecutorService, futureList));
+                collectors.add(new BluetoothCollector(mContext, CollectorType.Bluetooth, triggerFolder, scheduledExecutorService, futureList));
                 break;
             case CompleteIMU:
-                collectors.add(new CompleteIMUCollector(mContext, triggerFolder, scheduledExecutorService, futureList, samplingPeriod, 1));
+                collectors.add(new CompleteIMUCollector(mContext, CollectorType.CompleteIMU, triggerFolder, scheduledExecutorService, futureList, samplingPeriod, 1));
                 break;
             case NonIMU:
-                collectors.add(new NonIMUCollector(mContext, triggerFolder, scheduledExecutorService, futureList));
+                collectors.add(new NonIMUCollector(mContext, CollectorType.NonIMU, triggerFolder, scheduledExecutorService, futureList));
                 break;
             case Wifi:
-                collectors.add(new WifiCollector(mContext, triggerFolder, scheduledExecutorService, futureList));
+                collectors.add(new WifiCollector(mContext, CollectorType.Wifi, triggerFolder, scheduledExecutorService, futureList));
                 break;
             case All:
                 initializeAll();
@@ -108,6 +110,10 @@ public abstract class Trigger {
 
     public abstract void trigger();
 
+    public abstract void trigger(List<CollectorType> types);
+
+    public abstract void trigger(Collector collector);
+
     public abstract String getName();
 
     public void close() {
@@ -127,7 +133,6 @@ public abstract class Trigger {
     }
 
     public void pause() {
-        Log.e("Trigger", "pause");
         for (Collector collector: collectors) {
             collector.pause();
         }
@@ -135,7 +140,6 @@ public abstract class Trigger {
     }
 
     public void resume() {
-        Log.e("Trigger", "resume");
         for (Collector collector: collectors) {
             collector.resume();
         }
@@ -151,9 +155,15 @@ public abstract class Trigger {
     }
 
     public void cleanData() {
-        Log.e("Trigger", "clean");
         for (Collector collector: collectors) {
             collector.cleanData();
         }
+    }
+
+    public LogCollector newLogCollector(String label, int historyLength) {
+        String triggerFolder = getName();
+        LogCollector logCollector = new LogCollector(mContext, CollectorType.Log, triggerFolder, scheduledExecutorService, futureList, label, historyLength);
+        collectors.add(logCollector);
+        return logCollector;
     }
 }

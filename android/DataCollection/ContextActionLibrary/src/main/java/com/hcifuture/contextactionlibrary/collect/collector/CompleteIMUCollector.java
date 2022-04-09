@@ -15,6 +15,7 @@ import com.hcifuture.contextactionlibrary.collect.data.Data;
 import com.hcifuture.contextactionlibrary.collect.data.IMUData;
 import com.hcifuture.contextactionlibrary.collect.listener.PeriodicSensorEventListener;
 import com.google.gson.Gson;
+import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,8 +42,8 @@ public class CompleteIMUCollector extends SensorCollector {
     private String taptapPoint;
     private Gson gson = new Gson();
 
-    public CompleteIMUCollector(Context context, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, int samplingPeriod, int collectPeriod) {
-        super(context, triggerFolder, scheduledExecutorService, futureList);
+    public CompleteIMUCollector(Context context, Trigger.CollectorType type, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, int samplingPeriod, int collectPeriod) {
+        super(context, type, triggerFolder, scheduledExecutorService, futureList);
         this.samplingPeriod = samplingPeriod;
         this.collectPeriod = collectPeriod;
         this.data = new IMUData();

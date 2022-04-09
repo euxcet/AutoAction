@@ -6,14 +6,14 @@ import com.hcifuture.shared.communicate.SensorType;
 import java.util.List;
 
 public class ActionConfig extends Config {
-    private BuiltInActionEnum action;
+    private String action;
     private List<SensorType> sensorType;
 
-    public BuiltInActionEnum getAction() {
+    public String getAction() {
         return action;
     }
 
-    public void setAction(BuiltInActionEnum action) {
+    public void setAction(String action) {
         this.action = action;
     }
 

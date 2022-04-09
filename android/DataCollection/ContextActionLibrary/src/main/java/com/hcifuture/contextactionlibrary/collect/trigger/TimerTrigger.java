@@ -38,6 +38,16 @@ public class TimerTrigger extends Trigger {
     }
 
     @Override
+    public void trigger(List<CollectorType> types) {
+
+    }
+
+    @Override
+    public void trigger(Collector collector) {
+
+    }
+
+    @Override
     public String getName() {
         return "Data/Timer";
     }

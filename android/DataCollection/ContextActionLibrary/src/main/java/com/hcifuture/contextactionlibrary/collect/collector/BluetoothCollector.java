@@ -19,6 +19,7 @@ import com.hcifuture.contextactionlibrary.collect.data.BluetoothData;
 import com.hcifuture.contextactionlibrary.collect.data.Data;
 import com.hcifuture.contextactionlibrary.collect.data.SingleBluetoothData;
 import com.google.gson.Gson;
+import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class BluetoothCollector extends Collector {
 
@@ -40,8 +42,8 @@ public class BluetoothCollector extends Collector {
     private BluetoothManager bluetoothManager;
     private ScanCallback leScanCallback;
 
-    public BluetoothCollector(Context context, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
-        super(context, triggerFolder, scheduledExecutorService, futureList);
+    public BluetoothCollector(Context context, Trigger.CollectorType type, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, type, triggerFolder, scheduledExecutorService, futureList);
         data = new BluetoothData();
     }
 
@@ -132,17 +134,14 @@ public class BluetoothCollector extends Collector {
         bluetoothLeScanner.startScan(leScanCallback);
 
         // Stops scanning after 10 seconds
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                synchronized (BluetoothCollector.this) {
-                    bluetoothLeScanner.stopScan(leScanCallback);
-                    bluetoothAdapter.cancelDiscovery();
-                    saver.save(data.deepClone());
-                    ft.complete(data);
-                }
+        futureList.add(scheduledExecutorService.schedule(() -> {
+            synchronized (BluetoothCollector.this) {
+                bluetoothLeScanner.stopScan(leScanCallback);
+                bluetoothAdapter.cancelDiscovery();
+                saver.save(data.deepClone());
+                ft.complete(data);
             }
-        }, 10000);
+        }, 10000, TimeUnit.MILLISECONDS));
         return ft;
     }
 

@@ -35,13 +35,13 @@ public class TopTapAction extends BaseAction {
     private boolean gotAcc = false;
     private boolean gotGyro = false;
     private long syncTime = 0L;
-    private List<Float> xsAcc = new ArrayList<>();
-    private List<Float> ysAcc = new ArrayList<>();
-    private List<Float> zsAcc = new ArrayList<>();
-    private List<Float> xsGyro = new ArrayList<>();
-    private List<Float> ysGyro = new ArrayList<>();
-    private List<Float> zsGyro = new ArrayList<>();
-    private List<Long> timestamps = new ArrayList<>();
+    private List<Float> xsAcc = Collections.synchronizedList(new ArrayList<>());
+    private List<Float> ysAcc = Collections.synchronizedList(new ArrayList<>());
+    private List<Float> zsAcc = Collections.synchronizedList(new ArrayList<>());
+    private List<Float> xsGyro = Collections.synchronizedList(new ArrayList<>());
+    private List<Float> ysGyro = Collections.synchronizedList(new ArrayList<>());
+    private List<Float> zsGyro = Collections.synchronizedList(new ArrayList<>());
+    private List<Long> timestamps = Collections.synchronizedList(new ArrayList<>());
 
     private Highpass1C highpassKeyPositive = new Highpass1C();
     private Lowpass1C lowpassKeyPositive = new Lowpass1C();
@@ -55,8 +55,8 @@ public class TopTapAction extends BaseAction {
     private long[] doubleTopTapTimestamps = new long[2];
     private int result;
     private int seqLength;
-    private List<Long> backTapTimestamps = new ArrayList();
-    private List<Long> topTapTimestamps = new ArrayList();
+    private List<Long> backTapTimestamps = Collections.synchronizedList(new ArrayList<>());
+    private List<Long> topTapTimestamps = Collections.synchronizedList(new ArrayList<>());
     private TfClassifier tflite;
 
     // filter related
@@ -207,60 +207,68 @@ public class TopTapAction extends BaseAction {
     }
 
     private void addFeatureData(List<Float> list, int startIdx, int scale, List<Float> res) {
-        for (int i = 0; i < seqLength; i++) {
-            if (i + startIdx >= list.size())
-                res.add(0.0F);
-            else
-                res.add(scale * list.get(i + startIdx));
+        synchronized (list) {
+            for (int i = 0; i < seqLength; i++) {
+                if (i + startIdx >= list.size())
+                    res.add(0.0F);
+                else
+                    res.add(scale * list.get(i + startIdx));
+            }
         }
     }
 
     private int checkDoubleBackTapTiming(long timestamp) {
-        // remove old timestamps
-        int idx = 0;
-        for (; idx < backTapTimestamps.size(); idx++) {
-            if (timestamp - backTapTimestamps.get(idx) <= 500000000L)
-                break;
-        }
-        backTapTimestamps = backTapTimestamps.subList(idx, backTapTimestamps.size());
+        int res = 0;
+        synchronized (backTapTimestamps) {
+            // remove old timestamps
+            int idx = 0;
+            for (; idx < backTapTimestamps.size(); idx++) {
+                if (timestamp - backTapTimestamps.get(idx) <= 500000000L)
+                    break;
+            }
+            backTapTimestamps = backTapTimestamps.subList(idx, backTapTimestamps.size());
 
-        if (backTapTimestamps.isEmpty())
-            return 0;
-        else {
-            if (backTapTimestamps.size() == 1)
-                return 1;
-            doubleBackTapTimestamps[1] = backTapTimestamps.get(backTapTimestamps.size() - 1);
-            doubleBackTapTimestamps[0] = backTapTimestamps.get(0);
-            if (doubleBackTapTimestamps[1] - doubleBackTapTimestamps[0] > 100000000L) {
-                backTapTimestamps.clear();
-                return 2;
+            if (backTapTimestamps.isEmpty())
+                res = 0;
+            else {
+                if (backTapTimestamps.size() == 1)
+                    res = 1;
+                doubleBackTapTimestamps[1] = backTapTimestamps.get(backTapTimestamps.size() - 1);
+                doubleBackTapTimestamps[0] = backTapTimestamps.get(0);
+                if (doubleBackTapTimestamps[1] - doubleBackTapTimestamps[0] > 100000000L) {
+                    backTapTimestamps.clear();
+                    res = 2;
+                }
             }
         }
-        return 0;
+        return res;
     }
 
     private int checkDoubleTopTapTiming(long timestamp) {
-        // remove old timestamps
-        int idx = 0;
-        for (; idx < topTapTimestamps.size(); idx++) {
-            if (timestamp - topTapTimestamps.get(idx) <= 500000000L)
-                break;
-        }
-        topTapTimestamps = topTapTimestamps.subList(idx, topTapTimestamps.size());
+        int res = 0;
+        synchronized (topTapTimestamps) {
+            // remove old timestamps
+            int idx = 0;
+            for (; idx < topTapTimestamps.size(); idx++) {
+                if (timestamp - topTapTimestamps.get(idx) <= 500000000L)
+                    break;
+            }
+            topTapTimestamps = topTapTimestamps.subList(idx, topTapTimestamps.size());
 
-        if (topTapTimestamps.isEmpty())
-            return 0;
-        else {
-            if (topTapTimestamps.size() == 1)
-                return 1;
-            doubleTopTapTimestamps[1] = topTapTimestamps.get(topTapTimestamps.size() - 1);
-            doubleTopTapTimestamps[0] = topTapTimestamps.get(0);
-            if (doubleTopTapTimestamps[1] - doubleTopTapTimestamps[0] > 100000000L) {
-                topTapTimestamps.clear();
-                return 2;
+            if (topTapTimestamps.isEmpty())
+                res = 0;
+            else {
+                if (topTapTimestamps.size() == 1)
+                    res = 1;
+                doubleTopTapTimestamps[1] = topTapTimestamps.get(topTapTimestamps.size() - 1);
+                doubleTopTapTimestamps[0] = topTapTimestamps.get(0);
+                if (doubleTopTapTimestamps[1] - doubleTopTapTimestamps[0] > 100000000L) {
+                    topTapTimestamps.clear();
+                    res = 2;
+                }
             }
         }
-        return 0;
+        return res;
     }
 
     public float getFirstBackTapTimestamp() {

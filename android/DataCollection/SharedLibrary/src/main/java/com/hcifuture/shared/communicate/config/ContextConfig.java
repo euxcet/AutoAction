@@ -6,14 +6,14 @@ import com.hcifuture.shared.communicate.SensorType;
 import java.util.List;
 
 public class ContextConfig extends Config {
-    private BuiltInContextEnum context;
+    private String context;
     private List<SensorType> sensorType;
 
-    public BuiltInContextEnum getContext() {
+    public String getContext() {
         return context;
     }
 
-    public void setContext(BuiltInContextEnum context) {
+    public void setContext(String context) {
         this.context = context;
     }
 

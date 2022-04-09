@@ -99,7 +99,11 @@ public class Saver {
         } else {
             pool.execute(() -> {
                 try {
-                    saveString(new GsonBuilder().disableHtmlEscaping().create().toJson(object));
+                    if (object instanceof String) {
+                        saveString((String)object);
+                    } else {
+                        saveString(new GsonBuilder().disableHtmlEscaping().create().toJson(object));
+                    }
                     ft.complete(null);
                 } catch (Exception exc) {
                     ft.completeExceptionally(exc);
