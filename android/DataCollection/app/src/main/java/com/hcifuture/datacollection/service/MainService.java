@@ -127,28 +127,6 @@ public class MainService extends AccessibilityService implements ContextListener
             BluetoothDevice.ACTION_ACL_DISCONNECTED,
     };
 
-    private static final HashMap<String, Integer> volume = new HashMap<>();
-    static {
-        // speaker
-        volume.put("volume_music_speaker", 0);
-        volume.put("volume_ring_speaker", 0);
-        volume.put("volume_alarm_speaker", 0);
-        volume.put("volume_voice_speaker", 0);
-        volume.put("volume_tts_speaker", 0);
-        // headset
-        volume.put("volume_music_headset", 0);
-        volume.put("volume_voice_headset", 0);
-        volume.put("volume_tts_headset", 0);
-        // headphone
-        volume.put("volume_music_headphone", 0);
-        volume.put("volume_voice_headphone", 0);
-        volume.put("volume_tts_headphone", 0);
-        // Bluetooth A2DP
-        volume.put("volume_music_bt_a2dp", 0);
-        volume.put("volume_voice_bt_a2dp", 0);
-        volume.put("volume_tts_bt_a2dp", 0);
-    }
-    int brightness;
 
     public MainService() {
     }
@@ -226,36 +204,10 @@ public class MainService extends AccessibilityService implements ContextListener
     }
 
     class CustomBroadcastReceiver extends BroadcastReceiver {
-
         @Override
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            BroadcastEvent event = new BroadcastEvent(action, "", "BroadcastReceive", intent.getExtras());
-
-            switch (action) {
-                case Intent.ACTION_CLOSE_SYSTEM_DIALOGS:
-                    event.setTag(intent.getStringExtra("reason"));
-                    break;
-                case Intent.ACTION_CONFIGURATION_CHANGED:
-                    Configuration config = getResources().getConfiguration();
-                    event.getExtras().putInt("orientation", config.orientation);
-                    break;
-                case Intent.ACTION_SCREEN_OFF:
-                case Intent.ACTION_SCREEN_ON:
-                    // ref: https://stackoverflow.com/a/17348755/11854304
-                    DisplayManager dm = (DisplayManager) context.getSystemService(Context.DISPLAY_SERVICE);
-                    if (dm != null) {
-                        Display[] displays = dm.getDisplays();
-                        int [] states = new int[displays.length];
-                        for (int i = 0; i < displays.length; i++) {
-                            states[i] = displays[i].getState();
-                        }
-                        event.getExtras().putIntArray("display", states);
-                    }
-                    break;
-            }
-
             if (loaderManager != null) {
+                BroadcastEvent event = new BroadcastEvent(intent.getAction(), "", "BroadcastReceive", intent.getExtras());
                 loaderManager.onBroadcastEvent(event);
             }
         }
@@ -273,53 +225,12 @@ public class MainService extends AccessibilityService implements ContextListener
 
         @Override
         public void onChange(boolean selfChange, @Nullable Uri uri) {
-            BroadcastEvent event = new BroadcastEvent("", "", "ContentChange");
-
-
-            if (uri == null) {
-                event.setAction("uri_null");
-            } else {
-                event.setAction(uri.toString());
-
-                String database_key = uri.getLastPathSegment();
-                String inter = uri.getPathSegments().get(0);
-                if ("system".equals(inter)) {
-                    event.setTag(Settings.System.getString(getContentResolver(), database_key));
-                } else if ("global".equals(inter)) {
-                    event.setTag(Settings.Global.getString(getContentResolver(), database_key));
-                }
-
-                int value = Settings.System.getInt(getContentResolver(), database_key, 0);
-
-                // record special information
-                if (Settings.System.SCREEN_BRIGHTNESS.equals(database_key)) {
-                    // record brightness value difference and update
-                    int diff = value - brightness;
-                    event.getExtras().putInt("diff", diff);
-                    brightness = value;
-                    // record brightness mode
-                    int mode = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, -1);
-                    if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL) {
-                        event.getExtras().putString("mode", "man");
-                    } else if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
-                        event.getExtras().putString("mode", "auto");
-                    } else {
-                        event.getExtras().putString("mode", "unknown");
-                    }
-                }
-                if (database_key.startsWith("volume_")) {
-                    if (!volume.containsKey(database_key)) {
-                        // record new volume value
-                        volume.put(database_key, value);
-                    }
-                    // record volume value difference and update
-                    int diff = value - volume.get(database_key);
-                    event.getExtras().putInt("diff", diff);
-                    volume.put(database_key, value);
-                }
-            }
-
             if (loaderManager != null) {
+                BroadcastEvent event = new BroadcastEvent(
+                        (uri == null)? "uri_null" : uri.toString(),
+                        "",
+                        "ContentChange"
+                );
                 loaderManager.onBroadcastEvent(event);
             }
         }
