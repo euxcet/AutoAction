@@ -1,5 +1,6 @@
 package com.hcifuture.contextactionlibrary.contextaction.context;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -16,9 +17,14 @@ import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,12 +62,12 @@ public class ConfigContext extends BaseContext {
 
     @Override
     public void start() {
-
+        record_all();
     }
 
     @Override
     public void stop() {
-
+        record_all();
     }
 
     @Override
@@ -84,14 +90,6 @@ public class ConfigContext extends BaseContext {
         CharSequence pkg = event.getPackageName();
         if (pkg != null) {
             packageName = event.getPackageName().toString();
-        }
-    }
-
-    static void jsonSilentPut(JSONObject json, String key, Object value) {
-        try {
-            json.put(key, value);
-        } catch (JSONException e) {
-            e.printStackTrace();
         }
     }
 
@@ -143,9 +141,8 @@ public class ConfigContext extends BaseContext {
                         volume.put(database_key, value);
                     }
                     // record volume value difference and update
-                    int diff = value - volume.get(database_key);
+                    int diff = value - volume.put(database_key, value);
                     jsonSilentPut(json, "diff", diff);
-                    volume.put(database_key, value);
                 }
             }
         } else if ("BroadcastReceive".equals(type)) {
@@ -191,5 +188,61 @@ public class ConfigContext extends BaseContext {
                 .append("\t").append(tag).append("\t").append(other);
         String line = stringBuilder.toString();
         // TODO
+    }
+
+    void record_all() {
+        JSONObject json = new JSONObject();
+
+        // store brightness
+        brightness = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 0);
+        jsonSilentPut(json, "brightness", brightness);
+
+        // store volumes
+        for (String key : volume.keySet()) {
+            int value = Settings.System.getInt(mContext.getContentResolver(), key, 0);
+            volume.put(key, value);
+            jsonSilentPut(json, key, value);
+        }
+
+        // store configuration and orientation
+        Configuration config = mContext.getResources().getConfiguration();
+        jsonSilentPut(json, "configuration", config.toString());
+        jsonSilentPut(json, "orientation", config.orientation);
+
+        // store system settings
+        jsonPutSettings(json, "system", Settings.System.class);
+
+        // store global settings
+        jsonPutSettings(json, "global", Settings.Global.class);
+
+        // record
+        record("static", "", "", json.toString());
+    }
+
+    static void jsonSilentPut(JSONObject json, String key, Object value) {
+        try {
+            json.put(key, value);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void jsonPutSettings(JSONObject json, String key, Class<?> c) {
+        JSONArray jsonArray = new JSONArray();
+        Field[] fields_glb = c.getFields();
+        for (Field f : fields_glb) {
+            if (Modifier.isStatic(f.getModifiers())) {
+                try {
+                    String name = f.getName();
+                    String database_key = f.get(null).toString();
+                    Method method = c.getMethod("getString", ContentResolver.class, String.class);
+                    String value_s = (String) method.invoke(null, mContext.getContentResolver(), database_key);
+                    jsonArray.put(new JSONArray().put(name).put(database_key).put(value_s));
+                } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        jsonSilentPut(json, key, jsonArray);
     }
 }
