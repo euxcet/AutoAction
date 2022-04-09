@@ -167,6 +167,8 @@ public class ConfigContext extends BaseContext {
                     }
                     break;
             }
+        } else if ("KeyEvent".equals(type)) {
+            record = true;
         }
 
         if (record) {
