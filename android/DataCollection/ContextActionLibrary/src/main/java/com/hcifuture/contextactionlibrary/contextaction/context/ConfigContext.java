@@ -135,7 +135,6 @@ public class ConfigContext extends BaseContext {
                     } else {
                         jsonSilentPut(json, "mode", "unknown");
                     }
-                    jsonSilentPut(json, "package", packageName);
                 }
                 if (database_key.startsWith("volume_")) {
                     if (!volume.containsKey(database_key)) {
@@ -145,7 +144,6 @@ public class ConfigContext extends BaseContext {
                     // record volume value difference and update
                     int diff = value - volume.put(database_key, value);
                     jsonSilentPut(json, "diff", diff);
-                    jsonSilentPut(json, "package", packageName);
                 }
             }
         } else if ("BroadcastReceive".equals(type)) {
@@ -172,10 +170,10 @@ public class ConfigContext extends BaseContext {
             }
         } else if ("KeyEvent".equals(type)) {
             record = true;
-            jsonSilentPut(json, "package", packageName);
         }
 
         if (record) {
+            jsonSilentPut(json, "package", packageName);
             for (String key : extras.keySet()) {
                 Object obj = JSONObject.wrap(extras.get(key));
                 if (obj == null) {
