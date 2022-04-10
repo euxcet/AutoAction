@@ -1,7 +1,10 @@
 package com.hcifuture.contextactionlibrary.contextaction.collect;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
@@ -19,28 +22,27 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class ExampleCollector extends BaseCollector {
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public ExampleCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector logCollector) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                () -> {
-                    clickTrigger.trigger(logCollector);
-                    futureList.add(scheduledExecutorService.schedule(() -> {
-                        File logFile = new File(logCollector.getRecentPath());
-                        NetworkUtils.uploadCollectedData(mContext,
-                                logFile,
-                                0,
-                                "Log0",
-                                getMacMoreThanM(),
-                                System.currentTimeMillis(),
-                                "Log0_commit",
-                                new StringCallback() {
-                                    @Override
-                                    public void onSuccess(Response<String> response) {
-                                        Log.e("TapTapCollector", "Success");
-                                    }
-                                });
-                    }, 0, TimeUnit.MILLISECONDS));
-                },
+                () -> clickTrigger.trigger(logCollector).whenComplete((msg, ex) -> {
+                    File logFile = new File(logCollector.getRecentPath());
+                    NetworkUtils.uploadCollectedData(mContext,
+                            logFile,
+                            0,
+                            "Log0",
+                            getMacMoreThanM(),
+                            System.currentTimeMillis(),
+                            "Log0_commit",
+                            new StringCallback() {
+                                @Override
+                                public void onSuccess(Response<String> response) {
+                                    Log.e("ExampleCollector", "Success");
+                                }
+                            });
+
+                }),
                 0,
                 5000,
                 TimeUnit.MILLISECONDS));

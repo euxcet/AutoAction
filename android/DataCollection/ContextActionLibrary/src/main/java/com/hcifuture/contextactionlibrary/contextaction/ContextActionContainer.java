@@ -3,8 +3,11 @@ package com.hcifuture.contextactionlibrary.contextaction;
 import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
+
+import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
@@ -133,6 +136,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void start() {
+        Log.e("Example", "START");
         initialize();
         if (openSensor) {
             for (BaseSensorManager sensorManager: sensorManagers) {
@@ -154,6 +158,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void stop() {
+        Log.e("Example", "STOP");
         if (openSensor) {
             for (BaseSensorManager sensorManager: sensorManagers) {
                 sensorManager.stop();
@@ -196,8 +201,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         return result;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     private void initialize() {
-        this.scheduledExecutorService = Executors.newScheduledThreadPool(10);
+        this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
         this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU), scheduledExecutorService, futureList);
         LogCollector logCollector = clickTrigger.newLogCollector("Log0", 100);
@@ -374,6 +380,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAction(ActionResult action) {
         if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap")) {

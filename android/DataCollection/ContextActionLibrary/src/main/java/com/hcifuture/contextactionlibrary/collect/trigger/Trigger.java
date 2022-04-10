@@ -108,11 +108,11 @@ public abstract class Trigger {
         return new LinkedList<>();
     }
 
-    public abstract void trigger();
+    public abstract CompletableFuture<Void> trigger();
 
-    public abstract void trigger(List<CollectorType> types);
+    public abstract CompletableFuture<Void> trigger(List<CollectorType> types);
 
-    public abstract void trigger(Collector collector);
+    public abstract CompletableFuture<Void> trigger(Collector collector);
 
     public abstract String getName();
 

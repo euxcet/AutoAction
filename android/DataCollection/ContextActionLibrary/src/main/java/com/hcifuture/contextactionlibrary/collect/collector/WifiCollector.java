@@ -25,6 +25,7 @@ import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class WifiCollector extends Collector {
 
@@ -80,8 +81,8 @@ public class WifiCollector extends Collector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public synchronized CompletableFuture<Data> collect() {
-        CompletableFuture<Data> ft = new CompletableFuture<>();
+    public synchronized CompletableFuture<Void> collect() {
+        CompletableFuture<Void> ft = new CompletableFuture<>();
         data.clear();
         WifiInfo info = wifiManager.getConnectionInfo();
         if (info != null) {
@@ -93,16 +94,13 @@ public class WifiCollector extends Collector {
                     0, 0, true));
         }
         wifiManager.startScan();
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                synchronized (WifiCollector.this) {
-                    WifiData cloneData = data.deepClone();
-                    saver.save(cloneData);
-                }
-                ft.complete(data);
+        futureList.add(scheduledExecutorService.schedule(() -> {
+            synchronized (WifiCollector.this) {
+                WifiData cloneData = data.deepClone();
+                saver.save(cloneData);
             }
-        }, 10000);
+            ft.complete(null);
+        }, 10000, TimeUnit.MILLISECONDS));
         return ft;
     }
 

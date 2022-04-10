@@ -109,8 +109,8 @@ public class BluetoothCollector extends Collector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public synchronized CompletableFuture<Data> collect() {
-        CompletableFuture<Data> ft = new CompletableFuture<>();
+    public synchronized CompletableFuture<Void> collect() {
+        CompletableFuture<Void> ft = new CompletableFuture<>();
         data.clear();
 
         // scan bonded (paired) devices
@@ -139,7 +139,7 @@ public class BluetoothCollector extends Collector {
                 bluetoothLeScanner.stopScan(leScanCallback);
                 bluetoothAdapter.cancelDiscovery();
                 saver.save(data.deepClone());
-                ft.complete(data);
+                ft.complete(null);
             }
         }, 10000, TimeUnit.MILLISECONDS));
         return ft;

@@ -1,7 +1,10 @@
 package com.hcifuture.contextactionlibrary.contextaction.collect;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
@@ -21,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 public class InformationalContextCollector extends BaseCollector {
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public InformationalContextCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector logCollector) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
 

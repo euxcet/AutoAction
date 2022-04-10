@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class LogData extends Data {
-    private List<String> logs;
+    private final List<String> logs;
     private int historyLength;
 
     public LogData(int historyLength) {
@@ -16,18 +16,22 @@ public class LogData extends Data {
     }
 
     public void addLog(String log) {
-        logs.add(log);
-        while (logs.size() > historyLength) {
-            logs.remove(0);
+        synchronized (logs) {
+            logs.add(log);
+            while (logs.size() > historyLength) {
+                logs.remove(0);
+            }
         }
     }
 
     public String getString() {
-        StringBuilder result = new StringBuilder();
-        for (String s: logs) {
-            result.append(s).append("\n");
+        synchronized (logs) {
+            StringBuilder result = new StringBuilder();
+            for (String s : logs) {
+                result.append(s).append("\n");
+            }
+            return result.toString();
         }
-        return result.toString();
     }
 
     public void clear() {

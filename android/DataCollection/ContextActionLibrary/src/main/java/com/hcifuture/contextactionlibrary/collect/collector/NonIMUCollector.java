@@ -86,14 +86,14 @@ public class NonIMUCollector extends SensorCollector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public synchronized CompletableFuture<Data> collect() {
+    public synchronized CompletableFuture<Void> collect() {
         if (data == null) {
             return CompletableFuture.completedFuture(null);
         }
         data.setScreenBrightness(Settings.System.getInt(mContext.getContentResolver(),Settings.System.SCREEN_BRIGHTNESS,125));
         data.setScreenBrightnessTimestamp(System.currentTimeMillis());
         saver.save(data.deepClone());
-        return CompletableFuture.completedFuture(data);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override

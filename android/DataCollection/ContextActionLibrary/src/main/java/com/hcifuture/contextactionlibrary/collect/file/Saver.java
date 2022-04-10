@@ -22,6 +22,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -30,16 +32,14 @@ public class Saver {
 
     private String saveFolder;
     private String savePath;
-    private Executor pool;
+    private ScheduledExecutorService scheduledExecutorService;
+    private List<ScheduledFuture<?>> futureList;
 
-    public Saver(Context context, String triggerFolder, String saveFolderName) {
+    public Saver(Context context, String triggerFolder, String saveFolderName, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.saveFolder = context.getExternalMediaDirs()[0].getAbsolutePath() + "/" + triggerFolder + "/" + saveFolderName;
         this.savePath = "";
-        this.pool = new ThreadPoolExecutor(1, 1,
-                60, TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<>(10),
-                Executors.defaultThreadFactory(),
-                new ThreadPoolExecutor.DiscardPolicy());
+        this.scheduledExecutorService = scheduledExecutorService;
+        this.futureList = futureList;
     }
 
     private void saveString(String data) {
@@ -88,16 +88,16 @@ public class Saver {
         }
         CompletableFuture<Void> ft = new CompletableFuture<>();
         if (object instanceof List) {
-            pool.execute(() -> {
+            futureList.add(scheduledExecutorService.schedule(() -> {
                 try {
                     saveFloatList((List<Float>) object);
                     ft.complete(null);
                 } catch (Exception exc) {
                     ft.completeExceptionally(exc);
                 }
-            });
+            }, 0, TimeUnit.MILLISECONDS));
         } else {
-            pool.execute(() -> {
+            futureList.add(scheduledExecutorService.schedule(() -> {
                 try {
                     if (object instanceof String) {
                         saveString((String)object);
@@ -108,7 +108,7 @@ public class Saver {
                 } catch (Exception exc) {
                     ft.completeExceptionally(exc);
                 }
-            });
+            }, 0, TimeUnit.MILLISECONDS));
         }
         return ft;
     }
