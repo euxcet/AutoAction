@@ -40,6 +40,7 @@ public class ConfigCollector extends BaseCollector {
                                 @Override
                                 public void onSuccess(Response<String> response) {
                                     Log.e("ConfigLogger", "Success");
+                                    logCollector.eraseLog();
                                 }
                             });
                 }),

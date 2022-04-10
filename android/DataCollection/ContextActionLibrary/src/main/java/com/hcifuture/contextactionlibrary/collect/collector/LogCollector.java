@@ -52,6 +52,10 @@ public class LogCollector extends Collector {
         data.addLog(log);
     }
 
+    public void eraseLog() {
+        data.eraseLog();
+    }
+
     @Override
     public void close() {
         data.clear();

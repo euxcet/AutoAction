@@ -9,6 +9,7 @@ import java.util.List;
 public class LogData extends Data {
     private final List<String> logs;
     private int historyLength;
+    private int checkpoint = 0;
 
     public LogData(int historyLength) {
         logs = Collections.synchronizedList(new ArrayList<>());
@@ -24,8 +25,18 @@ public class LogData extends Data {
         }
     }
 
+    public void eraseLog() {
+        synchronized (logs) {
+            if (checkpoint > 0) {
+                logs.subList(0, checkpoint).clear();
+                checkpoint = 0;
+            }
+        }
+    }
+
     public String getString() {
         synchronized (logs) {
+            checkpoint = logs.size();
             StringBuilder result = new StringBuilder();
             for (String s : logs) {
                 result.append(s).append("\n");
