@@ -28,7 +28,7 @@ public class LogCollector extends Collector {
         this.label = label;
         this.historyLength = historyLength;
         this.data = new LogData(historyLength);
-        this.saver = new Saver(mContext, triggerFolder, getSaveFolderName());
+        this.saver = new Saver(mContext, triggerFolder, getSaveFolderName(), scheduledExecutorService, futureList);
     }
 
     @Override
@@ -42,11 +42,9 @@ public class LogCollector extends Collector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public CompletableFuture<Data> collect() {
-        // Log.e("LOG", "collect! " + data.getString() + "!");
-        CompletableFuture<Data> ft = new CompletableFuture<>();
-        saver.save(data.getString());
-        ft.complete(data);
+    public CompletableFuture<Void> collect() {
+        CompletableFuture<Void> ft = new CompletableFuture<>();
+        saver.save(data.getString()).whenComplete((v, t) -> ft.complete(null));
         return ft;
     }
 

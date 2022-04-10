@@ -107,16 +107,16 @@ public class CompleteIMUCollector extends SensorCollector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public synchronized CompletableFuture<Data> collect() {
+    public synchronized CompletableFuture<Void> collect() {
         Log.e("TapTapCollector", "collect");
         taptapPoint = gson.toJson(data.getLastData());
-        CompletableFuture<Data> ft = new CompletableFuture<>();
+        CompletableFuture<Void> ft = new CompletableFuture<>();
         futureList.add(scheduledExecutorService.schedule(() -> {
             List<Float> cur = data.toList();
             sensorData = gson.toJson(cur);
             Log.e("TapTapCollector", "size " + cur.size());
             saver.save(cur);
-            ft.complete(data);
+            ft.complete(null);
         }, DELAY_TIME, TimeUnit.MILLISECONDS));
         return ft;
     }

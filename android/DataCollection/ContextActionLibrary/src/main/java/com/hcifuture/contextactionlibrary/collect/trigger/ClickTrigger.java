@@ -1,21 +1,30 @@
 package com.hcifuture.contextactionlibrary.collect.trigger;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.collect.collector.Collector;
 import com.hcifuture.contextactionlibrary.collect.collector.CompleteIMUCollector;
+import com.hcifuture.contextactionlibrary.collect.data.Data;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class ClickTrigger extends Trigger {
 
@@ -27,52 +36,36 @@ public class ClickTrigger extends Trigger {
         super(context, type, scheduledExecutorService, futureList);
     }
 
-    @Override
-    public void trigger() {
-        futureList.add(scheduledExecutorService.schedule(() -> {
-                Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
-                String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-                for (Collector collector: collectors) {
-                    collector.setSavePath(timestamp);
-                }
-                for (Collector collector: collectors) {
-                    collector.collect();
-                }
-                Log.d(TAG, "数据收集结束: [" + System.currentTimeMillis() + "]");
-            }, 0L, TimeUnit.MILLISECONDS
-        ));
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private CompletableFuture<Void> triggerCollectors(List<Collector> collectors) {
+        Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
+        List<CompletableFuture<Void>> fts = new ArrayList<>();
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        for (Collector collector : collectors) {
+            collector.setSavePath(timestamp);
+        }
+        for (Collector collector : collectors) {
+            fts.add(collector.collect());
+        }
+        return CompletableFuture.allOf(fts.toArray(new CompletableFuture[0]));
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public void trigger(List<CollectorType> types) {
-        futureList.add(scheduledExecutorService.schedule(() -> {
-                    Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
-                    String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-                    for (Collector collector: collectors) {
-                        if (types.contains(collector.getType())) {
-                            collector.setSavePath(timestamp);
-                        }
-                    }
-                    for (Collector collector: collectors) {
-                        if (types.contains(collector.getType())) {
-                            collector.collect();
-                        }
-                    }
-                    Log.d(TAG, "数据收集结束: [" + System.currentTimeMillis() + "]");
-                }, 0L, TimeUnit.MILLISECONDS
-        ));
+    public CompletableFuture<Void> trigger() {
+        return triggerCollectors(collectors);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public void trigger(Collector collector) {
-        futureList.add(scheduledExecutorService.schedule(() -> {
-                    Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
-                    String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-                    collector.setSavePath(timestamp);
-                    collector.collect();
-                    Log.d(TAG, "数据收集结束: [" + System.currentTimeMillis() + "]");
-                }, 0L, TimeUnit.MILLISECONDS
-        ));
+    public CompletableFuture<Void> trigger(List<CollectorType> types) {
+        return triggerCollectors(collectors.stream().filter(types::contains).collect(Collectors.toList()));
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    public CompletableFuture<Void> trigger(Collector collector) {
+        return triggerCollectors(Collections.singletonList(collector));
     }
 
     @Override

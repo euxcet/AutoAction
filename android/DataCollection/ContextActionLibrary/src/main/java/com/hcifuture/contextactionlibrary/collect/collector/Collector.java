@@ -21,7 +21,7 @@ public abstract class Collector {
     public Collector(Context context, Trigger.CollectorType type, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;
         this.type = type;
-        this.saver = new Saver(mContext, triggerFolder, getSaveFolderName());
+        this.saver = new Saver(mContext, triggerFolder, getSaveFolderName(), scheduledExecutorService, futureList);
         this.scheduledExecutorService = scheduledExecutorService;
         this.futureList = futureList;
         initialize();
@@ -31,7 +31,7 @@ public abstract class Collector {
 
     public abstract void setSavePath(String timestamp);
 
-    public abstract CompletableFuture<Data> collect();
+    public abstract CompletableFuture<Void> collect();
 
     public abstract void close();
 
