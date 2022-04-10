@@ -200,6 +200,8 @@ public class LoaderManager {
 
 
         for (ContextActionConfigBean.ContextConfigBean bean: config.getContext()) {
+            if (bean == null)
+                continue;
             ContextConfig contextConfig = new ContextConfig();
             contextConfig.setContext(bean.getBuiltInContext());
             contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
@@ -219,6 +221,8 @@ public class LoaderManager {
         }
 
         for (ContextActionConfigBean.ActionConfigBean bean: config.getAction()) {
+            if (bean == null)
+                continue;
             ActionConfig actionConfig = new ActionConfig();
             actionConfig.setAction(bean.getBuiltInAction());
             actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
