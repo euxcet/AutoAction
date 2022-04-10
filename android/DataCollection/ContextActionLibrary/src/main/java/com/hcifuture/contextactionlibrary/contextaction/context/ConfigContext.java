@@ -189,6 +189,7 @@ public class ConfigContext extends BaseContext {
         long cur_timestamp = System.currentTimeMillis();
         String line = cur_timestamp + "\t" + type + "\t" + action + "\t" + tag + "\t" + other;
         logCollector.addLog(line);
+        Log.e("ConfigContext", "in record");
     }
 
     void record_all() {
