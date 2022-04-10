@@ -26,8 +26,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -57,7 +55,7 @@ public class ConfigContext extends BaseContext {
     int brightness;
     String packageName = "";
 
-    private LogCollector logCollector;
+    private final LogCollector logCollector;
 
     public ConfigContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector logCollector) {
         super(context, config, requestListener, contextListener);
@@ -191,10 +189,7 @@ public class ConfigContext extends BaseContext {
 
     void record(String type, String action, String tag, String other) {
         long cur_timestamp = System.currentTimeMillis();
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(cur_timestamp).append("\t").append(type).append("\t").append(action)
-                .append("\t").append(tag).append("\t").append(other);
-        String line = stringBuilder.toString();
+        String line = cur_timestamp + "\t" + type + "\t" + action + "\t" + tag + "\t" + other;
         logCollector.addLog(line);
     }
 
@@ -242,10 +237,13 @@ public class ConfigContext extends BaseContext {
             if (Modifier.isStatic(f.getModifiers())) {
                 try {
                     String name = f.getName();
-                    String database_key = f.get(null).toString();
-                    Method method = c.getMethod("getString", ContentResolver.class, String.class);
-                    String value_s = (String) method.invoke(null, mContext.getContentResolver(), database_key);
-                    jsonArray.put(new JSONArray().put(name).put(database_key).put(value_s));
+                    Object obj = f.get(null);
+                    if (obj != null) {
+                        String database_key = obj.toString();
+                        Method method = c.getMethod("getString", ContentResolver.class, String.class);
+                        String value_s = (String) method.invoke(null, mContext.getContentResolver(), database_key);
+                        jsonArray.put(new JSONArray().put(name).put(database_key).put(value_s));
+                    }
                 } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
