@@ -98,9 +98,13 @@ public class InformationalContext extends BaseContext {
 
         actionList.add(action);
 
-        if(nowTime-lastActionTime>500)
-        {
-            // todo: user do action, trigger IMU collector? @huangyanwen
+        if (nowTime - lastActionTime > 5000) {
+            if (contextListener != null) {
+                for (ContextListener listener: contextListener) {
+                    ContextResult contextResult = new ContextResult("Stable");
+                    listener.onContext(contextResult);
+                }
+            }
         }
 
         lastActionTime = nowTime;

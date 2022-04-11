@@ -82,6 +82,33 @@ public class ClickTrigger extends Trigger {
         return "";
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public CompletableFuture<Void> triggerShortIMU(int head, int tail) {
+        Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
+        List<CompletableFuture<Void>> fts = new ArrayList<>();
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        for (Collector collector : collectors) {
+            if (collector.getSaveFolderName().equals("CompleteIMU")) {
+                collector.setSavePath(timestamp);
+            }
+        }
+        for (Collector collector : collectors) {
+            if (collector.getSaveFolderName().equals("CompleteIMU")) {
+                fts.add(((CompleteIMUCollector)collector).collectShort(head, tail));
+            }
+        }
+        return CompletableFuture.allOf(fts.toArray(new CompletableFuture[0]));
+    }
+
+    public String getLastTimestamp() {
+        for (Collector collector: collectors) {
+            if (collector.getSaveFolderName().equals("CompleteIMU")) {
+                return ((CompleteIMUCollector)collector).getLastTimestamp();
+            }
+        }
+        return "";
+    }
+
     public String getRecentIMUData() {
         for (Collector collector: collectors) {
             if (collector.getSaveFolderName().equals("CompleteIMU")) {
