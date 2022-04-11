@@ -207,9 +207,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
         this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU), scheduledExecutorService, futureList);
-        LogCollector logCollector = clickTrigger.newLogCollector("Log0", 100);
-        LogCollector informationLogCollector = clickTrigger.newLogCollector("Informational", 1000);
-        LogCollector configLogCollector = clickTrigger.newLogCollector("Config", 8192);
 
         // cwh: asList returns a fixed-size list backed by the specified array, thus we cannot perform add()
         // ref: https://stackoverflow.com/questions/18389012/how-to-add-elements-in-list-when-used-arrays-aslist
@@ -219,7 +216,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 //                new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector),
 //                new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector)
 //        );
-
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
 
@@ -236,6 +232,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         actions.add(topTapAction);
                         break;
                     case "Example":
+                        LogCollector logCollector = clickTrigger.newLogCollector("Log0", 100);
                         collectors.add(new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector));
                         ExampleAction exampleAction = new ExampleAction(mContext, config, requestListener, Arrays.asList(this, actionListener), logCollector);
                         actions.add(exampleAction);
@@ -253,11 +250,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         contexts.add(tableContext);
                         break;
                     case "Informational":
+                        LogCollector informationLogCollector = clickTrigger.newLogCollector("Informational", 1000);
                         collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector));
                         InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener),informationLogCollector);
                         contexts.add(informationalContext);
                         break;
                     case "Config":
+                        LogCollector configLogCollector = clickTrigger.newLogCollector("Config", 8192);
                         collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector));
                         ConfigContext configContext = new ConfigContext(mContext, config, requestListener, Arrays.asList(this, contextListener), configLogCollector);
                         contexts.add(configContext);
