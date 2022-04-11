@@ -249,7 +249,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         contexts.add(tableContext);
                         break;
                     case "Informational":
-                        LogCollector informationLogCollector = clickTrigger.newLogCollector("Informational", 1000);
+                        LogCollector informationLogCollector = clickTrigger.newLogCollector("Informational", 8192);
                         collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector));
                         InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener),informationLogCollector);
                         contexts.add(informationalContext);

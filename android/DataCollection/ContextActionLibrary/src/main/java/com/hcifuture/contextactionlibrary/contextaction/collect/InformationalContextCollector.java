@@ -27,28 +27,26 @@ public class InformationalContextCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public InformationalContextCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector logCollector) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
-
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                () -> {
-                    clickTrigger.trigger(logCollector);
-                    futureList.add(scheduledExecutorService.schedule(() -> {
-                        File logFile = new File(logCollector.getRecentPath());
-                        NetworkUtils.uploadCollectedData(mContext,
-                                logFile,
-                                0,
-                                "Informational",
-                                getMacMoreThanM(),
-                                System.currentTimeMillis(),
-                                "InformationalLog_commit",
-                                new StringCallback() {
-                                    @Override
-                                    public void onSuccess(Response<String> response) {
-                                        Log.e("", "Success");
-                                    }
-                                });
-                    }, 0, TimeUnit.MILLISECONDS));
-                },
-                0,
+                () -> clickTrigger.trigger(logCollector).whenComplete((msg, ex) -> {
+                    File logFile = new File(logCollector.getRecentPath());
+                    Log.e("InformationalCollector", "uploadCollectedData: "+logFile.toString());
+                    NetworkUtils.uploadCollectedData(mContext,
+                            logFile,
+                            0,
+                            "Informational",
+                            getMacMoreThanM(),
+                            System.currentTimeMillis(),
+                            "InformationalLog_commit",
+                            new StringCallback() {
+                                @Override
+                                public void onSuccess(Response<String> response) {
+                                    Log.e("InformationalCollector", "Success");
+                                    logCollector.eraseLog();
+                                }
+                            });
+                }),
+                5000,
                 60000,
                 TimeUnit.MILLISECONDS));
     }
