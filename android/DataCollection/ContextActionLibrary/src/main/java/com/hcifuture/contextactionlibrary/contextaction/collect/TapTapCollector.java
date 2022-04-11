@@ -29,6 +29,7 @@ public class TapTapCollector extends BaseCollector {
 
     @Override
     public void onAction(ActionResult action) {
+        Log.e("TapTapCollector", action.getTimestamp());
         if (clickTrigger != null && scheduledExecutorService != null) {
             futureList.add(scheduledExecutorService.schedule(() -> {
                 File imuFile = new File(clickTrigger.getRecentIMUPath());
@@ -54,7 +55,6 @@ public class TapTapCollector extends BaseCollector {
     @Override
     public void onContext(ContextResult context) {
         if (clickTrigger != null && scheduledExecutorService != null) {
-            String lastTimestamp = clickTrigger.getLastTimestamp();
             // save
             clickTrigger.triggerShortIMU(800, 200);
             // upload
@@ -67,7 +67,7 @@ public class TapTapCollector extends BaseCollector {
                         context.getContext(),
                         getMacMoreThanM(),
                         System.currentTimeMillis(),
-                        context.getContext() + ":" + lastTimestamp,
+                        context.getContext() + ":" + context.getTimestamp(),
                         new StringCallback() {
                             @Override
                             public void onSuccess(Response<String> response) {

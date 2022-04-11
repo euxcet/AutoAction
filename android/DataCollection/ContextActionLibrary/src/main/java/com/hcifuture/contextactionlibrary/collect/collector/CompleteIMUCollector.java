@@ -35,7 +35,6 @@ public class CompleteIMUCollector extends SensorCollector {
 
     private String sensorData;
     private String taptapPoint;
-    private long lastTimestamp;
     private Gson gson = new Gson();
 
     public CompleteIMUCollector(Context context, Trigger.CollectorType type, String triggerFolder, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, int samplingPeriod, int collectPeriod) {
@@ -46,7 +45,6 @@ public class CompleteIMUCollector extends SensorCollector {
     }
 
     public synchronized void addSensorData(float x, float y, float z, int idx, long time) {
-        lastTimestamp = time;
         if (data != null) {
             data.insert(new ArrayList<>(Arrays.asList(
                     x, y, z,
@@ -124,8 +122,7 @@ public class CompleteIMUCollector extends SensorCollector {
         taptapPoint = gson.toJson(data.getLastData());
         CompletableFuture<Void> ft = new CompletableFuture<>();
         futureList.add(scheduledExecutorService.schedule(() -> {
-            int length = (head + tail) * size / 10000;
-            Log.e("TapTapCollector short", String.valueOf(length));
+            int length = (head + tail) * size * 5 / 10000;
             List<Float> tmp = data.toList();
             List<Float> cur = tmp.subList(tmp.size() - length, tmp.size());
             sensorData = gson.toJson(cur);
@@ -134,10 +131,6 @@ public class CompleteIMUCollector extends SensorCollector {
             ft.complete(null);
         }, tail, TimeUnit.MILLISECONDS));
         return ft;
-    }
-
-    public synchronized String getLastTimestamp() {
-        return String.valueOf(lastTimestamp);
     }
 
     @Override

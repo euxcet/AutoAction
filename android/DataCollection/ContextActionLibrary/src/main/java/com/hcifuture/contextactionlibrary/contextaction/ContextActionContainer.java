@@ -402,7 +402,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     @Override
     public void onContext(ContextResult context) {
-        if (context.getContext().equals("Stable")) {
+        if (context.getContext().equals("UserAction")) {
             if (collectors != null) {
                 for (BaseCollector collector: collectors) {
                     if (collector.getClass().equals(TapTapCollector.class))

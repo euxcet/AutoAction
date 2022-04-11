@@ -100,15 +100,6 @@ public class ClickTrigger extends Trigger {
         return CompletableFuture.allOf(fts.toArray(new CompletableFuture[0]));
     }
 
-    public String getLastTimestamp() {
-        for (Collector collector: collectors) {
-            if (collector.getSaveFolderName().equals("CompleteIMU")) {
-                return ((CompleteIMUCollector)collector).getLastTimestamp();
-            }
-        }
-        return "";
-    }
-
     public String getRecentIMUData() {
         for (Collector collector: collectors) {
             if (collector.getSaveFolderName().equals("CompleteIMU")) {

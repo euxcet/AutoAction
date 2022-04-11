@@ -51,6 +51,7 @@ public class InformationalContext extends BaseContext {
     private Page lastPage = null;
     private boolean windowStable = false;
 
+    private long lastIMUTime = 0;
     private long lastActionTime = 0;
 
     private LogCollector logCollector;
@@ -80,7 +81,7 @@ public class InformationalContext extends BaseContext {
 
     @Override
     public void onIMUSensorChanged(SensorEvent event) {
-
+        lastIMUTime = event.timestamp;
     }
 
     @Override
@@ -101,7 +102,8 @@ public class InformationalContext extends BaseContext {
         if (nowTime - lastActionTime > 5000) {
             if (contextListener != null) {
                 for (ContextListener listener: contextListener) {
-                    ContextResult contextResult = new ContextResult("Stable");
+                    ContextResult contextResult = new ContextResult("UserAction");
+                    contextResult.setTimestamp(String.valueOf(lastIMUTime));
                     listener.onContext(contextResult);
                 }
             }
