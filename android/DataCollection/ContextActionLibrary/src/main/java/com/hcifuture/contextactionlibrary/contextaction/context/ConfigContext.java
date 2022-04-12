@@ -12,13 +12,14 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.Display;
 import android.view.accessibility.AccessibilityEvent;
-import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
+import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
+import com.hcifuture.shared.communicate.result.ContextResult;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,6 +33,8 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ConfigContext extends BaseContext {
+
+    public static String NEED_COLLECT = "context.config.need_collect";
 
     private static final HashMap<String, Integer> volume = new HashMap<>();
     static {
@@ -56,6 +59,7 @@ public class ConfigContext extends BaseContext {
     }
     int brightness;
     String packageName = "";
+    long last_call = 0;
 
     private final LogCollector logCollector;
 
@@ -137,6 +141,7 @@ public class ConfigContext extends BaseContext {
                     } else {
                         jsonSilentPut(json, "mode", "unknown");
                     }
+                    notifySensorCollect();
                 }
                 if (database_key.startsWith("volume_")) {
                     if (!volume.containsKey(database_key)) {
@@ -146,6 +151,7 @@ public class ConfigContext extends BaseContext {
                     // record volume value difference and update
                     int diff = value - volume.put(database_key, value);
                     jsonSilentPut(json, "diff", diff);
+                    notifySensorCollect();
                 }
             }
         } else if ("BroadcastReceive".equals(type)) {
@@ -251,5 +257,24 @@ public class ConfigContext extends BaseContext {
             }
         }
         jsonSilentPut(json, key, jsonArray);
+    }
+
+    void notifySensorCollect() {
+        long current_call = System.currentTimeMillis();
+        if (last_call == 0) {
+            // first call, record timestamp
+            last_call = current_call;
+        } else if (current_call - last_call <= 10000) {
+            // if adjacent calls are too close, only notify once
+            return;
+        }
+
+        if (contextListener != null) {
+            for (ContextListener listener: contextListener) {
+                ContextResult contextResult = new ContextResult(NEED_COLLECT);
+                contextResult.setTimestamp(Long.toString(current_call));
+                listener.onContext(contextResult);
+            }
+        }
     }
 }
