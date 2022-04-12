@@ -131,12 +131,16 @@ public class BluetoothCollector extends Collector {
         bluetoothAdapter.startDiscovery();
         // start BLE scanning
         BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
-        bluetoothLeScanner.startScan(leScanCallback);
+        if (bluetoothLeScanner != null) {
+            bluetoothLeScanner.startScan(leScanCallback);
+        }
 
         // Stops scanning after 10 seconds
         futureList.add(scheduledExecutorService.schedule(() -> {
             synchronized (BluetoothCollector.this) {
-                bluetoothLeScanner.stopScan(leScanCallback);
+                if (bluetoothLeScanner != null) {
+                    bluetoothLeScanner.stopScan(leScanCallback);
+                }
                 bluetoothAdapter.cancelDiscovery();
                 saver.save(data.deepClone());
                 ft.complete(null);
