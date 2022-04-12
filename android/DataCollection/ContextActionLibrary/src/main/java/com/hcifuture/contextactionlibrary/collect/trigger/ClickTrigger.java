@@ -75,7 +75,7 @@ public class ClickTrigger extends Trigger {
 
     public String getRecentIMUPath() {
         for (Collector collector: collectors) {
-            if (collector.getSaveFolderName().equals("CompleteIMU")) {
+            if (collector.getType() == CollectorType.CompleteIMU) {
                 return collector.getRecentPath();
             }
         }
@@ -88,12 +88,12 @@ public class ClickTrigger extends Trigger {
         List<CompletableFuture<Void>> fts = new ArrayList<>();
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
         for (Collector collector : collectors) {
-            if (collector.getSaveFolderName().equals("CompleteIMU")) {
+            if (collector.getType() == CollectorType.CompleteIMU) {
                 collector.setSavePath(timestamp);
             }
         }
         for (Collector collector : collectors) {
-            if (collector.getSaveFolderName().equals("CompleteIMU")) {
+            if (collector.getType() == CollectorType.CompleteIMU) {
                 fts.add(((CompleteIMUCollector)collector).collectShort(head, tail));
             }
         }
@@ -102,7 +102,7 @@ public class ClickTrigger extends Trigger {
 
     public String getRecentIMUData() {
         for (Collector collector: collectors) {
-            if (collector.getSaveFolderName().equals("CompleteIMU")) {
+            if (collector.getType() == CollectorType.CompleteIMU) {
                 return ((CompleteIMUCollector)collector).getRecentData();
             }
         }
