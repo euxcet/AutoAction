@@ -270,11 +270,13 @@ public class ConfigContext extends BaseContext {
         }
 
         if (contextListener != null) {
+            Log.e("ConfigContext", "broadcast context NEED_COLLECT: " + NEED_COLLECT);
             for (ContextListener listener: contextListener) {
                 ContextResult contextResult = new ContextResult(NEED_COLLECT);
                 contextResult.setTimestamp(Long.toString(current_call));
                 listener.onContext(contextResult);
             }
+            last_call = current_call;
         }
     }
 }

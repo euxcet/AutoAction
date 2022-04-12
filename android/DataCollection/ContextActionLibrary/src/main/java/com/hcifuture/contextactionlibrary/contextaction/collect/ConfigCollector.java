@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -15,6 +16,8 @@ import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -23,13 +26,15 @@ import java.util.concurrent.TimeUnit;
 import androidx.annotation.RequiresApi;
 
 public class ConfigCollector extends BaseCollector {
+    List<Trigger.CollectorType> collect_types;
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ConfigCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector logCollector) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
                 () -> clickTrigger.trigger(logCollector).whenComplete((msg, ex) -> {
                     File logFile = new File(logCollector.getRecentPath());
-                    Log.e("ConfigCollector", "uploadCollectedData: "+logFile.toString());
+                    Log.e("ConfigCollector", "uploadCollectedData: "+logFile);
                     NetworkUtils.uploadCollectedData(mContext,
                             logFile,
                             0,
@@ -48,6 +53,7 @@ public class ConfigCollector extends BaseCollector {
                 5000,
                 60000,
                 TimeUnit.MILLISECONDS));
+        collect_types = Arrays.asList(Trigger.CollectorType.Bluetooth, Trigger.CollectorType.Wifi);
     }
 
     @Override
@@ -58,24 +64,26 @@ public class ConfigCollector extends BaseCollector {
     @Override
     public void onContext(ContextResult context) {
         if (ConfigContext.NEED_COLLECT.equals(context.getContext())) {
-            // TODO
-//            clickTrigger.trigger().whenComplete((msg, ex) -> {
-//                File sensorFile = new File(clickTrigger.getRecentIMUPath());
-//                Log.e("ConfigCollector", "uploadSensorData: "+sensorFile.toString());
-//                NetworkUtils.uploadCollectedData(mContext,
-//                        sensorFile,
-//                        0,
-//                        "Config",
-//                        getMacMoreThanM(),
-//                        System.currentTimeMillis(),
-//                        "Sensor_commit",
-//                        new StringCallback() {
-//                            @Override
-//                            public void onSuccess(Response<String> response) {
-//                                Log.e("ConfigLogger", "Sensor collect & upload success");
-//                            }
-//                        });
-//            });
+            for (Trigger.CollectorType type : collect_types) {
+                clickTrigger.trigger(Collections.singletonList(type)).whenComplete((msg, ex) -> {
+                    File sensorFile = new File(clickTrigger.getRecentPath(type));
+                    Log.e("ConfigCollector", "Sensor type: " + type);
+                    Log.e("ConfigCollector", "uploadSensorData: " + sensorFile);
+                    NetworkUtils.uploadCollectedData(mContext,
+                            sensorFile,
+                            0,
+                            "Config_"+type,
+                            getMacMoreThanM(),
+                            System.currentTimeMillis(),
+                            "Sensor_commit",
+                            new StringCallback() {
+                                @Override
+                                public void onSuccess(Response<String> response) {
+                                    Log.e("ConfigLogger", "Sensor collect & upload success");
+                                }
+                            });
+                });
+            }
         }
     }
 }
