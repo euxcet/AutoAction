@@ -9,6 +9,7 @@ import android.view.accessibility.AccessibilityEvent;
 
 import androidx.annotation.RequiresApi;
 
+import com.hcifuture.contextactionlibrary.collect.collector.CompleteIMUCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
@@ -401,6 +402,15 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     @Override
     public void onContext(ContextResult context) {
+        if (context.getContext().equals("UserAction")) {
+            if (collectors != null) {
+                for (BaseCollector collector: collectors) {
+                    if (collector.getClass().equals(TapTapCollector.class))
+                        collector.onContext(context);
+                }
+            }
+            return;
+        }
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
                 collector.onContext(context);

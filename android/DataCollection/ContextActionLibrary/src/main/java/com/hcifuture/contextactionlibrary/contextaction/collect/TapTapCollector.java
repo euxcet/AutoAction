@@ -1,7 +1,10 @@
 package com.hcifuture.contextactionlibrary.contextaction.collect;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
@@ -26,6 +29,7 @@ public class TapTapCollector extends BaseCollector {
 
     @Override
     public void onAction(ActionResult action) {
+        Log.e("TapTapCollector", action.getTimestamp());
         if (clickTrigger != null && scheduledExecutorService != null) {
             futureList.add(scheduledExecutorService.schedule(() -> {
                 File imuFile = new File(clickTrigger.getRecentIMUPath());
@@ -47,8 +51,30 @@ public class TapTapCollector extends BaseCollector {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onContext(ContextResult context) {
-
+        if (clickTrigger != null && scheduledExecutorService != null) {
+            // save
+            clickTrigger.triggerShortIMU(800, 200);
+            // upload
+            futureList.add(scheduledExecutorService.schedule(() -> {
+                File imuFile = new File(clickTrigger.getRecentIMUPath());
+                Log.e("TapTapCollector", imuFile.getAbsolutePath());
+                NetworkUtils.uploadCollectedData(mContext,
+                        imuFile,
+                        0,
+                        context.getContext(),
+                        getMacMoreThanM(),
+                        System.currentTimeMillis(),
+                        context.getContext() + ":" + context.getTimestamp(),
+                        new StringCallback() {
+                            @Override
+                            public void onSuccess(Response<String> response) {
+                                Log.e("TapTapCollector", "Success");
+                            }
+                        });
+            }, 5000L, TimeUnit.MILLISECONDS));
+        }
     }
 }

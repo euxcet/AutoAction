@@ -4,9 +4,6 @@ import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Build;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Process;
 import android.util.Log;
 
 import androidx.annotation.RequiresApi;
@@ -20,15 +17,13 @@ import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class CompleteIMUCollector extends SensorCollector {
-    // For complete data, keep 1min, 1 * 60 * 100 * 4 = 24k data
+    // For complete data, keep 10s, 10 * 100 * 4 = 4k data
     // in case sampling period is higher, maybe max 500Hz for acc and gyro
     private final long DELAY_TIME = 5000;
     private int size = 12000;
@@ -118,6 +113,23 @@ public class CompleteIMUCollector extends SensorCollector {
             saver.save(cur);
             ft.complete(null);
         }, DELAY_TIME, TimeUnit.MILLISECONDS));
+        return ft;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public synchronized CompletableFuture<Void> collectShort(int head, int tail) {
+        Log.e("TapTapCollector", "collect");
+        taptapPoint = gson.toJson(data.getLastData());
+        CompletableFuture<Void> ft = new CompletableFuture<>();
+        futureList.add(scheduledExecutorService.schedule(() -> {
+            int length = (head + tail) * size * 5 / 10000;
+            List<Float> tmp = data.toList();
+            List<Float> cur = tmp.subList(tmp.size() - length, tmp.size());
+            sensorData = gson.toJson(cur);
+            Log.e("TapTapCollector short", "size " + cur.size());
+            saver.save(cur);
+            ft.complete(null);
+        }, tail, TimeUnit.MILLISECONDS));
         return ft;
     }
 
