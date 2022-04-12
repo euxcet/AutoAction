@@ -39,7 +39,8 @@ public class ConfigCollector extends BaseCollector {
                             logFile,
                             0,
                             "Config",
-                            getMacMoreThanM(),
+//                            getMacMoreThanM(),
+                            "TestUserId_cwh",
                             System.currentTimeMillis(),
                             "ConfigLog_commit",
                             new StringCallback() {
@@ -73,7 +74,8 @@ public class ConfigCollector extends BaseCollector {
                             sensorFile,
                             0,
                             "Config_"+type,
-                            getMacMoreThanM(),
+//                            getMacMoreThanM(),
+                            "TestUserId_cwh",
                             System.currentTimeMillis(),
                             "Sensor_commit",
                             new StringCallback() {
