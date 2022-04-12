@@ -97,9 +97,8 @@ public class WifiCollector extends Collector {
         futureList.add(scheduledExecutorService.schedule(() -> {
             synchronized (WifiCollector.this) {
                 WifiData cloneData = data.deepClone();
-                saver.save(cloneData);
+                saver.save(cloneData).whenComplete((v, t) -> ft.complete(null));
             }
-            ft.complete(null);
         }, 10000, TimeUnit.MILLISECONDS));
         return ft;
     }

@@ -110,8 +110,7 @@ public class CompleteIMUCollector extends SensorCollector {
             List<Float> cur = data.toList();
             sensorData = gson.toJson(cur);
             Log.e("TapTapCollector", "size " + cur.size());
-            saver.save(cur);
-            ft.complete(null);
+            saver.save(cur).whenComplete((v, t) -> ft.complete(null));
         }, DELAY_TIME, TimeUnit.MILLISECONDS));
         return ft;
     }

@@ -142,8 +142,7 @@ public class BluetoothCollector extends Collector {
                     bluetoothLeScanner.stopScan(leScanCallback);
                 }
                 bluetoothAdapter.cancelDiscovery();
-                saver.save(data.deepClone());
-                ft.complete(null);
+                saver.save(data.deepClone()).whenComplete((v, t) -> ft.complete(null));
             }
         }, 10000, TimeUnit.MILLISECONDS));
         return ft;

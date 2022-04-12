@@ -90,10 +90,11 @@ public class NonIMUCollector extends SensorCollector {
         if (data == null) {
             return CompletableFuture.completedFuture(null);
         }
+        CompletableFuture<Void> ft = new CompletableFuture<>();
         data.setScreenBrightness(Settings.System.getInt(mContext.getContentResolver(),Settings.System.SCREEN_BRIGHTNESS,125));
         data.setScreenBrightnessTimestamp(System.currentTimeMillis());
-        saver.save(data.deepClone());
-        return CompletableFuture.completedFuture(null);
+        saver.save(data.deepClone()).whenComplete((v, t) -> ft.complete(null));
+        return ft;
     }
 
     @Override
