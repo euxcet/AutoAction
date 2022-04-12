@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
+import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
@@ -53,8 +54,28 @@ public class ConfigCollector extends BaseCollector {
     public void onAction(ActionResult action) {
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onContext(ContextResult context) {
-
+        if (ConfigContext.NEED_COLLECT.equals(context.getContext())) {
+            // TODO
+//            clickTrigger.trigger().whenComplete((msg, ex) -> {
+//                File sensorFile = new File(clickTrigger.getRecentIMUPath());
+//                Log.e("ConfigCollector", "uploadSensorData: "+sensorFile.toString());
+//                NetworkUtils.uploadCollectedData(mContext,
+//                        sensorFile,
+//                        0,
+//                        "Config",
+//                        getMacMoreThanM(),
+//                        System.currentTimeMillis(),
+//                        "Sensor_commit",
+//                        new StringCallback() {
+//                            @Override
+//                            public void onSuccess(Response<String> response) {
+//                                Log.e("ConfigLogger", "Sensor collect & upload success");
+//                            }
+//                        });
+//            });
+        }
     }
 }
