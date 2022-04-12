@@ -34,7 +34,7 @@ curl -XPOST http://127.0.0.1:6125/md5 # Use your backend ip address
 - 注：对于Windows平台，执行DataCollection下的aar2dex_win.bat脚本，需要提前配置环境变量D8_PATH，一般在%USERPROFILE%\AppData\Local\Android\Sdk\build-tools\%sdk_version%\d8.bat。如果要运行中的后端更新文件hash值，可以直接指定-s参数，此时可选IP和端口参数，否则默认为114.67.110.181:6125。
 
   ```batch
-  aar2dex_win.bat [-s [ip:port]]
+  .\aar2dex_win.bat [-s [ip:port]]
   ```
 
 
