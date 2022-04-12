@@ -22,6 +22,7 @@ import com.hcifuture.contextactionlibrary.contextaction.collect.ConfigCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ExampleCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.InformationalContextCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
+import com.hcifuture.contextactionlibrary.contextaction.collect.TimedCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
@@ -213,6 +214,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         // because it returns a fixed-size list backed by the specified array and we cannot perform add()
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
+        collectors.add(new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, Arrays.asList(Trigger.CollectorType.Bluetooth, Trigger.CollectorType.Wifi)));
 
         if (fromDex) {
             for (int i = 0; i < actionConfig.size(); i++) {

@@ -54,7 +54,7 @@ public class ConfigCollector extends BaseCollector {
                 5000,
                 60000,
                 TimeUnit.MILLISECONDS));
-        collect_types = Arrays.asList(Trigger.CollectorType.Bluetooth, Trigger.CollectorType.Wifi);
+//        collect_types = Arrays.asList(Trigger.CollectorType.Bluetooth, Trigger.CollectorType.Wifi);
     }
 
     @Override
