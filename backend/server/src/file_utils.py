@@ -5,7 +5,7 @@ import hashlib
 from time import time
 from ml.record import Record
 
-DATA_ROOT = '../data/'
+DATA_ROOT = os.path.join("..", "data")
 DATA_RECORD_ROOT = os.path.join(DATA_ROOT, "record")
 DATA_TRAIN_ROOT = os.path.join(DATA_ROOT, "train")
 DATA_FILE_ROOT = os.path.join(DATA_ROOT, "file")
