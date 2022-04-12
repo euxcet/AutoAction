@@ -11,6 +11,7 @@ import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.NonIMUCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.WifiCollector;
 import com.hcifuture.contextactionlibrary.collect.data.Data;
+import com.hcifuture.shared.communicate.SensorType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -165,5 +166,14 @@ public abstract class Trigger {
         LogCollector logCollector = new LogCollector(mContext, CollectorType.Log, triggerFolder, scheduledExecutorService, futureList, label, historyLength);
         collectors.add(logCollector);
         return logCollector;
+    }
+
+    public String getRecentPath(CollectorType type) {
+        for (Collector collector: collectors) {
+            if (collector.getType() == type) {
+                return collector.getRecentPath();
+            }
+        }
+        return null;
     }
 }
