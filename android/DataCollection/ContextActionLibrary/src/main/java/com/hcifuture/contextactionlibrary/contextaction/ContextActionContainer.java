@@ -45,6 +45,7 @@ import com.hcifuture.shared.communicate.result.ContextResult;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
@@ -206,16 +207,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private void initialize() {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
-        this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU), scheduledExecutorService, futureList);
+        this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Bluetooth, Trigger.CollectorType.Wifi), scheduledExecutorService, futureList);
 
-        // cwh: asList returns a fixed-size list backed by the specified array, thus we cannot perform add()
-        // ref: https://stackoverflow.com/questions/18389012/how-to-add-elements-in-list-when-used-arrays-aslist
-//        this.collectors = Arrays.asList(
-//                new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger),
-//                new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector),
-//                new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector),
-//                new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector)
-//        );
+        // cwh: do not use Arrays.asList() to assign to collectors,
+        // because it returns a fixed-size list backed by the specified array and we cannot perform add()
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
 
@@ -385,7 +380,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     public void onAction(ActionResult action) {
         if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap")) {
             if (clickTrigger != null) {
-                clickTrigger.trigger();
+                clickTrigger.trigger(Collections.singletonList(Trigger.CollectorType.CompleteIMU));
             }
         }
     }
