@@ -15,8 +15,8 @@ public class SingleWifiData extends Data {
     private boolean connected;
 
     public SingleWifiData() {
-        this.ssid = "NULL";
-        this.bssid = "NULL";
+        this.ssid = "";
+        this.bssid = "";
         this.capabilities = "";
         this.level = 0;
         this.frequency = 0;
@@ -35,17 +35,9 @@ public class SingleWifiData extends Data {
                           int channelWidth,
                           int centerFreq0, int centerFreq1,
                           boolean connected) {
-        if (ssid == null) {
-            this.ssid = "NULL";
-        } else {
-            this.ssid = ssid;
-        }
-        if (bssid == null) {
-            this.bssid = "NULL";
-        } else {
-            this.bssid = bssid;
-        }
-        this.capabilities = capabilities;
+        setSsid(ssid);
+        setBssid(bssid);
+        setCapabilities(capabilities);
         this.level = level;
         this.frequency = frequency;
         this.timestamp = timestamp;
@@ -93,16 +85,20 @@ public class SingleWifiData extends Data {
 
     public boolean getConnected() { return connected; }
 
-    public void setBssid(String Bssid) {
-        if (Bssid == null) {
-            this.bssid = "NULL";
+    public void setBssid(String bssid) {
+        if (bssid == null) {
+            this.bssid = "";
         } else {
             this.bssid = bssid;
         }
     }
 
     public void setCapabilities(String capabilities) {
-        this.capabilities = capabilities;
+        if (capabilities == null) {
+            this.capabilities = "";
+        } else {
+            this.capabilities = capabilities;
+        }
     }
 
     public void setCenterFreq0(int centerFreq0) {
@@ -127,7 +123,7 @@ public class SingleWifiData extends Data {
 
     public void setSsid(String ssid) {
         if (ssid == null) {
-            this.ssid = "NULL";
+            this.ssid = "";
         } else {
             this.ssid = ssid;
         }

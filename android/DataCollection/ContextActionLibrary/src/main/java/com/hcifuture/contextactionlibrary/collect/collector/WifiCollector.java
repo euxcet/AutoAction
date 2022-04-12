@@ -85,9 +85,9 @@ public class WifiCollector extends Collector {
         CompletableFuture<Void> ft = new CompletableFuture<>();
         data.clear();
         WifiInfo info = wifiManager.getConnectionInfo();
-        if (info != null) {
+        if (info != null && info.getBSSID() != null) {
             data.insert(new SingleWifiData(info.getSSID(), info.getBSSID(),
-                    "NULL",
+                    null,
                     0, info.getFrequency(),
                     SystemClock.elapsedRealtimeNanos()/1000,
                     0,
