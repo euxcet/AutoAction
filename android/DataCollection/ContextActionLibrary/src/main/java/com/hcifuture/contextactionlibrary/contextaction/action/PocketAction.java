@@ -6,7 +6,6 @@ import android.hardware.SensorEvent;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
-import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.HorizontalFilter;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.Lowpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.MyPeakDetector;
@@ -22,9 +21,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class TopTapAction extends BaseAction {
+public class PocketAction extends BaseAction {
 
-    private String TAG = "TopTapAction";
+    private String TAG = "PocketAction";
 
     private long SAMPLINGINTERVALNS = 10000000L;
     private long WINDOW_NS = 400000000L;
@@ -42,41 +41,26 @@ public class TopTapAction extends BaseAction {
 
     private Highpass1C highpassKeyPositive = new Highpass1C();
     private Lowpass1C lowpassKeyPositive = new Lowpass1C();
-    private Highpass1C highpassKeyNegative = new Highpass1C();
-    private Lowpass1C lowpassKeyNegative = new Lowpass1C();
     private MyPeakDetector peakDetectorPositive = new MyPeakDetector();
-    private MyPeakDetector peakDetectorNegative = new MyPeakDetector();
     private boolean wasPositivePeakApproaching = true;
-    private boolean wasNegativePeakApproaching = true;
-    private long[] doubleBackTapTimestamps = new long[2];
-    private long[] doubleTopTapTimestamps = new long[2];
+    private long[] doublePocketTimestamps = new long[2];
     private int result;
     private int seqLength;
-    private List<Long> backTapTimestamps = Collections.synchronizedList(new ArrayList<>());
-    private List<Long> topTapTimestamps = Collections.synchronizedList(new ArrayList<>());
+    private List<Long> pocketTimestamps = Collections.synchronizedList(new ArrayList<>());
     private TfClassifier tflite;
 
-    // filter related
-    private HorizontalFilter horizontalFilter = new HorizontalFilter();
-
-
-    public TopTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
+    public PocketAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
         super(context, config, requestListener, actionListener);
         init();
-        // tflite = new TfClassifier(mContext.getAssets(), "combined.tflite");
-        tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "combined.tflite"));
+        tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "pocket.tflite"));
         seqLength = (int)config.getValue("SeqLength");
     }
 
     private void init() {
         lowpassKeyPositive.setPara(0.2F);
         highpassKeyPositive.setPara(0.2F);
-        lowpassKeyNegative.setPara(0.2F);
-        highpassKeyNegative.setPara(0.2F);
         peakDetectorPositive.setMinNoiseTolerate(0.05f);
         peakDetectorPositive.setWindowSize(40);
-        peakDetectorNegative.setMinNoiseTolerate(0.05f);
-        peakDetectorNegative.setWindowSize(40);
     }
 
     private void reset() {
@@ -113,16 +97,6 @@ public class TopTapAction extends BaseAction {
 
     @Override
     public synchronized void onIMUSensorChanged(SensorEvent event) {
-        // just for horizontal / static cases' record && upload
-        horizontalFilter.onSensorChanged(event);
-        if (horizontalFilter.passWithDelay(event.timestamp) == -1) {
-            ActionResult actionResult = new ActionResult("TopTap");
-            actionResult.setReason("Static");
-            for (ActionListener listener : actionListener) {
-                listener.onActionSave(actionResult);
-            }
-        }
-
         if (event.sensor.getType() != Sensor.TYPE_GYROSCOPE && event.sensor.getType() != Sensor.TYPE_LINEAR_ACCELERATION)
             return;
         result = 0;
@@ -139,19 +113,14 @@ public class TopTapAction extends BaseAction {
             syncTime = event.timestamp;
             lowpassKeyPositive.init(0.0F);
             highpassKeyPositive.init(0.0F);
-            lowpassKeyNegative.init(0.0F);
-            highpassKeyNegative.init(0.0F);
         } else {
             if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION)
                 processAccAndKeySignal(event.values[0], event.values[1], event.values[2], event.timestamp, SAMPLINGINTERVALNS);
             else
                 processGyro(event.values[0], event.values[1], event.values[2], SAMPLINGINTERVALNS);
-            recognizeTapML();
+            recognizePocketML();
             if (result == 1) {
-                backTapTimestamps.add(event.timestamp);
-            }
-            else if (result == 2) {
-                topTapTimestamps.add(event.timestamp);
+                pocketTimestamps.add(event.timestamp);
             }
         }
     }
@@ -176,7 +145,6 @@ public class TopTapAction extends BaseAction {
         }
 
         peakDetectorPositive.update(highpassKeyPositive.update(lowpassKeyPositive.update(z)));
-        peakDetectorNegative.update(-highpassKeyNegative.update(lowpassKeyNegative.update(y)));
     }
 
     private void processGyro(float x, float y, float z, long samplingInterval) {
@@ -214,26 +182,26 @@ public class TopTapAction extends BaseAction {
         }
     }
 
-    private int checkDoubleBackTapTiming(long timestamp) {
+    private int checkDoublePocketTiming(long timestamp) {
         int res = 0;
-        synchronized (backTapTimestamps) {
+        synchronized (pocketTimestamps) {
             // remove old timestamps
             int idx = 0;
-            for (; idx < backTapTimestamps.size(); idx++) {
-                if (timestamp - backTapTimestamps.get(idx) <= 500000000L)
+            for (; idx < pocketTimestamps.size(); idx++) {
+                if (timestamp - pocketTimestamps.get(idx) <= 500000000L)
                     break;
             }
-            backTapTimestamps = backTapTimestamps.subList(idx, backTapTimestamps.size());
+            pocketTimestamps = pocketTimestamps.subList(idx, pocketTimestamps.size());
 
-            if (backTapTimestamps.isEmpty())
+            if (pocketTimestamps.isEmpty())
                 res = 0;
             else {
-                if (backTapTimestamps.size() == 1)
+                if (pocketTimestamps.size() == 1)
                     res = 1;
-                doubleBackTapTimestamps[1] = backTapTimestamps.get(backTapTimestamps.size() - 1);
-                doubleBackTapTimestamps[0] = backTapTimestamps.get(0);
-                if (doubleBackTapTimestamps[1] - doubleBackTapTimestamps[0] > 100000000L) {
-                    backTapTimestamps.clear();
+                doublePocketTimestamps[1] = pocketTimestamps.get(pocketTimestamps.size() - 1);
+                doublePocketTimestamps[0] = pocketTimestamps.get(0);
+                if (doublePocketTimestamps[1] - doublePocketTimestamps[0] > 100000000L) {
+                    pocketTimestamps.clear();
                     res = 2;
                 }
             }
@@ -241,51 +209,15 @@ public class TopTapAction extends BaseAction {
         return res;
     }
 
-    private int checkDoubleTopTapTiming(long timestamp) {
-        int res = 0;
-        synchronized (topTapTimestamps) {
-            // remove old timestamps
-            int idx = 0;
-            for (; idx < topTapTimestamps.size(); idx++) {
-                if (timestamp - topTapTimestamps.get(idx) <= 500000000L)
-                    break;
-            }
-            topTapTimestamps = topTapTimestamps.subList(idx, topTapTimestamps.size());
-
-            if (topTapTimestamps.isEmpty())
-                res = 0;
-            else {
-                if (topTapTimestamps.size() == 1)
-                    res = 1;
-                doubleTopTapTimestamps[1] = topTapTimestamps.get(topTapTimestamps.size() - 1);
-                doubleTopTapTimestamps[0] = topTapTimestamps.get(0);
-                if (doubleTopTapTimestamps[1] - doubleTopTapTimestamps[0] > 100000000L) {
-                    topTapTimestamps.clear();
-                    res = 2;
-                }
-            }
-        }
-        return res;
+    public long getFirstPocketTimestamp() {
+        return doublePocketTimestamps[0];
     }
 
-    public long getFirstBackTapTimestamp() {
-        return doubleBackTapTimestamps[0];
+    public long getSecondPocketTimestamp() {
+        return doublePocketTimestamps[1];
     }
 
-    public long getSecondBackTapTimestamp() {
-        return doubleBackTapTimestamps[1];
-    }
-
-    public long getFirstTopTapTimestamp() {
-        return doubleTopTapTimestamps[0];
-    }
-
-    public long getSecondTopTapTimestamp() {
-        return doubleTopTapTimestamps[1];
-    }
-
-    public void recognizeTapML() {
-        // for taptap
+    public void recognizePocketML() {
         int peakIdxPositive = peakDetectorPositive.getIdMajorPeak();
         if (peakIdxPositive == 32) {
             wasPositivePeakApproaching = true;
@@ -293,44 +225,16 @@ public class TopTapAction extends BaseAction {
         int idxPositive = peakIdxPositive - 15;
         if (idxPositive >= 0) {
             if (idxPositive + seqLength < zsAcc.size() && wasPositivePeakApproaching && peakIdxPositive <= 30) {
-                int tmp = Util.getMaxId(tflite.predict(getInput(idxPositive), 3).get(0));
+                int tmp = Util.getMaxId(tflite.predict(getInput(idxPositive), 2, true).get(0));
                 if (tmp == 1) {
                     wasPositivePeakApproaching = false;
                     peakDetectorPositive.reset();
                     result = 1;
-                }
-                else if (tmp == 2) {
-                    wasNegativePeakApproaching = false;
-                    peakDetectorNegative.reset();
-                    result = 2;
                 }
             }
         }
         else
             wasPositivePeakApproaching = false;
-        // for toptap
-        int peakIdxNegative = peakDetectorNegative.getIdMajorPeak();
-        if (peakIdxNegative == 32) {
-            wasNegativePeakApproaching = true;
-        }
-        int idxNegative = peakIdxNegative - 15;
-        if (idxNegative >= 0) {
-            if (idxNegative + seqLength < zsAcc.size() && wasNegativePeakApproaching && peakIdxNegative <= 30) {
-                int tmp = Util.getMaxId(tflite.predict(getInput(idxNegative), 3).get(0));
-                if (tmp == 1) {
-                    wasPositivePeakApproaching = false;
-                    peakDetectorPositive.reset();
-                    result = 1;
-                }
-                else if (tmp == 2) {
-                    wasNegativePeakApproaching = false;
-                    peakDetectorNegative.reset();
-                    result = 2;
-                }
-            }
-        }
-        else
-            wasNegativePeakApproaching = false;
     }
 
     @Override
@@ -338,25 +242,16 @@ public class TopTapAction extends BaseAction {
         if (!isStarted)
             return;
         long timestamp = timestamps.get(seqLength);
-        int count1 = checkDoubleBackTapTiming(timestamp);
-        if (count1 == 2) {
-            if (actionListener != null) {
-                for (ActionListener listener: actionListener) {
-                    ActionResult actionResult = new ActionResult("TapTapConfirmed");
-                    actionResult.setTimestamp(getFirstBackTapTimestamp() + ":" + getSecondBackTapTimestamp());
-                    listener.onActionRecognized(actionResult);
-                }
-            }
-        }
-        int count2 = checkDoubleTopTapTiming(timestamp);
-        if (count2 == 2) {
+        int count = checkDoublePocketTiming(timestamp);
+        if (count == 2) {
             if (actionListener != null) {
                 for (ActionListener listener : actionListener) {
-                    ActionResult actionResult = new ActionResult("TopTap");
-                    actionResult.setTimestamp(getFirstTopTapTimestamp() + ":" + getSecondTopTapTimestamp());
+                    ActionResult actionResult = new ActionResult("Pocket");
+                    actionResult.setTimestamp(getFirstPocketTimestamp() + ":" + getSecondPocketTimestamp());
+                    actionResult.setReason("Triggered");
                     listener.onAction(actionResult);
+                    listener.onActionSave(actionResult);
                 }
-                horizontalFilter.updateCondition();
             }
         }
     }

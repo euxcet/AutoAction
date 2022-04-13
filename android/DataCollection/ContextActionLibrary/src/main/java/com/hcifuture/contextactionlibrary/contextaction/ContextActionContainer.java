@@ -9,12 +9,12 @@ import android.view.accessibility.AccessibilityEvent;
 
 import androidx.annotation.RequiresApi;
 
-import com.hcifuture.contextactionlibrary.collect.collector.CompleteIMUCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 import com.hcifuture.contextactionlibrary.contextaction.action.BaseAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
+import com.hcifuture.contextactionlibrary.contextaction.action.PocketAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.BaseCollector;
@@ -228,6 +228,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         TopTapAction topTapAction = new TopTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                         actions.add(topTapAction);
                         break;
+                    case "Pocket":
+                        PocketAction pocketAction = new PocketAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                        actions.add(pocketAction);
+                        break;
                     case "Example":
                         LogCollector logCollector = clickTrigger.newLogCollector("Log0", 100);
                         collectors.add(new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector));
@@ -380,7 +384,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAction(ActionResult action) {
-        if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap")) {
+        if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap") || action.getAction().equals("Pocket")) {
             if (clickTrigger != null) {
                 clickTrigger.trigger(Collections.singletonList(Trigger.CollectorType.CompleteIMU));
             }
@@ -389,10 +393,19 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     @Override
     public void onActionSave(ActionResult action) {
-        action.setTimestamp(markTimestamp);
-        if (collectors != null) {
-            for (BaseCollector collector: collectors) {
-                collector.onAction(action);
+        if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap")) {
+            action.setTimestamp(markTimestamp);
+            if (collectors != null) {
+                for (BaseCollector collector : collectors) {
+                    collector.onAction(action);
+                }
+            }
+        }
+        else if (action.getAction().equals("Pocket")) {
+            if (collectors != null) {
+                for (BaseCollector collector : collectors) {
+                    collector.onAction(action);
+                }
             }
         }
     }

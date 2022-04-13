@@ -55,7 +55,8 @@ public class LoaderManager {
             "config.json",
             "tap7cls_pixel4.tflite",
             "ResultModel.tflite",
-            "combined.tflite"
+            "combined.tflite",
+            "pocket.tflite"
     );
     private AtomicBoolean isUpgrading;
     private ContextListener contextListener;

@@ -81,4 +81,30 @@ public class TfClassifier {
 
         return res;
     }
+
+    public ArrayList<ArrayList<Float>> predict(ArrayList<Float> var1, int var2, boolean isPocket) {
+        ArrayList<ArrayList<Float>> res = new ArrayList<>();
+        if (this.interpreter != null) {
+            float[][][][] var3 = new float[1][1][var1.size()][1];
+
+            int var4;
+            for(var4 = 0; var4 < var1.size(); ++var4) {
+                var3[0][0][var4][0] = (Float)var1.get(var4);
+            }
+
+            HashMap var6 = new HashMap();
+            var6.put(0, new float[1][var2]);
+            this.interpreter.runForMultipleInputsOutputs(new Object[]{var3}, var6);
+            float[][] var5 = (float[][])var6.get(0);
+            ArrayList var7 = new ArrayList();
+
+            for(var4 = 0; var4 < var2; ++var4) {
+                var7.add(var5[0][var4]);
+            }
+
+            res.add(var7);
+        }
+
+        return res;
+    }
 }

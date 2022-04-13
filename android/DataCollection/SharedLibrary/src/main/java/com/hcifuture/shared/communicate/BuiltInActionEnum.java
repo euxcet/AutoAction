@@ -3,7 +3,8 @@ package com.hcifuture.shared.communicate;
 public enum BuiltInActionEnum {
     TapTap,
     TopTap,
-    Knock;
+    Knock,
+    Pocket;
 
     public static BuiltInActionEnum fromString(String context) {
         switch (context) {
@@ -13,6 +14,8 @@ public enum BuiltInActionEnum {
                 return TopTap;
             case "Knock":
                 return Knock;
+            case "Pocket":
+                return Pocket;
             default:
                 return null;
         }
