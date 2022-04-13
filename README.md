@@ -56,6 +56,15 @@ python3 main.py
 web.server="http://114.67.110.181:6125"
 ```
 
+### Keystore配置
+
+在DataCollection的local.properties中加入字段key.path，值为android/DataCollection/key的绝对路径。
+
+示例
+```bash
+key.path=/Users/euxcet/Project/AutoAction/android/DataCollection/key
+```
+
 ### 测试情境和动作
 
 ## Roadmap
