@@ -18,6 +18,7 @@ import com.hcifuture.contextactionlibrary.collect.data.SingleWifiData;
 import com.hcifuture.contextactionlibrary.collect.data.WifiData;
 import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 
 import java.util.List;
 import java.util.Timer;
@@ -81,7 +82,7 @@ public class WifiCollector extends Collector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public synchronized CompletableFuture<Void> collect() {
+    public synchronized CompletableFuture<Void> collect(TriggerConfig config) {
         CompletableFuture<Void> ft = new CompletableFuture<>();
         data.clear();
         WifiInfo info = wifiManager.getConnectionInfo();
@@ -95,11 +96,15 @@ public class WifiCollector extends Collector {
         }
         wifiManager.startScan();
         futureList.add(scheduledExecutorService.schedule(() -> {
-            synchronized (WifiCollector.this) {
-                WifiData cloneData = data.deepClone();
-                saver.save(cloneData);
+            try {
+                synchronized (WifiCollector.this) {
+                    WifiData cloneData = data.deepClone();
+                    saver.save(cloneData);
+                }
+                ft.complete(null);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            ft.complete(null);
         }, 10000, TimeUnit.MILLISECONDS));
         return ft;
     }

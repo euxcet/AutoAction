@@ -20,6 +20,7 @@ import com.hcifuture.contextactionlibrary.collect.data.Data;
 import com.hcifuture.contextactionlibrary.collect.data.SingleBluetoothData;
 import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -109,7 +110,7 @@ public class BluetoothCollector extends Collector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public synchronized CompletableFuture<Void> collect() {
+    public synchronized CompletableFuture<Void> collect(TriggerConfig config) {
         CompletableFuture<Void> ft = new CompletableFuture<>();
         data.clear();
 
@@ -135,11 +136,15 @@ public class BluetoothCollector extends Collector {
 
         // Stops scanning after 10 seconds
         futureList.add(scheduledExecutorService.schedule(() -> {
-            synchronized (BluetoothCollector.this) {
-                bluetoothLeScanner.stopScan(leScanCallback);
-                bluetoothAdapter.cancelDiscovery();
-                saver.save(data.deepClone());
-                ft.complete(null);
+            try {
+                synchronized (BluetoothCollector.this) {
+                    bluetoothLeScanner.stopScan(leScanCallback);
+                    bluetoothAdapter.cancelDiscovery();
+                    saver.save(data.deepClone());
+                    ft.complete(null);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }, 10000, TimeUnit.MILLISECONDS));
         return ft;

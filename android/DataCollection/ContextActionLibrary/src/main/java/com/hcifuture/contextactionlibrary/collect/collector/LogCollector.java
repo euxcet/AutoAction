@@ -10,6 +10,7 @@ import com.hcifuture.contextactionlibrary.collect.data.Data;
 import com.hcifuture.contextactionlibrary.collect.data.LogData;
 import com.hcifuture.contextactionlibrary.collect.file.Saver;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,7 @@ public class LogCollector extends Collector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public CompletableFuture<Void> collect() {
+    public CompletableFuture<Void> collect(TriggerConfig config) {
         CompletableFuture<Void> ft = new CompletableFuture<>();
         saver.save(data.getString()).whenComplete((v, t) -> ft.complete(null));
         return ft;

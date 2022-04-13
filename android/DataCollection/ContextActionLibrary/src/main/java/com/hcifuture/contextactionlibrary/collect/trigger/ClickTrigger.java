@@ -37,7 +37,7 @@ public class ClickTrigger extends Trigger {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private CompletableFuture<Void> triggerCollectors(List<Collector> collectors) {
+    private CompletableFuture<Void> triggerCollectors(List<Collector> collectors, TriggerConfig config) {
         Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
         List<CompletableFuture<Void>> fts = new ArrayList<>();
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
@@ -45,27 +45,27 @@ public class ClickTrigger extends Trigger {
             collector.setSavePath(timestamp);
         }
         for (Collector collector : collectors) {
-            fts.add(collector.collect());
+            fts.add(collector.collect(config));
         }
         return CompletableFuture.allOf(fts.toArray(new CompletableFuture[0]));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public CompletableFuture<Void> trigger() {
-        return triggerCollectors(collectors);
+    public CompletableFuture<Void> trigger(TriggerConfig config) {
+        return triggerCollectors(collectors, config);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public CompletableFuture<Void> trigger(List<CollectorType> types) {
-        return triggerCollectors(collectors.stream().filter(types::contains).collect(Collectors.toList()));
+    public CompletableFuture<Void> trigger(List<CollectorType> types, TriggerConfig config) {
+        return triggerCollectors(collectors.stream().filter(types::contains).collect(Collectors.toList()), config);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public CompletableFuture<Void> trigger(Collector collector) {
-        return triggerCollectors(Collections.singletonList(collector));
+    public CompletableFuture<Void> trigger(Collector collector, TriggerConfig config) {
+        return triggerCollectors(Collections.singletonList(collector), config);
     }
 
     @Override

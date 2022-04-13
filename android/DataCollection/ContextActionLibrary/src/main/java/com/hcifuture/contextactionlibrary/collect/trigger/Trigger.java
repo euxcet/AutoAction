@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 import android.util.Pair;
 
+import com.hcifuture.contextactionlibrary.collect.collector.AudioCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.BluetoothCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.Collector;
 import com.hcifuture.contextactionlibrary.collect.collector.CompleteIMUCollector;
@@ -37,6 +38,7 @@ public abstract class Trigger {
     protected List<ScheduledFuture<?>> futureList;
 
     public enum CollectorType {
+        Audio,
         Bluetooth,
         CompleteIMU,
         SampledIMU,
@@ -57,6 +59,7 @@ public abstract class Trigger {
         collectors.add(new NonIMUCollector(mContext, CollectorType.NonIMU, triggerFolder, scheduledExecutorService, futureList));
         collectors.add(new WifiCollector(mContext, CollectorType.Wifi, triggerFolder, scheduledExecutorService, futureList));
         collectors.add(new LocationCollector(mContext, CollectorType.Location, triggerFolder, scheduledExecutorService, futureList));
+        collectors.add(new AudioCollector(mContext, CollectorType.Audio, triggerFolder, scheduledExecutorService, futureList));
     }
 
     private void initialize(CollectorType type) {
@@ -76,6 +79,9 @@ public abstract class Trigger {
                 break;
             case Location:
                 collectors.add(new LocationCollector(mContext, CollectorType.Location, triggerFolder, scheduledExecutorService, futureList));
+                break;
+            case Audio:
+                collectors.add(new AudioCollector(mContext, CollectorType.Audio, triggerFolder, scheduledExecutorService, futureList));
                 break;
             case Log:
                 Log.e("Trigger", "Do not pass CollectorType.Log in the constructor, it will be ignored.");
@@ -117,11 +123,11 @@ public abstract class Trigger {
         return new LinkedList<>();
     }
 
-    public abstract CompletableFuture<Void> trigger();
+    public abstract CompletableFuture<Void> trigger(TriggerConfig config);
 
-    public abstract CompletableFuture<Void> trigger(List<CollectorType> types);
+    public abstract CompletableFuture<Void> trigger(List<CollectorType> types, TriggerConfig config);
 
-    public abstract CompletableFuture<Void> trigger(Collector collector);
+    public abstract CompletableFuture<Void> trigger(Collector collector, TriggerConfig config);
 
     public abstract String getName();
 

@@ -13,6 +13,7 @@ import com.hcifuture.contextactionlibrary.collect.data.IMUData;
 import com.hcifuture.contextactionlibrary.collect.listener.PeriodicSensorEventListener;
 import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -102,16 +103,20 @@ public class CompleteIMUCollector extends SensorCollector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public synchronized CompletableFuture<Void> collect() {
+    public synchronized CompletableFuture<Void> collect(TriggerConfig config) {
         Log.e("TapTapCollector", "collect");
         taptapPoint = gson.toJson(data.getLastData());
         CompletableFuture<Void> ft = new CompletableFuture<>();
         futureList.add(scheduledExecutorService.schedule(() -> {
-            List<Float> cur = data.toList();
-            sensorData = gson.toJson(cur);
-            Log.e("TapTapCollector", "size " + cur.size());
-            saver.save(cur);
-            ft.complete(null);
+            try {
+                List<Float> cur = data.toList();
+                sensorData = gson.toJson(cur);
+                Log.e("TapTapCollector", "size " + cur.size());
+                saver.save(cur);
+                ft.complete(null);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }, DELAY_TIME, TimeUnit.MILLISECONDS));
         return ft;
     }
@@ -122,13 +127,17 @@ public class CompleteIMUCollector extends SensorCollector {
         taptapPoint = gson.toJson(data.getLastData());
         CompletableFuture<Void> ft = new CompletableFuture<>();
         futureList.add(scheduledExecutorService.schedule(() -> {
-            int length = (head + tail) * size * 5 / 10000;
-            List<Float> tmp = data.toList();
-            List<Float> cur = tmp.subList(tmp.size() - length, tmp.size());
-            sensorData = gson.toJson(cur);
-            Log.e("TapTapCollector short", "size " + cur.size());
-            saver.save(cur);
-            ft.complete(null);
+            try {
+                int length = (head + tail) * size * 5 / 10000;
+                List<Float> tmp = data.toList();
+                List<Float> cur = tmp.subList(tmp.size() - length, tmp.size());
+                sensorData = gson.toJson(cur);
+                Log.e("TapTapCollector short", "size " + cur.size());
+                saver.save(cur);
+                ft.complete(null);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }, tail, TimeUnit.MILLISECONDS));
         return ft;
     }

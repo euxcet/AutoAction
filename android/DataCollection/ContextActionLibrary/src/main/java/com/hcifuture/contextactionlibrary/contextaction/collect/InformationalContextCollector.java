@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -30,7 +31,7 @@ public class InformationalContextCollector extends BaseCollector {
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
                 () -> {
                     try {
-                        clickTrigger.trigger(logCollector).whenComplete((msg, ex) -> {
+                        clickTrigger.trigger(logCollector, new TriggerConfig()).whenComplete((msg, ex) -> {
                             File logFile = new File(logCollector.getRecentPath());
                             Log.e("InformationalCollector", "uploadCollectedData: " + logFile.toString());
                             NetworkUtils.uploadCollectedData(mContext,

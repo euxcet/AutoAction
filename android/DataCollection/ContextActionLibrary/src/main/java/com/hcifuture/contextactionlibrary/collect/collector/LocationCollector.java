@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.collect.data.Data;
 import com.hcifuture.contextactionlibrary.collect.data.LocationData;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -46,8 +47,7 @@ public class LocationCollector extends Collector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public synchronized CompletableFuture<Void> collect() {
-        Log.e("Location", "" + (client.mLocation == null));
+    public synchronized CompletableFuture<Void> collect(TriggerConfig config) {
         if (client != null) {
             return client.requestLocation().thenApply(aMapLocation -> {
                 data = new LocationData(
@@ -63,7 +63,6 @@ public class LocationCollector extends Collector {
                         aMapLocation.getAdCode(),
                         aMapLocation.getCityCode()
                 );
-                Log.e("Location", "result " + data.getLatitude() + " " + data.getLongitude());
                 return data;
             }).thenCompose(data -> saver.save(data));
         } else {

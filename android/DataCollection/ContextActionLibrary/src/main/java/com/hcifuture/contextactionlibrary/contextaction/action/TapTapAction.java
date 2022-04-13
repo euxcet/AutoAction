@@ -315,7 +315,6 @@ public class TapTapAction extends BaseAction {
 
     @Override
     public synchronized void getAction() {
-        Log.e("TEST", "getAction");
         if (!isStarted)
             return;
         long timestamp = timestamps.get(seqLength);

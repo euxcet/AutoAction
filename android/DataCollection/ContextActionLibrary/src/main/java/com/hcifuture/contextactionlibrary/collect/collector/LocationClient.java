@@ -45,7 +45,6 @@ public class LocationClient {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public synchronized CompletableFuture<AMapLocation> requestLocation(long timeout) {
-        Log.e("Location", "requestLocation");
         if (mCurrentFuture != null) {
             return mCurrentFuture;
         }
@@ -56,13 +55,11 @@ public class LocationClient {
             mLocationOption.setNeedAddress(true);
             mLocationOption.setOnceLocation(true);
             mLocationOption.setInterval(600000);
-            Log.e("Location", "new client");
             try {
                 mLocationClient = new AMapLocationClient(mContext);
                 mLocationClient.disableBackgroundLocation(true);
                 mLocationClient.setLocationOption(mLocationOption);
                 mListener = aMapLocation -> {
-                    Log.e("Location", aMapLocation.toStr());
                     if (aMapLocation != null) {
                         if (Math.abs(aMapLocation.getLatitude()) > 0.1f) {
                             mLocation = aMapLocation.clone();
@@ -82,7 +79,6 @@ public class LocationClient {
                         LocationClient.this.notifyAll();
                     }
                 };
-                Log.e("Location", "Start location");
                 mLocationClient.setLocationListener(mListener);
                 mLocationClient.startLocation();
             } catch (Exception e) {

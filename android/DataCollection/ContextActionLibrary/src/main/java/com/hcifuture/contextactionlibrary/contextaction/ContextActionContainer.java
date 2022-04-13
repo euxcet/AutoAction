@@ -13,6 +13,7 @@ import com.hcifuture.contextactionlibrary.collect.collector.CompleteIMUCollector
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.contextaction.action.BaseAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
@@ -240,7 +241,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private void initialize() {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
-        this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Location), scheduledExecutorService, futureList);
+        this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Location, Trigger.CollectorType.Audio), scheduledExecutorService, futureList);
 
         // cwh: asList returns a fixed-size list backed by the specified array, thus we cannot perform add()
         // ref: https://stackoverflow.com/questions/18389012/how-to-add-elements-in-list-when-used-arrays-aslist
@@ -429,7 +430,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     public void onAction(ActionResult action) {
         if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap")) {
             if (clickTrigger != null) {
-                clickTrigger.trigger();
+                clickTrigger.trigger(new TriggerConfig().setAudioLength(5000));
             }
         }
     }
