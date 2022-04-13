@@ -5,6 +5,7 @@ import android.content.Context;
 import com.hcifuture.contextactionlibrary.collect.data.Data;
 import com.hcifuture.contextactionlibrary.collect.file.Saver;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -31,7 +32,7 @@ public abstract class Collector {
 
     public abstract void setSavePath(String timestamp);
 
-    public abstract CompletableFuture<Void> collect();
+    public abstract CompletableFuture<Void> collect(TriggerConfig config);
 
     public abstract void close();
 

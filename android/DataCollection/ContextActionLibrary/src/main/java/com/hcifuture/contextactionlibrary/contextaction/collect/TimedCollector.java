@@ -7,6 +7,7 @@ import android.util.Log;
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -32,14 +33,14 @@ public class TimedCollector extends BaseCollector {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
         for (Trigger.CollectorType type : types) {
             futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                    () -> clickTrigger.trigger(Collections.singletonList(type)).whenComplete((msg, ex) -> {
+                    () -> clickTrigger.trigger(Collections.singletonList(type), new TriggerConfig().setAudioLength(5000)).whenComplete((msg, ex) -> {
                         File sensorFile = new File(clickTrigger.getRecentPath(type));
                         Log.e("TimedCollector", "Sensor type: " + type);
                         Log.e("TimedCollector", "uploadSensorData: " + sensorFile);
                         NetworkUtils.uploadCollectedData(mContext,
                                 sensorFile,
                                 0,
-                                "Timed_"+type,
+                                "Timed_" + type,
                                 "TestUserId_cwh",
                                 System.currentTimeMillis(),
                                 "Sensor_commit",
