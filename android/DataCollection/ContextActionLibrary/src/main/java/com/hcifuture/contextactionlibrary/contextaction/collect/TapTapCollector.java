@@ -32,21 +32,25 @@ public class TapTapCollector extends BaseCollector {
         Log.e("TapTapCollector", action.getTimestamp());
         if (clickTrigger != null && scheduledExecutorService != null) {
             futureList.add(scheduledExecutorService.schedule(() -> {
-                File imuFile = new File(clickTrigger.getRecentIMUPath());
-                Log.e("TapTapCollector", imuFile.getAbsolutePath());
-                NetworkUtils.uploadCollectedData(mContext,
-                        imuFile,
-                        0,
-                        action.getAction(),
-                        getMacMoreThanM(),
-                        System.currentTimeMillis(),
-                        action.getAction() + ":" + action.getReason() + ":" + action.getTimestamp(),
-                        new StringCallback() {
-                            @Override
-                            public void onSuccess(Response<String> response) {
-                                Log.e("TapTapCollector", "Success");
-                            }
-                        });
+                try {
+                    File imuFile = new File(clickTrigger.getRecentIMUPath());
+                    Log.e("TapTapCollector", imuFile.getAbsolutePath());
+                    NetworkUtils.uploadCollectedData(mContext,
+                            imuFile,
+                            0,
+                            action.getAction(),
+                            getMacMoreThanM(),
+                            System.currentTimeMillis(),
+                            action.getAction() + ":" + action.getReason() + ":" + action.getTimestamp(),
+                            new StringCallback() {
+                                @Override
+                                public void onSuccess(Response<String> response) {
+                                    Log.e("TapTapCollector", "Success");
+                                }
+                            });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }, 20000L, TimeUnit.MILLISECONDS));
         }
     }

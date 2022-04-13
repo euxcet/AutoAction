@@ -7,6 +7,7 @@ import android.util.Pair;
 import com.hcifuture.contextactionlibrary.collect.collector.BluetoothCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.Collector;
 import com.hcifuture.contextactionlibrary.collect.collector.CompleteIMUCollector;
+import com.hcifuture.contextactionlibrary.collect.collector.LocationCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.NonIMUCollector;
 import com.hcifuture.contextactionlibrary.collect.collector.WifiCollector;
@@ -55,6 +56,7 @@ public abstract class Trigger {
         collectors.add(new CompleteIMUCollector(mContext, CollectorType.CompleteIMU, triggerFolder, scheduledExecutorService, futureList, samplingPeriod, 1));
         collectors.add(new NonIMUCollector(mContext, CollectorType.NonIMU, triggerFolder, scheduledExecutorService, futureList));
         collectors.add(new WifiCollector(mContext, CollectorType.Wifi, triggerFolder, scheduledExecutorService, futureList));
+        collectors.add(new LocationCollector(mContext, CollectorType.Location, triggerFolder, scheduledExecutorService, futureList));
     }
 
     private void initialize(CollectorType type) {
@@ -71,6 +73,12 @@ public abstract class Trigger {
                 break;
             case Wifi:
                 collectors.add(new WifiCollector(mContext, CollectorType.Wifi, triggerFolder, scheduledExecutorService, futureList));
+                break;
+            case Location:
+                collectors.add(new LocationCollector(mContext, CollectorType.Location, triggerFolder, scheduledExecutorService, futureList));
+                break;
+            case Log:
+                Log.e("Trigger", "Do not pass CollectorType.Log in the constructor, it will be ignored.");
                 break;
             case All:
                 initializeAll();

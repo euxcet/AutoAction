@@ -27,8 +27,8 @@ public class LocationData extends Data {
     }
 
     public LocationData(double longitude, double latitude, double altitude,
-                 float accuracy,
-                 String floor, String city, String poiName, String street, long time, String adCode, String cityCode) {
+                        float accuracy,
+                        String floor, String city, String poiName, String street, long time, String adCode, String cityCode) {
         this.longitude = longitude;
         this.latitude = latitude;
         this.altitude = altitude;

@@ -52,6 +52,7 @@ public class LoaderManager {
             "param_max.json",
             "words.csv",
             "classes.dex",
+            "release.dex",
             "config.json",
             "tap7cls_pixel4.tflite",
             "ResultModel.tflite",

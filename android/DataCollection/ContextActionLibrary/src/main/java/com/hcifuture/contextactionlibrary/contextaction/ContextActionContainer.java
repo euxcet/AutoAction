@@ -66,7 +66,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private List<BaseSensorManager> sensorManagers;
 
     private boolean fromDex = false;
-    private boolean openSensor = true;
+    private boolean openSensor = false;
     private List<ActionConfig> actionConfig;
     private List<ContextConfig> contextConfig;
     private ActionListener actionListener;
@@ -83,10 +83,15 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private TapTapAction tapTapAction;
     private String markTimestamp;
 
+    private ScheduledFuture<?> actionFuture;
+    private ScheduledFuture<?> contextFuture;
+
     public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener) {
         this.mContext = context;
         this.actions = actions;
         this.contexts = contexts;
+        this.actionFuture = null;
+        this.contextFuture = null;
         /*
         this.executor = new ThreadPoolExecutor(1,
                 1,
@@ -136,8 +141,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         stop();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void start() {
-        Log.e("Example", "START");
         initialize();
         if (openSensor) {
             for (BaseSensorManager sensorManager: sensorManagers) {
@@ -159,7 +164,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void stop() {
-        Log.e("Example", "STOP");
         if (openSensor) {
             for (BaseSensorManager sensorManager: sensorManagers) {
                 sensorManager.stop();
@@ -180,6 +184,36 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
         futureList.clear();
         scheduledExecutorService.shutdownNow();
+    }
+
+    public void pause() {
+        for (BaseAction action: actions) {
+            action.stop();
+        }
+        for (BaseContext context: contexts) {
+            context.stop();
+        }
+        if (clickTrigger != null) {
+            clickTrigger.pause();
+        }
+    }
+
+    public void resume() {
+        for (BaseAction action: actions) {
+            action.start();
+        }
+        for (BaseContext context: contexts) {
+            context.start();
+        }
+        if (actionFuture != null && (actionFuture.isDone() || actionFuture.isCancelled())) {
+            monitorAction();
+        }
+        if (contextFuture != null && (contextFuture.isDone() || contextFuture.isCancelled())) {
+            monitorContext();
+        }
+        if (clickTrigger != null) {
+            clickTrigger.resume();
+        }
     }
 
     private List<BaseAction> selectBySensorTypeAction(List<BaseAction> actions, SensorType sensorType) {
@@ -206,7 +240,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private void initialize() {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
-        this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU), scheduledExecutorService, futureList);
+        this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Location), scheduledExecutorService, futureList);
 
         // cwh: asList returns a fixed-size list backed by the specified array, thus we cannot perform add()
         // ref: https://stackoverflow.com/questions/18389012/how-to-add-elements-in-list-when-used-arrays-aslist
@@ -294,19 +328,29 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     private void monitorAction() {
-        futureList.add(scheduledExecutorService.scheduleAtFixedRate(() -> {
-            for (BaseAction action: actions) {
-                action.getAction();
+        actionFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
+            try {
+                for (BaseAction action : actions) {
+                    action.getAction();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }, 3000L, 20L, TimeUnit.MILLISECONDS));
+        }, 3000L, 20L, TimeUnit.MILLISECONDS);
+        futureList.add(actionFuture);
     }
 
     private void monitorContext() {
-        futureList.add(scheduledExecutorService.scheduleAtFixedRate(() -> {
-            for (BaseContext context: contexts) {
-                context.getContext();
+        contextFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
+            try {
+                for (BaseContext context: contexts) {
+                    context.getContext();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }, 3000L, 1000L, TimeUnit.MILLISECONDS));
+        }, 3000L, 1000L, TimeUnit.MILLISECONDS);
+        futureList.add(contextFuture);
     }
 
     public void onSensorChangedDex(SensorEvent event) {
