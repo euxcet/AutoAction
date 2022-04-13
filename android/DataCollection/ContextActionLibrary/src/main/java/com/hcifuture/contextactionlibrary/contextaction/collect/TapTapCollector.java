@@ -29,7 +29,8 @@ public class TapTapCollector extends BaseCollector {
 
     @Override
     public void onAction(ActionResult action) {
-        Log.e("TapTapCollector", action.getTimestamp());
+        if (!(action.getAction().equals("TapTap") || action.getAction().equals("TopTap") || action.getAction().equals("Pocket")))
+            return;
         if (clickTrigger != null && scheduledExecutorService != null) {
             futureList.add(scheduledExecutorService.schedule(() -> {
                 File imuFile = new File(clickTrigger.getRecentIMUPath());
@@ -54,6 +55,8 @@ public class TapTapCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onContext(ContextResult context) {
+        if (!context.getContext().equals("UserAction"))
+            return;
         if (clickTrigger != null && scheduledExecutorService != null) {
             // save
             clickTrigger.triggerShortIMU(800, 200).whenComplete((msg, ex) -> {

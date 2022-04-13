@@ -395,32 +395,16 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     public void onActionSave(ActionResult action) {
         if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap")) {
             action.setTimestamp(markTimestamp);
-            if (collectors != null) {
-                for (BaseCollector collector : collectors) {
-                    collector.onAction(action);
-                }
-            }
         }
-        else if (action.getAction().equals("Pocket")) {
-            if (collectors != null) {
-                for (BaseCollector collector : collectors) {
-                    collector.onAction(action);
-                }
+        if (collectors != null) {
+            for (BaseCollector collector : collectors) {
+                collector.onAction(action);
             }
         }
     }
 
     @Override
     public void onContext(ContextResult context) {
-        if (context.getContext().equals("UserAction")) {
-            if (collectors != null) {
-                for (BaseCollector collector: collectors) {
-                    if (collector.getClass().equals(TapTapCollector.class))
-                        collector.onContext(context);
-                }
-            }
-            return;
-        }
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
                 collector.onContext(context);
