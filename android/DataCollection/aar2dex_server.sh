@@ -8,3 +8,4 @@ cd ../../../../../../backend/server/data/file/
 # TODO: configurate d8 path
 $D8_PATH classes.jar
 curl -XPOST http://114.67.110.181:6125/file -F "file=@classes.dex"
+curl -XPOST http://114.67.110.181:6125/md5 
