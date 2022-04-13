@@ -10,6 +10,7 @@ import android.content.res.Configuration;
 import android.database.ContentObserver;
 import android.hardware.display.DisplayManager;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
@@ -125,6 +126,9 @@ public class MainService extends AccessibilityService implements ContextListener
             BluetoothDevice.ACTION_ACL_CONNECTED,
             BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED,
             BluetoothDevice.ACTION_ACL_DISCONNECTED,
+            // WiFi related
+            WifiManager.NETWORK_STATE_CHANGED_ACTION,
+            WifiManager.WIFI_STATE_CHANGED_ACTION,
     };
 
 

@@ -16,6 +16,7 @@ import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -54,7 +55,10 @@ public class ConfigCollector extends BaseCollector {
                 5000,
                 60000,
                 TimeUnit.MILLISECONDS));
-//        collect_types = Arrays.asList(Trigger.CollectorType.Bluetooth, Trigger.CollectorType.Wifi);
+
+        collect_types = new ArrayList<>();
+//        collect_types.add(Trigger.CollectorType.Bluetooth);
+//        collect_types.add(Trigger.CollectorType.Wifi);
     }
 
     @Override
