@@ -56,9 +56,8 @@ public class TapTapCollector extends BaseCollector {
     public void onContext(ContextResult context) {
         if (clickTrigger != null && scheduledExecutorService != null) {
             // save
-            clickTrigger.triggerShortIMU(800, 200);
-            // upload
-            futureList.add(scheduledExecutorService.schedule(() -> {
+            clickTrigger.triggerShortIMU(800, 200).whenComplete((msg, ex) -> {
+                // upload when done
                 File imuFile = new File(clickTrigger.getRecentIMUPath());
                 Log.e("TapTapCollector", imuFile.getAbsolutePath());
                 NetworkUtils.uploadCollectedData(mContext,
@@ -74,7 +73,7 @@ public class TapTapCollector extends BaseCollector {
                                 Log.e("TapTapCollector", "Success");
                             }
                         });
-            }, 5000L, TimeUnit.MILLISECONDS));
+            });
         }
     }
 }
