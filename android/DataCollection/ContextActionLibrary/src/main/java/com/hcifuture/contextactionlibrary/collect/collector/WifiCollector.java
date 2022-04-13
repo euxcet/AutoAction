@@ -101,7 +101,6 @@ public class WifiCollector extends Collector {
                     WifiData cloneData = data.deepClone();
                     saver.save(cloneData).whenComplete((v, t) -> ft.complete(null));
                 }
-                ft.complete(null);
             } catch (Exception e) {
                 e.printStackTrace();
             }

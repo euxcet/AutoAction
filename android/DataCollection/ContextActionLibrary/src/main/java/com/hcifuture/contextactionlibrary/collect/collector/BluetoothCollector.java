@@ -140,7 +140,9 @@ public class BluetoothCollector extends Collector {
         futureList.add(scheduledExecutorService.schedule(() -> {
             try {
                 synchronized (BluetoothCollector.this) {
-                    bluetoothLeScanner.stopScan(leScanCallback);
+                    if (bluetoothLeScanner != null) {
+                        bluetoothLeScanner.stopScan(leScanCallback);
+                    }
                     bluetoothAdapter.cancelDiscovery();
                     saver.save(data.deepClone()).whenComplete((v, t) -> ft.complete(null));
                 }

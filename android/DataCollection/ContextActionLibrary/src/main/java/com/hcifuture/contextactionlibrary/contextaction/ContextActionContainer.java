@@ -244,18 +244,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
 
-        // cwh: do not use Arrays.asList() to assign to collectors,
-        // because it returns a fixed-size list backed by the specified array and we cannot perform add()
         this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Location, Trigger.CollectorType.Audio), scheduledExecutorService, futureList);
 
-        // cwh: asList returns a fixed-size list backed by the specified array, thus we cannot perform add()
-        // ref: https://stackoverflow.com/questions/18389012/how-to-add-elements-in-list-when-used-arrays-aslist
-//        this.collectors = Arrays.asList(
-//                new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger),
-//                new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector),
-//                new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector),
-//                new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector)
-//        );
+        // cwh: do not use Arrays.asList() to assign to collectors,
+        // because it returns a fixed-size list backed by the specified array and we cannot perform add()
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
         collectors.add(new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, Arrays.asList(Trigger.CollectorType.Bluetooth, Trigger.CollectorType.Wifi)));
