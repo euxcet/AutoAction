@@ -54,7 +54,6 @@ public class PocketAction extends BaseAction {
         init();
         tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "pocket.tflite"));
         seqLength = (int)config.getValue("SeqLength");
-        Log.e(TAG, "Pocket Action initialized");
     }
 
     private void init() {
@@ -111,7 +110,6 @@ public class PocketAction extends BaseAction {
                 return;
         }
         if (0L == syncTime) {
-            Log.e(TAG, "Pocket Action sync time");
             syncTime = event.timestamp;
             lowpassKeyPositive.init(0.0F);
             highpassKeyPositive.init(0.0F);
@@ -122,7 +120,6 @@ public class PocketAction extends BaseAction {
                 processGyro(event.values[0], event.values[1], event.values[2], SAMPLINGINTERVALNS);
             recognizePocketML();
             if (result == 1) {
-                Log.e(TAG, "Pocket Action recognized once");
                 pocketTimestamps.add(event.timestamp);
             }
         }
@@ -223,16 +220,13 @@ public class PocketAction extends BaseAction {
     public void recognizePocketML() {
         int peakIdxPositive = peakDetectorPositive.getIdMajorPeak();
         if (peakIdxPositive == 32) {
-            Log.e(TAG, "Pocket Action positive peak");
             wasPositivePeakApproaching = true;
         }
         int idxPositive = peakIdxPositive - 15;
         if (idxPositive >= 0) {
             if (idxPositive + seqLength < zsAcc.size() && wasPositivePeakApproaching && peakIdxPositive <= 30) {
-                Log.e(TAG, "Pocket Action run model");
-                int tmp = Util.getMaxId(tflite.predict(getInput(idxPositive), 2).get(0));
+                int tmp = Util.getMaxId(tflite.predict(getInput(idxPositive), 2, true).get(0));
                 if (tmp == 1) {
-                    Log.e(TAG, "Pocket Action run model 1");
                     wasPositivePeakApproaching = false;
                     peakDetectorPositive.reset();
                     result = 1;
@@ -250,7 +244,6 @@ public class PocketAction extends BaseAction {
         long timestamp = timestamps.get(seqLength);
         int count = checkDoublePocketTiming(timestamp);
         if (count == 2) {
-            Log.e(TAG, "Pocket Action recognized twice");
             if (actionListener != null) {
                 for (ActionListener listener : actionListener) {
                     ActionResult actionResult = new ActionResult("Pocket");

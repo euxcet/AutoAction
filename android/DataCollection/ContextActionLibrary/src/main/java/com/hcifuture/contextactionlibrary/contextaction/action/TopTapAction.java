@@ -6,7 +6,6 @@ import android.hardware.SensorEvent;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
-import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.CombinedFilter;
 import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.HorizontalFilter;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.Lowpass1C;
@@ -22,8 +21,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import kotlin.jvm.Synchronized;
 
 public class TopTapAction extends BaseAction {
 
@@ -69,7 +66,6 @@ public class TopTapAction extends BaseAction {
         // tflite = new TfClassifier(mContext.getAssets(), "combined.tflite");
         tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "combined.tflite"));
         seqLength = (int)config.getValue("SeqLength");
-        Log.e(TAG, "TopTap Action initialized");
     }
 
     private void init() {
