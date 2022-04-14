@@ -39,28 +39,8 @@ public class TimedCollector extends BaseCollector {
             return this;
         }
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                () -> clickTrigger.trigger(Collections.singletonList(type), triggerConfig).whenComplete((msg, ex) -> {
-                    try {
-                        File sensorFile = new File(clickTrigger.getRecentPath(type));
-                        Log.e("TimedCollector", "Sensor type: " + type);
-                        Log.e("TimedCollector", "Sensor file: " + sensorFile);
-                        NetworkUtils.uploadCollectedData(mContext,
-                                sensorFile,
-                                0,
-                                "Timed_" + type,
-                                getUserID(),
-                                System.currentTimeMillis(),
-                                "Sensor: " + type,
-                                new StringCallback() {
-                                    @Override
-                                    public void onSuccess(Response<String> response) {
-                                        Log.e("TimedCollector", type + " sensor upload success");
-                                    }
-                                });
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }), delay, period, TimeUnit.MILLISECONDS)
+                () -> triggerAndUpload(type, triggerConfig, "Timed_" + type, "Sensor: " + type),
+                delay, period, TimeUnit.MILLISECONDS)
         );
         return this;
     }
@@ -68,30 +48,9 @@ public class TimedCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public TimedCollector scheduleTimedLogUpload(LogCollector logCollector, long period, long delay, String name) {
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                () -> clickTrigger.trigger(logCollector, new TriggerConfig()).whenComplete((msg, ex) -> {
-                    try {
-                        File file = new File(logCollector.getRecentPath());
-                        Log.e("TimedCollector", "Log name: " + name);
-                        Log.e("TimedCollector", "Log file: " + file);
-                        NetworkUtils.uploadCollectedData(mContext,
-                                file,
-                                0,
-                                "Timed_" + name,
-                                getUserID(),
-                                System.currentTimeMillis(),
-                                "Log: " + name,
-                                new StringCallback() {
-                                    @Override
-                                    public void onSuccess(Response<String> response) {
-                                        logCollector.eraseLog();
-                                        Log.e("TimedCollector", name + " log upload success && locally erased");
-                                    }
-                                });
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }), delay, period, TimeUnit.MILLISECONDS)
-        );
+                () -> triggerAndUpload(logCollector, new TriggerConfig(), "Timed_"+name, "Log: "+name)
+                        .whenComplete((msg, ex) -> logCollector.eraseLog()),
+                delay, period, TimeUnit.MILLISECONDS));
         return this;
     }
 
