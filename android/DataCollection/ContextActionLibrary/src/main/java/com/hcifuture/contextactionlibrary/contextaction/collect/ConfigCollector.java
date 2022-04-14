@@ -43,26 +43,12 @@ public class ConfigCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onContext(ContextResult context) {
+        Trigger.CollectorType type = null;
         if (ConfigContext.NEED_AUDIO.equals(context.getContext())) {
-            Trigger.CollectorType type = Trigger.CollectorType.Audio;
-            clickTrigger.trigger(Collections.singletonList(type), triggerConfig).whenComplete((msg, ex) -> {
-                File sensorFile = new File(clickTrigger.getRecentPath(type));
-                Log.e("ConfigCollector", "Sensor type: " + type);
-                Log.e("ConfigCollector", "Sensor file: " + sensorFile);
-                NetworkUtils.uploadCollectedData(mContext,
-                        sensorFile,
-                        0,
-                        "Config_"+type,
-                        getUserID(),
-                        System.currentTimeMillis(),
-                        "Sensor: " + type,
-                        new StringCallback() {
-                            @Override
-                            public void onSuccess(Response<String> response) {
-                                Log.e("ConfigLogger", type + " sensor upload success");
-                            }
-                        });
-            });
+            type = Trigger.CollectorType.Audio;
+        }
+        if (type != null) {
+            triggerAndUpload(type, triggerConfig, "Config_"+type, "Sensor: "+type);
         }
     }
 }
