@@ -59,7 +59,9 @@ public class ClickTrigger extends Trigger {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public CompletableFuture<Void> trigger(List<CollectorType> types, TriggerConfig config) {
-        return triggerCollectors(collectors.stream().filter((collector) -> types.contains(collector.getType())).collect(Collectors.toList()), config);
+        return triggerCollectors(collectors.stream().filter(
+                (collector) -> types.contains(collector.getType()) && (collector.getType() != CollectorType.Log)
+        ).collect(Collectors.toList()), config);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
