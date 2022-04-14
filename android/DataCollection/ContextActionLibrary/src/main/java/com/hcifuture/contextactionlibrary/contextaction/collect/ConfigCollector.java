@@ -18,7 +18,6 @@ import com.lzy.okgo.model.Response;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,6 +28,7 @@ import androidx.annotation.RequiresApi;
 
 public class ConfigCollector extends BaseCollector {
     List<Trigger.CollectorType> collect_types;
+    TriggerConfig triggerConfig;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ConfigCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector logCollector) {
@@ -58,8 +58,13 @@ public class ConfigCollector extends BaseCollector {
                 TimeUnit.MILLISECONDS));
 
         collect_types = new ArrayList<>();
+        collect_types.add(Trigger.CollectorType.Audio);
 //        collect_types.add(Trigger.CollectorType.Bluetooth);
 //        collect_types.add(Trigger.CollectorType.Wifi);
+        triggerConfig = new TriggerConfig()
+                .setAudioLength(5000)
+                .setBluetoothScanTime(10000)
+                .setWifiScanTime(10000);
     }
 
     @Override
@@ -69,9 +74,9 @@ public class ConfigCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onContext(ContextResult context) {
-        if (ConfigContext.NEED_COLLECT.equals(context.getContext())) {
+        if (ConfigContext.NEED_AUDIO.equals(context.getContext())) {
             for (Trigger.CollectorType type : collect_types) {
-                clickTrigger.trigger(Collections.singletonList(type), new TriggerConfig()).whenComplete((msg, ex) -> {
+                clickTrigger.trigger(Collections.singletonList(type), triggerConfig).whenComplete((msg, ex) -> {
                     File sensorFile = new File(clickTrigger.getRecentPath(type));
                     Log.e("ConfigCollector", "Sensor type: " + type);
                     Log.e("ConfigCollector", "uploadSensorData: " + sensorFile);

@@ -14,7 +14,6 @@ import android.view.Display;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
-import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -34,7 +33,7 @@ import java.util.List;
 
 public class ConfigContext extends BaseContext {
 
-    public static String NEED_COLLECT = "context.config.need_collect";
+    public static String NEED_AUDIO = "context.config.need_audio";
 
     private static final HashMap<String, Integer> volume = new HashMap<>();
     static {
@@ -141,7 +140,6 @@ public class ConfigContext extends BaseContext {
                     } else {
                         jsonSilentPut(json, "mode", "unknown");
                     }
-                    notifySensorCollect();
                 }
                 if (database_key.startsWith("volume_")) {
                     if (!volume.containsKey(database_key)) {
@@ -151,7 +149,7 @@ public class ConfigContext extends BaseContext {
                     // record volume value difference and update
                     int diff = value - volume.put(database_key, value);
                     jsonSilentPut(json, "diff", diff);
-                    notifySensorCollect();
+                    notifyAudio();
                 }
             }
         } else if ("BroadcastReceive".equals(type)) {
@@ -259,7 +257,7 @@ public class ConfigContext extends BaseContext {
         jsonSilentPut(json, key, jsonArray);
     }
 
-    void notifySensorCollect() {
+    void notifyAudio() {
         long current_call = System.currentTimeMillis();
         if (last_call == 0) {
             // first call, record timestamp
@@ -270,9 +268,9 @@ public class ConfigContext extends BaseContext {
         }
 
         if (contextListener != null) {
-            Log.e("ConfigContext", "broadcast context NEED_COLLECT: " + NEED_COLLECT);
+            Log.e("ConfigContext", "broadcast context: " + NEED_AUDIO);
             for (ContextListener listener: contextListener) {
-                ContextResult contextResult = new ContextResult(NEED_COLLECT);
+                ContextResult contextResult = new ContextResult(NEED_AUDIO);
                 contextResult.setTimestamp(Long.toString(current_call));
                 listener.onContext(contextResult);
             }
