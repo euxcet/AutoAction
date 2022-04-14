@@ -3,7 +3,9 @@ package com.hcifuture.shared.communicate;
 public enum BuiltInActionEnum {
     TapTap,
     TopTap,
-    Knock;
+    Knock,
+    Flip,
+    Close;
 
     public static BuiltInActionEnum fromString(String context) {
         switch (context) {
@@ -13,6 +15,10 @@ public enum BuiltInActionEnum {
                 return TopTap;
             case "Knock":
                 return Knock;
+            case "Close":
+                return Close;
+            case "Flip":
+                return Flip;
             default:
                 return null;
         }

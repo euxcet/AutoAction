@@ -14,7 +14,9 @@ import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
 import com.hcifuture.contextactionlibrary.contextaction.action.BaseAction;
+import com.hcifuture.contextactionlibrary.contextaction.action.CloseAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
+import com.hcifuture.contextactionlibrary.contextaction.action.FlipAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.BaseCollector;
@@ -221,12 +223,23 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 ActionConfig config = actionConfig.get(i);
                 switch (config.getAction()) {
                     case "TapTap":
+                        Log.e("Action","TapTap register!!!!!");
                         tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                         actions.add(tapTapAction);
                         break;
                     case "TopTap":
                         TopTapAction topTapAction = new TopTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                         actions.add(topTapAction);
+                        break;
+                    case "Flip":
+                        Log.e("Action","Flip register!!!!!");
+                        FlipAction flipAction = new FlipAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                        actions.add(flipAction);
+                        break;
+                    case "Close":
+                        Log.e("Action","Close register!!!!!");
+                        CloseAction closeAction = new CloseAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                        actions.add(closeAction);
                         break;
                     case "Example":
                         LogCollector logCollector = clickTrigger.newLogCollector("Log0", 100);

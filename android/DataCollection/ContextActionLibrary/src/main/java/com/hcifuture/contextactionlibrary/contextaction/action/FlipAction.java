@@ -191,6 +191,7 @@ public class FlipAction extends BaseAction{
     //获取方位角数据
     public void getValue() {
         // r从这里返回
+//        Log.i("FLIP","更新方向角");
         if(gravity!=null && geomagnetic!=null){
             if(SensorManager.getRotationMatrix(r, null, gravity, geomagnetic)) {
                 //values从这里返回
@@ -268,12 +269,11 @@ public class FlipAction extends BaseAction{
     public void getAction() {
         if (!isStarted)
             return;
-        if (NcnnInstance.getInstance() != null) {
-            if (success_flag) {
-                reset();
-                for (ActionListener listener: actionListener) {
-                    listener.onAction(new ActionResult("Flip"));
-                }
+        if (success_flag) {
+            Log.i("FLIP","识别成功了");
+            reset();
+            for (ActionListener listener: actionListener) {
+                listener.onAction(new ActionResult("Flip"));
             }
         }
     }

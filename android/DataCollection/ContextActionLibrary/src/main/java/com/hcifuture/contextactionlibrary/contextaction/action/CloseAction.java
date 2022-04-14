@@ -83,11 +83,22 @@ public class CloseAction extends BaseAction {
                     }
                 }
         }
+
+        if(success_id != -1){
+            if(System.currentTimeMillis()-success_id>100){
+                Log.i("proximity:", "成功了！"+ success_id);
+                success_flag = true;
+            }
+            else{
+                Log.i("proximity","稳定的时间不够"+(System.currentTimeMillis()-success_id));
+            }
+        }
     }
 
     @Override
     public void onProximitySensorChanged(SensorEvent event) {
         int type = event.sensor.getType();
+//        Log.i("proximity:","改变了！"+type);
         switch (type) {
             case Sensor.TYPE_PROXIMITY:
                 dist = event.values[0];
@@ -112,27 +123,17 @@ public class CloseAction extends BaseAction {
                 }
         }
 
-        if(success_id != -1){
-            if(System.currentTimeMillis()-success_id>100){
-                success_flag = true;
-            }
-            else{
-                Log.i("proximity","稳定的时间不够"+(System.currentTimeMillis()-success_id));
-            }
-        }
-
     }
 
     @Override
     public void getAction() {
         if (!isStarted)
             return;
-        if (NcnnInstance.getInstance() != null) {
-            if (success_flag) {
-                reset();
-                for (ActionListener listener: actionListener) {
-                    listener.onAction(new ActionResult("Close"));
-                }
+        if (success_flag) {
+            reset();
+            Log.i("proximity:","识别成功了");
+            for (ActionListener listener: actionListener) {
+                listener.onAction(new ActionResult("Close"));
             }
         }
     }
