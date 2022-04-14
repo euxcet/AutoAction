@@ -245,7 +245,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
 
-        this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Location, Trigger.CollectorType.Audio), scheduledExecutorService, futureList);
+        this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(
+                Trigger.CollectorType.CompleteIMU,
+                Trigger.CollectorType.Location,
+                Trigger.CollectorType.Audio,
+                Trigger.CollectorType.Bluetooth,
+                Trigger.CollectorType.Wifi
+        ), scheduledExecutorService, futureList);
 
         // cwh: do not use Arrays.asList() to assign to collectors,
         // because it returns a fixed-size list backed by the specified array and we cannot perform add()
@@ -302,6 +308,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         break;
                     case "Informational":
                         LogCollector informationLogCollector = clickTrigger.newLogCollector("Informational", 8192);
+                        timedCollector.scheduleTimedLogUpload(informationLogCollector, 60000, 5000, "Informational");
                         collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector));
                         InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener),informationLogCollector);
                         contexts.add(informationalContext);
