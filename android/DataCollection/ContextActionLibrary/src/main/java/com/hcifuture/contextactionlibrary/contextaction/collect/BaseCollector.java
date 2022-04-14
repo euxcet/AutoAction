@@ -61,4 +61,9 @@ public abstract class BaseCollector {
         }
         return null;
     }
+
+    public static String getUserID() {
+        // TODO: implement in the future
+        return getMacMoreThanM();
+    }
 }
