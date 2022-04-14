@@ -250,7 +250,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 Trigger.CollectorType.Location,
                 Trigger.CollectorType.Audio,
                 Trigger.CollectorType.Bluetooth,
-                Trigger.CollectorType.Wifi
+                Trigger.CollectorType.Wifi,
+                Trigger.CollectorType.NonIMU
         ), scheduledExecutorService, futureList);
 
         // cwh: do not use Arrays.asList() to assign to collectors,

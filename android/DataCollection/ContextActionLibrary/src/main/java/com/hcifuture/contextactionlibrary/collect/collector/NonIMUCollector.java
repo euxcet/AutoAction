@@ -44,6 +44,10 @@ public class NonIMUCollector extends SensorCollector {
                     data.setEnvironmentBrightness(x);
                     data.setEnvironmentBrightnessTimestamp(time);
                     break;
+                case Sensor.TYPE_PROXIMITY:
+                    data.setProximity(x);
+                    data.setProximityTimestamp(time);
+                    break;
                 default:
                     break;
             }
@@ -52,9 +56,11 @@ public class NonIMUCollector extends SensorCollector {
 
     private NonIMUSensorEventListener pressureListener;
     private NonIMUSensorEventListener lightListener;
+    private NonIMUSensorEventListener proximityListener;
 
     private Sensor mPressure;
     private Sensor mLight;
+    private Sensor mProximity;
 
     @Override
     public void initialize() {
@@ -62,9 +68,11 @@ public class NonIMUCollector extends SensorCollector {
 
         mPressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         mLight = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        mProximity = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
 
         pressureListener = new NonIMUSensorEventListener(this, Sensor.TYPE_PRESSURE);
         lightListener = new NonIMUSensorEventListener(this, Sensor.TYPE_LIGHT);
+        proximityListener = new NonIMUSensorEventListener(this, Sensor.TYPE_PROXIMITY);
 
         /*
         sensorThread = new HandlerThread("NonIMU Thread", Process.THREAD_PRIORITY_MORE_FAVORABLE);
@@ -102,6 +110,7 @@ public class NonIMUCollector extends SensorCollector {
     public void close() {
         sensorManager.unregisterListener(pressureListener);
         sensorManager.unregisterListener(lightListener);
+        sensorManager.unregisterListener(proximityListener);
         /*
         if (sensorThread != null)
             sensorThread.quitSafely();
@@ -112,12 +121,14 @@ public class NonIMUCollector extends SensorCollector {
     public synchronized void pause() {
         sensorManager.unregisterListener(pressureListener);
         sensorManager.unregisterListener(lightListener);
+        sensorManager.unregisterListener(proximityListener);
     }
 
     @Override
     public synchronized void resume() {
         sensorManager.registerListener(pressureListener, mPressure, SensorManager.SENSOR_DELAY_NORMAL, sensorHandler);
         sensorManager.registerListener(lightListener, mLight, SensorManager.SENSOR_DELAY_NORMAL, sensorHandler);
+        sensorManager.registerListener(proximityListener, mProximity, SensorManager.SENSOR_DELAY_NORMAL, sensorHandler);
     }
 
     @Override
