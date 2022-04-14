@@ -112,6 +112,11 @@ public class BluetoothCollector extends Collector {
     @Override
     public synchronized CompletableFuture<Void> collect(TriggerConfig config) {
         CompletableFuture<Void> ft = new CompletableFuture<>();
+        if (config.getBluetoothScanTime() == 0) {
+            ft.complete(null);
+            return ft;
+        }
+
         data.clear();
 
         // scan bonded (paired) devices
@@ -149,7 +154,7 @@ public class BluetoothCollector extends Collector {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }, 10000, TimeUnit.MILLISECONDS));
+        }, config.getBluetoothScanTime(), TimeUnit.MILLISECONDS));
         return ft;
     }
 

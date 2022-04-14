@@ -252,7 +252,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         // because it returns a fixed-size list backed by the specified array and we cannot perform add()
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
-        collectors.add(new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, Arrays.asList(Trigger.CollectorType.Bluetooth, Trigger.CollectorType.Wifi)));
+        collectors.add(new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger,
+                Arrays.asList(Trigger.CollectorType.Bluetooth, Trigger.CollectorType.Wifi), 15000));
 
         if (fromDex) {
             for (int i = 0; i < actionConfig.size(); i++) {

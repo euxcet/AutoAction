@@ -29,11 +29,17 @@ import androidx.annotation.RequiresApi;
 public class TimedCollector extends BaseCollector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public TimedCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, List<Trigger.CollectorType> types) {
+    public TimedCollector(Context context, ScheduledExecutorService scheduledExecutorService,
+                          List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger,
+                          List<Trigger.CollectorType> types, long period) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
+        TriggerConfig triggerConfig = new TriggerConfig()
+                .setAudioLength(5000)
+                .setBluetoothScanTime(10000)
+                .setWifiScanTime(10000);
         for (Trigger.CollectorType type : types) {
             futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                    () -> clickTrigger.trigger(Collections.singletonList(type), new TriggerConfig().setAudioLength(5000)).whenComplete((msg, ex) -> {
+                    () -> clickTrigger.trigger(Collections.singletonList(type), triggerConfig).whenComplete((msg, ex) -> {
                         File sensorFile = new File(clickTrigger.getRecentPath(type));
                         Log.e("TimedCollector", "Sensor type: " + type);
                         Log.e("TimedCollector", "uploadSensorData: " + sensorFile);
@@ -50,10 +56,8 @@ public class TimedCollector extends BaseCollector {
                                         Log.e("TimedCollector", "Sensor collect & upload success");
                                     }
                                 });
-                    }),
-                    0,
-                    15000,
-                    TimeUnit.MILLISECONDS));
+                    }), 0, period, TimeUnit.MILLISECONDS)
+            );
         }
     }
 

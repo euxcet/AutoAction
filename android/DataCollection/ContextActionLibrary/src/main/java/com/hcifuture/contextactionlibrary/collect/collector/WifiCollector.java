@@ -84,6 +84,11 @@ public class WifiCollector extends Collector {
     @Override
     public synchronized CompletableFuture<Void> collect(TriggerConfig config) {
         CompletableFuture<Void> ft = new CompletableFuture<>();
+        if (config.getWifiScanTime() == 0) {
+            ft.complete(null);
+            return ft;
+        }
+
         data.clear();
         WifiInfo info = wifiManager.getConnectionInfo();
         if (info != null && info.getBSSID() != null) {
@@ -104,7 +109,7 @@ public class WifiCollector extends Collector {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }, 10000, TimeUnit.MILLISECONDS));
+        }, config.getWifiScanTime(), TimeUnit.MILLISECONDS));
         return ft;
     }
 
