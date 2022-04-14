@@ -290,6 +290,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         break;
                     case "Example":
                         LogCollector logCollector = clickTrigger.newLogCollector("Log0", 100);
+                        timedCollector.scheduleTimedLogUpload(logCollector, 5000, 0, "Example");
                         collectors.add(new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector));
                         ExampleAction exampleAction = new ExampleAction(mContext, config, requestListener, Arrays.asList(this, actionListener), logCollector);
                         actions.add(exampleAction);

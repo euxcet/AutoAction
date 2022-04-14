@@ -26,27 +26,6 @@ public class ExampleCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ExampleCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector logCollector) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
-        futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                () -> clickTrigger.trigger(logCollector, new TriggerConfig()).whenComplete((msg, ex) -> {
-                    File logFile = new File(logCollector.getRecentPath());
-                    NetworkUtils.uploadCollectedData(mContext,
-                            logFile,
-                            0,
-                            "Log0",
-                            getMacMoreThanM(),
-                            System.currentTimeMillis(),
-                            "Log0_commit",
-                            new StringCallback() {
-                                @Override
-                                public void onSuccess(Response<String> response) {
-                                    Log.e("ExampleCollector", "Success");
-                                }
-                            });
-
-                }),
-                0,
-                5000,
-                TimeUnit.MILLISECONDS));
     }
 
     @Override
