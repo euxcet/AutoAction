@@ -1,9 +1,9 @@
 package com.hcifuture.contextactionlibrary.collect.trigger;
 
 public class TriggerConfig {
-    private int audioLength;
-    private int bluetoothScanTime;
-    private int wifiScanTime;
+    private int audioLength = 5000;
+    private int bluetoothScanTime = 10000;
+    private int wifiScanTime = 10000;
     public TriggerConfig() {
     }
 
