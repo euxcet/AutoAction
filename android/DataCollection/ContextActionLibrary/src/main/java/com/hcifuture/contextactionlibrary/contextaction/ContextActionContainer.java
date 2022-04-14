@@ -49,7 +49,6 @@ import com.hcifuture.shared.communicate.result.ContextResult;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
@@ -252,8 +251,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         // because it returns a fixed-size list backed by the specified array and we cannot perform add()
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
-        collectors.add(new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger,
-                Arrays.asList(Trigger.CollectorType.Bluetooth, Trigger.CollectorType.Wifi), 15000));
+        TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
+                .scheduleTimedSensorUpload(Trigger.CollectorType.Bluetooth, new TriggerConfig().setBluetoothScanTime(10000), 15000, 0)
+                .scheduleTimedSensorUpload(Trigger.CollectorType.Wifi, new TriggerConfig().setWifiScanTime(10000), 15000, 0);
+        collectors.add(timedCollector);
 
         if (fromDex) {
             for (int i = 0; i < actionConfig.size(); i++) {
@@ -307,6 +308,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         break;
                     case "Config":
                         LogCollector configLogCollector = clickTrigger.newLogCollector("Config", 8192);
+                        timedCollector.scheduleTimedLogUpload(configLogCollector, 60000, 5000, "Config");
                         collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector));
                         ConfigContext configContext = new ConfigContext(mContext, config, requestListener, Arrays.asList(this, contextListener), configLogCollector);
                         contexts.add(configContext);

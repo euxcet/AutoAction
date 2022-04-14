@@ -33,30 +33,6 @@ public class ConfigCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ConfigCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector logCollector) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
-        futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                () -> clickTrigger.trigger(logCollector, new TriggerConfig()).whenComplete((msg, ex) -> {
-                    File logFile = new File(logCollector.getRecentPath());
-                    Log.e("ConfigCollector", "uploadCollectedData: "+logFile);
-                    NetworkUtils.uploadCollectedData(mContext,
-                            logFile,
-                            0,
-                            "Config",
-//                            getMacMoreThanM(),
-                            "TestUserId_cwh",
-                            System.currentTimeMillis(),
-                            "ConfigLog_commit",
-                            new StringCallback() {
-                                @Override
-                                public void onSuccess(Response<String> response) {
-                                    Log.e("ConfigLogger", "Success");
-                                    logCollector.eraseLog();
-                                }
-                            });
-                }),
-                5000,
-                60000,
-                TimeUnit.MILLISECONDS));
-
         collect_types = new ArrayList<>();
         collect_types.add(Trigger.CollectorType.Audio);
 //        collect_types.add(Trigger.CollectorType.Bluetooth);
