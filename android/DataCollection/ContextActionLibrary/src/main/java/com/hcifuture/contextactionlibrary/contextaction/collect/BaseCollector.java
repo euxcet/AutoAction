@@ -77,8 +77,12 @@ public abstract class BaseCollector {
 
     public static String getUserID() {
         // TODO: implement in the future
-        return "Test_USERID";
-//        return getMacMoreThanM();
+        String macAddress = getMacMoreThanM();
+        if (macAddress != null) {
+            return macAddress.replace(":", "_");
+        } else {
+            return "TEST_USERID";
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
