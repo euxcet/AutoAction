@@ -258,8 +258,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
-                .scheduleTimedSensorUpload(Trigger.CollectorType.Bluetooth, new TriggerConfig().setBluetoothScanTime(10000), 12000, 0)
-                .scheduleTimedSensorUpload(Trigger.CollectorType.Wifi, new TriggerConfig().setWifiScanTime(10000), 12000, 0);
+                .scheduleFixedDelayUpload(Trigger.CollectorType.Bluetooth, new TriggerConfig().setBluetoothScanTime(10000), 1, 0)
+                .scheduleFixedDelayUpload(Trigger.CollectorType.Wifi, new TriggerConfig().setWifiScanTime(10000), 1, 0);
         collectors.add(timedCollector);
 
         if (fromDex) {
