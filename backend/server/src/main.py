@@ -423,9 +423,12 @@ def upload_collected_data():
     commit = request.form.get("commit")
     timestamp = request.form.get("timestamp")
     path = file_utils.get_dex_path(userId, name, timestamp)
-    file_utils.mkdir(path)
-    file_utils.save_file(file, os.path.join(path, file.filename))
+    file_path = os.path.join(path, file.filename)
     commit_file_path = os.path.join(path, "commit.txt")
+    print(f"saving file: {file_path}")
+    print(f"saving commit file: {commit_file_path}")
+    file_utils.mkdir(path)
+    file_utils.save_file(file, file_path)
     with open(commit_file_path, 'w') as fout:
         fout.write(commit)
     return {}
