@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
@@ -26,7 +27,7 @@ public class ExampleCollector extends BaseCollector {
     public ExampleCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector logCollector) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                () -> clickTrigger.trigger(logCollector).whenComplete((msg, ex) -> {
+                () -> clickTrigger.trigger(logCollector, new TriggerConfig()).whenComplete((msg, ex) -> {
                     File logFile = new File(logCollector.getRecentPath());
                     NetworkUtils.uploadCollectedData(mContext,
                             logFile,

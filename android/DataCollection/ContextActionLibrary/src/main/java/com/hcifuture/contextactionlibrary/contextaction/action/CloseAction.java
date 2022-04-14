@@ -34,7 +34,7 @@ public class CloseAction extends BaseAction {
     }
 
     //对变量进行初始化
-    public void reset(){
+    private void reset(){
         register_flag = false;
         register_time = -1;
         dist = -100;
@@ -45,18 +45,18 @@ public class CloseAction extends BaseAction {
     }
 
     @Override
-    public void start() {
+    public synchronized void start() {
         isStarted = true;
         reset();
     }
 
     @Override
-    public void stop() {
+    public synchronized void stop() {
         isStarted = false;
     }
 
     @Override
-    public void onIMUSensorChanged(SensorEvent event) {
+    public synchronized void onIMUSensorChanged(SensorEvent event) {
         int type = event.sensor.getType();
         switch (type) {
             case Sensor.TYPE_GYROSCOPE:
@@ -96,7 +96,7 @@ public class CloseAction extends BaseAction {
     }
 
     @Override
-    public void onProximitySensorChanged(SensorEvent event) {
+    public synchronized void onProximitySensorChanged(SensorEvent event) {
         int type = event.sensor.getType();
 //        Log.i("proximity:","改变了！"+type);
         switch (type) {
@@ -126,7 +126,7 @@ public class CloseAction extends BaseAction {
     }
 
     @Override
-    public void getAction() {
+    public synchronized void getAction() {
         if (!isStarted)
             return;
         if (success_flag) {

@@ -6,10 +6,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.ContentObserver;
 import android.hardware.display.DisplayManager;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
@@ -21,6 +24,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import com.amap.api.services.core.ServiceSettings;
 import com.hcifuture.datacollection.BuildConfig;
 import com.hcifuture.datacollection.NcnnInstance;
 import com.hcifuture.datacollection.contextaction.ContextActionLoader;
@@ -45,8 +49,11 @@ import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.model.Response;
 
 import java.io.File;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -125,6 +132,9 @@ public class MainService extends AccessibilityService implements ContextListener
             BluetoothDevice.ACTION_ACL_CONNECTED,
             BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED,
             BluetoothDevice.ACTION_ACL_DISCONNECTED,
+            // WiFi related
+            WifiManager.NETWORK_STATE_CHANGED_ACTION,
+            WifiManager.WIFI_STATE_CHANGED_ACTION,
     };
 
 
@@ -169,6 +179,9 @@ public class MainService extends AccessibilityService implements ContextListener
         for (Uri uri : listenedURIs) {
             getContentResolver().registerContentObserver(uri, true, mContentObserver);
         }
+        ServiceSettings.updatePrivacyShow(getApplicationContext(), true , true);
+        ServiceSettings.updatePrivacyAgree(getApplicationContext(), true);
+        Log.e("Location", sHA1(getApplicationContext()));
     }
 
     @Override
@@ -248,5 +261,31 @@ public class MainService extends AccessibilityService implements ContextListener
             loaderManager.onBroadcastEvent(bc_event);
         }
         return super.onKeyEvent(event);
+    }
+
+    public static String sHA1(Context context){
+        try {
+            PackageInfo info = context.getPackageManager().getPackageInfo(
+                    context.getPackageName(), PackageManager.GET_SIGNATURES);
+            byte[] cert = info.signatures[0].toByteArray();
+            MessageDigest md = MessageDigest.getInstance("SHA1");
+            byte[] publicKey = md.digest(cert);
+            StringBuffer hexString = new StringBuffer();
+            for (int i = 0; i < publicKey.length; i++) {
+                String appendString = Integer.toHexString(0xFF & publicKey[i])
+                        .toUpperCase(Locale.US);
+                if (appendString.length() == 1)
+                    hexString.append("0");
+                hexString.append(appendString);
+                hexString.append(":");
+            }
+            String result = hexString.toString();
+            return result.substring(0, result.length()-1);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

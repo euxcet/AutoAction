@@ -16,6 +16,7 @@ import com.hcifuture.contextactionlibrary.collect.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.collect.listener.NonIMUSensorEventListener;
 import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -86,7 +87,7 @@ public class NonIMUCollector extends SensorCollector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public synchronized CompletableFuture<Void> collect() {
+    public synchronized CompletableFuture<Void> collect(TriggerConfig config) {
         if (data == null) {
             return CompletableFuture.completedFuture(null);
         }

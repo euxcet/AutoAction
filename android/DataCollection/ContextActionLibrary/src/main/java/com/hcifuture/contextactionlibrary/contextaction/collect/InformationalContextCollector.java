@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -28,24 +29,30 @@ public class InformationalContextCollector extends BaseCollector {
     public InformationalContextCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector logCollector) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                () -> clickTrigger.trigger(logCollector).whenComplete((msg, ex) -> {
-                    File logFile = new File(logCollector.getRecentPath());
-                    Log.e("InformationalCollector", "uploadCollectedData: "+logFile.toString());
-                    NetworkUtils.uploadCollectedData(mContext,
-                            logFile,
-                            0,
-                            "Informational",
-                            getMacMoreThanM(),
-                            System.currentTimeMillis(),
-                            "InformationalLog_commit",
-                            new StringCallback() {
-                                @Override
-                                public void onSuccess(Response<String> response) {
-                                    Log.e("InformationalCollector", "Success");
-                                    logCollector.eraseLog();
-                                }
-                            });
-                }),
+                () -> {
+                    try {
+                        clickTrigger.trigger(logCollector, new TriggerConfig()).whenComplete((msg, ex) -> {
+                            File logFile = new File(logCollector.getRecentPath());
+                            Log.e("InformationalCollector", "uploadCollectedData: " + logFile.toString());
+                            NetworkUtils.uploadCollectedData(mContext,
+                                    logFile,
+                                    0,
+                                    "Informational",
+                                    getMacMoreThanM(),
+                                    System.currentTimeMillis(),
+                                    "InformationalLog_commit",
+                                    new StringCallback() {
+                                        @Override
+                                        public void onSuccess(Response<String> response) {
+                                            Log.e("InformationalCollector", "Success");
+                                            logCollector.eraseLog();
+                                        }
+                                    });
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                },
                 5000,
                 60000,
                 TimeUnit.MILLISECONDS));

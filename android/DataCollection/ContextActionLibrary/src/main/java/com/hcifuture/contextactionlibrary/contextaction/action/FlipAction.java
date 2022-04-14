@@ -37,9 +37,8 @@ public class FlipAction extends BaseAction{
         super(context, config, requestListener, actionListener);
     }
 
-
     //对变量进行初始化
-    public void reset(){
+    private void reset(){
         values = new float[3];//用来保存最终的结果
         gravity = new float[3];//用来保存加速度传感器的值
         r = new float[9];//
@@ -63,17 +62,18 @@ public class FlipAction extends BaseAction{
     }
 
     @Override
-    public void start() {
+    public synchronized void start() {
         isStarted = true;
         reset();
     }
 
     @Override
-    public void stop() {
+    public synchronized void stop() {
         isStarted = false;
     }
 
-    public void onIMUSensorChanged(SensorEvent event) {
+    @Override
+    public synchronized void onIMUSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             gravity = event.values.clone();
             getValue(); //更新方位角
@@ -189,7 +189,7 @@ public class FlipAction extends BaseAction{
     }
 
     //获取方位角数据
-    public void getValue() {
+    private void getValue() {
         // r从这里返回
 //        Log.i("FLIP","更新方向角");
         if(gravity!=null && geomagnetic!=null){
@@ -266,7 +266,7 @@ public class FlipAction extends BaseAction{
     }
 
     @Override
-    public void getAction() {
+    public synchronized void getAction() {
         if (!isStarted)
             return;
         if (success_flag) {

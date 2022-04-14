@@ -171,8 +171,8 @@ public class FileUtils {
                 SharedPreferences fileMD5 = context.getSharedPreferences("FILE_MD5", MODE_PRIVATE);
                 String[] md5s = response.body().split(",");
                 List<String> changedFilename = new ArrayList<>();
-                Log.e("TEST", md5s.length + " " + filename.size());
                 if (md5s.length != filename.size()) {
+                    Log.e("TEST", "The requested files are not available on the web server.");
                     return;
                 }
                 for (int i = 0; i < filename.size(); i++) {

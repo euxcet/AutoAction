@@ -7,6 +7,7 @@ import android.util.Log;
 import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
+import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -16,6 +17,7 @@ import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +34,7 @@ public class ConfigCollector extends BaseCollector {
     public ConfigCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector logCollector) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                () -> clickTrigger.trigger(logCollector).whenComplete((msg, ex) -> {
+                () -> clickTrigger.trigger(logCollector, new TriggerConfig()).whenComplete((msg, ex) -> {
                     File logFile = new File(logCollector.getRecentPath());
                     Log.e("ConfigCollector", "uploadCollectedData: "+logFile);
                     NetworkUtils.uploadCollectedData(mContext,
@@ -54,7 +56,10 @@ public class ConfigCollector extends BaseCollector {
                 5000,
                 60000,
                 TimeUnit.MILLISECONDS));
-//        collect_types = Arrays.asList(Trigger.CollectorType.Bluetooth, Trigger.CollectorType.Wifi);
+
+        collect_types = new ArrayList<>();
+//        collect_types.add(Trigger.CollectorType.Bluetooth);
+//        collect_types.add(Trigger.CollectorType.Wifi);
     }
 
     @Override
@@ -66,7 +71,7 @@ public class ConfigCollector extends BaseCollector {
     public void onContext(ContextResult context) {
         if (ConfigContext.NEED_COLLECT.equals(context.getContext())) {
             for (Trigger.CollectorType type : collect_types) {
-                clickTrigger.trigger(Collections.singletonList(type)).whenComplete((msg, ex) -> {
+                clickTrigger.trigger(Collections.singletonList(type), new TriggerConfig()).whenComplete((msg, ex) -> {
                     File sensorFile = new File(clickTrigger.getRecentPath(type));
                     Log.e("ConfigCollector", "Sensor type: " + type);
                     Log.e("ConfigCollector", "uploadSensorData: " + sensorFile);

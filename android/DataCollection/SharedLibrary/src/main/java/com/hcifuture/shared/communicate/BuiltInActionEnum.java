@@ -5,7 +5,8 @@ public enum BuiltInActionEnum {
     TopTap,
     Knock,
     Flip,
-    Close;
+    Close,
+    Pocket;
 
     public static BuiltInActionEnum fromString(String context) {
         switch (context) {
@@ -19,6 +20,8 @@ public enum BuiltInActionEnum {
                 return Close;
             case "Flip":
                 return Flip;
+            case "Pocket":
+                return Pocket;
             default:
                 return null;
         }
