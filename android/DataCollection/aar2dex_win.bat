@@ -18,7 +18,7 @@ if errorlevel 1 goto err else goto checkarg
 
 :checkarg
 if [%~1]==[-s] (
-	if [%~2]==[] (set server_addr=114.67.110.181:6125) else (set server_addr=%~2)
+	if [%~2]==[] (set server_addr=127.0.0.1:6125) else (set server_addr=%~2)
 	goto server
 ) else goto noerr
 
