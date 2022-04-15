@@ -42,6 +42,7 @@ public class ConfigContext extends BaseContext {
 
     private long last_audio;
     private long last_nonimu;
+    private long last_record_all;
 
     private final LogCollector logCollector;
 
@@ -74,6 +75,7 @@ public class ConfigContext extends BaseContext {
 
         last_audio = 0;
         last_nonimu = 0;
+        last_record_all = 0;
     }
 
     @Override
@@ -111,6 +113,7 @@ public class ConfigContext extends BaseContext {
 
     @Override
     public void onBroadcastEvent(BroadcastEvent event) {
+        long timestamp = event.getTimestamp();
         String action = event.getAction();
         String type = event.getType();
         String tag = event.getTag();
@@ -197,18 +200,18 @@ public class ConfigContext extends BaseContext {
                 }
                 jsonSilentPut(json, key, obj);
             }
-            record(type, action, tag, json.toString());
+            record(timestamp, type, action, tag, json.toString());
         }
     }
 
-    void record(String type, String action, String tag, String other) {
-        long cur_timestamp = System.currentTimeMillis();
-        String line = cur_timestamp + "\t" + type + "\t" + action + "\t" + tag + "\t" + other;
+    void record(long timestamp, String type, String action, String tag, String other) {
+        String line = timestamp + "\t" + type + "\t" + action + "\t" + tag + "\t" + other;
         logCollector.addLog(line);
         Log.e("ConfigContext", "in record");
     }
 
     void record_all() {
+        last_record_all = System.currentTimeMillis();
         JSONObject json = new JSONObject();
 
         // store brightness
@@ -234,7 +237,7 @@ public class ConfigContext extends BaseContext {
         jsonPutSettings(json, "global", Settings.Global.class);
 
         // record
-        record("static", "", "", json.toString());
+        record(last_record_all, "static", "", "", json.toString());
     }
 
     static void jsonSilentPut(JSONObject json, String key, Object value) {
