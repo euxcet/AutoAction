@@ -3,24 +3,26 @@ package com.hcifuture.shared.communicate.event;
 import android.os.Bundle;
 
 public class BroadcastEvent {
+    private long timestamp;
     private String action;
     private String tag;
     private String type;
     private Bundle extras;
 
-    public BroadcastEvent(String action, String tag, String type) {
-        this(action, tag, type, null);
+    public BroadcastEvent(long timestamp, String action, String tag, String type) {
+        this(timestamp, action, tag, type, null);
     }
 
-    public BroadcastEvent(String action, Bundle extras) {
-        this(action, "", "", extras);
-    }
-
-    public BroadcastEvent(String action, String tag, String type, Bundle extras) {
+    public BroadcastEvent(long timestamp, String action, String tag, String type, Bundle extras) {
+        setTimestamp(timestamp);
         setAction(action);
         setTag(tag);
         setType(type);
         setExtras(extras);
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 
     public String getAction() {
@@ -37,6 +39,10 @@ public class BroadcastEvent {
 
     public Bundle getExtras() {
         return extras;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public void setAction(String action) {

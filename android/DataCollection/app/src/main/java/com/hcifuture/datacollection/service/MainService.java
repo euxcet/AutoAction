@@ -220,7 +220,13 @@ public class MainService extends AccessibilityService implements ContextListener
         @Override
         public void onReceive(Context context, Intent intent) {
             if (loaderManager != null) {
-                BroadcastEvent event = new BroadcastEvent(intent.getAction(), "", "BroadcastReceive", intent.getExtras());
+                BroadcastEvent event = new BroadcastEvent(
+                        System.currentTimeMillis(),
+                        intent.getAction(),
+                        "",
+                        "BroadcastReceive",
+                        intent.getExtras()
+                );
                 loaderManager.onBroadcastEvent(event);
             }
         }
@@ -240,6 +246,7 @@ public class MainService extends AccessibilityService implements ContextListener
         public void onChange(boolean selfChange, @Nullable Uri uri) {
             if (loaderManager != null) {
                 BroadcastEvent event = new BroadcastEvent(
+                        System.currentTimeMillis(),
                         (uri == null)? "uri_null" : uri.toString(),
                         "",
                         "ContentChange"
@@ -252,7 +259,12 @@ public class MainService extends AccessibilityService implements ContextListener
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
         if (loaderManager != null) {
-            BroadcastEvent bc_event = new BroadcastEvent("KeyEvent://"+event.getAction()+"/"+event.getKeyCode(), "", "KeyEvent");
+            BroadcastEvent bc_event = new BroadcastEvent(
+                    System.currentTimeMillis(),
+                    "KeyEvent://"+event.getAction()+"/"+event.getKeyCode(),
+                    "",
+                    "KeyEvent"
+            );
             bc_event.getExtras().putInt("action", event.getAction());
             bc_event.getExtras().putInt("code", event.getKeyCode());
             bc_event.getExtras().putInt("source", event.getSource());

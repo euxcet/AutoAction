@@ -42,6 +42,7 @@ public class ConfigContext extends BaseContext {
 
     private long last_audio;
     private long last_nonimu;
+    private long last_record_all;
 
     private final LogCollector logCollector;
 
@@ -74,6 +75,7 @@ public class ConfigContext extends BaseContext {
 
         last_audio = 0;
         last_nonimu = 0;
+        last_record_all = 0;
     }
 
     @Override
@@ -88,7 +90,11 @@ public class ConfigContext extends BaseContext {
 
     @Override
     public void getContext() {
-
+        long current_call = System.currentTimeMillis();
+        // periodically record_all() every 4 hour
+        if (current_call - last_record_all >= 4 * 60 * 60000) {
+            record_all();
+        }
     }
 
     @Override
@@ -111,6 +117,7 @@ public class ConfigContext extends BaseContext {
 
     @Override
     public void onBroadcastEvent(BroadcastEvent event) {
+        long timestamp = event.getTimestamp();
         String action = event.getAction();
         String type = event.getType();
         String tag = event.getTag();
@@ -197,18 +204,18 @@ public class ConfigContext extends BaseContext {
                 }
                 jsonSilentPut(json, key, obj);
             }
-            record(type, action, tag, json.toString());
+            record(timestamp, type, action, tag, json.toString());
         }
     }
 
-    void record(String type, String action, String tag, String other) {
-        long cur_timestamp = System.currentTimeMillis();
-        String line = cur_timestamp + "\t" + type + "\t" + action + "\t" + tag + "\t" + other;
+    void record(long timestamp, String type, String action, String tag, String other) {
+        String line = timestamp + "\t" + type + "\t" + action + "\t" + tag + "\t" + other;
         logCollector.addLog(line);
         Log.e("ConfigContext", "in record");
     }
 
     void record_all() {
+        last_record_all = System.currentTimeMillis();
         JSONObject json = new JSONObject();
 
         // store brightness
@@ -234,7 +241,7 @@ public class ConfigContext extends BaseContext {
         jsonPutSettings(json, "global", Settings.Global.class);
 
         // record
-        record("static", "", "", json.toString());
+        record(last_record_all, "static", "", "", json.toString());
     }
 
     static void jsonSilentPut(JSONObject json, String key, Object value) {
@@ -269,36 +276,32 @@ public class ConfigContext extends BaseContext {
 
     void notifyAudio() {
         long current_call = System.currentTimeMillis();
-        if (current_call - last_audio <= 10000) {
-            // if adjacent calls are too close, only notify once
-            return;
-        }
-        last_audio = current_call;
-
-        if (contextListener != null) {
-            Log.e("ConfigContext", "broadcast context: " + NEED_AUDIO);
-            for (ContextListener listener: contextListener) {
-                ContextResult contextResult = new ContextResult(NEED_AUDIO);
-                contextResult.setTimestamp(Long.toString(current_call));
-                listener.onContext(contextResult);
+        // if adjacent calls are too close, only notify once
+        if (current_call - last_audio >= 10000) {
+            if (contextListener != null) {
+                Log.e("ConfigContext", "broadcast context: " + NEED_AUDIO);
+                for (ContextListener listener: contextListener) {
+                    ContextResult contextResult = new ContextResult(NEED_AUDIO);
+                    contextResult.setTimestamp(Long.toString(current_call));
+                    listener.onContext(contextResult);
+                }
+                last_audio = current_call;
             }
         }
     }
 
     void notifyNonIMU() {
         long current_call = System.currentTimeMillis();
-        if (current_call - last_nonimu <= 500) {
-            // if adjacent calls are too close, only notify once
-            return;
-        }
-        last_nonimu = current_call;
-
-        if (contextListener != null) {
-            Log.e("ConfigContext", "broadcast context: " + NEED_NONIMU);
-            for (ContextListener listener: contextListener) {
-                ContextResult contextResult = new ContextResult(NEED_NONIMU);
-                contextResult.setTimestamp(Long.toString(current_call));
-                listener.onContext(contextResult);
+        // if adjacent calls are too close, only notify once
+        if (current_call - last_nonimu >= 500) {
+            if (contextListener != null) {
+                Log.e("ConfigContext", "broadcast context: " + NEED_NONIMU);
+                for (ContextListener listener: contextListener) {
+                    ContextResult contextResult = new ContextResult(NEED_NONIMU);
+                    contextResult.setTimestamp(Long.toString(current_call));
+                    listener.onContext(contextResult);
+                }
+                last_nonimu = current_call;
             }
         }
     }
