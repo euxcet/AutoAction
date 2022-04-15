@@ -37,28 +37,43 @@ public class TapTapCollector extends BaseCollector {
             return;
         if (clickTrigger != null && scheduledExecutorService != null) {
             futureList.add(scheduledExecutorService.schedule(() -> {
-                try {
-                    clickTrigger.trigger(Collections.singletonList(Trigger.CollectorType.CompleteIMU), new TriggerConfig()).whenComplete((v, t) -> {
-                        File imuFile = new File(clickTrigger.getRecentIMUPath());
-                        Log.e("TapTapCollector", imuFile.getAbsolutePath());
-                        NetworkUtils.uploadCollectedData(mContext,
-                                imuFile,
-                                0,
-                                action.getAction(),
-                                getMacMoreThanM(),
-                                System.currentTimeMillis(),
-                                action.getAction() + ":" + action.getReason() + ":" + action.getTimestamp(),
-                                new StringCallback() {
-                                    @Override
-                                    public void onSuccess(Response<String> response) {
-                                        Log.e("TapTapCollector", "Success");
-                                    }
-                                });
-
-                    });
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    clickTrigger.trigger(Collections.singletonList(Trigger.CollectorType.CompleteIMU), new TriggerConfig()).whenComplete((v, t) -> {
+//                        File imuFile = new File(clickTrigger.getRecentIMUPath());
+//                        Log.e("TapTapCollector", imuFile.getAbsolutePath());
+//                        NetworkUtils.uploadCollectedData(mContext,
+//                                imuFile,
+//                                0,
+//                                action.getAction(),
+//                                getMacMoreThanM(),
+//                                System.currentTimeMillis(),
+//                                action.getAction() + ":" + action.getReason() + ":" + action.getTimestamp(),
+//                                new StringCallback() {
+//                                    @Override
+//                                    public void onSuccess(Response<String> response) {
+//                                        Log.e("TapTapCollector", "Success");
+//                                    }
+//                                });
+//
+//                    });
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+                File imuFile = new File(clickTrigger.getRecentIMUPath());
+                Log.e("TapTapCollector", imuFile.getAbsolutePath());
+                NetworkUtils.uploadCollectedData(mContext,
+                        imuFile,
+                        0,
+                        action.getAction(),
+                        getMacMoreThanM(),
+                        System.currentTimeMillis(),
+                        action.getAction() + ":" + action.getReason() + ":" + action.getTimestamp(),
+                        new StringCallback() {
+                            @Override
+                            public void onSuccess(Response<String> response) {
+                                Log.e("TapTapCollector", "Success");
+                            }
+                });
             }, 20000L, TimeUnit.MILLISECONDS));
         }
     }

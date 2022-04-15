@@ -49,6 +49,7 @@ import com.hcifuture.shared.communicate.result.ContextResult;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
@@ -455,18 +456,16 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAction(ActionResult action) {
-        /*
         if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap") || action.getAction().equals("Pocket")) {
             if (clickTrigger != null) {
                 clickTrigger.trigger(Collections.singletonList(Trigger.CollectorType.CompleteIMU), new TriggerConfig());
             }
         }
-         */
-        if (collectors != null) {
-            for (BaseCollector collector: collectors) {
-                collector.onAction(action);
-            }
-        }
+//        if (collectors != null) {
+//            for (BaseCollector collector: collectors) {
+//                collector.onAction(action);
+//            }
+//        }
     }
 
     @Override
