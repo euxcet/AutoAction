@@ -46,6 +46,8 @@ public class ConfigCollector extends BaseCollector {
         Trigger.CollectorType type = null;
         if (ConfigContext.NEED_AUDIO.equals(context.getContext())) {
             type = Trigger.CollectorType.Audio;
+        } else if (ConfigContext.NEED_NONIMU.equals(context.getContext())) {
+            type = Trigger.CollectorType.NonIMU;
         }
         if (type != null) {
             triggerAndUpload(type, triggerConfig, "Config_"+type, "Sensor: "+type);

@@ -34,9 +34,25 @@ import java.util.List;
 public class ConfigContext extends BaseContext {
 
     public static String NEED_AUDIO = "context.config.need_audio";
+    public static String NEED_NONIMU = "context.config.need_nonimu";
 
-    private static final HashMap<String, Integer> volume = new HashMap<>();
-    static {
+    private String packageName;
+    private int brightness;
+    private final HashMap<String, Integer> volume;
+
+    private long last_audio;
+    private long last_nonimu;
+
+    private final LogCollector logCollector;
+
+    public ConfigContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector logCollector) {
+        super(context, config, requestListener, contextListener);
+        this.logCollector = logCollector;
+
+        // initialize
+        packageName = "";
+        brightness = 0;
+        volume = new HashMap<>();
         // speaker
         volume.put("volume_music_speaker", 0);
         volume.put("volume_ring_speaker", 0);
@@ -55,16 +71,9 @@ public class ConfigContext extends BaseContext {
         volume.put("volume_music_bt_a2dp", 0);
         volume.put("volume_voice_bt_a2dp", 0);
         volume.put("volume_tts_bt_a2dp", 0);
-    }
-    int brightness;
-    String packageName = "";
-    long last_call = 0;
 
-    private final LogCollector logCollector;
-
-    public ConfigContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector logCollector) {
-        super(context, config, requestListener, contextListener);
-        this.logCollector = logCollector;
+        last_audio = 0;
+        last_nonimu = 0;
     }
 
     @Override
@@ -140,6 +149,7 @@ public class ConfigContext extends BaseContext {
                     } else {
                         jsonSilentPut(json, "mode", "unknown");
                     }
+                    notifyNonIMU();
                 }
                 if (database_key.startsWith("volume_")) {
                     if (!volume.containsKey(database_key)) {
@@ -259,13 +269,11 @@ public class ConfigContext extends BaseContext {
 
     void notifyAudio() {
         long current_call = System.currentTimeMillis();
-        if (last_call == 0) {
-            // first call, record timestamp
-            last_call = current_call;
-        } else if (current_call - last_call <= 10000) {
+        if (current_call - last_audio <= 10000) {
             // if adjacent calls are too close, only notify once
             return;
         }
+        last_audio = current_call;
 
         if (contextListener != null) {
             Log.e("ConfigContext", "broadcast context: " + NEED_AUDIO);
@@ -274,7 +282,24 @@ public class ConfigContext extends BaseContext {
                 contextResult.setTimestamp(Long.toString(current_call));
                 listener.onContext(contextResult);
             }
-            last_call = current_call;
+        }
+    }
+
+    void notifyNonIMU() {
+        long current_call = System.currentTimeMillis();
+        if (current_call - last_nonimu <= 500) {
+            // if adjacent calls are too close, only notify once
+            return;
+        }
+        last_nonimu = current_call;
+
+        if (contextListener != null) {
+            Log.e("ConfigContext", "broadcast context: " + NEED_NONIMU);
+            for (ContextListener listener: contextListener) {
+                ContextResult contextResult = new ContextResult(NEED_NONIMU);
+                contextResult.setTimestamp(Long.toString(current_call));
+                listener.onContext(contextResult);
+            }
         }
     }
 }
