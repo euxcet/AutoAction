@@ -17,8 +17,11 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 
 import java.io.File;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 
 public class PocketAction extends BaseAction {
@@ -37,7 +40,7 @@ public class PocketAction extends BaseAction {
     private List<Float> xsGyro = Collections.synchronizedList(new ArrayList<>());
     private List<Float> ysGyro = Collections.synchronizedList(new ArrayList<>());
     private List<Float> zsGyro = Collections.synchronizedList(new ArrayList<>());
-    private List<Long> timestamps = Collections.synchronizedList(new ArrayList<>());
+    private long lastTimestamp = 0L;
 
     private Highpass1C highpassKeyPositive = new Highpass1C();
     private Lowpass1C lowpassKeyPositive = new Lowpass1C();
@@ -46,7 +49,7 @@ public class PocketAction extends BaseAction {
     private long[] doublePocketTimestamps = new long[2];
     private int result;
     private int seqLength;
-    private List<Long> pocketTimestamps = Collections.synchronizedList(new ArrayList<>());
+    private Deque<Long> pocketTimestamps = new ArrayDeque();
     private TfClassifier tflite;
 
     public PocketAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
@@ -73,7 +76,7 @@ public class PocketAction extends BaseAction {
         xsGyro.clear();
         ysGyro.clear();
         zsGyro.clear();
-        timestamps.clear();
+        lastTimestamp = 0L;
     }
 
     @Override
@@ -120,7 +123,7 @@ public class PocketAction extends BaseAction {
                 processGyro(event.values[0], event.values[1], event.values[2], SAMPLINGINTERVALNS);
             recognizePocketML();
             if (result == 1) {
-                pocketTimestamps.add(event.timestamp);
+                pocketTimestamps.addLast(event.timestamp);
             }
         }
     }
@@ -134,14 +137,13 @@ public class PocketAction extends BaseAction {
         xsAcc.add(x);
         ysAcc.add(y);
         zsAcc.add(z);
-        timestamps.add(t);
+        lastTimestamp = t;
         int size = (int)(WINDOW_NS / samplingInterval);
 
         while(xsAcc.size() > size) {
             xsAcc.remove(0);
             ysAcc.remove(0);
             zsAcc.remove(0);
-            timestamps.remove(0);
         }
 
         peakDetectorPositive.update(highpassKeyPositive.update(lowpassKeyPositive.update(z)));
@@ -183,26 +185,26 @@ public class PocketAction extends BaseAction {
     }
 
     private int checkDoublePocketTiming(long timestamp) {
-        int res = 0;
-        synchronized (pocketTimestamps) {
-            // remove old timestamps
-            int idx = 0;
-            for (; idx < pocketTimestamps.size(); idx++) {
-                if (timestamp - pocketTimestamps.get(idx) <= 500000000L)
-                    break;
+        Iterator iter = pocketTimestamps.iterator();
+        while (iter.hasNext()) {
+            if (timestamp - (Long) iter.next() > 500000000L) {
+                iter.remove();
             }
-            pocketTimestamps = pocketTimestamps.subList(idx, pocketTimestamps.size());
-
-            if (pocketTimestamps.isEmpty())
-                res = 0;
-            else {
-                if (pocketTimestamps.size() == 1)
+        }
+        int res = 0;
+        if (!pocketTimestamps.isEmpty()) {
+            iter = pocketTimestamps.iterator();
+            while (true) {
+                if (!iter.hasNext()) {
                     res = 1;
-                doublePocketTimestamps[1] = pocketTimestamps.get(pocketTimestamps.size() - 1);
-                doublePocketTimestamps[0] = pocketTimestamps.get(0);
+                    break;
+                }
+                doublePocketTimestamps[1] = (Long)pocketTimestamps.getLast();
+                doublePocketTimestamps[0] = (Long)iter.next();
                 if (doublePocketTimestamps[1] - doublePocketTimestamps[0] > 100000000L) {
                     pocketTimestamps.clear();
                     res = 2;
+                    break;
                 }
             }
         }
@@ -241,8 +243,7 @@ public class PocketAction extends BaseAction {
     public synchronized void getAction() {
         if (!isStarted)
             return;
-        long timestamp = timestamps.get(seqLength);
-        int count = checkDoublePocketTiming(timestamp);
+        int count = checkDoublePocketTiming(lastTimestamp);
         if (count == 2) {
             if (actionListener != null) {
                 for (ActionListener listener : actionListener) {

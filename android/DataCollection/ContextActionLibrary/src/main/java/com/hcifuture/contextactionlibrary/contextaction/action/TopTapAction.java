@@ -18,8 +18,11 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 
 import java.io.File;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 
 public class TopTapAction extends BaseAction {
@@ -38,7 +41,7 @@ public class TopTapAction extends BaseAction {
     private List<Float> xsGyro = Collections.synchronizedList(new ArrayList<>());
     private List<Float> ysGyro = Collections.synchronizedList(new ArrayList<>());
     private List<Float> zsGyro = Collections.synchronizedList(new ArrayList<>());
-    private List<Long> timestamps = Collections.synchronizedList(new ArrayList<>());
+    private long lastTimestamp = 0L;
 
     private Highpass1C highpassKeyPositive = new Highpass1C();
     private Lowpass1C lowpassKeyPositive = new Lowpass1C();
@@ -52,8 +55,8 @@ public class TopTapAction extends BaseAction {
     private long[] doubleTopTapTimestamps = new long[2];
     private int result;
     private int seqLength;
-    private List<Long> backTapTimestamps = Collections.synchronizedList(new ArrayList<>());
-    private List<Long> topTapTimestamps = Collections.synchronizedList(new ArrayList<>());
+    private Deque<Long> backTapTimestamps = new ArrayDeque();
+    private Deque<Long> topTapTimestamps = new ArrayDeque();
     private TfClassifier tflite;
 
     // filter related
@@ -89,7 +92,7 @@ public class TopTapAction extends BaseAction {
         xsGyro.clear();
         ysGyro.clear();
         zsGyro.clear();
-        timestamps.clear();
+        lastTimestamp = 0L;
     }
 
     @Override
@@ -148,10 +151,10 @@ public class TopTapAction extends BaseAction {
                 processGyro(event.values[0], event.values[1], event.values[2], SAMPLINGINTERVALNS);
             recognizeTapML();
             if (result == 1) {
-                backTapTimestamps.add(event.timestamp);
+                backTapTimestamps.addLast(event.timestamp);
             }
             else if (result == 2) {
-                topTapTimestamps.add(event.timestamp);
+                topTapTimestamps.addLast(event.timestamp);
             }
         }
     }
@@ -165,14 +168,13 @@ public class TopTapAction extends BaseAction {
         xsAcc.add(x);
         ysAcc.add(y);
         zsAcc.add(z);
-        timestamps.add(t);
+        lastTimestamp = t;
         int size = (int)(WINDOW_NS / samplingInterval);
 
         while(xsAcc.size() > size) {
             xsAcc.remove(0);
             ysAcc.remove(0);
             zsAcc.remove(0);
-            timestamps.remove(0);
         }
 
         peakDetectorPositive.update(highpassKeyPositive.update(lowpassKeyPositive.update(z)));
@@ -215,26 +217,26 @@ public class TopTapAction extends BaseAction {
     }
 
     private int checkDoubleBackTapTiming(long timestamp) {
-        int res = 0;
-        synchronized (backTapTimestamps) {
-            // remove old timestamps
-            int idx = 0;
-            for (; idx < backTapTimestamps.size(); idx++) {
-                if (timestamp - backTapTimestamps.get(idx) <= 500000000L)
-                    break;
+        Iterator iter = backTapTimestamps.iterator();
+        while (iter.hasNext()) {
+            if (timestamp - (Long) iter.next() > 500000000L) {
+                iter.remove();
             }
-            backTapTimestamps = backTapTimestamps.subList(idx, backTapTimestamps.size());
-
-            if (backTapTimestamps.isEmpty())
-                res = 0;
-            else {
-                if (backTapTimestamps.size() == 1)
+        }
+        int res = 0;
+        if (!backTapTimestamps.isEmpty()) {
+            iter = backTapTimestamps.iterator();
+            while (true) {
+                if (!iter.hasNext()) {
                     res = 1;
-                doubleBackTapTimestamps[1] = backTapTimestamps.get(backTapTimestamps.size() - 1);
-                doubleBackTapTimestamps[0] = backTapTimestamps.get(0);
+                    break;
+                }
+                doubleBackTapTimestamps[1] = (Long)backTapTimestamps.getLast();
+                doubleBackTapTimestamps[0] = (Long)iter.next();
                 if (doubleBackTapTimestamps[1] - doubleBackTapTimestamps[0] > 100000000L) {
                     backTapTimestamps.clear();
                     res = 2;
+                    break;
                 }
             }
         }
@@ -242,26 +244,26 @@ public class TopTapAction extends BaseAction {
     }
 
     private int checkDoubleTopTapTiming(long timestamp) {
-        int res = 0;
-        synchronized (topTapTimestamps) {
-            // remove old timestamps
-            int idx = 0;
-            for (; idx < topTapTimestamps.size(); idx++) {
-                if (timestamp - topTapTimestamps.get(idx) <= 500000000L)
-                    break;
+        Iterator iter = topTapTimestamps.iterator();
+        while (iter.hasNext()) {
+            if (timestamp - (Long) iter.next() > 500000000L) {
+                iter.remove();
             }
-            topTapTimestamps = topTapTimestamps.subList(idx, topTapTimestamps.size());
-
-            if (topTapTimestamps.isEmpty())
-                res = 0;
-            else {
-                if (topTapTimestamps.size() == 1)
+        }
+        int res = 0;
+        if (!topTapTimestamps.isEmpty()) {
+            iter = topTapTimestamps.iterator();
+            while (true) {
+                if (!iter.hasNext()) {
                     res = 1;
-                doubleTopTapTimestamps[1] = topTapTimestamps.get(topTapTimestamps.size() - 1);
-                doubleTopTapTimestamps[0] = topTapTimestamps.get(0);
+                    break;
+                }
+                doubleTopTapTimestamps[1] = (Long)topTapTimestamps.getLast();
+                doubleTopTapTimestamps[0] = (Long)iter.next();
                 if (doubleTopTapTimestamps[1] - doubleTopTapTimestamps[0] > 100000000L) {
                     topTapTimestamps.clear();
                     res = 2;
+                    break;
                 }
             }
         }
@@ -337,8 +339,7 @@ public class TopTapAction extends BaseAction {
     public synchronized void getAction() {
         if (!isStarted)
             return;
-        long timestamp = timestamps.get(seqLength);
-        int count1 = checkDoubleBackTapTiming(timestamp);
+        int count1 = checkDoubleBackTapTiming(lastTimestamp);
         if (count1 == 2) {
             if (actionListener != null) {
                 for (ActionListener listener: actionListener) {
@@ -348,7 +349,7 @@ public class TopTapAction extends BaseAction {
                 }
             }
         }
-        int count2 = checkDoubleTopTapTiming(timestamp);
+        int count2 = checkDoubleTopTapTiming(lastTimestamp);
         if (count2 == 2) {
             if (actionListener != null) {
                 for (ActionListener listener : actionListener) {

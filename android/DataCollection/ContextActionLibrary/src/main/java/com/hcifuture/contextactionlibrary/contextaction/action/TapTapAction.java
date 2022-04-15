@@ -25,8 +25,11 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 
 import java.io.File;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 
 public class TapTapAction extends BaseAction {
@@ -53,7 +56,7 @@ public class TapTapAction extends BaseAction {
     private List<Float> xsGyro = Collections.synchronizedList(new ArrayList<>());
     private List<Float> ysGyro = Collections.synchronizedList(new ArrayList<>());
     private List<Float> zsGyro = Collections.synchronizedList(new ArrayList<>());
-    private List<Long> timestamps = Collections.synchronizedList(new ArrayList<>());
+    private long lastTimestamp = 0L;
 
     private Highpass1C highpassKey = new Highpass1C();
     private Lowpass1C lowpassKey = new Lowpass1C();
@@ -61,7 +64,7 @@ public class TapTapAction extends BaseAction {
     private boolean wasPeakApproaching = true;
     private int result;
     private int seqLength;
-    private List<Long> tapTimestamps = Collections.synchronizedList(new ArrayList<>());
+    private Deque<Long> tapTimestamps = new ArrayDeque();
     private TfClassifier tflite;
 
     // filter related
@@ -101,7 +104,7 @@ public class TapTapAction extends BaseAction {
         xsGyro.clear();
         ysGyro.clear();
         zsGyro.clear();
-        timestamps.clear();
+        lastTimestamp = 0L;
     }
 
     @Override
@@ -193,8 +196,9 @@ public class TapTapAction extends BaseAction {
                 while(resampleGyro.update(event.values[0], event.values[1], event.values[2], event.timestamp))
                     processGyro();
             recognizeTapML();
-            if (result == 1)
-                tapTimestamps.add(event.timestamp);
+            if (result == 1) {
+                tapTimestamps.addLast(event.timestamp);
+            }
         }
     }
 
@@ -210,14 +214,13 @@ public class TapTapAction extends BaseAction {
         xsAcc.add(point3.x);
         ysAcc.add(point3.y);
         zsAcc.add(point3.z);
-        timestamps.add(sample.t);
+        lastTimestamp = sample.t;
         int size = (int)(WINDOW_NS / resampleAcc.getInterval());
 
         while(xsAcc.size() > size) {
             xsAcc.remove(0);
             ysAcc.remove(0);
             zsAcc.remove(0);
-            timestamps.remove(0);
         }
 
         peakDetectorPositive.update(highpassKey.update(lowpassKey.update(point1.z)));
@@ -261,24 +264,24 @@ public class TapTapAction extends BaseAction {
     }
     
     private int checkDoubleTapTiming(long timestamp) {
-        int res = 0;
-        synchronized (tapTimestamps) {
-            // remove old timestamps
-            int idx = 0;
-            for (; idx < tapTimestamps.size(); idx++) {
-                if (timestamp - tapTimestamps.get(idx) <= 500000000L)
-                    break;
+        Iterator iter = tapTimestamps.iterator();
+        while (iter.hasNext()) {
+            if (timestamp - (Long)iter.next() > 500000000L) {
+                iter.remove();
             }
-            tapTimestamps = tapTimestamps.subList(idx, tapTimestamps.size());
-
-            if (tapTimestamps.isEmpty())
-                res = 0;
-            else {
-                if (tapTimestamps.size() == 1)
+        }
+        int res = 0;
+        if (!tapTimestamps.isEmpty()) {
+            iter = tapTimestamps.iterator();
+            while (true) {
+                if (!iter.hasNext()) {
                     res = 1;
-                if (tapTimestamps.get(tapTimestamps.size() - 1) - tapTimestamps.get(0) > 100000000L) {
+                    break;
+                }
+                if ((Long)tapTimestamps.getLast() - (Long)iter.next() > 100000000L) {
                     tapTimestamps.clear();
                     res = 2;
+                    break;
                 }
             }
         }
@@ -317,8 +320,7 @@ public class TapTapAction extends BaseAction {
     public synchronized void getAction() {
         if (!isStarted)
             return;
-        long timestamp = timestamps.get(seqLength);
-        int count = checkDoubleTapTiming(timestamp);
+        int count = checkDoubleTapTiming(lastTimestamp);
         if (count == 2) {
             if (actionListener != null) {
                 for (ActionListener listener: actionListener) {
