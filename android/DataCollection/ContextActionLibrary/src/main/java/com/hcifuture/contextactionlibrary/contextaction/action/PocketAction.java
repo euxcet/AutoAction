@@ -6,6 +6,8 @@ import android.hardware.SensorEvent;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
+import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.Lowpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.MyPeakDetector;
@@ -27,6 +29,10 @@ import java.util.List;
 public class PocketAction extends BaseAction {
 
     private String TAG = "PocketAction";
+
+    public static String ACTION = "action.taptap.action";
+    public static String ACTION_UPLOAD = "action.taptap.action.upload";
+    public static String ACTION_RECOGNIZED = "action.taptap.action.recognized";
 
     private long SAMPLINGINTERVALNS = 10000000L;
     private long WINDOW_NS = 400000000L;
@@ -99,11 +105,11 @@ public class PocketAction extends BaseAction {
     }
 
     @Override
-    public synchronized void onIMUSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() != Sensor.TYPE_GYROSCOPE && event.sensor.getType() != Sensor.TYPE_LINEAR_ACCELERATION)
+    public void onIMUSensorEvent(SingleIMUData data) {
+        if (data.getType() != Sensor.TYPE_GYROSCOPE && data.getType() != Sensor.TYPE_LINEAR_ACCELERATION)
             return;
         result = 0;
-        if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+        if (data.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             gotAcc = true;
             if (!gotGyro)
                 return;
@@ -113,23 +119,23 @@ public class PocketAction extends BaseAction {
                 return;
         }
         if (0L == syncTime) {
-            syncTime = event.timestamp;
+            syncTime = data.getTimestamp();
             lowpassKeyPositive.init(0.0F);
             highpassKeyPositive.init(0.0F);
         } else {
-            if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION)
-                processAccAndKeySignal(event.values[0], event.values[1], event.values[2], event.timestamp, SAMPLINGINTERVALNS);
+            if (data.getType() == Sensor.TYPE_LINEAR_ACCELERATION)
+                processAccAndKeySignal(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), data.getTimestamp(), SAMPLINGINTERVALNS);
             else
-                processGyro(event.values[0], event.values[1], event.values[2], SAMPLINGINTERVALNS);
+                processGyro(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), SAMPLINGINTERVALNS);
             recognizePocketML();
             if (result == 1) {
-                pocketTimestamps.addLast(event.timestamp);
+                pocketTimestamps.addLast(data.getTimestamp());
             }
         }
     }
 
     @Override
-    public void onProximitySensorChanged(SensorEvent event) {
+    public void onNonIMUSensorEvent(NonIMUData data) {
 
     }
 
@@ -247,11 +253,13 @@ public class PocketAction extends BaseAction {
         if (count == 2) {
             if (actionListener != null) {
                 for (ActionListener listener : actionListener) {
-                    ActionResult actionResult = new ActionResult("Pocket");
+                    ActionResult actionResult = new ActionResult(ACTION);
                     actionResult.setTimestamp(getFirstPocketTimestamp() + ":" + getSecondPocketTimestamp());
                     actionResult.setReason("Triggered");
                     listener.onAction(actionResult);
-                    listener.onActionSave(actionResult);
+                    actionResult.setAction(ACTION_UPLOAD);
+                    listener.onAction(actionResult);
+                    // listener.onActionSave(actionResult);
                 }
             }
         }

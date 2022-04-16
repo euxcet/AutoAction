@@ -4,6 +4,9 @@ import android.content.Context;
 import android.hardware.SensorEvent;
 import android.view.accessibility.AccessibilityEvent;
 
+import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -30,8 +33,10 @@ public abstract class BaseContext {
 
     public abstract void start();
     public abstract void stop();
-    public abstract void onIMUSensorChanged(SensorEvent event);
-    public abstract void onProximitySensorChanged(SensorEvent event);
+    // public abstract void onIMUSensorChanged(SensorEvent event);
+    // public abstract void onProximitySensorChanged(SensorEvent event);
+    public abstract void onIMUSensorEvent(SingleIMUData data);
+    public abstract void onNonIMUSensorEvent(NonIMUData data);
 
     public abstract void onAccessibilityEvent(AccessibilityEvent event);
     public abstract void onBroadcastEvent(BroadcastEvent event);

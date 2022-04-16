@@ -5,11 +5,12 @@ import static java.lang.StrictMath.abs;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
-import android.hardware.SensorManager;
 import android.util.Log;
 
-import com.hcifuture.contextactionlibrary.data.ProximitySensorManager;
-import com.hcifuture.contextactionlibrary.model.NcnnInstance;
+import com.hcifuture.contextactionlibrary.sensor.data.Data;
+import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -56,17 +57,17 @@ public class CloseAction extends BaseAction {
     }
 
     @Override
-    public synchronized void onIMUSensorChanged(SensorEvent event) {
-        int type = event.sensor.getType();
+    public void onIMUSensorEvent(SingleIMUData data) {
+        int type = data.getType();
         switch (type) {
             case Sensor.TYPE_GYROSCOPE:
-                //需要将弧度转为角度
-                gx = (float)Math.toDegrees(event.values[0]);
-                gy = (float)Math.toDegrees(event.values[1]);
-                gz = (float)Math.toDegrees(event.values[2]);
+                // 需要将弧度转为角度
+                gx = (float)Math.toDegrees(data.getValues().get(0));
+                gy = (float)Math.toDegrees(data.getValues().get(1));
+                gz = (float)Math.toDegrees(data.getValues().get(2));
                 // check_close
-                //gx要必须很大，且gy，gz不大，才可以说明是凑近嘴部。
-                if(!upright_gyro) {
+                // gx要必须很大，且gy，gz不大，才可以说明是凑近嘴部。
+                if (!upright_gyro) {
 //                Log.i("proximity:","gx: "+gx+" gy: "+gy+" gz: "+gz);
                     if (gx > 30 && abs(gx) - abs(gy) > 30 && abs(gx) - abs(gz) > 30) {
                         up_gyro_id = System.currentTimeMillis();
@@ -84,45 +85,39 @@ public class CloseAction extends BaseAction {
                 }
         }
 
-        if(success_id != -1){
-            if(System.currentTimeMillis()-success_id>100){
-                Log.i("proximity:", "成功了！"+ success_id);
+        if (success_id != -1) {
+            if (System.currentTimeMillis() - success_id > 100) {
+                Log.i("proximity:", "成功了！" + success_id);
                 success_flag = true;
             }
-            else{
-                Log.i("proximity","稳定的时间不够"+(System.currentTimeMillis()-success_id));
+            else {
+                Log.i("proximity","稳定的时间不够" + (System.currentTimeMillis() - success_id));
             }
         }
     }
 
     @Override
-    public synchronized void onProximitySensorChanged(SensorEvent event) {
-        int type = event.sensor.getType();
-//        Log.i("proximity:","改变了！"+type);
-        switch (type) {
-            case Sensor.TYPE_PROXIMITY:
-                dist = event.values[0];
-                Log.i("proximity:","接近光距离为："+dist);
-                if(dist == 0 ) {
-                    if (upright_gyro) {
-                        success_id = System.currentTimeMillis();
-                        Log.i("proximity:", "识别成功2----"+(success_id-register_time)+" "+success_id);
-                    } else {
-                        Log.i("proximity:", "gyro不满足条件");
-                    }
-                }
-                if(dist==5) {
-                    success_id = -1;
-                    if (System.currentTimeMillis() - register_time > 10000) {
-                        //TODO: 取消传感器注册
-//                    sm.unregisterListener(this, sm.getDefaultSensor(Sensor.TYPE_PROXIMITY));
-                        Log.i("proximity:", "接近光 时间过长，取消注册传感器");
-                        reset();
-                        register_flag = false;
-                    }
-                }
+    public void onNonIMUSensorEvent(NonIMUData data) {
+        dist = data.getProximity();
+        Log.i("proximity:","接近光距离为："+dist);
+        if(dist == 0 ) {
+            if (upright_gyro) {
+                success_id = System.currentTimeMillis();
+                Log.i("proximity:", "识别成功2----"+(success_id-register_time)+" "+success_id);
+            } else {
+                Log.i("proximity:", "gyro不满足条件");
+            }
         }
-
+        if(dist==5) {
+            success_id = -1;
+            if (System.currentTimeMillis() - register_time > 10000) {
+                //TODO: 取消传感器注册
+//                    sm.unregisterListener(this, sm.getDefaultSensor(Sensor.TYPE_PROXIMITY));
+                Log.i("proximity:", "接近光 时间过长，取消注册传感器");
+                reset();
+                register_flag = false;
+            }
+        }
     }
 
     @Override

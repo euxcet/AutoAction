@@ -5,6 +5,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 
 import com.hcifuture.contextactionlibrary.model.NcnnInstance;
+import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -18,7 +20,7 @@ public class KnockAction extends BaseAction {
     private final int DATA_ELEMSIZE = 6;
     private final int INTERVAL = 9900000;
 
-    private float[] data = new float[DATA_LENGTH];
+    private float[] inputData = new float[DATA_LENGTH];
     private long lastTimestampGyro = 0;
     private long lastTimestampLinear = 0;
 
@@ -37,33 +39,33 @@ public class KnockAction extends BaseAction {
     }
 
     @Override
-    public void onIMUSensorChanged(SensorEvent event) {
-        int type = event.sensor.getType();
+    public void onIMUSensorEvent(SingleIMUData data) {
+        int type = data.getType();
         switch (type) {
             case Sensor.TYPE_GYROSCOPE:
-                if (event.timestamp - lastTimestampGyro > INTERVAL) {
+                if (data.getTimestamp() - lastTimestampGyro > INTERVAL) {
                     for (int i = 0; i < DATA_LENGTH - DATA_ELEMSIZE; i += DATA_ELEMSIZE) {
                         for (int j = 0; j < 3; j ++) {
-                            data[i + j] = data[i + j + DATA_ELEMSIZE];
+                            inputData[i + j] = inputData[i + j + DATA_ELEMSIZE];
                         }
                     }
-                    data[DATA_LENGTH - DATA_ELEMSIZE] = event.values[0];
-                    data[DATA_LENGTH - DATA_ELEMSIZE + 1] = event.values[1];
-                    data[DATA_LENGTH - DATA_ELEMSIZE + 2] = event.values[2];
-                    lastTimestampGyro = event.timestamp;
+                    inputData[DATA_LENGTH - DATA_ELEMSIZE] = data.getValues().get(0);
+                    inputData[DATA_LENGTH - DATA_ELEMSIZE + 1] = data.getValues().get(1);
+                    inputData[DATA_LENGTH - DATA_ELEMSIZE + 2] = data.getValues().get(2);
+                    lastTimestampGyro = data.getTimestamp();
                 }
                 break;
             case Sensor.TYPE_LINEAR_ACCELERATION:
-                if (event.timestamp - lastTimestampLinear > INTERVAL) {
+                if (data.getTimestamp() - lastTimestampLinear > INTERVAL) {
                     for (int i = 0; i < DATA_LENGTH - DATA_ELEMSIZE; i += DATA_ELEMSIZE) {
                         for (int j = 3; j < 6; j ++) {
-                            data[i + j] = data[i + j + DATA_ELEMSIZE];
+                            inputData[i + j] = inputData[i + j + DATA_ELEMSIZE];
                         }
                     }
-                    data[DATA_LENGTH - DATA_ELEMSIZE + 3] = event.values[0];
-                    data[DATA_LENGTH - DATA_ELEMSIZE + 4] = event.values[1];
-                    data[DATA_LENGTH - DATA_ELEMSIZE + 5] = event.values[2];
-                    lastTimestampLinear = event.timestamp;
+                    inputData[DATA_LENGTH - DATA_ELEMSIZE + 3] = data.getValues().get(0);
+                    inputData[DATA_LENGTH - DATA_ELEMSIZE + 4] = data.getValues().get(1);
+                    inputData[DATA_LENGTH - DATA_ELEMSIZE + 5] = data.getValues().get(2);
+                    lastTimestampLinear = data.getTimestamp();
                 }
                 break;
             default:
@@ -72,16 +74,17 @@ public class KnockAction extends BaseAction {
     }
 
     @Override
-    public void onProximitySensorChanged(SensorEvent event) {
+    public void onNonIMUSensorEvent(NonIMUData data) {
 
     }
 
     @Override
     public void getAction() {
-        if (!isStarted)
+        if (!isStarted) {
             return;
+        }
         if (NcnnInstance.getInstance() != null) {
-            int result = NcnnInstance.getInstance().actionDetect(data);
+            int result = NcnnInstance.getInstance().actionDetect(inputData);
             if (result == 0) {
                 for (ActionListener listener: actionListener) {
                     listener.onAction(new ActionResult("Knock"));

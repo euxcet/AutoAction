@@ -10,8 +10,10 @@ import android.view.accessibility.AccessibilityEvent;
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
-import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
+import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
+import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
@@ -80,18 +82,16 @@ public class InformationalContext extends BaseContext {
     }
 
     @Override
-    public void onIMUSensorChanged(SensorEvent event) {
-        lastIMUTime = event.timestamp;
+    public void onIMUSensorEvent(SingleIMUData data) {
+        lastIMUTime = data.getTimestamp();
     }
 
     @Override
-    public void onProximitySensorChanged(SensorEvent event) {
+    public void onNonIMUSensorEvent(NonIMUData data) {
 
     }
 
-
-    public void onAction(Action action)
-    {
+    public void onAction(Action action) {
         long nowTime = System.currentTimeMillis();
         addTaskLog(new LogItem(action.toString(),"action",new Date()));
         if(action.getType().equals("text_change"))

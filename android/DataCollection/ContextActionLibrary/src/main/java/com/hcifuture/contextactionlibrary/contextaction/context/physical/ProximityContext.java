@@ -7,6 +7,8 @@ import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
+import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -48,22 +50,20 @@ public class ProximityContext extends BaseContext {
     }
 
     @Override
-    public void onIMUSensorChanged(SensorEvent event) {
+    public void onIMUSensorEvent(SingleIMUData data) {
 
     }
 
     @Override
-    public void onProximitySensorChanged(SensorEvent event) {
-        if (event.sensor.getType() != Sensor.TYPE_PROXIMITY)
-            return;
-        float prox = event.values[0];
+    public void onNonIMUSensorEvent(NonIMUData data) {
+        float prox = data.getProximity();
         if ((int)prox < proxThreshold) {
-            lastNearTime = event.timestamp;
+            lastNearTime = data.getProximityTimestamp();
         }
         else {
-            lastFarTime = event.timestamp;
+            lastFarTime = data.getProximityTimestamp();
         }
-        lastTimestamp = event.timestamp;
+        lastTimestamp = data.getProximityTimestamp();
     }
 
     @Override

@@ -8,6 +8,8 @@ import android.util.Log;
 import com.hcifuture.contextactionlibrary.BuildConfig;
 import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.CombinedFilter;
 import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.HorizontalFilter;
+import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass3C;
 import com.hcifuture.contextactionlibrary.utils.imu.Lowpass1C;
@@ -35,6 +37,10 @@ import java.util.List;
 public class TapTapAction extends BaseAction {
 
     private String TAG = "TapTapAction";
+
+    public static String ACTION = "action.taptap.action";
+    public static String ACTION_UPLOAD = "action.taptap.action.upload";
+    public static String ACTION_RECOGNIZED = "action.taptap.action.recognized";
 
     private long SAMPLINGINTERVALNS = 2500000L;
     private long WINDOW_NS = 160000000L;
@@ -127,14 +133,14 @@ public class TapTapAction extends BaseAction {
     }
 
     @Override
-    public synchronized void onIMUSensorChanged(SensorEvent event) {
+    public void onIMUSensorEvent(SingleIMUData data) {
         // just for horizontal / static cases' record && upload
-        horizontalFilter.onSensorChanged(event);
-        if (horizontalFilter.passWithDelay(event.timestamp) == -1) {
-            ActionResult actionResult = new ActionResult("TapTap");
+        horizontalFilter.onSensorChanged(data);
+        if (horizontalFilter.passWithDelay(data.getTimestamp()) == -1) {
+            ActionResult actionResult = new ActionResult(ACTION_UPLOAD);
             actionResult.setReason("Static");
             for (ActionListener listener : actionListener) {
-                listener.onActionSave(actionResult);
+                listener.onAction(actionResult);
             }
         }
 //        horizontalFilter.onSensorChanged(event);
@@ -143,8 +149,8 @@ public class TapTapAction extends BaseAction {
 //            existTaptapSignal = false;
 //        else if (tmp1 == 1)
 //            flag1 = true;
-        combinedFilter.onSensorChanged(event);
-        int tmp2 = combinedFilter.passWithDelay(event.timestamp);
+        combinedFilter.onSensorChanged(data);
+        int tmp2 = combinedFilter.passWithDelay(data.getTimestamp());
         if (tmp2 == -1)
             existTaptapSignal = false;
         else if (tmp2 == 1)
@@ -152,7 +158,7 @@ public class TapTapAction extends BaseAction {
         if (existTaptapSignal && flag1 && flag2) {
             if (actionListener != null) {
                 for (ActionListener listener: actionListener) {
-                    listener.onAction(new ActionResult("TapTap"));
+                    listener.onAction(new ActionResult(ACTION));
                 }
             }
             existTaptapSignal = false;
@@ -160,25 +166,25 @@ public class TapTapAction extends BaseAction {
             flag2 = false;
         }
 
-        if (event.sensor.getType() != Sensor.TYPE_GYROSCOPE && event.sensor.getType() != Sensor.TYPE_ACCELEROMETER)
+        if (data.getType() != Sensor.TYPE_GYROSCOPE && data.getType() != Sensor.TYPE_ACCELEROMETER)
             return;
         result = 0;
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        if (data.getType() == Sensor.TYPE_ACCELEROMETER) {
             gotAcc = true;
             if (0L == syncTime)
-                resampleAcc.init(event.values[0], event.values[1], event.values[2], event.timestamp, SAMPLINGINTERVALNS);
+                resampleAcc.init(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), data.getTimestamp(), SAMPLINGINTERVALNS);
             if (!gotGyro)
                 return;
         } else {
             gotGyro = true;
             if (0L == syncTime)
-                resampleGyro.init(event.values[0], event.values[1], event.values[2], event.timestamp, SAMPLINGINTERVALNS);
+                resampleGyro.init(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), data.getTimestamp(), SAMPLINGINTERVALNS);
             if (!gotAcc)
                 return;
         }
         if (0L == syncTime) {
-            syncTime = event.timestamp;
-            resampleAcc.setSyncTime(event.timestamp);
+            syncTime = data.getTimestamp();
+            resampleAcc.setSyncTime(data.getTimestamp());
             resampleGyro.setSyncTime(syncTime);
             slopeAcc.init(resampleAcc.getResults().point);
             slopeGyro.init(resampleGyro.getResults().point);
@@ -189,21 +195,22 @@ public class TapTapAction extends BaseAction {
             lowpassKey.init(0.0F);
             highpassKey.init(0.0F);
         } else {
-            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
-                while(resampleAcc.update(event.values[0], event.values[1], event.values[2], event.timestamp))
+            if (data.getType() == Sensor.TYPE_ACCELEROMETER)
+                while(resampleAcc.update(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), data.getTimestamp()))
                     processAccAndKeySignal();
             else
-                while(resampleGyro.update(event.values[0], event.values[1], event.values[2], event.timestamp))
+                while(resampleGyro.update(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), data.getTimestamp()))
                     processGyro();
             recognizeTapML();
             if (result == 1) {
-                tapTimestamps.addLast(event.timestamp);
+                tapTimestamps.addLast(data.getTimestamp());
             }
         }
+
     }
 
     @Override
-    public void onProximitySensorChanged(SensorEvent event) {
+    public void onNonIMUSensorEvent(NonIMUData data) {
 
     }
 
@@ -324,8 +331,9 @@ public class TapTapAction extends BaseAction {
         if (count == 2) {
             if (actionListener != null) {
                 for (ActionListener listener: actionListener) {
-                    ActionResult actionResult = new ActionResult("TapTap");
-                    listener.onActionRecognized(actionResult);
+                    ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
+                    listener.onAction(actionResult);
+                    onConfirmed();
                 }
                 horizontalFilter.updateCondition();
                 combinedFilter.updateCondition();

@@ -12,6 +12,8 @@ import android.hardware.SensorManager;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.model.NcnnInstance;
+import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -19,7 +21,7 @@ import com.hcifuture.shared.communicate.result.ActionResult;
 
 import java.util.List;
 
-public class FlipAction extends BaseAction{
+public class FlipAction extends BaseAction {
 
     //判断自然动作所需的变量
     boolean flag1,flag2; //翻转的第1步和第2步的角度判断
@@ -73,24 +75,28 @@ public class FlipAction extends BaseAction{
     }
 
     @Override
-    public synchronized void onIMUSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            gravity = event.values.clone();
+    public void onIMUSensorEvent(SingleIMUData data) {
+        if (data.getType() == Sensor.TYPE_ACCELEROMETER) {
+            gravity[0] = data.getValues().get(0);
+            gravity[1] = data.getValues().get(1);
+            gravity[2] = data.getValues().get(2);
             getValue(); //更新方位角
             if(abs(gravity[2])>20){
                 Log.i("FLIP","角速度过大"+abs(gravity[2]));
                 reset();
             }
         }
-        else if(event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD){
-            geomagnetic = event.values.clone();
+        else if(data.getType() == Sensor.TYPE_MAGNETIC_FIELD){
+            geomagnetic[0] = data.getValues().get(0);
+            geomagnetic[1] = data.getValues().get(1);
+            geomagnetic[2] = data.getValues().get(2);
             getValue();
         }
-        else if(event.sensor.getType() == Sensor.TYPE_GYROSCOPE){
+        else if(data.getType() == Sensor.TYPE_GYROSCOPE){
             //需要将弧度转为角度
-            gx = (float)Math.toDegrees(event.values[0]);
-            gy = (float)Math.toDegrees(event.values[1]);
-            gz = (float)Math.toDegrees(event.values[2]);
+            gx = (float)Math.toDegrees(data.getValues().get(0));
+            gy = (float)Math.toDegrees(data.getValues().get(1));
+            gz = (float)Math.toDegrees(data.getValues().get(2));
             if(abs(gy)>max_gy+100){
                 max_gx = abs(gx);
                 gx_id = System.currentTimeMillis();
@@ -188,6 +194,12 @@ public class FlipAction extends BaseAction{
 
     }
 
+    @Override
+    public void onNonIMUSensorEvent(NonIMUData data) {
+
+    }
+
+
     //获取方位角数据
     private void getValue() {
         // r从这里返回
@@ -261,9 +273,11 @@ public class FlipAction extends BaseAction{
         }
     }
 
+    /*
     @Override
     public void onProximitySensorChanged(SensorEvent event) {
     }
+     */
 
     @Override
     public synchronized void getAction() {

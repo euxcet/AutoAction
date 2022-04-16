@@ -6,6 +6,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
+
 public abstract class Filter {
     protected final long MILLISECOND = (long)1e6;
     protected final long SECOND = (long)1e9;
@@ -88,22 +90,26 @@ public abstract class Filter {
         }
     }
 
-    public void onSensorChanged(SensorEvent event) {
-        int type = event.sensor.getType();
-        if (event.timestamp < lastSensorTime[type] + 8 * MILLISECOND) {
+    public void onSensorChanged(SingleIMUData data) {
+        int type = data.getType();
+        if (data.getTimestamp() < lastSensorTime[type] + 8 * MILLISECOND) {
             return;
         }
-        lastSensorTime[type] = event.timestamp;
+        lastSensorTime[type] = data.getTimestamp();
         switch (type) {
             case Sensor.TYPE_GYROSCOPE:
             case Sensor.TYPE_LINEAR_ACCELERATION:
-                updateInput(type, event.values[0], event.values[1], event.values[2], event.timestamp);
+                updateInput(type, data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), data.getTimestamp());
                 break;
             case Sensor.TYPE_ACCELEROMETER:
-                System.arraycopy(event.values, 0, accMark, 0, accMark.length);
+                accMark[0] = data.getValues().get(0);
+                accMark[1] = data.getValues().get(1);
+                accMark[2] = data.getValues().get(2);
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD:
-                System.arraycopy(event.values, 0, magMark, 0, magMark.length);
+                magMark[0] = data.getValues().get(0);
+                magMark[1] = data.getValues().get(1);
+                magMark[2] = data.getValues().get(2);
                 updateOrientationAngles();
                 break;
             default:
@@ -114,15 +120,15 @@ public abstract class Filter {
         float linearAccThreshold = 0.05f;
         float gyroThreshold = 0.02f;
         // linear
-        if (event.sensor.getType() == 10) {
-            if (Math.abs(event.values[0]) < linearAccThreshold && Math.abs(event.values[1]) < linearAccThreshold)
+        if (data.getType() == 10) {
+            if (Math.abs(data.getValues().get(0)) < linearAccThreshold && Math.abs(data.getValues().get(1)) < linearAccThreshold)
                 linearStaticCount = Math.min(100, linearStaticCount + 1);
             else
                 linearStaticCount = Math.max(0, linearStaticCount - 1);
         }
         // gyro
-        else if (event.sensor.getType() == 4) {
-            if (Math.abs(event.values[0]) < gyroThreshold && Math.abs(event.values[1]) < gyroThreshold && Math.abs(event.values[2]) < gyroThreshold)
+        else if (data.getType() == 4) {
+            if (Math.abs(data.getValues().get(0)) < gyroThreshold && Math.abs(data.getValues().get(1)) < gyroThreshold && Math.abs(data.getValues().get(2)) < gyroThreshold)
                 gyroStaticCount = Math.min(200, gyroStaticCount + 1);
             else
                 gyroStaticCount = Math.max(0, gyroStaticCount - 1);

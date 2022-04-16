@@ -4,19 +4,14 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
-import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
-import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
-import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
-import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
-import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
+import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
+import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
+import com.hcifuture.contextactionlibrary.sensor.trigger.Trigger;
+import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
-import com.lzy.okgo.callback.StringCallback;
-import com.lzy.okgo.model.Response;
 
-import java.io.File;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -32,6 +27,7 @@ public class TimedCollector extends BaseCollector {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
     }
 
+    /*
     @RequiresApi(api = Build.VERSION_CODES.N)
     public TimedCollector scheduleFixedRateUpload(Trigger.CollectorType type, TriggerConfig triggerConfig, long period, long initialDelay) {
         if (type == Trigger.CollectorType.Log) {
@@ -66,6 +62,7 @@ public class TimedCollector extends BaseCollector {
                 initialDelay, period, TimeUnit.MILLISECONDS));
         return this;
     }
+     */
 
     @Override
     public void onAction(ActionResult action) {

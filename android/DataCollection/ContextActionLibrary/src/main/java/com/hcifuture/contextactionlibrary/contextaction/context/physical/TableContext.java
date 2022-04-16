@@ -8,6 +8,8 @@ import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
+import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -36,19 +38,19 @@ public class TableContext extends BaseContext {
         super(context, config, requestListener, contextListener);
     }
 
-    private void checkIsStatic(SensorEvent event) {
+    private void checkIsStatic(SingleIMUData data) {
         float linearAccThreshold = 0.05f;
         float gyroThreshold = 0.02f;
         // linear acc
-        if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
-            if (Math.abs(event.values[0]) <= linearAccThreshold && Math.abs(event.values[1]) <= linearAccThreshold)
+        if (data.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+            if (Math.abs(data.getValues().get(0)) <= linearAccThreshold && Math.abs(data.getValues().get(1)) <= linearAccThreshold)
                 linearStaticCount = Math.min(20, linearStaticCount + 1);
             else
                 linearStaticCount = Math.max(0, linearStaticCount - 1);
         }
         // gyro
         else {
-            if (Math.abs(event.values[0]) <= gyroThreshold && Math.abs(event.values[1]) <= gyroThreshold && Math.abs(event.values[2]) <= gyroThreshold)
+            if (Math.abs(data.getValues().get(0)) <= gyroThreshold && Math.abs(data.getValues().get(1)) <= gyroThreshold && Math.abs(data.getValues().get(2)) <= gyroThreshold)
                 gyroStaticCount = Math.min(40, gyroStaticCount + 1);
             else
                 gyroStaticCount = Math.max(0, gyroStaticCount - 1);
@@ -90,17 +92,21 @@ public class TableContext extends BaseContext {
     }
 
     @Override
-    public void onIMUSensorChanged(SensorEvent event) {
-        switch (event.sensor.getType()) {
+    public void onIMUSensorEvent(SingleIMUData data) {
+        switch (data.getType()) {
             case Sensor.TYPE_GYROSCOPE:
             case Sensor.TYPE_LINEAR_ACCELERATION:
-                checkIsStatic(event);
+                checkIsStatic(data);
                 break;
             case Sensor.TYPE_ACCELEROMETER:
-                System.arraycopy(event.values, 0, accMark, 0, accMark.length);
+                accMark[0] = data.getValues().get(0);
+                accMark[1] = data.getValues().get(1);
+                accMark[2] = data.getValues().get(2);
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD:
-                System.arraycopy(event.values, 0, magMark, 0, magMark.length);
+                magMark[0] = data.getValues().get(0);
+                magMark[1] = data.getValues().get(1);
+                magMark[2] = data.getValues().get(2);
                 updateOrientationAngles();
                 break;
             default:
@@ -109,7 +115,7 @@ public class TableContext extends BaseContext {
     }
 
     @Override
-    public void onProximitySensorChanged(SensorEvent event) {
+    public void onNonIMUSensorEvent(NonIMUData data) {
 
     }
 

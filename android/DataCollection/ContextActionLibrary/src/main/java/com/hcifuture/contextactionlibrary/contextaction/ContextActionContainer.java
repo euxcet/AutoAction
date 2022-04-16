@@ -2,40 +2,26 @@ package com.hcifuture.contextactionlibrary.contextaction;
 
 import android.content.Context;
 import android.hardware.SensorEvent;
-import android.hardware.SensorManager;
 import android.os.Build;
-import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
 import androidx.annotation.RequiresApi;
 
-import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
-import com.hcifuture.contextactionlibrary.collect.trigger.ClickTrigger;
-import com.hcifuture.contextactionlibrary.collect.trigger.Trigger;
-import com.hcifuture.contextactionlibrary.collect.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
+import com.hcifuture.contextactionlibrary.sensor.data.Data;
+import com.hcifuture.contextactionlibrary.sensor.distributor.DataDistributor;
+import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.contextaction.action.BaseAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.CloseAction;
-import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.FlipAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.PocketAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.BaseCollector;
-import com.hcifuture.contextactionlibrary.contextaction.collect.ConfigCollector;
-import com.hcifuture.contextactionlibrary.contextaction.collect.ExampleCollector;
-import com.hcifuture.contextactionlibrary.contextaction.collect.InformationalContextCollector;
-import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
-import com.hcifuture.contextactionlibrary.contextaction.collect.TimedCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
-import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
-import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.physical.ProximityContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.physical.TableContext;
-import com.hcifuture.contextactionlibrary.data.AccessibilityEventManager;
-import com.hcifuture.contextactionlibrary.data.BroadcastEventManager;
-import com.hcifuture.contextactionlibrary.data.IMUSensorManager;
-import com.hcifuture.contextactionlibrary.data.BaseSensorManager;
-import com.hcifuture.contextactionlibrary.data.ProximitySensorManager;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
@@ -48,12 +34,8 @@ import com.hcifuture.shared.communicate.result.ContextResult;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -68,7 +50,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private List<BaseAction> actions;
     private List<BaseContext> contexts;
 
-    private List<BaseSensorManager> sensorManagers;
+    // private List<BaseSensorManager> sensorManagers;
 
     private boolean fromDex = false;
     private boolean openSensor = false;
@@ -91,6 +73,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private ScheduledFuture<?> actionFuture;
     private ScheduledFuture<?> contextFuture;
 
+    private CollectorManager collectorManager;
+    private DataDistributor dataDistributor;
+
     public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener) {
         this.mContext = context;
         this.actions = actions;
@@ -104,7 +89,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 new LinkedBlockingDeque<>(2),
                 new ThreadPoolExecutor.DiscardOldestPolicy());
          */
-        this.sensorManagers = new ArrayList<>();
+        // this.sensorManagers = new ArrayList<>();
 
         /*
         if (NcnnInstance.getInstance() == null) {
@@ -149,11 +134,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void start() {
         initialize();
+        /*
         if (openSensor) {
             for (BaseSensorManager sensorManager: sensorManagers) {
                 sensorManager.start();
             }
         }
+         */
 
         for (BaseAction action: actions) {
             action.start();
@@ -163,26 +150,42 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
         monitorAction();
         monitorContext();
+        if (collectorManager != null) {
+            collectorManager.resume();
+        }
+        /*
         if (clickTrigger != null) {
             clickTrigger.resume();
         }
+         */
     }
 
     public void stop() {
+        /*
         if (openSensor) {
             for (BaseSensorManager sensorManager: sensorManagers) {
                 sensorManager.stop();
             }
         }
+         */
         for (BaseAction action: actions) {
             action.stop();
         }
         for (BaseContext context: contexts) {
             context.stop();
         }
+        /*
         if (clickTrigger != null) {
             clickTrigger.pause();
             clickTrigger.close();
+        }
+         */
+        if (collectorManager != null) {
+            if (dataDistributor != null) {
+                collectorManager.unregisterListener(dataDistributor);
+            }
+            collectorManager.pause();
+            collectorManager.close();
         }
         for (ScheduledFuture<?> future: futureList) {
             future.cancel(true);
@@ -198,9 +201,14 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         for (BaseContext context: contexts) {
             context.stop();
         }
+        if (collectorManager != null) {
+            collectorManager.pause();
+        }
+        /*
         if (clickTrigger != null) {
             clickTrigger.pause();
         }
+         */
     }
 
     public void resume() {
@@ -216,8 +224,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         if (contextFuture != null && (contextFuture.isDone() || contextFuture.isCancelled())) {
             monitorContext();
         }
+        /*
         if (clickTrigger != null) {
             clickTrigger.resume();
+        }
+         */
+        if (collectorManager != null) {
+            collectorManager.resume();
         }
     }
 
@@ -246,31 +259,34 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
 
-        this.clickTrigger = new ClickTrigger(mContext, Arrays.asList(
-                Trigger.CollectorType.CompleteIMU,
-                Trigger.CollectorType.Location,
-                Trigger.CollectorType.Audio,
-                Trigger.CollectorType.Bluetooth,
-                Trigger.CollectorType.Wifi,
-                Trigger.CollectorType.NonIMU
+        this.collectorManager = new CollectorManager(mContext, Arrays.asList(
+                CollectorManager.CollectorType.IMU,
+                CollectorManager.CollectorType.Location,
+                CollectorManager.CollectorType.Audio,
+                CollectorManager.CollectorType.Bluetooth,
+                CollectorManager.CollectorType.Wifi,
+                CollectorManager.CollectorType.NonIMU
         ), scheduledExecutorService, futureList);
+
+        this.clickTrigger = new ClickTrigger(mContext, collectorManager, scheduledExecutorService, futureList);
 
         // cwh: do not use Arrays.asList() to assign to collectors,
         // because it returns a fixed-size list backed by the specified array and we cannot perform add()
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
+        /*
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
-                .scheduleFixedDelayUpload(Trigger.CollectorType.Bluetooth, new TriggerConfig().setBluetoothScanTime(10000), 1, 0)
-                .scheduleFixedDelayUpload(Trigger.CollectorType.Wifi, new TriggerConfig().setWifiScanTime(10000), 1, 0)
-                .scheduleFixedRateUpload(Trigger.CollectorType.Location, new TriggerConfig(), 60000, 0);
+                .scheduleFixedDelayUpload(CollectorManager.CollectorType.Bluetooth, new TriggerConfig().setBluetoothScanTime(10000), 1, 0)
+                .scheduleFixedDelayUpload(CollectorManager.CollectorType.Wifi, new TriggerConfig().setWifiScanTime(10000), 1, 0)
+                .scheduleFixedRateUpload(CollectorManager.CollectorType.Location, new TriggerConfig(), 60000, 0);
         collectors.add(timedCollector);
+         */
 
         if (fromDex) {
             for (int i = 0; i < actionConfig.size(); i++) {
                 ActionConfig config = actionConfig.get(i);
                 switch (config.getAction()) {
                     case "TapTap":
-                        Log.e("Action","TapTap register!!!!!");
                         tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                         actions.add(tapTapAction);
                         break;
@@ -279,24 +295,25 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         actions.add(topTapAction);
                         break;
                     case "Flip":
-                        Log.e("Action","Flip register!!!!!");
                         FlipAction flipAction = new FlipAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                         actions.add(flipAction);
                         break;
                     case "Close":
-                        Log.e("Action","Close register!!!!!");
                         CloseAction closeAction = new CloseAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                         actions.add(closeAction);
                     case "Pocket":
                         PocketAction pocketAction = new PocketAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                         actions.add(pocketAction);
                         break;
+                        /*
                     case "Example":
                         LogCollector logCollector = clickTrigger.newLogCollector("Log0", 100);
                         timedCollector.scheduleTimedLogUpload(logCollector, 5000, 0, "Example");
                         collectors.add(new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector));
                         ExampleAction exampleAction = new ExampleAction(mContext, config, requestListener, Arrays.asList(this, actionListener), logCollector);
                         actions.add(exampleAction);
+                        break;
+                         */
                 }
             }
             for (int i = 0; i < contextConfig.size(); i++) {
@@ -310,6 +327,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         TableContext tableContext = new TableContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
                         contexts.add(tableContext);
                         break;
+                        /*
                     case "Informational":
                         LogCollector informationLogCollector = clickTrigger.newLogCollector("Informational", 8192);
                         timedCollector.scheduleTimedLogUpload(informationLogCollector, 60000, 5000, "Informational");
@@ -324,11 +342,16 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         ConfigContext configContext = new ConfigContext(mContext, config, requestListener, Arrays.asList(this, contextListener), configLogCollector);
                         contexts.add(configContext);
                         break;
+                         */
                 }
             }
         }
 
+        this.dataDistributor = new DataDistributor(actions, contexts);
+        collectorManager.registerListener(dataDistributor);
+
         // init sensor
+        /*
         sensorManagers.add(new IMUSensorManager(mContext,
                 "IMUSensorManager",
                 selectBySensorTypeAction(actions, SensorType.IMU),
@@ -354,6 +377,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 selectBySensorTypeAction(actions, SensorType.BROADCAST),
                 selectBySensorTypeContext(contexts, SensorType.BROADCAST)
         ));
+         */
     }
 
     private void monitorAction() {
@@ -384,42 +408,38 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     public void onSensorChangedDex(SensorEvent event) {
         int type = event.sensor.getType();
+        /*
         for (BaseSensorManager sensorManager: sensorManagers) {
             if (sensorManager.getSensorTypeList() != null && sensorManager.getSensorTypeList().contains(type)) {
                 sensorManager.onSensorChangedDex(event);
             }
         }
+         */
     }
 
     public void onAccessibilityEventDex(AccessibilityEvent event) {
+        for (BaseContext context: contexts) {
+            context.onAccessibilityEvent(event);
+        }
+        /*
         for (BaseSensorManager sensorManager: sensorManagers) {
             sensorManager.onAccessibilityEventDex(event);
         }
+         */
     }
 
     public void onBroadcastEventDex(BroadcastEvent event) {
+        for (BaseContext context: contexts) {
+            context.onBroadcastEvent(event);
+        }
+        /*
         for (BaseSensorManager sensorManager: sensorManagers) {
             sensorManager.onBroadcastEventDex(event);
         }
+         */
     }
 
     /*
-    private void updateContextAction(String type) {
-        if (type.equals("None"))
-            return;
-        switch (type) {
-            case "TapTap":
-                proximitySensorManager.start();
-                proximitySensorManager.stopLater(3000);
-                break;
-            case "Proximity":
-                break;
-            default:
-                break;
-        }
-    }
-     */
-
     private void scheduleCleanData() {
         Calendar calendar = Calendar.getInstance();
         calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH),3, 0, 0);
@@ -441,7 +461,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }, date, 24 * 60 * 60 * 1000);
 
     }
+     */
 
+    /*
     @Override
     public void onActionRecognized(ActionResult action) {
         if (action.getAction().equals("TapTapConfirmed")) {
@@ -452,15 +474,23 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             markTimestamp = action.getTimestamp();
         }
     }
+     */
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAction(ActionResult action) {
+        if (collectors != null) {
+            for (BaseCollector collector: collectors) {
+                collector.onAction(action);
+            }
+        }
+            /*
         if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap") || action.getAction().equals("Pocket")) {
             if (clickTrigger != null) {
                 clickTrigger.trigger(Collections.singletonList(Trigger.CollectorType.CompleteIMU), new TriggerConfig());
             }
         }
+             */
 //        if (collectors != null) {
 //            for (BaseCollector collector: collectors) {
 //                collector.onAction(action);
@@ -468,6 +498,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 //        }
     }
 
+    /*
     @Override
     public void onActionSave(ActionResult action) {
         if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap")) {
@@ -479,6 +510,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             }
         }
     }
+     */
 
     @Override
     public void onContext(ContextResult context) {

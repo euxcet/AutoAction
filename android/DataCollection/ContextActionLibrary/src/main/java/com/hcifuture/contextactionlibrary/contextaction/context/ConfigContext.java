@@ -13,7 +13,9 @@ import android.util.Log;
 import android.view.Display;
 import android.view.accessibility.AccessibilityEvent;
 
-import com.hcifuture.contextactionlibrary.collect.collector.LogCollector;
+import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
+import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -89,22 +91,22 @@ public class ConfigContext extends BaseContext {
     }
 
     @Override
+    public void onIMUSensorEvent(SingleIMUData data) {
+
+    }
+
+    @Override
+    public void onNonIMUSensorEvent(NonIMUData data) {
+
+    }
+
+    @Override
     public void getContext() {
         long current_call = System.currentTimeMillis();
         // periodically record_all() every 4 hour
         if (current_call - last_record_all >= 4 * 60 * 60000) {
             record_all();
         }
-    }
-
-    @Override
-    public void onIMUSensorChanged(SensorEvent event) {
-
-    }
-
-    @Override
-    public void onProximitySensorChanged(SensorEvent event) {
-
     }
 
     @Override

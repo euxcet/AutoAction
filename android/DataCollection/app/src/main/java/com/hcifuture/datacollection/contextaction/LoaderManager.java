@@ -67,27 +67,12 @@ public class LoaderManager {
         this.mService = service;
         this.isUpgrading = new AtomicBoolean(false);
         if (contextListener == null) {
-            this.contextListener = (p) -> {};
+            this.contextListener = x -> {};
         } else {
             this.contextListener = contextListener;
         }
         if (actionListener == null) {
-            this.actionListener = new ActionListener() {
-                @Override
-                public void onActionRecognized(ActionResult action) {
-
-                }
-
-                @Override
-                public void onAction(ActionResult action) {
-
-                }
-
-                @Override
-                public void onActionSave(ActionResult action) {
-
-                }
-            };
+            this.actionListener = x -> {};
         } else {
             this.actionListener = actionListener;
         }

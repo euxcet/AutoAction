@@ -7,6 +7,8 @@ import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
 import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.HorizontalFilter;
+import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.Lowpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.MyPeakDetector;
@@ -28,6 +30,10 @@ import java.util.List;
 public class TopTapAction extends BaseAction {
 
     private String TAG = "TopTapAction";
+
+    public static String ACTION = "action.toptap.action";
+    public static String ACTION_UPLOAD = "action.toptap.action.upload";
+    public static String ACTION_RECOGNIZED = "action.toptap.action.recognized";
 
     private long SAMPLINGINTERVALNS = 10000000L;
     private long WINDOW_NS = 400000000L;
@@ -115,21 +121,21 @@ public class TopTapAction extends BaseAction {
     }
 
     @Override
-    public synchronized void onIMUSensorChanged(SensorEvent event) {
+    public void onIMUSensorEvent(SingleIMUData data) {
         // just for horizontal / static cases' record && upload
-        horizontalFilter.onSensorChanged(event);
-        if (horizontalFilter.passWithDelay(event.timestamp) == -1) {
-            ActionResult actionResult = new ActionResult("TopTap");
+        horizontalFilter.onSensorChanged(data);
+        if (horizontalFilter.passWithDelay(data.getTimestamp()) == -1) {
+            ActionResult actionResult = new ActionResult(ACTION_UPLOAD);
             actionResult.setReason("Static");
             for (ActionListener listener : actionListener) {
-                listener.onActionSave(actionResult);
+                listener.onAction(actionResult);
             }
         }
 
-        if (event.sensor.getType() != Sensor.TYPE_GYROSCOPE && event.sensor.getType() != Sensor.TYPE_LINEAR_ACCELERATION)
+        if (data.getType() != Sensor.TYPE_GYROSCOPE && data.getType() != Sensor.TYPE_LINEAR_ACCELERATION)
             return;
         result = 0;
-        if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+        if (data.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             gotAcc = true;
             if (!gotGyro)
                 return;
@@ -139,28 +145,29 @@ public class TopTapAction extends BaseAction {
                 return;
         }
         if (0L == syncTime) {
-            syncTime = event.timestamp;
+            syncTime = data.getTimestamp();
             lowpassKeyPositive.init(0.0F);
             highpassKeyPositive.init(0.0F);
             lowpassKeyNegative.init(0.0F);
             highpassKeyNegative.init(0.0F);
         } else {
-            if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION)
-                processAccAndKeySignal(event.values[0], event.values[1], event.values[2], event.timestamp, SAMPLINGINTERVALNS);
+            if (data.getType() == Sensor.TYPE_LINEAR_ACCELERATION)
+                processAccAndKeySignal(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), data.getTimestamp(), SAMPLINGINTERVALNS);
             else
-                processGyro(event.values[0], event.values[1], event.values[2], SAMPLINGINTERVALNS);
+                processGyro(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), SAMPLINGINTERVALNS);
             recognizeTapML();
             if (result == 1) {
-                backTapTimestamps.addLast(event.timestamp);
+                backTapTimestamps.addLast(data.getTimestamp());
             }
             else if (result == 2) {
-                topTapTimestamps.addLast(event.timestamp);
+                topTapTimestamps.addLast(data.getTimestamp());
             }
         }
+
     }
 
     @Override
-    public void onProximitySensorChanged(SensorEvent event) {
+    public void onNonIMUSensorEvent(NonIMUData data) {
 
     }
 
@@ -343,9 +350,9 @@ public class TopTapAction extends BaseAction {
         if (count1 == 2) {
             if (actionListener != null) {
                 for (ActionListener listener: actionListener) {
-                    ActionResult actionResult = new ActionResult("TapTapConfirmed");
+                    ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
                     actionResult.setTimestamp(getFirstBackTapTimestamp() + ":" + getSecondBackTapTimestamp());
-                    listener.onActionRecognized(actionResult);
+                    listener.onAction(actionResult);
                 }
             }
         }
@@ -353,7 +360,7 @@ public class TopTapAction extends BaseAction {
         if (count2 == 2) {
             if (actionListener != null) {
                 for (ActionListener listener : actionListener) {
-                    ActionResult actionResult = new ActionResult("TopTap");
+                    ActionResult actionResult = new ActionResult(ACTION);
                     actionResult.setTimestamp(getFirstTopTapTimestamp() + ":" + getSecondTopTapTimestamp());
                     listener.onAction(actionResult);
                 }

@@ -1,11 +1,27 @@
 package com.hcifuture.contextactionlibrary.utils;
 
+import android.os.Build;
+import android.util.Log;
+
+import androidx.annotation.RequiresApi;
+
+import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
+import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
+
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class FileUtils {
 
@@ -13,7 +29,7 @@ public class FileUtils {
         try {
             File file = new File(directory);
             if (!file.exists()) {
-                file.mkdir();
+                file.mkdirs();
             }
         } catch (Exception ignored) {
         }
@@ -21,6 +37,7 @@ public class FileUtils {
 
     private static File makeFile(File file) {
         try {
+            makeDir(file.getParent());
             if (!file.exists()) {
                 file.createNewFile();
             }
@@ -39,6 +56,51 @@ public class FileUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static CompletableFuture<String> writeStringToFile(String content, File saveFile, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        CompletableFuture<String> ft = new CompletableFuture<>();
+        futureList.add(scheduledExecutorService.schedule(() -> {
+            try {
+                makeFile(saveFile);
+                String toWrite = content + "\r\n";
+                OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(saveFile));
+                writer.write(toWrite);
+                writer.close();
+                ft.complete(saveFile.getAbsolutePath());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, 0, TimeUnit.MILLISECONDS));
+        return ft;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static CompletableFuture<String> writeIMUDataToFile(IMUData data, File saveFile, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        CompletableFuture<String> ft = new CompletableFuture<>();
+        futureList.add(scheduledExecutorService.schedule(() -> {
+            try {
+                makeFile(saveFile);
+                FileOutputStream fos = new FileOutputStream(saveFile);
+                DataOutputStream dos = new DataOutputStream(fos);
+                for (SingleIMUData d: data.getData()) {
+                    List<Float> values = d.getValues();
+                    dos.writeFloat(values.get(0));
+                    dos.writeFloat(values.get(1));
+                    dos.writeFloat(values.get(2));
+                    dos.writeDouble((double)d.getTimestamp());
+                }
+                dos.flush();
+                dos.close();
+                fos.flush();
+                fos.close();
+                ft.complete(saveFile.getAbsolutePath());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, 0, TimeUnit.MILLISECONDS));
+        return ft;
     }
 
     public static void copy(File src, File dst) {
