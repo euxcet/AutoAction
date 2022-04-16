@@ -65,7 +65,19 @@ if not os.path.exists("../data/file/config.json"):
                 "booleanParamKey": [],
                 "booleanParamValue": []
             }
-        ]
+        ],
+        "listenedSystemActions": [
+            "android.intent.action.AIRPLANE_MODE",
+            "android.intent.action.SCREEN_OFF",
+            "android.intent.action.SCREEN_ON",
+            "android.bluetooth.device.action.ACL_CONNECTED"
+        ],
+        "listenedSystemURIs": [
+            "content://settings/system",
+            "content://settings/global"
+        ],
+        "overrideSystemActions": False,
+        "overrideSystemURIs": False
     }
 
     file_utils.save_json(config, "../data/file/config.json")

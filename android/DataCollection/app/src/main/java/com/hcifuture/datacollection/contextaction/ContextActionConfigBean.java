@@ -30,7 +30,19 @@ Example:
             "booleanParamKey": [],
 			"booleanParamValue": []
         }
-    ]
+    ],
+    "listenedSystemActions": [
+        "android.intent.action.AIRPLANE_MODE",
+        "android.intent.action.SCREEN_OFF",
+        "android.intent.action.SCREEN_ON",
+        "android.bluetooth.device.action.ACL_CONNECTED"
+    ],
+    "listenedSystemURIs": [
+        "content://settings/system",
+        "content://settings/global"
+    ],
+    "overrideSystemActions": false,
+    "overrideSystemURIs": false
 }
  */
 
@@ -39,6 +51,10 @@ import java.util.List;
 public class ContextActionConfigBean {
     private List<ContextConfigBean> context;
     private List<ActionConfigBean> action;
+    private List<String> listenedSystemActions;
+    private List<String> listenedSystemURIs;
+    private boolean overrideSystemActions;
+    private boolean overrideSystemURIs;
 
     public void setContext(List<ContextConfigBean> context) {
         this.context = context;
@@ -54,6 +70,22 @@ public class ContextActionConfigBean {
 
     public List<ContextConfigBean> getContext() {
         return context;
+    }
+
+    public java.util.List<String> getListenedSystemActions() {
+        return listenedSystemActions;
+    }
+
+    public List<String> getListenedSystemURIs() {
+        return listenedSystemURIs;
+    }
+
+    public boolean isOverrideSystemActions() {
+        return overrideSystemActions;
+    }
+
+    public boolean isOverrideSystemURIs() {
+        return overrideSystemURIs;
     }
 
     public static class ContextConfigBean {
