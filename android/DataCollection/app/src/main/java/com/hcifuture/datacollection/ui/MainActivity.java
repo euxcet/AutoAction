@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // jump to accessibility settings
-        Button accessibilityButton = findViewById(R.id.upgradeButton);
+        Button accessibilityButton = findViewById(R.id.accessibilityButton);
         accessibilityButton.setOnClickListener((v) -> {
             Intent settingIntent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
             startActivity(settingIntent);
