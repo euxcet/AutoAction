@@ -40,7 +40,7 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
     private Sensor mAccSensor;
     private Sensor mMagSensor;
 
-    public IMUCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, int collectPeriod) {
+    public IMUCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
         this.data = new IMUData();
     }

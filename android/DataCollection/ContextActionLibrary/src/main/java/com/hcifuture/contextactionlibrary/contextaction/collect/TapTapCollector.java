@@ -6,6 +6,7 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
+import com.hcifuture.contextactionlibrary.contextaction.action.PocketAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
@@ -25,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -40,13 +42,23 @@ public class TapTapCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAction(ActionResult action) {
-        if (action.getAction().equals(TapTapAction.ACTION) || action.getAction().equals(TopTapAction.ACTION)) {
+        if (action.getAction().equals(TapTapAction.ACTION) || action.getAction().equals(TopTapAction.ACTION) || action.getAction().equals(PocketAction.ACTION)) {
             lastFuture = clickTrigger.trigger(Collections.singletonList(CollectorManager.CollectorType.IMU), new TriggerConfig());
-        } else if (action.getAction().equals(TapTapAction.ACTION_UPLOAD) || action.getAction().equals(TopTapAction.ACTION_UPLOAD)) {
+        } else if (action.getAction().equals(TapTapAction.ACTION_UPLOAD) || action.getAction().equals(TopTapAction.ACTION_UPLOAD) || action.getAction().equals(PocketAction.ACTION_UPLOAD)) {
             if (lastFuture != null) {
-                // TODO: upload with timestamp markTimestamp
+                String name = action.getAction();
+                String commit = action.getAction() + ":" + action.getReason() + " " + action.getTimestamp();
+                if (lastFuture.isDone()) {
+                    try {
+                        upload(lastFuture.get().get(0), name, commit);
+                    } catch (ExecutionException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    lastFuture.whenComplete((v, e) -> upload(v.get(0), name, commit));
+                }
             }
-        } else if (action.getAction().equals(TapTapAction.ACTION_RECOGNIZED) || action.getAction().equals(TopTapAction.ACTION_RECOGNIZED)) {
+        } else if (action.getAction().equals(TapTapAction.ACTION_RECOGNIZED) || action.getAction().equals(TopTapAction.ACTION_RECOGNIZED) || action.getAction().equals(PocketAction.ACTION_RECOGNIZED)) {
             markTimestamp = action.getTimestamp();
         }
     }
@@ -58,31 +70,11 @@ public class TapTapCollector extends BaseCollector {
             return;
         }
         if (clickTrigger != null) {
-            clickTrigger.trigger(Collections.singletonList(CollectorManager.CollectorType.IMU),
-                    new TriggerConfig().setImuHead(800).setImuTail(200));
+            triggerAndUpload(CollectorManager.CollectorType.IMU,
+                    new TriggerConfig().setImuHead(800).setImuTail(200),
+                    context.getContext(),
+                    context.getContext() + ":" + context.getTimestamp()
+            );
         }
-        /*
-        if (clickTrigger != null && scheduledExecutorService != null) {
-            // save
-            clickTrigger.triggerShortIMU(800, 200).whenComplete((msg, ex) -> {
-                // upload when done
-                File imuFile = new File(clickTrigger.getRecentIMUPath());
-                Log.e("TapTapCollector", imuFile.getAbsolutePath());
-                NetworkUtils.uploadCollectedData(mContext,
-                        imuFile,
-                        0,
-                        context.getContext(),
-                        getMacMoreThanM(),
-                        System.currentTimeMillis(),
-                        context.getContext() + ":" + context.getTimestamp(),
-                        new StringCallback() {
-                            @Override
-                            public void onSuccess(Response<String> response) {
-                                Log.e("TapTapCollector", "Success");
-                            }
-                        });
-            });
-        }
-         */
     }
 }

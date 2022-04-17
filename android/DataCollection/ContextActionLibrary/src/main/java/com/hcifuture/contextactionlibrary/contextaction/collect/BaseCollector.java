@@ -6,7 +6,11 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
+import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
+import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
@@ -42,7 +46,6 @@ public abstract class BaseCollector {
 
     public abstract void onContext(ContextResult context);
 
-    /*
     protected static String getMacMoreThanM() {
         try {
             Enumeration enumeration = NetworkInterface.getNetworkInterfaces();
@@ -113,19 +116,14 @@ public abstract class BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<Void> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String commit) {
         CompletableFuture<Void> ft = new CompletableFuture<>();
-        clickTrigger.trigger(collector, triggerConfig).whenComplete((msg, ex) -> {
-            upload(collector.getRecentPath(), name, commit).whenComplete((v, t) -> ft.complete(null));
-        });
+        clickTrigger.trigger(collector, triggerConfig).whenComplete((v, e) -> upload(v.get(0), name, commit));
         return ft;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<Void> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String commit) {
         CompletableFuture<Void> ft = new CompletableFuture<>();
-        clickTrigger.trigger(Collections.singletonList(type), triggerConfig).whenComplete((msg, ex) -> {
-            upload(clickTrigger.getRecentPath(type), name, commit).whenComplete((v, t) -> ft.complete(null));
-        });
+        clickTrigger.trigger(Collections.singletonList(type), triggerConfig).whenComplete((v, e) -> upload(v.get(0), name, commit));
         return ft;
     }
-     */
 }

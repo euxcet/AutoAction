@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Collector {
     protected Context mContext;
@@ -13,6 +14,7 @@ public abstract class Collector {
     protected List<ScheduledFuture<?>> futureList;
     protected CollectorManager.CollectorType type;
     protected final List<CollectorListener> listenerList = new ArrayList<>();
+    protected AtomicBoolean isRegistered = new AtomicBoolean(false);
 
     public Collector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;

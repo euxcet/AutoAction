@@ -14,6 +14,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.async.IMUCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.SynchronousCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
+import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -38,16 +39,6 @@ public class ClickTrigger extends Trigger {
         this.saveFolder = context.getExternalMediaDirs()[0].getAbsolutePath() + "/Data/Click/";
         this.history = new HashMap<>();
     }
-
-    /*
-    public ClickTrigger(Context context, List<CollectorType> types, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
-        super(context, types, scheduledExecutorService, futureList);
-    }
-
-    public ClickTrigger(Context context, CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
-        super(context, type, scheduledExecutorService, futureList);
-    }
-     */
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private CompletableFuture<List<String>> triggerCollectors(List<Collector> collectors, TriggerConfig config) {
@@ -114,30 +105,4 @@ public class ClickTrigger extends Trigger {
         return triggerCollectors(Collections.singletonList(collector), config);
     }
 
-    /*
-    @Override
-    public String getName() {
-        return "Data/Click";
-    }
-     */
-
-    /*
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<Void> triggerShortIMU(int head, int tail) {
-        Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
-        List<CompletableFuture<Void>> fts = new ArrayList<>();
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-        for (Collector collector : collectors) {
-            if (collector.getType() == CollectorType.CompleteIMU) {
-                collector.setSavePath(timestamp);
-            }
-        }
-        for (Collector collector : collectors) {
-            if (collector.getType() == CollectorType.CompleteIMU) {
-                fts.add(((CompleteIMUCollector)collector).collectShort(head, tail));
-            }
-        }
-        return CompletableFuture.allOf(fts.toArray(new CompletableFuture[0]));
-    }
-     */
 }

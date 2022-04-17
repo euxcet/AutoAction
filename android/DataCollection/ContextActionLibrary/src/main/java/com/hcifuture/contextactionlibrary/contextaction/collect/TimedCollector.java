@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.Trigger;
@@ -27,10 +28,9 @@ public class TimedCollector extends BaseCollector {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
     }
 
-    /*
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public TimedCollector scheduleFixedRateUpload(Trigger.CollectorType type, TriggerConfig triggerConfig, long period, long initialDelay) {
-        if (type == Trigger.CollectorType.Log) {
+    public TimedCollector scheduleFixedRateUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, long period, long initialDelay) {
+        if (type == CollectorManager.CollectorType.Log) {
             Log.e("TimedCollector", "Do not pass CollectorType.Log in scheduleFixedRateUpload(), it will be ignored.");
             return this;
         }
@@ -42,8 +42,8 @@ public class TimedCollector extends BaseCollector {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public TimedCollector scheduleFixedDelayUpload(Trigger.CollectorType type, TriggerConfig triggerConfig, long delay, long initialDelay) {
-        if (type == Trigger.CollectorType.Log) {
+    public TimedCollector scheduleFixedDelayUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, long delay, long initialDelay) {
+        if (type == CollectorManager.CollectorType.Log) {
             Log.e("TimedCollector", "Do not pass CollectorType.Log in scheduleFixedDelayUpload(), it will be ignored.");
             return this;
         }
@@ -62,7 +62,6 @@ public class TimedCollector extends BaseCollector {
                 initialDelay, period, TimeUnit.MILLISECONDS));
         return this;
     }
-     */
 
     @Override
     public void onAction(ActionResult action) {

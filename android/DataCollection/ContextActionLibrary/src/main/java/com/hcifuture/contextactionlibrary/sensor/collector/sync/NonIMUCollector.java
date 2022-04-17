@@ -8,6 +8,7 @@ import android.hardware.SensorManager;
 import android.os.Handler;
 import android.provider.Settings;
 
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorListener;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
@@ -18,6 +19,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 
 public class NonIMUCollector extends SynchronousCollector implements SensorEventListener {
+    // TODO: split NonIMUCollector into collectors for each sensor.
 
     private NonIMUData data;
     private SensorManager sensorManager;
@@ -77,14 +79,14 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
     }
 
     @Override
-    public String getDataString(TriggerConfig config) {
+    public synchronized String getDataString(TriggerConfig config) {
         data.setScreenBrightness(Settings.System.getInt(mContext.getContentResolver(),Settings.System.SCREEN_BRIGHTNESS,125));
         data.setScreenBrightnessTimestamp(System.currentTimeMillis());
         return gson.toJson(data);
     }
 
     @Override
-    public void onSensorChanged(SensorEvent event) {
+    public synchronized void onSensorChanged(SensorEvent event) {
         if (data != null) {
             switch (event.sensor.getType()) {
                 case Sensor.TYPE_PRESSURE:
@@ -102,6 +104,9 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
                 default:
                     break;
             }
+        }
+        for (CollectorListener listener: listenerList) {
+            listener.onSensorEvent(data);
         }
     }
 

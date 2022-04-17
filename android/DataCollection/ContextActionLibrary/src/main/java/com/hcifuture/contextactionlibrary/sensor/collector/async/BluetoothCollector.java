@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -22,6 +23,8 @@ import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleBluetoothData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 
+import org.checkerframework.checker.units.qual.A;
+
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BluetoothCollector extends AsynchronousCollector {
 
@@ -130,7 +134,9 @@ public class BluetoothCollector extends AsynchronousCollector {
                 }
             }
         };
+
         mContext.registerReceiver(receiver, bluetoothFilter);
+        isRegistered.set(true);
 
         // ref: https://developer.android.com/guide/topics/connectivity/bluetooth-le#find
         // set BLE scan callback
@@ -164,18 +170,27 @@ public class BluetoothCollector extends AsynchronousCollector {
 
     @Override
     public void close() {
-        mContext.unregisterReceiver(receiver);
+        if (isRegistered.get() && receiver != null) {
+            mContext.unregisterReceiver(receiver);
+            isRegistered.set(false);
+        }
     }
 
 
     @Override
-    public synchronized void pause() {
-        mContext.unregisterReceiver(receiver);
+    public void pause() {
+        if (isRegistered.get() && receiver != null) {
+            mContext.unregisterReceiver(receiver);
+            isRegistered.set(false);
+        }
     }
 
     @Override
-    public synchronized void resume() {
-        mContext.registerReceiver(receiver, bluetoothFilter);
+    public void resume() {
+        if (!isRegistered.get() && receiver != null && bluetoothFilter != null) {
+            mContext.registerReceiver(receiver, bluetoothFilter);
+            isRegistered.set(true);
+        }
     }
 
     @Override

@@ -3,11 +3,20 @@ package com.hcifuture.contextactionlibrary.contextaction;
 import android.content.Context;
 import android.hardware.SensorEvent;
 import android.os.Build;
+import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
 import androidx.annotation.RequiresApi;
 
+import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
+import com.hcifuture.contextactionlibrary.contextaction.collect.ConfigCollector;
+import com.hcifuture.contextactionlibrary.contextaction.collect.ExampleCollector;
+import com.hcifuture.contextactionlibrary.contextaction.collect.InformationalContextCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
+import com.hcifuture.contextactionlibrary.contextaction.collect.TimedCollector;
+import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
+import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
+import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.distributor.DataDistributor;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
@@ -22,6 +31,7 @@ import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.physical.ProximityContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.physical.TableContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
+import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
@@ -274,13 +284,12 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         // because it returns a fixed-size list backed by the specified array and we cannot perform add()
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
-        /*
+
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
-                .scheduleFixedDelayUpload(CollectorManager.CollectorType.Bluetooth, new TriggerConfig().setBluetoothScanTime(10000), 1, 0)
-                .scheduleFixedDelayUpload(CollectorManager.CollectorType.Wifi, new TriggerConfig().setWifiScanTime(10000), 1, 0)
+                .scheduleFixedDelayUpload(CollectorManager.CollectorType.Bluetooth, new TriggerConfig().setBluetoothScanTime(10000), 1000, 0)
+                .scheduleFixedDelayUpload(CollectorManager.CollectorType.Wifi, new TriggerConfig().setWifiScanTime(10000), 1000, 0)
                 .scheduleFixedRateUpload(CollectorManager.CollectorType.Location, new TriggerConfig(), 60000, 0);
         collectors.add(timedCollector);
-         */
 
         if (fromDex) {
             for (int i = 0; i < actionConfig.size(); i++) {
@@ -301,19 +310,18 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     case "Close":
                         CloseAction closeAction = new CloseAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                         actions.add(closeAction);
+                        break;
                     case "Pocket":
                         PocketAction pocketAction = new PocketAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
                         actions.add(pocketAction);
                         break;
-                        /*
                     case "Example":
-                        LogCollector logCollector = clickTrigger.newLogCollector("Log0", 100);
+                        LogCollector logCollector = collectorManager.newLogCollector("Log0", 100);
                         timedCollector.scheduleTimedLogUpload(logCollector, 5000, 0, "Example");
                         collectors.add(new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector));
                         ExampleAction exampleAction = new ExampleAction(mContext, config, requestListener, Arrays.asList(this, actionListener), logCollector);
                         actions.add(exampleAction);
                         break;
-                         */
                 }
             }
             for (int i = 0; i < contextConfig.size(); i++) {
@@ -327,22 +335,20 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         TableContext tableContext = new TableContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
                         contexts.add(tableContext);
                         break;
-                        /*
                     case "Informational":
-                        LogCollector informationLogCollector = clickTrigger.newLogCollector("Informational", 8192);
+                        LogCollector informationLogCollector = collectorManager.newLogCollector("Informational", 8192);
                         timedCollector.scheduleTimedLogUpload(informationLogCollector, 60000, 5000, "Informational");
                         collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector));
                         InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener),informationLogCollector);
                         contexts.add(informationalContext);
                         break;
                     case "Config":
-                        LogCollector configLogCollector = clickTrigger.newLogCollector("Config", 8192);
+                        LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
                         timedCollector.scheduleTimedLogUpload(configLogCollector, 60000, 5000, "Config");
                         collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector));
                         ConfigContext configContext = new ConfigContext(mContext, config, requestListener, Arrays.asList(this, contextListener), configLogCollector);
                         contexts.add(configContext);
                         break;
-                         */
                 }
             }
         }

@@ -43,10 +43,8 @@ public class ConfigCollector extends BaseCollector {
         } else if (ConfigContext.NEED_NONIMU.equals(context.getContext())) {
             type = CollectorManager.CollectorType.NonIMU;
         }
-        /*
         if (type != null) {
-            triggerAndUpload(type, triggerConfig, "Config_"+type, "Sensor: "+type);
+            triggerAndUpload(type, triggerConfig, "Config_" + type, "Sensor: " + type);
         }
-         */
     }
 }

@@ -9,6 +9,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -23,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WifiCollector extends AsynchronousCollector {
 
@@ -31,6 +33,8 @@ public class WifiCollector extends AsynchronousCollector {
     private WifiData data;
 
     private BroadcastReceiver receiver;
+
+    private IntentFilter wifiFilter;
 
     public WifiCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
@@ -42,7 +46,7 @@ public class WifiCollector extends AsynchronousCollector {
     public void initialize() {
         wifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
-        IntentFilter wifiFilter = new IntentFilter();
+        wifiFilter = new IntentFilter();
         wifiFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
 
         receiver = new BroadcastReceiver() {
@@ -65,6 +69,7 @@ public class WifiCollector extends AsynchronousCollector {
         };
 
         mContext.registerReceiver(receiver, wifiFilter);
+        isRegistered.set(true);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -107,17 +112,25 @@ public class WifiCollector extends AsynchronousCollector {
 
     @Override
     public void close() {
-        mContext.unregisterReceiver(receiver);
+        if (isRegistered.get() && receiver != null) {
+            mContext.unregisterReceiver(receiver);
+        }
     }
 
     @Override
-    public synchronized void pause() {
-
+    public void pause() {
+        if (isRegistered.get() && receiver != null) {
+            mContext.unregisterReceiver(receiver);
+            isRegistered.set(false);
+        }
     }
 
     @Override
-    public synchronized void resume() {
-
+    public void resume() {
+        if (!isRegistered.get() && receiver != null && wifiFilter != null) {
+            mContext.registerReceiver(receiver, wifiFilter);
+            isRegistered.set(true);
+        }
     }
 
     @Override

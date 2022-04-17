@@ -63,6 +63,8 @@ public class MainService extends AccessibilityService implements ContextListener
     private Context mContext;
     private Handler mHandler;
 
+    private static MainService self;
+
     private CustomBroadcastReceiver mBroadcastReceiver;
     private CustomContentObserver mContentObserver;
 
@@ -161,6 +163,7 @@ public class MainService extends AccessibilityService implements ContextListener
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+        self = this;
         mContext = this;
         this.mHandler = new Handler(Looper.getMainLooper());
         this.loaderManager = new LoaderManager(this, this, this);
@@ -194,6 +197,8 @@ public class MainService extends AccessibilityService implements ContextListener
         if (loaderManager != null) {
             loaderManager.stop();
         }
+
+        self = null;
 
         return super.onUnbind(intent);
     }
@@ -293,5 +298,13 @@ public class MainService extends AccessibilityService implements ContextListener
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static MainService getInstance() {
+        return self;
+    }
+
+    public void upgrade() {
+        loaderManager.upgrade();
     }
 }

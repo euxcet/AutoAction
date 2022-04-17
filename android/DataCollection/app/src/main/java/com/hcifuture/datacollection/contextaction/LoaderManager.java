@@ -147,7 +147,7 @@ public class LoaderManager {
                         isUpgrading.set(false);
                     });
                 }
-            }, 2000);
+            }, 5000);
         });
     }
 

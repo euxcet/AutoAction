@@ -40,7 +40,7 @@ public class CollectorManager {
 
     private void initializeAll() {
         collectors.add(new BluetoothCollector(mContext, CollectorType.Bluetooth, scheduledExecutorService, futureList));
-        collectors.add(new IMUCollector(mContext, CollectorType.IMU, scheduledExecutorService, futureList,  1));
+        collectors.add(new IMUCollector(mContext, CollectorType.IMU, scheduledExecutorService, futureList));
         collectors.add(new NonIMUCollector(mContext, CollectorType.NonIMU, scheduledExecutorService, futureList));
         collectors.add(new WifiCollector(mContext, CollectorType.Wifi, scheduledExecutorService, futureList));
         collectors.add(new LocationCollector(mContext, CollectorType.Location, scheduledExecutorService, futureList));
@@ -53,7 +53,7 @@ public class CollectorManager {
                 collectors.add(new BluetoothCollector(mContext, CollectorType.Bluetooth, scheduledExecutorService, futureList));
                 break;
             case IMU:
-                collectors.add(new IMUCollector(mContext, CollectorType.IMU, scheduledExecutorService, futureList,1));
+                collectors.add(new IMUCollector(mContext, CollectorType.IMU, scheduledExecutorService, futureList));
                 break;
             case NonIMU:
                 collectors.add(new NonIMUCollector(mContext, CollectorType.NonIMU, scheduledExecutorService, futureList));

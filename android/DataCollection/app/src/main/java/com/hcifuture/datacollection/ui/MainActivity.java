@@ -19,6 +19,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.hcifuture.datacollection.R;
+import com.hcifuture.datacollection.service.MainService;
 import com.hcifuture.datacollection.utils.GlobalVariable;
 import com.hcifuture.datacollection.utils.bean.TaskListBean;
 import com.hcifuture.datacollection.data.Recorder;
@@ -109,10 +110,15 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // jump to accessibility settings
-        Button accessibilityButton = findViewById(R.id.accessibilityButton);
+        Button accessibilityButton = findViewById(R.id.upgradeButton);
         accessibilityButton.setOnClickListener((v) -> {
             Intent settingIntent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
             startActivity(settingIntent);
+        });
+
+        Button upgradeButton = findViewById(R.id.upgradeButton);
+        upgradeButton.setOnClickListener((v) -> {
+            MainService.getInstance().upgrade();
         });
     }
 
