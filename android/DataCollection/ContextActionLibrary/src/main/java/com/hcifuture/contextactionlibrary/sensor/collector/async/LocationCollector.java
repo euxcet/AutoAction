@@ -6,9 +6,12 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.LocationData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+
+import org.checkerframework.checker.units.qual.C;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -26,9 +29,10 @@ public class LocationCollector extends AsynchronousCollector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public CompletableFuture<Data> getData(TriggerConfig config) {
+    public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
         if (client != null) {
             return client.requestLocation().thenApply(aMapLocation -> {
+                CollectorResult result = new CollectorResult();
                 data = new LocationData(
                         aMapLocation.getLongitude(),
                         aMapLocation.getLatitude(),
@@ -42,18 +46,22 @@ public class LocationCollector extends AsynchronousCollector {
                         aMapLocation.getAdCode(),
                         aMapLocation.getCityCode()
                 );
-                return data;
+                result.setData(data.deepClone());
+                result.setDataString(gson.toJson(result.getData(), LocationData.class));
+                return result;
             });
         } else {
             return CompletableFuture.completedFuture(null);
         }
     }
 
+    /*
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public CompletableFuture<String> getDataString(TriggerConfig config) {
         return getData(config).thenApply((d) -> d == null ? null : gson.toJson(d, LocationData.class));
     }
+     */
 
     @Override
     public void initialize() {

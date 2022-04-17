@@ -6,10 +6,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class LogData extends Data implements Cloneable {
+public class LogData extends Data {
     private final List<String> logs;
     private int historyLength;
-    private int checkpoint = 0;
 
     public LogData(int historyLength) {
         logs = Collections.synchronizedList(new ArrayList<>());
@@ -25,18 +24,14 @@ public class LogData extends Data implements Cloneable {
         }
     }
 
-    public void eraseLog() {
+    public void eraseLog(int length) {
         synchronized (logs) {
-            if (checkpoint > 0) {
-                logs.subList(0, checkpoint).clear();
-                checkpoint = 0;
-            }
+            logs.subList(0, length).clear();
         }
     }
 
     public String getString() {
         synchronized (logs) {
-            checkpoint = logs.size();
             StringBuilder result = new StringBuilder();
             for (String s : logs) {
                 result.append(s).append("\n");
@@ -45,8 +40,14 @@ public class LogData extends Data implements Cloneable {
         }
     }
 
+    public int getSize() {
+        return logs.size();
+    }
+
     public void clear() {
-        logs.clear();
+        synchronized (logs) {
+            logs.clear();
+        }
     }
 
     @Override
@@ -54,9 +55,7 @@ public class LogData extends Data implements Cloneable {
         return DataType.LogData;
     }
 
-    @NonNull
-    @Override
-    public LogData clone() {
+    public LogData deepClone() {
         synchronized (logs) {
             LogData data = new LogData(historyLength);
             for (String l: logs) {

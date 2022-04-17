@@ -10,6 +10,7 @@ import android.provider.Settings;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorListener;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
@@ -72,18 +73,23 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
     }
 
     @Override
-    public synchronized Data getData(TriggerConfig config) {
+    public synchronized CollectorResult getData(TriggerConfig config) {
         data.setScreenBrightness(Settings.System.getInt(mContext.getContentResolver(),Settings.System.SCREEN_BRIGHTNESS,125));
         data.setScreenBrightnessTimestamp(System.currentTimeMillis());
-        return gson.fromJson(gson.toJson(data), NonIMUData.class);
+        CollectorResult result = new CollectorResult();
+        result.setDataString(gson.toJson(data));
+        result.setData(gson.fromJson(result.getDataString(), NonIMUData.class));
+        return result;
     }
 
+    /*
     @Override
     public synchronized String getDataString(TriggerConfig config) {
         data.setScreenBrightness(Settings.System.getInt(mContext.getContentResolver(),Settings.System.SCREEN_BRIGHTNESS,125));
         data.setScreenBrightnessTimestamp(System.currentTimeMillis());
         return gson.toJson(data);
     }
+     */
 
     @Override
     public synchronized void onSensorChanged(SensorEvent event) {

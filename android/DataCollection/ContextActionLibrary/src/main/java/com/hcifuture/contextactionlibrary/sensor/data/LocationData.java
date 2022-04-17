@@ -26,6 +26,11 @@ public class LocationData extends Data {
         adCode = "";
     }
 
+    public LocationData deepClone() {
+        return new LocationData(longitude, longitude, altitude,
+                accuracy, floor, city, poiName, street, time, adCode, cityCode);
+    }
+
     public LocationData(double longitude, double latitude, double altitude,
                         float accuracy,
                         String floor, String city, String poiName, String street, long time, String adCode, String cityCode) {

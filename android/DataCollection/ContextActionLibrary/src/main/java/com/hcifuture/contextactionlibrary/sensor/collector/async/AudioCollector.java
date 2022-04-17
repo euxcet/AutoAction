@@ -7,6 +7,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 
@@ -94,8 +95,8 @@ public class AudioCollector extends AsynchronousCollector {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
-    public CompletableFuture<Data> getData(TriggerConfig config) {
-        CompletableFuture<Data> ft = new CompletableFuture<>();
+    public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
+        CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         if (config.getAudioLength() == 0) {
             ft.complete(null);
             return ft;
@@ -142,10 +143,13 @@ public class AudioCollector extends AsynchronousCollector {
         return ft;
     }
 
+    /*
     @Override
     public CompletableFuture<String> getDataString(TriggerConfig config) {
         return null;
     }
+
+     */
 
     @Override
     public void pause() {

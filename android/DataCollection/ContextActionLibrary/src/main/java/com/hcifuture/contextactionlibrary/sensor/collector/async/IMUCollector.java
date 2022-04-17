@@ -12,6 +12,7 @@ import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorListener;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
@@ -108,8 +109,8 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public CompletableFuture<Data> getData(TriggerConfig config) {
-        CompletableFuture<Data> ft = new CompletableFuture<>();
+    public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
+        CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         long delay = DELAY_TIME;
         if (config.getImuHead() > 0 && config.getImuTail() > 0) {
             delay = config.getImuTail();
@@ -118,9 +119,13 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
             try {
                 if (config.getImuHead() > 0 && config.getImuTail() > 0) {
                     int length = (config.getImuHead() + config.getImuTail()) * LENGTH_LIMIT * 5 / 10000;
-                    ft.complete(data.deepClone().tail(length));
+                    CollectorResult result = new CollectorResult();
+                    result.setData(data.deepClone().tail(length));
+                    ft.complete(result);
                 } else {
-                    ft.complete(data.deepClone());
+                    CollectorResult result = new CollectorResult();
+                    result.setData(data.deepClone());
+                    ft.complete(result);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -129,9 +134,11 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
         return ft;
     }
 
+    /*
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public CompletableFuture<String> getDataString(TriggerConfig config) {
         return getData(config).thenApply((d) -> d == null ? null : gson.toJson(d, IMUData.class));
     }
+     */
 }

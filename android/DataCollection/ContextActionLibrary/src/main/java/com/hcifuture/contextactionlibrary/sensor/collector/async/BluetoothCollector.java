@@ -18,6 +18,7 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.BluetoothData;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleBluetoothData;
@@ -53,8 +54,8 @@ public class BluetoothCollector extends AsynchronousCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @SuppressLint("MissingPermission")
     @Override
-    public CompletableFuture<Data> getData(TriggerConfig config) {
-        CompletableFuture<Data> ft = new CompletableFuture<>();
+    public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
+        CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         if (config.getBluetoothScanTime() == 0) {
             ft.complete(null);
             return ft;
@@ -92,7 +93,10 @@ public class BluetoothCollector extends AsynchronousCollector {
                         bluetoothLeScanner.stopScan(leScanCallback);
                     }
                     bluetoothAdapter.cancelDiscovery();
-                    ft.complete(data.deepClone());
+                    CollectorResult result = new CollectorResult();
+                    result.setData(data.deepClone());
+                    result.setDataString(gson.toJson(result.getData(), BluetoothData.class));
+                    ft.complete(result);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -101,11 +105,13 @@ public class BluetoothCollector extends AsynchronousCollector {
         return ft;
     }
 
+    /*
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public CompletableFuture<String> getDataString(TriggerConfig config) {
         return getData(config).thenApply((d) -> d == null ? null : gson.toJson(d, BluetoothData.class));
     }
+     */
 
     @SuppressLint("MissingPermission")
     private synchronized void insert(BluetoothDevice device, short rssi, boolean linked, String scanResult, String intentExtra) {

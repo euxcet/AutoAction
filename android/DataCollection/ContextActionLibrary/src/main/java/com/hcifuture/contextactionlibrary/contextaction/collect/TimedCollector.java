@@ -35,7 +35,13 @@ public class TimedCollector extends BaseCollector {
             return this;
         }
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                () -> triggerAndUpload(type, triggerConfig, "Timed_" + type, "Sensor: " + type),
+                () -> {
+                    try {
+                        triggerAndUpload(type, triggerConfig, "Timed_" + type, "Sensor: " + type);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                },
                 initialDelay, period, TimeUnit.MILLISECONDS)
         );
         return this;
@@ -48,7 +54,13 @@ public class TimedCollector extends BaseCollector {
             return this;
         }
         futureList.add(scheduledExecutorService.scheduleWithFixedDelay(
-                () -> triggerAndUpload(type, triggerConfig, "Timed_" + type, "Sensor: " + type).join(),
+                () -> {
+                    try {
+                        triggerAndUpload(type, triggerConfig, "Timed_" + type, "Sensor: " + type).join();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                },
                 initialDelay, delay, TimeUnit.MILLISECONDS)
         );
         return this;
@@ -57,8 +69,14 @@ public class TimedCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public TimedCollector scheduleTimedLogUpload(LogCollector logCollector, long period, long initialDelay, String name) {
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                () -> triggerAndUpload(logCollector, new TriggerConfig(), "Timed_"+name, "Log: "+name)
-                        .whenComplete((msg, ex) -> logCollector.eraseLog()),
+                () -> {
+                    try {
+                        triggerAndUpload(logCollector, new TriggerConfig(), "Timed_" + name, "Log: " + name)
+                                .whenComplete((v, e) -> logCollector.eraseLog(v.getLogLength()));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                },
                 initialDelay, period, TimeUnit.MILLISECONDS));
         return this;
     }

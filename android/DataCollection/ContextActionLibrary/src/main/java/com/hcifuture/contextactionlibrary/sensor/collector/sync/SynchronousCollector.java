@@ -5,6 +5,7 @@ import android.content.Context;
 import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 
@@ -19,7 +20,7 @@ public abstract class SynchronousCollector extends Collector {
         super(context, type, scheduledExecutorService, futureList);
     }
 
-    public abstract Data getData(TriggerConfig config);
+    public abstract CollectorResult getData(TriggerConfig config);
 
-    public abstract String getDataString(TriggerConfig config);
+    // public abstract String getDataString(TriggerConfig config);
 }

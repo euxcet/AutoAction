@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
@@ -86,13 +87,13 @@ public abstract class BaseCollector {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<Void> upload(String filePath, String name, String commit) {
-        CompletableFuture<Void> ft = new CompletableFuture<>();
+    public CompletableFuture<CollectorResult> upload(CollectorResult result, String name, String commit) {
+        CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         try {
             Log.e("Upload name", name);
             Log.e("Upload commit", commit);
-            Log.e("Upload file", filePath);
-            File file = new File(filePath);
+            Log.e("Upload file", result.getSavePath());
+            File file = new File(result.getSavePath());
             NetworkUtils.uploadCollectedData(mContext,
                     file,
                     0,
@@ -104,7 +105,7 @@ public abstract class BaseCollector {
                         @Override
                         public void onSuccess(Response<String> response) {
                             Log.e("Upload response", "Success!");
-                            ft.complete(null);
+                            ft.complete(result);
                         }
                     });
         } catch (Exception e) {
@@ -114,16 +115,14 @@ public abstract class BaseCollector {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<Void> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String commit) {
-        CompletableFuture<Void> ft = new CompletableFuture<>();
-        clickTrigger.trigger(collector, triggerConfig).whenComplete((v, e) -> upload(v.get(0), name, commit));
-        return ft;
+    public CompletableFuture<CollectorResult> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String commit) {
+        return clickTrigger.trigger(collector, triggerConfig)
+                .thenCompose((v) -> upload(v.get(0), name, commit));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<Void> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String commit) {
-        CompletableFuture<Void> ft = new CompletableFuture<>();
-        clickTrigger.trigger(Collections.singletonList(type), triggerConfig).whenComplete((v, e) -> upload(v.get(0), name, commit));
-        return ft;
+    public CompletableFuture<CollectorResult> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String commit) {
+        return clickTrigger.trigger(Collections.singletonList(type), triggerConfig)
+                .thenCompose((v) -> upload(v.get(0), name, commit));
     }
 }

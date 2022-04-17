@@ -5,6 +5,7 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 
@@ -59,16 +60,17 @@ public class FileUtils {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public static CompletableFuture<String> writeStringToFile(String content, File saveFile, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
-        CompletableFuture<String> ft = new CompletableFuture<>();
+    public static CompletableFuture<CollectorResult> writeStringToFile(CollectorResult result, File saveFile, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         futureList.add(scheduledExecutorService.schedule(() -> {
             try {
                 makeFile(saveFile);
-                String toWrite = content + "\r\n";
+                String toWrite = result.getDataString() + "\r\n";
                 OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(saveFile));
                 writer.write(toWrite);
                 writer.close();
-                ft.complete(saveFile.getAbsolutePath());
+                result.setSavePath(saveFile.getAbsolutePath());
+                ft.complete(result);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -77,14 +79,15 @@ public class FileUtils {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public static CompletableFuture<String> writeIMUDataToFile(IMUData data, File saveFile, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
-        CompletableFuture<String> ft = new CompletableFuture<>();
+    public static CompletableFuture<CollectorResult> writeIMUDataToFile(CollectorResult result, File saveFile, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        assert result.getData() instanceof IMUData;
+        CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         futureList.add(scheduledExecutorService.schedule(() -> {
             try {
                 makeFile(saveFile);
                 FileOutputStream fos = new FileOutputStream(saveFile);
                 DataOutputStream dos = new DataOutputStream(fos);
-                for (SingleIMUData d: data.getData()) {
+                for (SingleIMUData d: ((IMUData)result.getData()).getData()) {
                     List<Float> values = d.getValues();
                     dos.writeFloat(values.get(0));
                     dos.writeFloat(values.get(1));
@@ -95,7 +98,10 @@ public class FileUtils {
                 dos.close();
                 fos.flush();
                 fos.close();
-                ft.complete(saveFile.getAbsolutePath());
+
+                result.setSavePath(saveFile.getAbsolutePath());
+
+                ft.complete(result);
             } catch (Exception e) {
                 e.printStackTrace();
             }

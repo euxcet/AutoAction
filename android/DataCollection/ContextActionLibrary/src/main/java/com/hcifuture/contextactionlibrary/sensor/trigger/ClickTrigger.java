@@ -8,13 +8,13 @@ import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.collector.async.AsynchronousCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.async.AudioCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.async.IMUCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.SynchronousCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
-import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -41,33 +41,33 @@ public class ClickTrigger extends Trigger {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private CompletableFuture<List<String>> triggerCollectors(List<Collector> collectors, TriggerConfig config) {
+    private CompletableFuture<List<CollectorResult>> triggerCollectors(List<Collector> collectors, TriggerConfig config) {
         Log.d(TAG, "数据收集开始执行: [" + System.currentTimeMillis() + "]");
-        List<CompletableFuture<String>> fts = new ArrayList<>();
+        List<CompletableFuture<CollectorResult>> fts = new ArrayList<>();
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
 
 
         for (Collector collector: collectors) {
             String name = collector.getName();
-            File saveFile = new File(this.saveFolder + name + "/" + timestamp + collector.getExt());
+            File saveFile = new File(this.saveFolder + name + "/" + name + "_" + timestamp + collector.getExt());
             if (!history.containsKey(name)) {
                 history.put(name, new ArrayList<>());
             }
             Objects.requireNonNull(history.get(name)).add(saveFile);
             Log.e("TEST", saveFile.getAbsolutePath());
             if (collector instanceof SynchronousCollector) { // sync
-                fts.add(FileUtils.writeStringToFile(((SynchronousCollector)collector).getDataString(config),
+                fts.add(FileUtils.writeStringToFile(((SynchronousCollector)collector).getData(config),
                         saveFile, scheduledExecutorService, futureList));
             } else if (collector instanceof AsynchronousCollector) {
                 if (collector instanceof IMUCollector) { // imu
                     fts.add(((IMUCollector) collector).getData(config).thenCompose((v) ->
-                            FileUtils.writeIMUDataToFile((IMUData)v, saveFile, scheduledExecutorService, futureList)));
+                            FileUtils.writeIMUDataToFile(v, saveFile, scheduledExecutorService, futureList)));
                 } else if (collector instanceof AudioCollector) {
                     config.setAudioFilename(saveFile.getAbsolutePath());
                     fts.add(((AsynchronousCollector)collector).getData(config).thenApply((v) -> null));
                     config.setAudioFilename("");
                 } else { // async
-                    fts.add(((AsynchronousCollector)collector).getDataString(config).thenCompose((v) ->
+                    fts.add(((AsynchronousCollector)collector).getData(config).thenCompose((v) ->
                             FileUtils.writeStringToFile(v, saveFile, scheduledExecutorService, futureList)));
                 }
             }
@@ -87,13 +87,13 @@ public class ClickTrigger extends Trigger {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public CompletableFuture<List<String>> trigger(TriggerConfig config) {
+    public CompletableFuture<List<CollectorResult>> trigger(TriggerConfig config) {
         return triggerCollectors(collectorManager.getCollectors(), config);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public CompletableFuture<List<String>> trigger(List<CollectorManager.CollectorType> types, TriggerConfig config) {
+    public CompletableFuture<List<CollectorResult>> trigger(List<CollectorManager.CollectorType> types, TriggerConfig config) {
         return triggerCollectors(collectorManager.getCollectors().stream().filter(
                 (collector) -> types.contains(collector.getType()) && (collector.getType() != CollectorManager.CollectorType.Log)
         ).collect(Collectors.toList()), config);
@@ -101,7 +101,7 @@ public class ClickTrigger extends Trigger {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public CompletableFuture<List<String>> trigger(Collector collector, TriggerConfig config) {
+    public CompletableFuture<List<CollectorResult>> trigger(Collector collector, TriggerConfig config) {
         return triggerCollectors(Collections.singletonList(collector), config);
     }
 

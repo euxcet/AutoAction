@@ -14,6 +14,7 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleWifiData;
 import com.hcifuture.contextactionlibrary.sensor.data.WifiData;
@@ -74,8 +75,8 @@ public class WifiCollector extends AsynchronousCollector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public CompletableFuture<Data> getData(TriggerConfig config) {
-        CompletableFuture<Data> ft = new CompletableFuture<>();
+    public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
+        CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         if (config.getWifiScanTime() == 0) {
             ft.complete(null);
             return ft;
@@ -95,7 +96,10 @@ public class WifiCollector extends AsynchronousCollector {
         futureList.add(scheduledExecutorService.schedule(() -> {
             try {
                 synchronized (WifiCollector.this) {
-                    ft.complete(data.deepClone());
+                    CollectorResult result = new CollectorResult();
+                    result.setData(data.deepClone());
+                    result.setDataString(gson.toJson(result.getData(), WifiData.class));
+                    ft.complete(result);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -104,11 +108,13 @@ public class WifiCollector extends AsynchronousCollector {
         return ft;
     }
 
+    /*
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public CompletableFuture<String> getDataString(TriggerConfig config) {
         return getData(config).thenApply((d) -> d == null ? null : gson.toJson(d, WifiData.class));
     }
+     */
 
     @Override
     public void close() {

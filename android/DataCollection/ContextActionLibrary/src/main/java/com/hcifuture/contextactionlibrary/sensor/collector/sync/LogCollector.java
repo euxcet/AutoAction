@@ -1,8 +1,10 @@
 package com.hcifuture.contextactionlibrary.sensor.collector.sync;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.LogData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
@@ -15,7 +17,7 @@ public class LogCollector extends SynchronousCollector {
     private String label;
     private int historyLength;
 
-    private LogData data;
+    private final LogData data;
 
     public LogCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, String label, int historyLength) {
         super(context, type, scheduledExecutorService, futureList);
@@ -42,8 +44,9 @@ public class LogCollector extends SynchronousCollector {
         data.addLog(log);
     }
 
-    public void eraseLog() {
-        data.eraseLog();
+    public void eraseLog(int length) {
+        Log.e("TEST", "Log erase length: " + length);
+        data.eraseLog(length);
     }
 
     @Override
@@ -52,14 +55,20 @@ public class LogCollector extends SynchronousCollector {
     }
 
     @Override
-    public Data getData(TriggerConfig config) {
-        return data.clone();
+    public CollectorResult getData(TriggerConfig config) {
+        CollectorResult result = new CollectorResult();
+        result.setData(data.deepClone());
+        result.setDataString(((LogData)result.getData()).getString());
+        result.setLogLength(((LogData)result.getData()).getSize());
+        return result;
     }
 
+    /*
     @Override
-    public String getDataString(TriggerConfig config) {
+    public CollectorResult getDataString(TriggerConfig config) {
         return data.getString();
     }
+     */
 
     @Override
     public void pause() {
@@ -73,7 +82,7 @@ public class LogCollector extends SynchronousCollector {
 
     @Override
     public String getName() {
-        return "Log";
+        return this.label;
     }
 
     @Override

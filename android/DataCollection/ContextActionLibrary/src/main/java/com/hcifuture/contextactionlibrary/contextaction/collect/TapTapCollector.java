@@ -11,6 +11,7 @@ import com.hcifuture.contextactionlibrary.contextaction.action.TapTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.collector.async.IMUCollector;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
@@ -33,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 public class TapTapCollector extends BaseCollector {
     private String markTimestamp;
-    private CompletableFuture<List<String>> lastFuture;
+    private CompletableFuture<List<CollectorResult>> lastFuture;
 
     public TapTapCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);

@@ -14,10 +14,12 @@ import java.util.List;
 
 public class ExampleAction extends BaseAction {
     private LogCollector logCollector;
+    private int counter;
 
     public ExampleAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, LogCollector logCollector) {
         super(context, config, requestListener, actionListener);
         this.logCollector = logCollector;
+        this.counter = 0;
     }
 
     @Override
@@ -32,7 +34,10 @@ public class ExampleAction extends BaseAction {
 
     @Override
     public void onIMUSensorEvent(SingleIMUData data) {
-        logCollector.addLog(data.getName() + " " + data.getTimestamp());
+        if (counter == 0) {
+            logCollector.addLog(data.getName() + " " + data.getTimestamp());
+        }
+        counter = (counter + 1) % 100;
     }
 
     @Override
