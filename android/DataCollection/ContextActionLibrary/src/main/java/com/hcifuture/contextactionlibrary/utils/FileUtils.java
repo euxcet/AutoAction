@@ -1,7 +1,6 @@
 package com.hcifuture.contextactionlibrary.utils;
 
 import android.os.Build;
-import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -17,9 +16,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -92,6 +89,7 @@ public class FileUtils {
                     dos.writeFloat(values.get(0));
                     dos.writeFloat(values.get(1));
                     dos.writeFloat(values.get(2));
+                    dos.writeFloat((float)d.getType());
                     dos.writeDouble((double)d.getTimestamp());
                 }
                 dos.flush();
