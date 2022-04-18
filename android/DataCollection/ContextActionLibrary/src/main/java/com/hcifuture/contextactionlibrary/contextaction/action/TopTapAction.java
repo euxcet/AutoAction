@@ -2,7 +2,6 @@ package com.hcifuture.contextactionlibrary.contextaction.action;
 
 import android.content.Context;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
@@ -353,6 +352,7 @@ public class TopTapAction extends BaseAction {
                     ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
                     actionResult.setTimestamp(getFirstBackTapTimestamp() + ":" + getSecondBackTapTimestamp());
                     listener.onAction(actionResult);
+                    TapTapAction.onConfirmed();
                 }
             }
         }
@@ -360,8 +360,10 @@ public class TopTapAction extends BaseAction {
         if (count2 == 2) {
             if (actionListener != null) {
                 for (ActionListener listener : actionListener) {
-                    ActionResult actionResult = new ActionResult(ACTION);
+                    ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
                     actionResult.setTimestamp(getFirstTopTapTimestamp() + ":" + getSecondTopTapTimestamp());
+                    listener.onAction(actionResult);
+                    actionResult.setAction(ACTION);
                     listener.onAction(actionResult);
                 }
                 horizontalFilter.updateCondition();

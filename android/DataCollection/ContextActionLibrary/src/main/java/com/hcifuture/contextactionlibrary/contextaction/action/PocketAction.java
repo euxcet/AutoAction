@@ -2,7 +2,6 @@ package com.hcifuture.contextactionlibrary.contextaction.action;
 
 import android.content.Context;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
@@ -30,9 +29,9 @@ public class PocketAction extends BaseAction {
 
     private String TAG = "PocketAction";
 
-    public static String ACTION = "action.taptap.action";
-    public static String ACTION_UPLOAD = "action.taptap.action.upload";
-    public static String ACTION_RECOGNIZED = "action.taptap.action.recognized";
+    public static String ACTION = "action.pocket.action";
+    public static String ACTION_UPLOAD = "action.pocket.action.upload";
+    public static String ACTION_RECOGNIZED = "action.pocket.action.recognized";
 
     private long SAMPLINGINTERVALNS = 10000000L;
     private long WINDOW_NS = 400000000L;
@@ -253,11 +252,13 @@ public class PocketAction extends BaseAction {
         if (count == 2) {
             if (actionListener != null) {
                 for (ActionListener listener : actionListener) {
-                    ActionResult actionResult = new ActionResult(ACTION);
+                    ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
                     actionResult.setTimestamp(getFirstPocketTimestamp() + ":" + getSecondPocketTimestamp());
-                    actionResult.setReason("Triggered");
+                    listener.onAction(actionResult);
+                    actionResult.setAction(ACTION);
                     listener.onAction(actionResult);
                     actionResult.setAction(ACTION_UPLOAD);
+                    actionResult.setReason("Triggered");
                     listener.onAction(actionResult);
                     // listener.onActionSave(actionResult);
                 }

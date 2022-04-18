@@ -2,7 +2,6 @@ package com.hcifuture.contextactionlibrary.contextaction.action;
 
 import android.content.Context;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
@@ -78,7 +77,7 @@ public class TapTapAction extends BaseAction {
     private boolean flag2 = false;
     private boolean existTaptapSignal = false;
     private HorizontalFilter horizontalFilter = new HorizontalFilter();
-    private CombinedFilter combinedFilter = new CombinedFilter();
+    private static CombinedFilter combinedFilter = new CombinedFilter();
 
 
     public TapTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
@@ -319,7 +318,7 @@ public class TapTapAction extends BaseAction {
         existTaptapSignal = true;
     }
 
-    public void onConfirmed() {
+    public static void onConfirmed() {
         combinedFilter.confirmed();
     }
 
@@ -333,7 +332,6 @@ public class TapTapAction extends BaseAction {
                 for (ActionListener listener: actionListener) {
                     ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
                     listener.onAction(actionResult);
-                    onConfirmed();
                 }
                 horizontalFilter.updateCondition();
                 combinedFilter.updateCondition();
