@@ -17,6 +17,8 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ContextResult;
 
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class TableContext extends BaseContext {
 
@@ -34,8 +36,8 @@ public class TableContext extends BaseContext {
 
     private boolean isOnTable = false;
 
-    public TableContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener) {
-        super(context, config, requestListener, contextListener);
+    public TableContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
     }
 
     private void checkIsStatic(SingleIMUData data) {

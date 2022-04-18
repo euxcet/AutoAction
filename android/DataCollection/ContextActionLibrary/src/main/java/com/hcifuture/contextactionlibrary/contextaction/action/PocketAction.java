@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
+import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
@@ -24,6 +25,8 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class PocketAction extends BaseAction {
 
@@ -57,10 +60,10 @@ public class PocketAction extends BaseAction {
     private Deque<Long> pocketTimestamps = new ArrayDeque();
     private TfClassifier tflite;
 
-    public PocketAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
-        super(context, config, requestListener, actionListener);
+    public PocketAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         init();
-        tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "pocket.tflite"));
+        tflite = new TfClassifier(new File(ContextActionContainer.getSavePath() + "pocket.tflite"));
         seqLength = (int)config.getValue("SeqLength");
     }
 
