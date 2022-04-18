@@ -127,6 +127,7 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                ft.completeExceptionally(e);
             }
         }, delay, TimeUnit.MILLISECONDS));
         return ft;

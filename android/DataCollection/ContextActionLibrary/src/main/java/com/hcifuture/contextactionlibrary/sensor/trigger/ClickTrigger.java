@@ -63,7 +63,7 @@ public class ClickTrigger extends Trigger {
                             FileUtils.writeIMUDataToFile(v, saveFile, scheduledExecutorService, futureList)));
                 } else if (collector instanceof AudioCollector) {
                     config.setAudioFilename(saveFile.getAbsolutePath());
-                    fts.add(((AsynchronousCollector)collector).getData(config).thenApply((v) -> v.setSavePath(saveFile.getAbsolutePath())));
+                    fts.add(((AsynchronousCollector)collector).getData(config));
                     config.setAudioFilename("");
                 } else { // async
                     fts.add(((AsynchronousCollector)collector).getData(config).thenCompose((v) ->

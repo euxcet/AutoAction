@@ -56,8 +56,8 @@ public class BluetoothCollector extends AsynchronousCollector {
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
-        if (config.getBluetoothScanTime() == 0) {
-            ft.complete(null);
+        if (config.getBluetoothScanTime() <= 0) {
+            ft.completeExceptionally(new Exception("Invalid Bluetooth scan time: " + config.getBluetoothScanTime()));
             return ft;
         }
 
@@ -100,6 +100,7 @@ public class BluetoothCollector extends AsynchronousCollector {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                ft.completeExceptionally(e);
             }
         }, config.getBluetoothScanTime(), TimeUnit.MILLISECONDS));
         return ft;
