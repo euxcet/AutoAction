@@ -1,7 +1,5 @@
 package com.hcifuture.contextactionlibrary.sensor.data;
 
-import androidx.annotation.NonNull;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +26,7 @@ public class IMUData extends Data {
     }
 
     public synchronized IMUData tail(int length) {
-        if (length > data.size()) {
+        if (length < data.size()) {
             data = data.subList(data.size() - length, data.size());
         }
         return this;
