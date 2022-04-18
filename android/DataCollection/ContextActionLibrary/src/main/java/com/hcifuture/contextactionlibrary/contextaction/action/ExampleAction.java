@@ -11,13 +11,15 @@ import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class ExampleAction extends BaseAction {
     private LogCollector logCollector;
     private int counter;
 
-    public ExampleAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, LogCollector logCollector) {
-        super(context, config, requestListener, actionListener);
+    public ExampleAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, LogCollector logCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         this.logCollector = logCollector;
         this.counter = 0;
     }

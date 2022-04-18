@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
 import com.hcifuture.contextactionlibrary.R;
+import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -29,7 +30,7 @@ public class PageController {
     {
         try
         {
-            InputStream inStream = new FileInputStream(BuildConfig.SAVE_PATH + "pages.csv");
+            InputStream inStream = new FileInputStream(ContextActionContainer.getSavePath() + "pages.csv");
             BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
             String line;
             while ((line = br.readLine()) != null) {

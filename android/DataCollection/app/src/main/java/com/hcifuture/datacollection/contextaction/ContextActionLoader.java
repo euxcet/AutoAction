@@ -5,6 +5,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.view.accessibility.AccessibilityEvent;
 
+import com.hcifuture.datacollection.BuildConfig;
 import com.hcifuture.datacollection.contextaction.sensor.IMUSensorManager;
 import com.hcifuture.datacollection.contextaction.sensor.ProximitySensorManager;
 import com.hcifuture.shared.communicate.config.ActionConfig;
@@ -49,12 +50,12 @@ public class ContextActionLoader {
                     List.class, ActionListener.class,
                     List.class, ContextListener.class,
                     RequestListener.class,
-                    boolean.class, boolean.class)
+                    boolean.class, boolean.class, String.class)
                     .newInstance(mContext,
                             actionConfig, actionListener,
                             contextConfig, contextListener,
                             requestListener,
-                            true, false);
+                            true, false, BuildConfig.SAVE_PATH);
         } catch (Exception e) {
             e.printStackTrace();
         }

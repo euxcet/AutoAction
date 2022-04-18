@@ -13,6 +13,8 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class KnockAction extends BaseAction {
 
@@ -24,8 +26,8 @@ public class KnockAction extends BaseAction {
     private long lastTimestampGyro = 0;
     private long lastTimestampLinear = 0;
 
-    public KnockAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
-        super(context, config, requestListener, actionListener);
+    public KnockAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
     }
 
     @Override

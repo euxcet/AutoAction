@@ -6,6 +6,7 @@ import android.hardware.SensorEvent;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
+import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
 import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.CombinedFilter;
 import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.HorizontalFilter;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
@@ -33,6 +34,8 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class TapTapAction extends BaseAction {
 
@@ -81,11 +84,11 @@ public class TapTapAction extends BaseAction {
     private CombinedFilter combinedFilter = new CombinedFilter();
 
 
-    public TapTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
-        super(context, config, requestListener, actionListener);
+    public TapTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         init();
         // tflite = new TfClassifier(mContext.getAssets(), "tap7cls_pixel4.tflite");
-        tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "tap7cls_pixel4.tflite"));
+        tflite = new TfClassifier(new File(ContextActionContainer.getSavePath() + "tap7cls_pixel4.tflite"));
         seqLength = (int)config.getValue("SeqLength");
     }
 

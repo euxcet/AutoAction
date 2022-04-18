@@ -31,13 +31,13 @@ android {
         debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField("String", "SAVE_PATH", "\"/storage/emulated/0/PlaceData/\"")
+            // buildConfigField("String", "SAVE_PATH", "\"/storage/emulated/0/PlaceData/\"")
             buildConfigField("String", "WEB_SERVER", getProps("web.server"))
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField("String", "SAVE_PATH", "\"/storage/emulated/0/PlaceData/\"")
+            // buildConfigField("String", "SAVE_PATH", "\"/storage/emulated/0/PlaceData/\"")
             buildConfigField("String", "WEB_SERVER", getProps("web.server"))
         }
     }

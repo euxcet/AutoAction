@@ -9,6 +9,7 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
+import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -62,7 +63,7 @@ public class EventAnalyzer {
         min = new float[29];
         try {
             // InputStream inStream = context.getResources().openRawResource(R.raw.param_max);
-            InputStream inStream = new FileInputStream(BuildConfig.SAVE_PATH + "param_max.json");
+            InputStream inStream = new FileInputStream(ContextActionContainer.getSavePath() + "param_max.json");
             BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
             String line;
             StringBuilder stringBuilder = new StringBuilder();
@@ -97,7 +98,7 @@ public class EventAnalyzer {
         encodeMap = new ArrayList<>();
         try {
             // InputStream inStream = context.getResources().openRawResource(R.raw.param_dicts);
-            InputStream inStream = new FileInputStream(BuildConfig.SAVE_PATH + "param_dicts.json");
+            InputStream inStream = new FileInputStream(ContextActionContainer.getSavePath() + "param_dicts.json");
             BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
             String line;
             StringBuilder stringBuilder = new StringBuilder();

@@ -12,6 +12,8 @@ import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public abstract class BaseAction {
 
@@ -23,11 +25,16 @@ public abstract class BaseAction {
 
     protected boolean isStarted = false;
 
-    public BaseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
+    protected ScheduledExecutorService scheduledExecutorService;
+    protected List<ScheduledFuture<?>> futureList;
+
+    public BaseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;
         this.config = config;
         this.requestListener = requestListener;
         this.actionListener = actionListener;
+        this.scheduledExecutorService = scheduledExecutorService;
+        this.futureList = futureList;
     }
 
     public abstract void start();

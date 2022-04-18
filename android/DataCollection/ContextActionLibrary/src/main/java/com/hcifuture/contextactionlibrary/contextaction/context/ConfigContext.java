@@ -32,6 +32,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class ConfigContext extends BaseContext {
 
@@ -48,8 +50,8 @@ public class ConfigContext extends BaseContext {
 
     private final LogCollector logCollector;
 
-    public ConfigContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector logCollector) {
-        super(context, config, requestListener, contextListener);
+    public ConfigContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector logCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
         this.logCollector = logCollector;
 
         // initialize
