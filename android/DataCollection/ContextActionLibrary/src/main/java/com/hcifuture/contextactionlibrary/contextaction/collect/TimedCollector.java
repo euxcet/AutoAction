@@ -72,7 +72,7 @@ public class TimedCollector extends BaseCollector {
                 () -> {
                     try {
                         triggerAndUpload(logCollector, new TriggerConfig(), "Timed_" + name, "Log: " + name)
-                                .whenComplete((v, e) -> logCollector.eraseLog(v.getLogLength()));
+                                .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
