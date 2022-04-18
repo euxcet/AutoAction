@@ -54,7 +54,6 @@ public class ClickTrigger extends Trigger {
                 history.put(name, new ArrayList<>());
             }
             Objects.requireNonNull(history.get(name)).add(saveFile);
-            Log.e("TEST", saveFile.getAbsolutePath());
             if (collector instanceof SynchronousCollector) { // sync
                 fts.add(FileUtils.writeStringToFile(((SynchronousCollector)collector).getData(config),
                         saveFile, scheduledExecutorService, futureList));
@@ -64,7 +63,7 @@ public class ClickTrigger extends Trigger {
                             FileUtils.writeIMUDataToFile(v, saveFile, scheduledExecutorService, futureList)));
                 } else if (collector instanceof AudioCollector) {
                     config.setAudioFilename(saveFile.getAbsolutePath());
-                    fts.add(((AsynchronousCollector)collector).getData(config).thenApply((v) -> null));
+                    fts.add(((AsynchronousCollector)collector).getData(config).thenApply((v) -> v.setSavePath(saveFile.getAbsolutePath())));
                     config.setAudioFilename("");
                 } else { // async
                     fts.add(((AsynchronousCollector)collector).getData(config).thenCompose((v) ->

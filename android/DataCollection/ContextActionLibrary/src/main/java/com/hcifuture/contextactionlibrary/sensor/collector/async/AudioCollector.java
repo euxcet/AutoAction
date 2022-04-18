@@ -3,6 +3,7 @@ package com.hcifuture.contextactionlibrary.sensor.collector.async;
 import android.content.Context;
 import android.media.MediaRecorder;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -97,14 +98,11 @@ public class AudioCollector extends AsynchronousCollector {
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
-        if (config.getAudioLength() == 0) {
-            ft.complete(null);
+        if (config.getAudioLength() == 0 || config.getAudioFilename() == null) {
+            ft.complete(new CollectorResult());
             return ft;
         }
-        if (saveFile == null) {
-            ft.complete(null);
-            return ft;
-        }
+        saveFile = new File(config.getAudioFilename());
         if (!Objects.requireNonNull(saveFile.getParentFile()).exists()) {
             saveFile.getParentFile().mkdirs();
         }
@@ -132,13 +130,13 @@ public class AudioCollector extends AsynchronousCollector {
                         mMediaRecorder = null;
                     }
                     isRecording.set(false);
-                    ft.complete(null);
+                    ft.complete(new CollectorResult());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }, config.getAudioLength(), TimeUnit.MILLISECONDS);
         } else {
-            ft.complete(null);
+            ft.complete(new CollectorResult());
         }
         return ft;
     }
@@ -168,6 +166,6 @@ public class AudioCollector extends AsynchronousCollector {
 
     @Override
     public String getExt() {
-        return ".txt";
+        return ".mp3";
     }
 }
