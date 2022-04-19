@@ -3,20 +3,23 @@ package com.hcifuture.datacollection.contextaction;
 import static android.content.Context.MODE_PRIVATE;
 
 import android.accessibilityservice.AccessibilityService;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.ContentObserver;
+import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Handler;
-import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
-import android.util.Pair;
 import android.view.accessibility.AccessibilityEvent;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.hcifuture.datacollection.BuildConfig;
-import com.hcifuture.datacollection.NcnnInstance;
 import com.hcifuture.datacollection.utils.FileUtils;
-import com.hcifuture.shared.communicate.BuiltInActionEnum;
-import com.hcifuture.shared.communicate.BuiltInContextEnum;
 import com.hcifuture.shared.communicate.SensorType;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.config.ContextConfig;
@@ -28,17 +31,17 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.RequestResult;
 
-import org.checkerframework.checker.units.qual.A;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import androidx.annotation.Nullable;
 import dalvik.system.DexClassLoader;
 
 public class LoaderManager {
@@ -63,6 +66,79 @@ public class LoaderManager {
     private ContextListener contextListener;
     private ActionListener actionListener;
 
+    // listening
+    private final Uri [] listenedURIs = {
+            Settings.System.CONTENT_URI,
+            Settings.Global.CONTENT_URI,
+    };
+    private final String [] listenedActions = {
+            Intent.ACTION_AIRPLANE_MODE_CHANGED,
+            Intent.ACTION_APPLICATION_RESTRICTIONS_CHANGED,
+            Intent.ACTION_BATTERY_LOW,
+            Intent.ACTION_BATTERY_OKAY,
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_CONFIGURATION_CHANGED,
+            Intent.ACTION_DOCK_EVENT,
+            Intent.ACTION_DREAMING_STARTED,
+            Intent.ACTION_DREAMING_STOPPED,
+            Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE,
+            Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE,
+            Intent.ACTION_HEADSET_PLUG,
+            Intent.ACTION_INPUT_METHOD_CHANGED,
+            Intent.ACTION_LOCALE_CHANGED,
+            Intent.ACTION_LOCKED_BOOT_COMPLETED,
+            Intent.ACTION_MEDIA_BAD_REMOVAL,
+            Intent.ACTION_MEDIA_BUTTON,
+            Intent.ACTION_MEDIA_CHECKING,
+            Intent.ACTION_MEDIA_EJECT,
+            Intent.ACTION_MEDIA_MOUNTED,
+            Intent.ACTION_MEDIA_NOFS,
+            Intent.ACTION_MEDIA_REMOVED,
+            Intent.ACTION_MEDIA_SCANNER_FINISHED,
+            Intent.ACTION_MEDIA_SCANNER_STARTED,
+            Intent.ACTION_MEDIA_SHARED,
+            Intent.ACTION_MEDIA_UNMOUNTABLE,
+            Intent.ACTION_MEDIA_UNMOUNTED,
+            Intent.ACTION_MY_PACKAGE_REPLACED,
+            Intent.ACTION_PACKAGES_SUSPENDED,
+            Intent.ACTION_PACKAGES_UNSUSPENDED,
+            Intent.ACTION_PACKAGE_ADDED,
+            Intent.ACTION_PACKAGE_CHANGED,
+            Intent.ACTION_PACKAGE_DATA_CLEARED,
+            Intent.ACTION_PACKAGE_FIRST_LAUNCH,
+            Intent.ACTION_PACKAGE_FULLY_REMOVED,
+            Intent.ACTION_PACKAGE_NEEDS_VERIFICATION,
+            Intent.ACTION_PACKAGE_REMOVED,
+            Intent.ACTION_PACKAGE_REPLACED,
+            Intent.ACTION_PACKAGE_RESTARTED,
+            Intent.ACTION_PACKAGE_VERIFIED,
+            Intent.ACTION_POWER_CONNECTED,
+            Intent.ACTION_POWER_DISCONNECTED,
+            Intent.ACTION_PROVIDER_CHANGED,
+            Intent.ACTION_REBOOT,
+            Intent.ACTION_SCREEN_OFF,
+            Intent.ACTION_SCREEN_ON,
+            Intent.ACTION_SHUTDOWN,
+            Intent.ACTION_TIMEZONE_CHANGED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_UID_REMOVED,
+            Intent.ACTION_USER_BACKGROUND,
+            Intent.ACTION_USER_FOREGROUND,
+            Intent.ACTION_USER_PRESENT,
+            Intent.ACTION_USER_UNLOCKED,
+            // Bluetooth related
+            BluetoothDevice.ACTION_ACL_CONNECTED,
+            BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED,
+            BluetoothDevice.ACTION_ACL_DISCONNECTED,
+            // WiFi related
+            WifiManager.NETWORK_STATE_CHANGED_ACTION,
+            WifiManager.WIFI_STATE_CHANGED_ACTION
+    };
+
+    private final CustomBroadcastReceiver mBroadcastReceiver;
+    private final CustomContentObserver mContentObserver;
+    private final List<Uri> mRegURIs;
+
     public LoaderManager(AccessibilityService service, ContextListener contextListener, ActionListener actionListener) {
         this.mService = service;
         this.isUpgrading = new AtomicBoolean(false);
@@ -76,6 +152,9 @@ public class LoaderManager {
         } else {
             this.actionListener = actionListener;
         }
+        mBroadcastReceiver = new CustomBroadcastReceiver();
+        mContentObserver = new CustomContentObserver(new Handler());
+        mRegURIs = new ArrayList<>();
         calculateLocalMD5(UPDATABLE_FILES);
     }
 
@@ -152,6 +231,12 @@ public class LoaderManager {
     }
 
     public void stop() {
+        // unregister broadcast receiver
+        mService.unregisterReceiver(mBroadcastReceiver);
+        // unregister content observer
+        mService.getContentResolver().unregisterContentObserver(mContentObserver);
+        mRegURIs.clear();
+
         if (loader != null) {
             loader.stopDetection();
             loader = null;
@@ -229,6 +314,23 @@ public class LoaderManager {
         }
 
         RequestListener requestListener = this::handleRequest;
+
+        // register broadcast receiver
+        IntentFilter intentFilter = new IntentFilter();
+        config.getListenedSystemActions().stream().filter(Objects::nonNull).forEach(intentFilter::addAction);
+        if (!config.isOverrideSystemActions()) {
+            Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
+        }
+        intentFilter.actionsIterator().forEachRemaining(item -> Log.e("Register broadcast", item));
+        mService.registerReceiver(mBroadcastReceiver, intentFilter);
+
+        // register content observer
+        config.getListenedSystemURIs().stream().filter(Objects::nonNull).map(Uri::parse).forEach(this::registerURI);
+        if (!config.isOverrideSystemURIs()) {
+            Arrays.stream(listenedURIs).forEach(this::registerURI);
+        }
+        mRegURIs.forEach(uri -> Log.e("Register URI", uri.toString()));
+
         loader.startDetection(actionConfigs, actionListener, contextConfigs, contextListener, requestListener);
         /*
         NcnnInstance.init(mService,
@@ -255,6 +357,51 @@ public class LoaderManager {
     public void onBroadcastEvent(BroadcastEvent event) {
         if (loader != null) {
             loader.onBroadcastEvent(event);
+        }
+    }
+
+    class CustomBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            BroadcastEvent event = new BroadcastEvent(
+                    System.currentTimeMillis(),
+                    intent.getAction(),
+                    "",
+                    "BroadcastReceive",
+                    intent.getExtras()
+            );
+            onBroadcastEvent(event);
+        }
+    }
+
+    class CustomContentObserver extends ContentObserver {
+        public CustomContentObserver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            onChange(selfChange, null);
+        }
+
+        @Override
+        public void onChange(boolean selfChange, @Nullable Uri uri) {
+            BroadcastEvent event = new BroadcastEvent(
+                    System.currentTimeMillis(),
+                    (uri == null)? "uri_null" : uri.toString(),
+                    "",
+                    "ContentChange"
+            );
+            onBroadcastEvent(event);
+        }
+    }
+
+    void registerURI(Uri uri) {
+        if (uri != null) {
+            if (!mRegURIs.contains(uri)) {
+                mService.getContentResolver().registerContentObserver(uri, true, mContentObserver);
+                mRegURIs.add(uri);
+            }
         }
     }
 }
