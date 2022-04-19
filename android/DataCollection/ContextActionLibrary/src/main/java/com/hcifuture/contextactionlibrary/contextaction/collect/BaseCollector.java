@@ -107,9 +107,16 @@ public abstract class BaseCollector {
                             Log.e("Upload response", "Success!");
                             ft.complete(result);
                         }
+
+                        @Override
+                        public void onError(Response<String> response) {
+                            ft.completeExceptionally(response.getException());
+                            super.onError(response);
+                        }
                     });
         } catch (Exception e) {
             e.printStackTrace();
+            ft.completeExceptionally(e);
         }
         return ft;
     }

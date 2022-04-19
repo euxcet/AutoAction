@@ -13,6 +13,8 @@ import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public abstract class BaseContext {
     protected Context mContext;
@@ -24,11 +26,16 @@ public abstract class BaseContext {
 
     protected boolean isStarted = false;
 
-    public BaseContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener) {
+    protected ScheduledExecutorService scheduledExecutorService;
+    protected List<ScheduledFuture<?>> futureList;
+
+    public BaseContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;
         this.config = config;
         this.requestListener = requestListener;
         this.contextListener = contextListener;
+        this.scheduledExecutorService = scheduledExecutorService;
+        this.futureList = futureList;
     }
 
     public abstract void start();

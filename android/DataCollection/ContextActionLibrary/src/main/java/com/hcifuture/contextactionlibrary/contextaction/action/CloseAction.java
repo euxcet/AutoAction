@@ -17,6 +17,8 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class CloseAction extends BaseAction {
 
@@ -30,8 +32,8 @@ public class CloseAction extends BaseAction {
     long success_id; //成功时的id
     boolean success_flag;
 
-    public CloseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
-        super(context, config, requestListener, actionListener);
+    public CloseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
     }
 
     //对变量进行初始化

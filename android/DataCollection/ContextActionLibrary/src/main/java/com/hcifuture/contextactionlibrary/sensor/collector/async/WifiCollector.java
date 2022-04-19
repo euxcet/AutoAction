@@ -77,8 +77,8 @@ public class WifiCollector extends AsynchronousCollector {
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
-        if (config.getWifiScanTime() == 0) {
-            ft.complete(null);
+        if (config.getWifiScanTime() <= 0) {
+            ft.completeExceptionally(new Exception("Invalid Wifi scan time: " + config.getWifiScanTime()));
             return ft;
         }
 
@@ -103,6 +103,7 @@ public class WifiCollector extends AsynchronousCollector {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                ft.completeExceptionally(e);
             }
         }, config.getWifiScanTime(), TimeUnit.MILLISECONDS));
         return ft;

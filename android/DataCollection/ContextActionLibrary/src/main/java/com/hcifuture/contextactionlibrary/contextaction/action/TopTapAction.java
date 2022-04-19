@@ -2,10 +2,10 @@ package com.hcifuture.contextactionlibrary.contextaction.action;
 
 import android.content.Context;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
+import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
 import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.HorizontalFilter;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
@@ -26,6 +26,8 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class TopTapAction extends BaseAction {
 
@@ -69,11 +71,11 @@ public class TopTapAction extends BaseAction {
     private HorizontalFilter horizontalFilter = new HorizontalFilter();
 
 
-    public TopTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener) {
-        super(context, config, requestListener, actionListener);
+    public TopTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         init();
         // tflite = new TfClassifier(mContext.getAssets(), "combined.tflite");
-        tflite = new TfClassifier(new File(BuildConfig.SAVE_PATH + "combined.tflite"));
+        tflite = new TfClassifier(new File(ContextActionContainer.getSavePath() + "combined.tflite"));
         seqLength = (int)config.getValue("SeqLength");
     }
 
@@ -353,6 +355,7 @@ public class TopTapAction extends BaseAction {
                     ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
                     actionResult.setTimestamp(getFirstBackTapTimestamp() + ":" + getSecondBackTapTimestamp());
                     listener.onAction(actionResult);
+                    TapTapAction.onConfirmed();
                 }
             }
         }
@@ -360,8 +363,10 @@ public class TopTapAction extends BaseAction {
         if (count2 == 2) {
             if (actionListener != null) {
                 for (ActionListener listener : actionListener) {
-                    ActionResult actionResult = new ActionResult(ACTION);
+                    ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
                     actionResult.setTimestamp(getFirstTopTapTimestamp() + ":" + getSecondTopTapTimestamp());
+                    listener.onAction(actionResult);
+                    actionResult.setAction(ACTION);
                     listener.onAction(actionResult);
                 }
                 horizontalFilter.updateCondition();

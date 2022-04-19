@@ -87,12 +87,15 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private CollectorManager collectorManager;
     private DataDistributor dataDistributor;
 
-    public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener) {
+    private static String SAVE_PATH;
+
+    public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener, String SAVE_PATH) {
         this.mContext = context;
         this.actions = actions;
         this.contexts = contexts;
         this.actionFuture = null;
         this.contextFuture = null;
+        ContextActionContainer.SAVE_PATH = SAVE_PATH;
         /*
         this.executor = new ThreadPoolExecutor(1,
                 1,
@@ -125,8 +128,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                                   List<ActionConfig> actionConfig, ActionListener actionListener,
                                   List<ContextConfig> contextConfig, ContextListener contextListener,
                                   RequestListener requestListener,
-                                  boolean fromDex, boolean openSensor) {
-        this(context, new ArrayList<>(), new ArrayList<>(), requestListener);
+                                  boolean fromDex, boolean openSensor, String SAVE_PATH) {
+        this(context, new ArrayList<>(), new ArrayList<>(), requestListener, SAVE_PATH);
         this.actionConfig = actionConfig;
         this.actionListener = actionListener;
         this.contextConfig = contextConfig;
@@ -134,6 +137,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         this.requestListener = requestListener;
         this.fromDex = fromDex;
         this.openSensor = openSensor;
+    }
+
+    public static String getSavePath() {
+        return SAVE_PATH;
     }
 
     @Override
@@ -288,7 +295,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
 
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
-                .scheduleFixedDelayUpload(CollectorManager.CollectorType.Bluetooth, new TriggerConfig().setBluetoothScanTime(10000), 1000, 0)
+                .scheduleFixedDelayUpload(CollectorManager.CollectorType.Audio, new TriggerConfig().setBluetoothScanTime(10000).setAudioLength(5000), 15000, 0)
                 .scheduleFixedDelayUpload(CollectorManager.CollectorType.Wifi, new TriggerConfig().setWifiScanTime(10000), 1000, 0)
                 .scheduleFixedRateUpload(CollectorManager.CollectorType.Location, new TriggerConfig(), 10000, 0);
         collectors.add(timedCollector);
@@ -298,30 +305,30 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 ActionConfig config = actionConfig.get(i);
                 switch (config.getAction()) {
                     case "TapTap":
-                        tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                        tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
                         actions.add(tapTapAction);
                         break;
                     case "TopTap":
-                        TopTapAction topTapAction = new TopTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                        TopTapAction topTapAction = new TopTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
                         actions.add(topTapAction);
                         break;
                     case "Flip":
-                        FlipAction flipAction = new FlipAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                        FlipAction flipAction = new FlipAction(mContext, config, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
                         actions.add(flipAction);
                         break;
                     case "Close":
-                        CloseAction closeAction = new CloseAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                        CloseAction closeAction = new CloseAction(mContext, config, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
                         actions.add(closeAction);
                         break;
                     case "Pocket":
-                        PocketAction pocketAction = new PocketAction(mContext, config, requestListener, Arrays.asList(this, actionListener));
+                        PocketAction pocketAction = new PocketAction(mContext, config, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
                         actions.add(pocketAction);
                         break;
                     case "Example":
                         LogCollector logCollector = collectorManager.newLogCollector("Log0", 100);
                         timedCollector.scheduleTimedLogUpload(logCollector, 5000, 0, "Example");
                         collectors.add(new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector));
-                        ExampleAction exampleAction = new ExampleAction(mContext, config, requestListener, Arrays.asList(this, actionListener), logCollector);
+                        ExampleAction exampleAction = new ExampleAction(mContext, config, requestListener, Arrays.asList(this, actionListener), logCollector, scheduledExecutorService, futureList);
                         actions.add(exampleAction);
                         break;
                 }
@@ -330,25 +337,25 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 ContextConfig config = contextConfig.get(i);
                 switch (config.getContext()) {
                     case "Proximity":
-                        ProximityContext proximityContext = new ProximityContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
+                        ProximityContext proximityContext = new ProximityContext(mContext, config, requestListener, Arrays.asList(this, contextListener), scheduledExecutorService, futureList);
                         contexts.add(proximityContext);
                         break;
                     case "Table":
-                        TableContext tableContext = new TableContext(mContext, config, requestListener, Arrays.asList(this, contextListener));
+                        TableContext tableContext = new TableContext(mContext, config, requestListener, Arrays.asList(this, contextListener), scheduledExecutorService, futureList);
                         contexts.add(tableContext);
                         break;
                     case "Informational":
                         LogCollector informationLogCollector = collectorManager.newLogCollector("Informational", 8192);
                         timedCollector.scheduleTimedLogUpload(informationLogCollector, 60000, 5000, "Informational");
                         collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector));
-                        InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener),informationLogCollector);
+                        InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener),informationLogCollector, scheduledExecutorService, futureList);
                         contexts.add(informationalContext);
                         break;
                     case "Config":
                         LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
                         timedCollector.scheduleTimedLogUpload(configLogCollector, 60000, 5000, "Config");
                         collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector));
-                        ConfigContext configContext = new ConfigContext(mContext, config, requestListener, Arrays.asList(this, contextListener), configLogCollector);
+                        ConfigContext configContext = new ConfigContext(mContext, config, requestListener, Arrays.asList(this, contextListener), configLogCollector, scheduledExecutorService, futureList);
                         contexts.add(configContext);
                         break;
                 }

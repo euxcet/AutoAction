@@ -51,7 +51,9 @@ public class LocationCollector extends AsynchronousCollector {
                 return result;
             });
         } else {
-            return CompletableFuture.completedFuture(null);
+            CompletableFuture<CollectorResult> ft =  new CompletableFuture<>();
+            ft.completeExceptionally(new Exception("LocationClient instance is null!"));
+            return ft;
         }
     }
 

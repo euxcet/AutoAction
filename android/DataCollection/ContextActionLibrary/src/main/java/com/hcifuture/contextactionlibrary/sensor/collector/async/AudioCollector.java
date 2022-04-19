@@ -3,6 +3,7 @@ package com.hcifuture.contextactionlibrary.sensor.collector.async;
 import android.content.Context;
 import android.media.MediaRecorder;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -97,14 +98,15 @@ public class AudioCollector extends AsynchronousCollector {
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
-        if (config.getAudioLength() == 0) {
-            ft.complete(null);
+        if (config.getAudioLength() <= 0) {
+            ft.completeExceptionally(new Exception("Invalid audio length: " + config.getAudioLength()));
             return ft;
         }
-        if (saveFile == null) {
-            ft.complete(null);
+        if (config.getAudioFilename() == null) {
+            ft.completeExceptionally(new Exception("NULL audio filename!"));
             return ft;
         }
+        saveFile = new File(config.getAudioFilename());
         if (!Objects.requireNonNull(saveFile.getParentFile()).exists()) {
             saveFile.getParentFile().mkdirs();
         }
@@ -121,24 +123,26 @@ public class AudioCollector extends AsynchronousCollector {
                 mMediaRecorder.setOutputFile(new File(config.getAudioFilename()));
                 mMediaRecorder.prepare();
                 mMediaRecorder.start();
+                scheduledExecutorService.schedule(() -> {
+                    try {
+                        if (mMediaRecorder != null) {
+                            mMediaRecorder.stop();
+                            mMediaRecorder.release();
+                            mMediaRecorder = null;
+                        }
+                        isRecording.set(false);
+                        ft.complete(new CollectorResult().setSavePath(saveFile.getAbsolutePath()));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        ft.completeExceptionally(e);
+                    }
+                }, config.getAudioLength(), TimeUnit.MILLISECONDS);
             } catch (IOException e) {
                 e.printStackTrace();
+                ft.completeExceptionally(e);
             }
-            scheduledExecutorService.schedule(() -> {
-                try {
-                    if (mMediaRecorder != null) {
-                        mMediaRecorder.stop();
-                        mMediaRecorder.release();
-                        mMediaRecorder = null;
-                    }
-                    isRecording.set(false);
-                    ft.complete(null);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }, config.getAudioLength(), TimeUnit.MILLISECONDS);
         } else {
-            ft.complete(null);
+            ft.completeExceptionally(new Exception("Another task of audio recording is taking place!"));
         }
         return ft;
     }
@@ -168,6 +172,6 @@ public class AudioCollector extends AsynchronousCollector {
 
     @Override
     public String getExt() {
-        return ".txt";
+        return ".mp3";
     }
 }

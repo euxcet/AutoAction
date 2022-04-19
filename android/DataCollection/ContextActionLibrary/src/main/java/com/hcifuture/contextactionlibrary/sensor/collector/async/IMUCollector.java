@@ -6,14 +6,12 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorListener;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
-import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
@@ -118,7 +116,7 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
         futureList.add(scheduledExecutorService.schedule(() -> {
             try {
                 if (config.getImuHead() > 0 && config.getImuTail() > 0) {
-                    int length = (config.getImuHead() + config.getImuTail()) * LENGTH_LIMIT * 5 / 10000;
+                    int length = (config.getImuHead() + config.getImuTail()) * LENGTH_LIMIT / 10000;
                     CollectorResult result = new CollectorResult();
                     result.setData(data.deepClone().tail(length));
                     ft.complete(result);
@@ -129,6 +127,7 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                ft.completeExceptionally(e);
             }
         }, delay, TimeUnit.MILLISECONDS));
         return ft;

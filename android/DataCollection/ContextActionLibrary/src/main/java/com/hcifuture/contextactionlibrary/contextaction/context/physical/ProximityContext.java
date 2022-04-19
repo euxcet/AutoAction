@@ -16,6 +16,8 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ContextResult;
 
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class ProximityContext extends BaseContext {
     private String TAG = "ProximityContext";
@@ -27,8 +29,8 @@ public class ProximityContext extends BaseContext {
     private long lastFarTime = 0L;
     private long lastRecognized = 0L;
 
-    public ProximityContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener) {
-        super(context, config, requestListener, contextListener);
+    public ProximityContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
     }
 
     @Override

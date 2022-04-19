@@ -10,6 +10,7 @@ import android.view.accessibility.AccessibilityEvent;
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
+import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
@@ -37,6 +38,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 public class InformationalContext extends BaseContext {
     private static final String TAG = "TaskContext";
@@ -58,8 +61,8 @@ public class InformationalContext extends BaseContext {
 
     private LogCollector logCollector;
 
-    public InformationalContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector informationalLogCollector) {
-        super(context, config, requestListener, contextListener);
+    public InformationalContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector informationalLogCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+        super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
 
         logCollector = informationalLogCollector;
 
@@ -265,7 +268,7 @@ public class InformationalContext extends BaseContext {
     {
         try
         {
-            InputStream inStream = new FileInputStream(BuildConfig.SAVE_PATH + "tasks.csv");
+            InputStream inStream = new FileInputStream(ContextActionContainer.getSavePath() + "tasks.csv");
             BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
             String line;
             while ((line = br.readLine()) != null) {
