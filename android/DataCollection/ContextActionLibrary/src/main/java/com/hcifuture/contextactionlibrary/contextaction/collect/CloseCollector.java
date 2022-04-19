@@ -36,21 +36,21 @@ public class CloseCollector extends BaseCollector {
         if (action.getAction().equals("Close")) {
             FutureIMU = clickTrigger.trigger(Collections.singletonList(CollectorManager.CollectorType.IMU), new TriggerConfig());
             FutureNon = clickTrigger.trigger(Collections.singletonList(CollectorManager.CollectorType.NonIMU), new TriggerConfig());
-
+            long time = System.currentTimeMillis();
             if(FutureIMU !=null && FutureNon!=null ){
                String name = action.getAction();
                String commit = action.getAction() + ":" + action.getReason() + " " + action.getTimestamp();
                if(FutureIMU.isDone() && FutureNon!=null) {
                    try {
-                       upload(FutureIMU.get().get(0), name, commit);
-                       upload(FutureNon.get().get(0), name, commit);
+                       upload(FutureIMU.get().get(0), name, commit, time);
+                       upload(FutureNon.get().get(0), name, commit, time);
                    } catch (ExecutionException | InterruptedException e) {
                        e.printStackTrace();
                    }
                }
                else {
-                   FutureIMU.whenComplete((v, e) -> upload(v.get(0), name, commit));
-                   FutureNon.whenComplete((v, e) -> upload(v.get(0), name, commit));
+                   FutureIMU.whenComplete((v, e) -> upload(v.get(0), name, commit, time));
+                   FutureNon.whenComplete((v, e) -> upload(v.get(0), name, commit, time));
                }
            }
 //            FutureIMU = clickTrigger.trigger(Collections.singletonList(CollectorManager.CollectorType.NonIMU), new TriggerConfig());
@@ -79,6 +79,11 @@ public class CloseCollector extends BaseCollector {
         }
         if (clickTrigger != null) {
             triggerAndUpload(CollectorManager.CollectorType.IMU,
+                    new TriggerConfig().setImuHead(800).setImuTail(200),
+                    context.getContext(),
+                    context.getContext() + ":" + context.getTimestamp()
+            );
+            triggerAndUpload(CollectorManager.CollectorType.NonIMU,
                     new TriggerConfig().setImuHead(800).setImuTail(200),
                     context.getContext(),
                     context.getContext() + ":" + context.getTimestamp()
