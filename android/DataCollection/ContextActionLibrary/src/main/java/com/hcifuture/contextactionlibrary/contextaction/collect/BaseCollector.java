@@ -164,6 +164,12 @@ public abstract class BaseCollector {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
+    public CompletableFuture<CollectorResult> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String commit, long time) {
+        return clickTrigger.trigger(collector, triggerConfig)
+                .thenCompose((v) -> upload(v.get(0), name, commit, time));
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<CollectorResult> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String commit) {
         return clickTrigger.trigger(Collections.singletonList(type), triggerConfig)
                 .thenCompose((v) -> upload(v.get(0), name, commit));

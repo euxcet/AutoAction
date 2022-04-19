@@ -7,6 +7,7 @@ import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
+import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -19,13 +20,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class FlipCollector extends BaseCollector{
 
     private CompletableFuture<List<CollectorResult>> FutureIMU;
+    private LogCollector logCollector;
 
-    public FlipCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger) {
+    public FlipCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector FlipLogCollector) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
+        logCollector = FlipLogCollector;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -46,6 +50,16 @@ public class FlipCollector extends BaseCollector{
                 } else {
                     FutureIMU.whenComplete((v, e) -> upload(v.get(0), name, commit, time));
                 }
+            }
+            if (clickTrigger != null && scheduledExecutorService != null) {
+                futureList.add(scheduledExecutorService.schedule(() -> {
+                    try {
+                        triggerAndUpload(logCollector, new TriggerConfig(), "Flip", "Log: Flip",time)
+                                .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }, 20000L, TimeUnit.MILLISECONDS));
             }
         }
     }

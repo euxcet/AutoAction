@@ -294,7 +294,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
         collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
-        collectors.add(new FlipCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
 
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
                 .scheduleFixedDelayUpload(CollectorManager.CollectorType.Audio, new TriggerConfig().setBluetoothScanTime(10000).setAudioLength(5000), 15000, 0)
@@ -315,7 +314,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         actions.add(topTapAction);
                         break;
                     case "Flip":
-                        FlipAction flipAction = new FlipAction(mContext, config, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                        LogCollector FliplogCollector = collectorManager.newLogCollector("Flip", 800);
+                        collectors.add(new FlipCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, FliplogCollector));
+                        FlipAction flipAction = new FlipAction(mContext, config, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList, FliplogCollector);
                         actions.add(flipAction);
                         break;
                     case "Close":
