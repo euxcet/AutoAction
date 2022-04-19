@@ -12,6 +12,7 @@ import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.CloseCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ConfigCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ExampleCollector;
+import com.hcifuture.contextactionlibrary.contextaction.collect.FlipCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.InformationalContextCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TimedCollector;
@@ -293,6 +294,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
         collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
+        collectors.add(new FlipCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
 
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
                 .scheduleFixedDelayUpload(CollectorManager.CollectorType.Audio, new TriggerConfig().setBluetoothScanTime(10000).setAudioLength(5000), 15000, 0)
