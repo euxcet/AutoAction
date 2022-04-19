@@ -9,6 +9,7 @@ import android.view.accessibility.AccessibilityEvent;
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
+import com.hcifuture.contextactionlibrary.contextaction.collect.CloseCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ConfigCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ExampleCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.InformationalContextCollector;
@@ -284,6 +285,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         // because it returns a fixed-size list backed by the specified array and we cannot perform add()
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
+        collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
 
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
                 .scheduleFixedDelayUpload(CollectorManager.CollectorType.Bluetooth, new TriggerConfig().setBluetoothScanTime(10000), 1000, 0)
