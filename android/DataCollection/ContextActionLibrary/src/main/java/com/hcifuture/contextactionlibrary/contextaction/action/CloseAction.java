@@ -99,9 +99,11 @@ public class CloseAction extends BaseAction {
         }
 
         if (success_id != -1) {
-            if (System.currentTimeMillis() - success_id > 100) {
-                Log.i("proximity:", "成功了！" + success_id);
-                success_flag = true;
+            if(!success_flag) {
+                if (System.currentTimeMillis() - success_id > 100) {
+                    Log.i("proximity:", "成功了！" + success_id);
+                    success_flag = true;
+                }
             }
 //            else {
 //                Log.i("proximity","稳定的时间不够" + (System.currentTimeMillis() - success_id));

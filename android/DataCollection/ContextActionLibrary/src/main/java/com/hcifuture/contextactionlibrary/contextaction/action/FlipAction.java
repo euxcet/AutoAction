@@ -123,7 +123,7 @@ public class FlipAction extends BaseAction {
                                 Log.i("FLIP","-------------------角速度ok");
                                 if(flag2 && (gyro_id2-flag2_id)<100){
                                     Log.i("FLIP","角速度3:角度也满足条件！");
-                                    if(check_gy()) {
+                                    if(!success_flag&&check_gy()) {
                                         success_flag=true;
 //                                        Success();
                                     }
@@ -150,7 +150,7 @@ public class FlipAction extends BaseAction {
                                 Log.i("FLIP","-------------------角速度ok");
                                 if(flag2 && (gyro_id2-flag2_id)<3000){
                                     Log.i("FLIP","角速度3:角度也满足条件！");
-                                    if(check_gy())
+                                    if(!success_flag && check_gy())
                                         success_flag = true;
 //                                        Success();
                                 }
@@ -171,7 +171,7 @@ public class FlipAction extends BaseAction {
                 else{
                     if(((postive && gy<0)||(!postive && gy>0))&&(System.currentTimeMillis()-gyro_id1<30000)){
                         gyro_id2 = System.currentTimeMillis();
-                        Log.i("FLIP","角速度7：更新gyro2"+gy+"id2:"+gyro_id2);
+//                        Log.i("FLIP","角速度7：更新gyro2"+gy+"id2:"+gyro_id2);
                     }
                     else {
                         //假如gyro_flag1和2 都满足了，就要考虑更新gyro_flag1和2
@@ -232,7 +232,7 @@ public class FlipAction extends BaseAction {
                             if ((roll < -100 && roll > -180) || (roll > 100 && roll < 180)) { //保证翻转了180度
                                 flag1 = true;
                                 flag1_id = System.currentTimeMillis();
-                                Log.i("FLIP", "角度1:翻转到下面了"+(flag1_id-gyro_id1)+" "+flag1_id+" "+gyro_id1);
+                                Log.i("FLIP", "角度1:翻转到下面了"+"roll: "+roll+"pitch: "+pitch);
                             }
 //                        else{
 //                            Log.i("FLIP","roll的角度不满足:"+roll);
@@ -255,7 +255,7 @@ public class FlipAction extends BaseAction {
                             //检查gyro满足条件没 , 只要gyro_id2满足条件就行， 其实不用检查gyro_flag2
                             if((System.currentTimeMillis()-gyro_id2)<10000) {
                                 Log.i("FLIP","角度5:角速度也满足条件啦！");
-                                if(check_gy())
+                                if(!success_flag && check_gy())
                                     success_flag = true;
 //                                    Success();
                             }
