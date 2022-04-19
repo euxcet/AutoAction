@@ -7,8 +7,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.util.Log;
 
-import com.hcifuture.contextactionlibrary.sensor.data.Data;
-import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ActionConfig;
@@ -78,11 +76,24 @@ public class CloseAction extends BaseAction {
                             register_time = System.currentTimeMillis();
                             Log.i("proximity:", "注册传感器!" + register_time);
                             //TODO: 怎么注册传感器（和取消注册）
-//                            ProximitySensorManager.start();
+//                            for (ActionListener listener: actionListener) {
+//                                listener.onAction(new ActionResult("START_PROXIMITY"));
+//                            }
 //                            sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_PROXIMITY), SensorManager.SENSOR_DELAY_FASTEST);
                             register_flag = true;
                         }
                         Log.i("proximity:", "gyro为true了！");
+                    }
+                }
+                if(upright_gyro){
+//                    Log.i("proximity:","gx:"+gx+" gy:"+gy+" gz:"+gz);
+                    if((abs(abs(gy)-abs(gx))<30||abs(abs(gz)-abs(gx))<30||(abs(gz)>abs(gx))||abs(gy)>abs(gx))&&(abs(gy)>60||abs(gz)>60)){
+                        upright_gyro = false;
+                        Log.i("proximity:","其他方向的角速度太大了");
+                    }
+                    if(System.currentTimeMillis()-up_gyro_id>4000){
+                        upright_gyro = false;
+                        Log.i("proximity:","角速度时间过长");
                     }
                 }
         }
@@ -92,9 +103,9 @@ public class CloseAction extends BaseAction {
                 Log.i("proximity:", "成功了！" + success_id);
                 success_flag = true;
             }
-            else {
-                Log.i("proximity","稳定的时间不够" + (System.currentTimeMillis() - success_id));
-            }
+//            else {
+//                Log.i("proximity","稳定的时间不够" + (System.currentTimeMillis() - success_id));
+//            }
         }
     }
 
@@ -114,6 +125,9 @@ public class CloseAction extends BaseAction {
             success_id = -1;
             if (System.currentTimeMillis() - register_time > 10000) {
                 //TODO: 取消传感器注册
+//                for (ActionListener listener : actionListener) {
+//                    listener.onAction(new ActionResult("STOP_PROXIMITY"));
+//                }
 //                    sm.unregisterListener(this, sm.getDefaultSensor(Sensor.TYPE_PROXIMITY));
                 Log.i("proximity:", "接近光 时间过长，取消注册传感器");
                 reset();
