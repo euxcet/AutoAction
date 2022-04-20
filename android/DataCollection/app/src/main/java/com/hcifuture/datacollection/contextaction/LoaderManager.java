@@ -180,6 +180,7 @@ public class LoaderManager {
         classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
         loader = new ContextActionLoader(mService, classLoader);
 
+        /*
         Gson gson = new Gson();
         ContextActionConfigBean config = gson.fromJson(
                 FileUtils.getFileContent(BuildConfig.SAVE_PATH + "config.json"),
@@ -234,10 +235,11 @@ public class LoaderManager {
                 actionConfigs.add(actionConfig);
             }
         }
+        */
 
         RequestListener requestListener = this::handleRequest;
 
-        loader.startDetection(actionConfigs, actionListener, contextConfigs, contextListener, requestListener);
+        loader.startDetection(actionListener, contextListener, requestListener);
         /*
         NcnnInstance.init(mService,
                 BuildConfig.SAVE_PATH + "best.param",

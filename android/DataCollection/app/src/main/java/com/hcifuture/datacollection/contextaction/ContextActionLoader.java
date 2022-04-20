@@ -45,16 +45,14 @@ public class ContextActionLoader {
         }
     }
 
-    private Object newContainer(List<ActionConfig> actionConfig, ActionListener actionListener, List<ContextConfig> contextConfig, ContextListener contextListener, RequestListener requestListener) {
+    private Object newContainer(ActionListener actionListener, ContextListener contextListener, RequestListener requestListener) {
         try {
             return containerClass.getDeclaredConstructor(Context.class,
-                    List.class, ActionListener.class,
-                    List.class, ContextListener.class,
+                    ActionListener.class, ContextListener.class,
                     RequestListener.class,
                     boolean.class, boolean.class, String.class)
                     .newInstance(mContext,
-                            actionConfig, actionListener,
-                            contextConfig, contextListener,
+                            actionListener, contextListener,
                             requestListener,
                             true, false, BuildConfig.SAVE_PATH);
         } catch (Exception e) {
@@ -128,9 +126,9 @@ public class ContextActionLoader {
         );
     }
 
-    public void startDetection(List<ActionConfig> actionConfig, ActionListener actionListener, List<ContextConfig> contextConfig, ContextListener contextListener, RequestListener requestListener) {
+    public void startDetection(ActionListener actionListener, ContextListener contextListener, RequestListener requestListener) {
         try {
-            container = newContainer(actionConfig, actionListener, contextConfig, contextListener, requestListener);
+            container = newContainer(actionListener, contextListener, requestListener);
             Method onSensorChanged = getOnSensorChanged(container);
             startSensorManager(container, onSensorChanged);
             onAccessibilityEvent = getOnAccessibilityEvent(container);

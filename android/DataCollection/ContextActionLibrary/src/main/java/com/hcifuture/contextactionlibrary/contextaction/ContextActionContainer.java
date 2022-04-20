@@ -19,6 +19,7 @@ import android.view.accessibility.AccessibilityEvent;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.CloseCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ConfigCollector;
@@ -45,6 +46,7 @@ import com.hcifuture.contextactionlibrary.contextaction.context.physical.Proximi
 import com.hcifuture.contextactionlibrary.contextaction.context.physical.TableContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.event.BroadcastEvent;
@@ -65,6 +67,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class ContextActionContainer implements ActionListener, ContextListener {
@@ -216,14 +219,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public ContextActionContainer(Context context,
-                                  List<ActionConfig> actionConfig, ActionListener actionListener,
-                                  List<ContextConfig> contextConfig, ContextListener contextListener,
+                                  ActionListener actionListener, ContextListener contextListener,
                                   RequestListener requestListener,
                                   boolean fromDex, boolean openSensor, String SAVE_PATH) {
         this(context, new ArrayList<>(), new ArrayList<>(), requestListener, SAVE_PATH);
-        this.actionConfig = actionConfig;
+        // this.actionConfig = actionConfig;
         this.actionListener = actionListener;
-        this.contextConfig = contextConfig;
+        // this.contextConfig = contextConfig;
         this.contextListener = contextListener;
         this.requestListener = requestListener;
         this.fromDex = fromDex;
@@ -398,6 +400,112 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         collectors.add(timedCollector);
 
         if (fromDex) {
+            Gson gson = new Gson();
+            ContextActionConfigBean config = gson.fromJson(
+                    FileUtils.getFileContent(SAVE_PATH + "config.json"),
+                    ContextActionConfigBean.class
+            );
+
+            for (ContextActionConfigBean.ContextConfigBean bean: config.getContext()) {
+                if (bean == null) {
+                    continue;
+                }
+                ContextConfig contextConfig = new ContextConfig();
+                contextConfig.setContext(bean.getBuiltInContext());
+                contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                    contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                }
+                for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                    contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                }
+                for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                    contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                }
+                for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                    contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                }
+                switch (contextConfig.getContext()) {
+                    case "Proximity":
+                        ProximityContext proximityContext = new ProximityContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), scheduledExecutorService, futureList);
+                        contexts.add(proximityContext);
+                        break;
+                    case "Table":
+                        TableContext tableContext = new TableContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), scheduledExecutorService, futureList);
+                        contexts.add(tableContext);
+                        break;
+                    case "Informational":
+                        LogCollector informationLogCollector = collectorManager.newLogCollector("Informational", 8192);
+                        timedCollector.scheduleTimedLogUpload(informationLogCollector, 60000, 5000, "Informational");
+                        collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector));
+                        InformationalContext informationalContext = new InformationalContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener),informationLogCollector, scheduledExecutorService, futureList);
+                        contexts.add(informationalContext);
+                        break;
+                    case "Config":
+                        LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
+                        timedCollector.scheduleTimedLogUpload(configLogCollector, 60000, 5000, "Config");
+                        collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector));
+                        ConfigContext configContext = new ConfigContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), configLogCollector, scheduledExecutorService, futureList);
+                        contexts.add(configContext);
+                        break;
+                }
+            }
+
+            for (ContextActionConfigBean.ActionConfigBean bean: config.getAction()) {
+                if (bean == null) {
+                    continue;
+                }
+                ActionConfig actionConfig = new ActionConfig();
+                actionConfig.setAction(bean.getBuiltInAction());
+                actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                    actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                }
+                for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                    actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                }
+                for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                    actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                }
+                for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                    actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                }
+                switch (actionConfig.getAction()) {
+                    case "TapTap":
+                        tapTapAction = new TapTapAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                        actions.add(tapTapAction);
+                        break;
+                    case "TopTap":
+                        TopTapAction topTapAction = new TopTapAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                        actions.add(topTapAction);
+                        break;
+                    case "Flip":
+                        LogCollector FliplogCollector = collectorManager.newLogCollector("Flip", 800);
+                        collectors.add(new FlipCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, FliplogCollector));
+                        FlipAction flipAction = new FlipAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList, FliplogCollector);
+                        actions.add(flipAction);
+                        break;
+                    case "Close":
+                        CloseAction closeAction = new CloseAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                        actions.add(closeAction);
+                        break;
+                    case "Pocket":
+                        PocketAction pocketAction = new PocketAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                        actions.add(pocketAction);
+                        break;
+                    case "Example":
+                        LogCollector logCollector = collectorManager.newLogCollector("Log0", 100);
+                        timedCollector.scheduleTimedLogUpload(logCollector, 5000, 0, "Example");
+                        collectors.add(new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector));
+                        ExampleAction exampleAction = new ExampleAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), logCollector, scheduledExecutorService, futureList);
+                        actions.add(exampleAction);
+                        break;
+                }
+            }
+        }
+
+
+            /*
             for (int i = 0; i < actionConfig.size(); i++) {
                 ActionConfig config = actionConfig.get(i);
                 switch (config.getAction()) {
@@ -459,8 +567,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         break;
                 }
             }
-        }
 
+             */
         this.dataDistributor = new DataDistributor(actions, contexts);
         collectorManager.registerListener(dataDistributor);
 
