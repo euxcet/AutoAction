@@ -7,6 +7,8 @@ public class CollectorResult {
     private String dataString;
     private Data data;
     private int logLength;
+    private long startTimestamp;
+    private long endTimestamp;
 
     public int getLogLength() {
         return logLength;
@@ -22,6 +24,14 @@ public class CollectorResult {
 
     public String getDataString() {
         return dataString;
+    }
+
+    public long getStartTimestamp() {
+        return startTimestamp;
+    }
+
+    public long getEndTimestamp() {
+        return endTimestamp;
     }
 
     public CollectorResult setLogLength(int logLength) {
@@ -41,6 +51,16 @@ public class CollectorResult {
 
     public CollectorResult setDataString(String dataString) {
         this.dataString = dataString;
+        return this;
+    }
+
+    public CollectorResult setStartTimestamp(long startTimestamp) {
+        this.startTimestamp = startTimestamp;
+        return this;
+    }
+
+    public CollectorResult setEndTimestamp(long endTimestamp) {
+        this.endTimestamp = endTimestamp;
         return this;
     }
 }

@@ -54,22 +54,32 @@ public class ClickTrigger extends Trigger {
                 history.put(name, new ArrayList<>());
             }
             Objects.requireNonNull(history.get(name)).add(saveFile);
+            CompletableFuture<CollectorResult> ft;
+            long startTimestamp = System.currentTimeMillis();
             if (collector instanceof SynchronousCollector) { // sync
-                fts.add(FileUtils.writeStringToFile(((SynchronousCollector)collector).getData(config),
-                        saveFile, scheduledExecutorService, futureList));
+                ft = FileUtils.writeStringToFile(((SynchronousCollector)collector).getData(config),
+                        saveFile, scheduledExecutorService, futureList);
             } else if (collector instanceof AsynchronousCollector) {
                 if (collector instanceof IMUCollector) { // imu
-                    fts.add(((IMUCollector) collector).getData(config).thenCompose((v) ->
-                            FileUtils.writeIMUDataToFile(v, saveFile, scheduledExecutorService, futureList)));
-                } else if (collector instanceof AudioCollector) {
+                    ft = ((IMUCollector) collector).getData(config)
+                            .thenCompose(v -> FileUtils.writeIMUDataToFile(v, saveFile, scheduledExecutorService, futureList));
+                } else if (collector instanceof AudioCollector) { // audio
                     config.setAudioFilename(saveFile.getAbsolutePath());
-                    fts.add(((AsynchronousCollector)collector).getData(config));
+                    ft = ((AsynchronousCollector)collector).getData(config);
                     config.setAudioFilename("");
                 } else { // async
-                    fts.add(((AsynchronousCollector)collector).getData(config).thenCompose((v) ->
-                            FileUtils.writeStringToFile(v, saveFile, scheduledExecutorService, futureList)));
+                    ft = ((AsynchronousCollector)collector).getData(config)
+                            .thenCompose(v -> FileUtils.writeStringToFile(v, saveFile, scheduledExecutorService, futureList));
                 }
+            } else { // unknown collector
+                ft = CompletableFuture.completedFuture(null);
             }
+
+            fts.add(ft.thenApply(v -> {
+                v.setStartTimestamp(startTimestamp);
+                v.setEndTimestamp(System.currentTimeMillis());
+                return v;
+            }));
         }
 
         CompletableFuture<Void> allFutures = CompletableFuture.allOf(fts.toArray(new CompletableFuture[0]));

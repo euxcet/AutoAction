@@ -90,8 +90,10 @@ public abstract class BaseCollector {
     public CompletableFuture<CollectorResult> upload(CollectorResult result, String name, String commit) {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         try {
+            String newCommit = "Start: " + result.getStartTimestamp() + "\r\n" +
+                    "End: " + result.getEndTimestamp() + "\r\n" + commit;
             Log.e("Upload name", name);
-            Log.e("Upload commit", commit);
+            Log.e("Upload commit", newCommit);
             Log.e("Upload file", result.getSavePath());
             File file = new File(result.getSavePath());
             NetworkUtils.uploadCollectedData(mContext,
@@ -100,7 +102,7 @@ public abstract class BaseCollector {
                     name,
                     getUserID(),
                     System.currentTimeMillis(),
-                    commit,
+                    newCommit,
                     new StringCallback() {
                         @Override
                         public void onSuccess(Response<String> response) {
