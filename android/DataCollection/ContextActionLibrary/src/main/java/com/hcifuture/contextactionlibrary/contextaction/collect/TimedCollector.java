@@ -37,7 +37,7 @@ public class TimedCollector extends BaseCollector {
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
                 () -> {
                     try {
-                        triggerAndUpload(type, triggerConfig, "Timed_" + type, "Sensor: " + type);
+                        triggerAndUpload(type, triggerConfig, "Timed_" + type, "Fixed rate upload: " + period);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -56,7 +56,7 @@ public class TimedCollector extends BaseCollector {
         futureList.add(scheduledExecutorService.scheduleWithFixedDelay(
                 () -> {
                     try {
-                        triggerAndUpload(type, triggerConfig, "Timed_" + type, "Timed upload").join();
+                        triggerAndUpload(type, triggerConfig, "Timed_" + type, "Fixed delay upload: " + delay).join();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -71,7 +71,7 @@ public class TimedCollector extends BaseCollector {
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
                 () -> {
                     try {
-                        triggerAndUpload(logCollector, new TriggerConfig(), "Timed_" + name, "Timed log upload: " + name)
+                        triggerAndUpload(logCollector, new TriggerConfig(), "Timed_" + name, "Fixed rate upload: " + period + "\r\n" + "Log name: " + name)
                                 .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
                     } catch (Exception e) {
                         e.printStackTrace();
