@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BluetoothCollector extends AsynchronousCollector {
 
-    private BluetoothData data;
+    private final BluetoothData data;
 
     private BroadcastReceiver receiver;
     private IntentFilter bluetoothFilter;
@@ -46,9 +46,12 @@ public class BluetoothCollector extends AsynchronousCollector {
     private BluetoothManager bluetoothManager;
     private ScanCallback leScanCallback;
 
+    private final AtomicBoolean isCollecting;
+
     public BluetoothCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
         data = new BluetoothData();
+        isCollecting = new AtomicBoolean(false);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -61,48 +64,60 @@ public class BluetoothCollector extends AsynchronousCollector {
             return ft;
         }
 
-        data.clear();
-
-        // scan bonded (paired) devices
-        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-        if (pairedDevices.size() > 0) {
-            for (BluetoothDevice device: pairedDevices) {
-                insert(device, (short)0, isConnected(device), null, null);
-            }
-        }
-
-        // scan connected BLE devices
-        List<BluetoothDevice> connectedDevices = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
-        for (BluetoothDevice device : connectedDevices) {
-            insert(device, (short)0, isConnected(device), null, null);
-        }
-
-        // start classic bluetooth scanning
-        bluetoothAdapter.startDiscovery();
-        // start BLE scanning
-        BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
-        if (bluetoothLeScanner != null) {
-            bluetoothLeScanner.startScan(leScanCallback);
-        }
-
-        // Stops scanning after 10 seconds
-        futureList.add(scheduledExecutorService.schedule(() -> {
+        if (!isCollecting.get()) {
+            isCollecting.set(true);
             try {
-                synchronized (BluetoothCollector.this) {
-                    if (bluetoothLeScanner != null) {
-                        bluetoothLeScanner.stopScan(leScanCallback);
+                data.clear();
+
+                // scan bonded (paired) devices
+                Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+                if (pairedDevices.size() > 0) {
+                    for (BluetoothDevice device: pairedDevices) {
+                        insert(device, (short)0, isConnected(device), null, null);
                     }
-                    bluetoothAdapter.cancelDiscovery();
-                    CollectorResult result = new CollectorResult();
-                    result.setData(data.deepClone());
-                    result.setDataString(gson.toJson(result.getData(), BluetoothData.class));
-                    ft.complete(result);
                 }
+
+                // scan connected BLE devices
+                List<BluetoothDevice> connectedDevices = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
+                for (BluetoothDevice device : connectedDevices) {
+                    insert(device, (short)0, isConnected(device), null, null);
+                }
+
+                // start classic bluetooth scanning
+                bluetoothAdapter.startDiscovery();
+                // start BLE scanning
+                BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+                if (bluetoothLeScanner != null) {
+                    bluetoothLeScanner.startScan(leScanCallback);
+                }
+
+                // Stops scanning after 10 seconds
+                futureList.add(scheduledExecutorService.schedule(() -> {
+                    try {
+                        if (bluetoothLeScanner != null) {
+                            bluetoothLeScanner.stopScan(leScanCallback);
+                        }
+                        bluetoothAdapter.cancelDiscovery();
+                        CollectorResult result = new CollectorResult();
+                        result.setData(data.deepClone());
+                        result.setDataString(gson.toJson(result.getData(), BluetoothData.class));
+                        ft.complete(result);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        ft.completeExceptionally(e);
+                    } finally {
+                        isCollecting.set(false);
+                    }
+                }, config.getBluetoothScanTime(), TimeUnit.MILLISECONDS));
             } catch (Exception e) {
                 e.printStackTrace();
                 ft.completeExceptionally(e);
+                isCollecting.set(false);
             }
-        }, config.getBluetoothScanTime(), TimeUnit.MILLISECONDS));
+        } else {
+            ft.completeExceptionally(new Exception("Another task of Bluetooth scanning is taking place!"));
+        }
+
         return ft;
     }
 

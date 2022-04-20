@@ -29,17 +29,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WifiCollector extends AsynchronousCollector {
 
-    private WifiManager wifiManager;
-
     private WifiData data;
 
+    private WifiManager wifiManager;
     private BroadcastReceiver receiver;
-
     private IntentFilter wifiFilter;
+
+    private final AtomicBoolean isCollecting;
 
     public WifiCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
         this.data = new WifiData();
+        isCollecting = new AtomicBoolean(false);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -82,30 +83,42 @@ public class WifiCollector extends AsynchronousCollector {
             return ft;
         }
 
-        data.clear();
-        WifiInfo info = wifiManager.getConnectionInfo();
-        if (info != null && info.getBSSID() != null) {
-            data.insert(new SingleWifiData(info.getSSID(), info.getBSSID(),
-                    null,
-                    0, info.getFrequency(),
-                    SystemClock.elapsedRealtimeNanos()/1000,
-                    0,
-                    0, 0, true));
-        }
-        wifiManager.startScan();
-        futureList.add(scheduledExecutorService.schedule(() -> {
+        if (!isCollecting.get()) {
+            isCollecting.set(true);
             try {
-                synchronized (WifiCollector.this) {
-                    CollectorResult result = new CollectorResult();
-                    result.setData(data.deepClone());
-                    result.setDataString(gson.toJson(result.getData(), WifiData.class));
-                    ft.complete(result);
+                data.clear();
+                WifiInfo info = wifiManager.getConnectionInfo();
+                if (info != null && info.getBSSID() != null) {
+                    data.insert(new SingleWifiData(info.getSSID(), info.getBSSID(),
+                            null,
+                            0, info.getFrequency(),
+                            SystemClock.elapsedRealtimeNanos()/1000,
+                            0,
+                            0, 0, true));
                 }
+                wifiManager.startScan();
+                futureList.add(scheduledExecutorService.schedule(() -> {
+                    try {
+                        CollectorResult result = new CollectorResult();
+                        result.setData(data.deepClone());
+                        result.setDataString(gson.toJson(result.getData(), WifiData.class));
+                        ft.complete(result);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        ft.completeExceptionally(e);
+                    } finally {
+                        isCollecting.set(false);
+                    }
+                }, config.getWifiScanTime(), TimeUnit.MILLISECONDS));
             } catch (Exception e) {
                 e.printStackTrace();
                 ft.completeExceptionally(e);
+                isCollecting.set(false);
             }
-        }, config.getWifiScanTime(), TimeUnit.MILLISECONDS));
+        } else {
+            ft.completeExceptionally(new Exception("Another task of Wifi scanning is taking place!"));
+        }
+
         return ft;
     }
 

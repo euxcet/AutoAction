@@ -3,13 +3,11 @@ package com.hcifuture.contextactionlibrary.sensor.collector.async;
 import android.content.Context;
 import android.media.MediaRecorder;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
-import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 
 import java.io.File;
@@ -25,11 +23,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AudioCollector extends AsynchronousCollector {
     private MediaRecorder mMediaRecorder;
     private File saveFile;
-    private AtomicBoolean isRecording;
+    private final AtomicBoolean isCollecting;
 
     public AudioCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
-        isRecording = new AtomicBoolean(false);
+        isCollecting = new AtomicBoolean(false);
     }
 
     @Override
@@ -106,13 +104,14 @@ public class AudioCollector extends AsynchronousCollector {
             ft.completeExceptionally(new Exception("NULL audio filename!"));
             return ft;
         }
-        saveFile = new File(config.getAudioFilename());
-        if (!Objects.requireNonNull(saveFile.getParentFile()).exists()) {
-            saveFile.getParentFile().mkdirs();
-        }
-        if (!isRecording.get()) {
-            isRecording.set(true);
+        if (!isCollecting.get()) {
+            isCollecting.set(true);
             try {
+                saveFile = new File(config.getAudioFilename());
+                if (!Objects.requireNonNull(saveFile.getParentFile()).exists()) {
+                    saveFile.getParentFile().mkdirs();
+                }
+
                 mMediaRecorder = new MediaRecorder();
                 mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
                 mMediaRecorder.setAudioChannels(2);
@@ -130,16 +129,18 @@ public class AudioCollector extends AsynchronousCollector {
                             mMediaRecorder.release();
                             mMediaRecorder = null;
                         }
-                        isRecording.set(false);
                         ft.complete(new CollectorResult().setSavePath(saveFile.getAbsolutePath()));
                     } catch (Exception e) {
                         e.printStackTrace();
                         ft.completeExceptionally(e);
+                    } finally {
+                        isCollecting.set(false);
                     }
                 }, config.getAudioLength(), TimeUnit.MILLISECONDS);
             } catch (IOException e) {
                 e.printStackTrace();
                 ft.completeExceptionally(e);
+                isCollecting.set(false);
             }
         } else {
             ft.completeExceptionally(new Exception("Another task of audio recording is taking place!"));
