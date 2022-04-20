@@ -78,6 +78,7 @@ public class ClickTrigger extends Trigger {
             fts.add(ft.thenApply(v -> {
                 v.setStartTimestamp(startTimestamp);
                 v.setEndTimestamp(System.currentTimeMillis());
+                v.setType(collector.getType());
                 return v;
             }));
         }

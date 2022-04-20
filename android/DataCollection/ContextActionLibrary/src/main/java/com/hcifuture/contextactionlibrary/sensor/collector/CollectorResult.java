@@ -9,6 +9,7 @@ public class CollectorResult {
     private int logLength;
     private long startTimestamp;
     private long endTimestamp;
+    private CollectorManager.CollectorType type = CollectorManager.CollectorType.All;
 
     public int getLogLength() {
         return logLength;
@@ -32,6 +33,10 @@ public class CollectorResult {
 
     public long getEndTimestamp() {
         return endTimestamp;
+    }
+
+    public CollectorManager.CollectorType getType() {
+        return type;
     }
 
     public CollectorResult setLogLength(int logLength) {
@@ -61,6 +66,11 @@ public class CollectorResult {
 
     public CollectorResult setEndTimestamp(long endTimestamp) {
         this.endTimestamp = endTimestamp;
+        return this;
+    }
+
+    public CollectorResult setType(CollectorManager.CollectorType type) {
+        this.type = type;
         return this;
     }
 }

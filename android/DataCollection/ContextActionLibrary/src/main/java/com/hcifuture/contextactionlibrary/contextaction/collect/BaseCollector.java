@@ -90,8 +90,11 @@ public abstract class BaseCollector {
     public CompletableFuture<CollectorResult> upload(CollectorResult result, String name, String commit) {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         try {
-            String newCommit = "Start: " + result.getStartTimestamp() + "\r\n" +
-                    "End: " + result.getEndTimestamp() + "\r\n" + commit;
+            long uploadTime = System.currentTimeMillis();
+            String newCommit = "Type: " + ((result.getType() == null)? "Unknown" : result.getType()) + "\r\n" +
+                    "Start: " + result.getStartTimestamp() + "\r\n" +
+                    "End: " + result.getEndTimestamp() + "\r\n" +
+                    "Upload: " + uploadTime + "\r\n" + commit;
             Log.e("Upload name", name);
             Log.e("Upload commit", newCommit);
             Log.e("Upload file", result.getSavePath());
@@ -101,7 +104,7 @@ public abstract class BaseCollector {
                     0,
                     name,
                     getUserID(),
-                    System.currentTimeMillis(),
+                    uploadTime,
                     newCommit,
                     new StringCallback() {
                         @Override
