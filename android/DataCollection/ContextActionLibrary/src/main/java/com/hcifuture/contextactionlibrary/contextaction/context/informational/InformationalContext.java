@@ -247,21 +247,21 @@ public class InformationalContext extends BaseContext {
     @Override
     public void getContext() {
 
-        StringBuilder sb = new StringBuilder("");
-        sb.append("Informational:");
-        sb.append(lastTask.getName());
-        sb.append("#");
-        sb.append(lastPage.getTitle());
-        sb.append("#");
-        sb.append(lastActivityName);
-        sb.append("#");
-        sb.append(lastPackageName);
-
-        if (contextListener != null) {
-            for (ContextListener listener: contextListener) {
-                listener.onContext(new ContextResult(sb.toString()));
-            }
-        }
+//        StringBuilder sb = new StringBuilder("");
+//        sb.append("Informational:");
+//        sb.append(lastTask.getName());
+//        sb.append("#");
+//        sb.append(lastPage.getTitle());
+//        sb.append("#");
+//        sb.append(lastActivityName);
+//        sb.append("#");
+//        sb.append(lastPackageName);
+//
+//        if (contextListener != null) {
+//            for (ContextListener listener: contextListener) {
+//                listener.onContext(new ContextResult(sb.toString()));
+//            }
+//        }
     }
 
     public void initFromFile()
