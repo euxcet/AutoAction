@@ -104,7 +104,7 @@ public class ContextActionLoader {
 
     private Method getOnKeyEvent(Object container) {
         try {
-            Method method = containerClass.getMethod("onKeyEventDex", BroadcastEvent.class);
+            Method method = containerClass.getMethod("onKeyEventDex", KeyEvent.class);
             return method;
         } catch (Exception e) {
             e.printStackTrace();
