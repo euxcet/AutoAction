@@ -44,7 +44,7 @@ public class ConfigCollector extends BaseCollector {
             type = CollectorManager.CollectorType.NonIMU;
         }
         if (type != null) {
-            triggerAndUpload(type, triggerConfig, "Config_" + type, "Sensor: " + type);
+            triggerAndUpload(type, triggerConfig, "Config_" + type, "Context: " + context.getContext());
         }
     }
 }
