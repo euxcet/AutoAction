@@ -197,6 +197,7 @@ public class ConfigContext extends BaseContext {
             }
         } else if ("KeyEvent".equals(type)) {
             record = true;
+            notifyAudio();
         }
 
         if (record) {
