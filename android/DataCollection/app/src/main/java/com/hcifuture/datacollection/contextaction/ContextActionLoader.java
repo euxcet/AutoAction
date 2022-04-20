@@ -3,6 +3,7 @@ package com.hcifuture.datacollection.contextaction;
 import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.hcifuture.datacollection.BuildConfig;
@@ -32,7 +33,7 @@ public class ContextActionLoader {
     private ProximitySensorManager proximitySensorManager;
 
     private Method onAccessibilityEvent;
-    private Method onBroadcastEvent;
+    private Method onKeyEvent;
 
     public ContextActionLoader(Context context, DexClassLoader classLoader) {
         this.mContext = context;
@@ -101,9 +102,9 @@ public class ContextActionLoader {
         return null;
     }
 
-    private Method getOnBroadcastEvent(Object container) {
+    private Method getOnKeyEvent(Object container) {
         try {
-            Method method = containerClass.getMethod("onBroadcastEventDex", BroadcastEvent.class);
+            Method method = containerClass.getMethod("onKeyEventDex", BroadcastEvent.class);
             return method;
         } catch (Exception e) {
             e.printStackTrace();
@@ -133,7 +134,7 @@ public class ContextActionLoader {
             Method onSensorChanged = getOnSensorChanged(container);
             startSensorManager(container, onSensorChanged);
             onAccessibilityEvent = getOnAccessibilityEvent(container);
-            onBroadcastEvent = getOnBroadcastEvent(container);
+            onKeyEvent = getOnKeyEvent(container);
             startContainer(container);
             imuSensorManager.start();
             proximitySensorManager.start();
@@ -176,10 +177,10 @@ public class ContextActionLoader {
         }
     }
 
-    public void onBroadcastEvent(BroadcastEvent event) {
+    public void onKeyEvent(KeyEvent event) {
         try {
-            if (onBroadcastEvent != null) {
-                onBroadcastEvent.invoke(container, event);
+            if (onKeyEvent != null) {
+                onKeyEvent.invoke(container, event);
             }
         } catch (Exception e) {
             e.printStackTrace();

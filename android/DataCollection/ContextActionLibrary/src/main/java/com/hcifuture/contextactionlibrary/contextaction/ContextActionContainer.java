@@ -1,11 +1,22 @@
 package com.hcifuture.contextactionlibrary.contextaction;
 
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.database.ContentObserver;
 import android.hardware.SensorEvent;
+import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.Handler;
+import android.provider.Settings;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
@@ -48,12 +59,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+@RequiresApi(api = Build.VERSION_CODES.N)
 public class ContextActionContainer implements ActionListener, ContextListener {
     private Context mContext;
 
@@ -90,6 +103,79 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     private static String SAVE_PATH;
 
+    private final CustomBroadcastReceiver mBroadcastReceiver;
+    private final CustomContentObserver mContentObserver;
+    private final List<Uri> mRegURIs;
+
+    // listening
+    private final Uri [] listenedURIs = {
+            Settings.System.CONTENT_URI,
+            Settings.Global.CONTENT_URI,
+    };
+    private final String [] listenedActions = {
+            Intent.ACTION_AIRPLANE_MODE_CHANGED,
+            Intent.ACTION_APPLICATION_RESTRICTIONS_CHANGED,
+            Intent.ACTION_BATTERY_LOW,
+            Intent.ACTION_BATTERY_OKAY,
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_CONFIGURATION_CHANGED,
+            Intent.ACTION_DOCK_EVENT,
+            Intent.ACTION_DREAMING_STARTED,
+            Intent.ACTION_DREAMING_STOPPED,
+            Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE,
+            Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE,
+            Intent.ACTION_HEADSET_PLUG,
+            Intent.ACTION_INPUT_METHOD_CHANGED,
+            Intent.ACTION_LOCALE_CHANGED,
+            Intent.ACTION_LOCKED_BOOT_COMPLETED,
+            Intent.ACTION_MEDIA_BAD_REMOVAL,
+            Intent.ACTION_MEDIA_BUTTON,
+            Intent.ACTION_MEDIA_CHECKING,
+            Intent.ACTION_MEDIA_EJECT,
+            Intent.ACTION_MEDIA_MOUNTED,
+            Intent.ACTION_MEDIA_NOFS,
+            Intent.ACTION_MEDIA_REMOVED,
+            Intent.ACTION_MEDIA_SCANNER_FINISHED,
+            Intent.ACTION_MEDIA_SCANNER_STARTED,
+            Intent.ACTION_MEDIA_SHARED,
+            Intent.ACTION_MEDIA_UNMOUNTABLE,
+            Intent.ACTION_MEDIA_UNMOUNTED,
+            Intent.ACTION_MY_PACKAGE_REPLACED,
+            Intent.ACTION_PACKAGES_SUSPENDED,
+            Intent.ACTION_PACKAGES_UNSUSPENDED,
+            Intent.ACTION_PACKAGE_ADDED,
+            Intent.ACTION_PACKAGE_CHANGED,
+            Intent.ACTION_PACKAGE_DATA_CLEARED,
+            Intent.ACTION_PACKAGE_FIRST_LAUNCH,
+            Intent.ACTION_PACKAGE_FULLY_REMOVED,
+            Intent.ACTION_PACKAGE_NEEDS_VERIFICATION,
+            Intent.ACTION_PACKAGE_REMOVED,
+            Intent.ACTION_PACKAGE_REPLACED,
+            Intent.ACTION_PACKAGE_RESTARTED,
+            Intent.ACTION_PACKAGE_VERIFIED,
+            Intent.ACTION_POWER_CONNECTED,
+            Intent.ACTION_POWER_DISCONNECTED,
+            Intent.ACTION_PROVIDER_CHANGED,
+            Intent.ACTION_REBOOT,
+            Intent.ACTION_SCREEN_OFF,
+            Intent.ACTION_SCREEN_ON,
+            Intent.ACTION_SHUTDOWN,
+            Intent.ACTION_TIMEZONE_CHANGED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_UID_REMOVED,
+            Intent.ACTION_USER_BACKGROUND,
+            Intent.ACTION_USER_FOREGROUND,
+            Intent.ACTION_USER_PRESENT,
+            Intent.ACTION_USER_UNLOCKED,
+            // Bluetooth related
+            BluetoothDevice.ACTION_ACL_CONNECTED,
+            BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED,
+            BluetoothDevice.ACTION_ACL_DISCONNECTED,
+            // WiFi related
+            WifiManager.NETWORK_STATE_CHANGED_ACTION,
+            WifiManager.WIFI_STATE_CHANGED_ACTION
+    };
+
     public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener, String SAVE_PATH) {
         this.mContext = context;
         this.actions = actions;
@@ -123,6 +209,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         this.futureList = new ArrayList<>();
 
         // scheduleCleanData();
+
+        mBroadcastReceiver = new CustomBroadcastReceiver();
+        mContentObserver = new CustomContentObserver(new Handler());
+        mRegURIs = new ArrayList<>();
     }
 
     public ContextActionContainer(Context context,
@@ -180,6 +270,12 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void stop() {
+        // unregister broadcast receiver
+        mContext.unregisterReceiver(mBroadcastReceiver);
+        // unregister content observer
+        mContext.getContentResolver().unregisterContentObserver(mContentObserver);
+        mRegURIs.clear();
+
         /*
         if (openSensor) {
             for (BaseSensorManager sensorManager: sensorManagers) {
@@ -368,6 +464,30 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         this.dataDistributor = new DataDistributor(actions, contexts);
         collectorManager.registerListener(dataDistributor);
 
+        // register broadcast receiver
+        IntentFilter intentFilter = new IntentFilter();
+//        if (config.getListenedSystemActions() != null) {
+//            config.getListenedSystemActions().stream().filter(Objects::nonNull).forEach(intentFilter::addAction);
+//        }
+//        if (!config.isOverrideSystemActions()) {
+//            Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
+//        }
+//        Log.e("config.isOverrideSystemActions", Boolean.toString(config.isOverrideSystemActions()));
+        Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
+        mContext.registerReceiver(mBroadcastReceiver, intentFilter);
+        intentFilter.actionsIterator().forEachRemaining(item -> Log.e("Register broadcast", item));
+
+        // register content observer
+//        if (config.getListenedSystemURIs() != null) {
+//            config.getListenedSystemURIs().stream().filter(Objects::nonNull).map(Uri::parse).forEach(this::registerURI);
+//        }
+//        if (!config.isOverrideSystemURIs()) {
+//            Arrays.stream(listenedURIs).forEach(this::registerURI);
+//        }
+//        Log.e("config.isOverrideSystemURIs", Boolean.toString(config.isOverrideSystemURIs()));
+        Arrays.stream(listenedURIs).forEach(this::registerURI);
+        mRegURIs.forEach(uri -> Log.e("Register URI", uri.toString()));
+
         // init sensor
         /*
         sensorManagers.add(new IMUSensorManager(mContext,
@@ -446,15 +566,25 @@ public class ContextActionContainer implements ActionListener, ContextListener {
          */
     }
 
+    public void onKeyEventDex(KeyEvent event) {
+        BroadcastEvent bc_event = new BroadcastEvent(
+                System.currentTimeMillis(),
+                "KeyEvent://"+event.getAction()+"/"+event.getKeyCode(),
+                "",
+                "KeyEvent"
+        );
+        bc_event.getExtras().putInt("action", event.getAction());
+        bc_event.getExtras().putInt("code", event.getKeyCode());
+        bc_event.getExtras().putInt("source", event.getSource());
+        bc_event.getExtras().putLong("eventTime", event.getEventTime());
+        bc_event.getExtras().putLong("downTime", event.getDownTime());
+        onBroadcastEventDex(bc_event);
+    }
+
     public void onBroadcastEventDex(BroadcastEvent event) {
         for (BaseContext context: contexts) {
             context.onBroadcastEvent(event);
         }
-        /*
-        for (BaseSensorManager sensorManager: sensorManagers) {
-            sensorManager.onBroadcastEventDex(event);
-        }
-         */
     }
 
     /*
@@ -535,6 +665,51 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
                 collector.onContext(context);
+            }
+        }
+    }
+
+    class CustomBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            BroadcastEvent event = new BroadcastEvent(
+                    System.currentTimeMillis(),
+                    intent.getAction(),
+                    "",
+                    "BroadcastReceive",
+                    intent.getExtras()
+            );
+            onBroadcastEventDex(event);
+        }
+    }
+
+    class CustomContentObserver extends ContentObserver {
+        public CustomContentObserver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            onChange(selfChange, null);
+        }
+
+        @Override
+        public void onChange(boolean selfChange, @Nullable Uri uri) {
+            BroadcastEvent event = new BroadcastEvent(
+                    System.currentTimeMillis(),
+                    (uri == null)? "uri_null" : uri.toString(),
+                    "",
+                    "ContentChange"
+            );
+            onBroadcastEventDex(event);
+        }
+    }
+
+    void registerURI(Uri uri) {
+        if (uri != null) {
+            if (!mRegURIs.contains(uri)) {
+                mContext.getContentResolver().registerContentObserver(uri, true, mContentObserver);
+                mRegURIs.add(uri);
             }
         }
     }

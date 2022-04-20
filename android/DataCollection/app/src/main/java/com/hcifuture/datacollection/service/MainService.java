@@ -101,18 +101,7 @@ public class MainService extends AccessibilityService implements ContextListener
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
         if (loaderManager != null) {
-            BroadcastEvent bc_event = new BroadcastEvent(
-                    System.currentTimeMillis(),
-                    "KeyEvent://"+event.getAction()+"/"+event.getKeyCode(),
-                    "",
-                    "KeyEvent"
-            );
-            bc_event.getExtras().putInt("action", event.getAction());
-            bc_event.getExtras().putInt("code", event.getKeyCode());
-            bc_event.getExtras().putInt("source", event.getSource());
-            bc_event.getExtras().putLong("eventTime", event.getEventTime());
-            bc_event.getExtras().putLong("downTime", event.getDownTime());
-            loaderManager.onBroadcastEvent(bc_event);
+            loaderManager.onKeyEvent(event);
         }
         return super.onKeyEvent(event);
     }
