@@ -53,8 +53,8 @@ public class ContextActionConfigBean {
     private List<ActionConfigBean> action;
     private List<String> listenedSystemActions;
     private List<String> listenedSystemURIs;
-    private boolean overrideSystemActions;
-    private boolean overrideSystemURIs;
+    private boolean overrideSystemActions = false;
+    private boolean overrideSystemURIs = false;
 
     public void setContext(List<ContextConfigBean> context) {
         this.context = context;

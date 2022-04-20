@@ -270,65 +270,74 @@ public class LoaderManager {
         List<ContextConfig> contextConfigs = new ArrayList<>();
         List<ActionConfig> actionConfigs = new ArrayList<>();
 
-
-        for (ContextActionConfigBean.ContextConfigBean bean: config.getContext()) {
-            if (bean == null)
-                continue;
-            ContextConfig contextConfig = new ContextConfig();
-            contextConfig.setContext(bean.getBuiltInContext());
-            contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
-            for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
-                contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+        if (config.getContext() != null) {
+            for (ContextActionConfigBean.ContextConfigBean bean: config.getContext()) {
+                if (bean == null)
+                    continue;
+                ContextConfig contextConfig = new ContextConfig();
+                contextConfig.setContext(bean.getBuiltInContext());
+                contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                    contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                }
+                for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                    contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                }
+                for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                    contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                }
+                for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                    contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                }
+                contextConfigs.add(contextConfig);
             }
-            for (int i = 0; i < bean.getLongParamKey().size(); i++) {
-                contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
-            }
-            for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
-                contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
-            }
-            for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
-                contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
-            }
-            contextConfigs.add(contextConfig);
         }
 
-        for (ContextActionConfigBean.ActionConfigBean bean: config.getAction()) {
-            if (bean == null)
-                continue;
-            ActionConfig actionConfig = new ActionConfig();
-            actionConfig.setAction(bean.getBuiltInAction());
-            actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
-            for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
-                actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+        if (config.getAction() != null) {
+            for (ContextActionConfigBean.ActionConfigBean bean: config.getAction()) {
+                if (bean == null)
+                    continue;
+                ActionConfig actionConfig = new ActionConfig();
+                actionConfig.setAction(bean.getBuiltInAction());
+                actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                    actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                }
+                for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                    actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                }
+                for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                    actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                }
+                for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                    actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                }
+                actionConfigs.add(actionConfig);
             }
-            for (int i = 0; i < bean.getLongParamKey().size(); i++) {
-                actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
-            }
-            for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
-                actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
-            }
-            for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
-                actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
-            }
-            actionConfigs.add(actionConfig);
         }
 
         RequestListener requestListener = this::handleRequest;
 
         // register broadcast receiver
         IntentFilter intentFilter = new IntentFilter();
-        config.getListenedSystemActions().stream().filter(Objects::nonNull).forEach(intentFilter::addAction);
+        if (config.getListenedSystemActions() != null) {
+            config.getListenedSystemActions().stream().filter(Objects::nonNull).forEach(intentFilter::addAction);
+        }
         if (!config.isOverrideSystemActions()) {
             Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
         }
+        Log.e("config.isOverrideSystemActions()", Boolean.toString(config.isOverrideSystemActions()));
         intentFilter.actionsIterator().forEachRemaining(item -> Log.e("Register broadcast", item));
         mService.registerReceiver(mBroadcastReceiver, intentFilter);
 
         // register content observer
-        config.getListenedSystemURIs().stream().filter(Objects::nonNull).map(Uri::parse).forEach(this::registerURI);
+        if (config.getListenedSystemURIs() != null) {
+            config.getListenedSystemURIs().stream().filter(Objects::nonNull).map(Uri::parse).forEach(this::registerURI);
+        }
         if (!config.isOverrideSystemURIs()) {
             Arrays.stream(listenedURIs).forEach(this::registerURI);
         }
+        Log.e("config.isOverrideSystemURIs()", Boolean.toString(config.isOverrideSystemURIs()));
         mRegURIs.forEach(uri -> Log.e("Register URI", uri.toString()));
 
         loader.startDetection(actionConfigs, actionListener, contextConfigs, contextListener, requestListener);
