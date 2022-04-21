@@ -502,6 +502,28 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         break;
                 }
             }
+
+            // register broadcast receiver
+            IntentFilter intentFilter = new IntentFilter();
+            if (config.getListenedSystemActions() != null) {
+                config.getListenedSystemActions().stream().filter(Objects::nonNull).forEach(intentFilter::addAction);
+            }
+            if (!config.isOverrideSystemActions()) {
+                Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
+            }
+            mContext.registerReceiver(mBroadcastReceiver, intentFilter);
+            Log.e("OverrideSystemActions", Boolean.toString(config.isOverrideSystemActions()));
+            intentFilter.actionsIterator().forEachRemaining(item -> Log.e("Register broadcast", item));
+
+            // register content observer
+            if (config.getListenedSystemURIs() != null) {
+                config.getListenedSystemURIs().stream().filter(Objects::nonNull).map(Uri::parse).forEach(this::registerURI);
+            }
+            if (!config.isOverrideSystemURIs()) {
+                Arrays.stream(listenedURIs).forEach(this::registerURI);
+            }
+            Log.e("OverrideSystemURIs", Boolean.toString(config.isOverrideSystemURIs()));
+            mRegURIs.forEach(uri -> Log.e("Register URI", uri.toString()));
         }
 
 
@@ -572,29 +594,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         this.dataDistributor = new DataDistributor(actions, contexts);
         collectorManager.registerListener(dataDistributor);
 
-        // register broadcast receiver
-        IntentFilter intentFilter = new IntentFilter();
-//        if (config.getListenedSystemActions() != null) {
-//            config.getListenedSystemActions().stream().filter(Objects::nonNull).forEach(intentFilter::addAction);
-//        }
-//        if (!config.isOverrideSystemActions()) {
-//            Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
-//        }
-//        Log.e("config.isOverrideSystemActions", Boolean.toString(config.isOverrideSystemActions()));
-        Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
-        mContext.registerReceiver(mBroadcastReceiver, intentFilter);
-        intentFilter.actionsIterator().forEachRemaining(item -> Log.e("Register broadcast", item));
-
-        // register content observer
-//        if (config.getListenedSystemURIs() != null) {
-//            config.getListenedSystemURIs().stream().filter(Objects::nonNull).map(Uri::parse).forEach(this::registerURI);
-//        }
-//        if (!config.isOverrideSystemURIs()) {
-//            Arrays.stream(listenedURIs).forEach(this::registerURI);
-//        }
-//        Log.e("config.isOverrideSystemURIs", Boolean.toString(config.isOverrideSystemURIs()));
-        Arrays.stream(listenedURIs).forEach(this::registerURI);
-        mRegURIs.forEach(uri -> Log.e("Register URI", uri.toString()));
 
         // init sensor
         /*
