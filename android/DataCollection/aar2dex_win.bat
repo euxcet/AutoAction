@@ -1,5 +1,6 @@
 @echo off
 pushd .
+set server_addr=127.0.0.1:6125
 
 chdir ContextActionLibrary\build\outputs\aar
 rmdir /S /Q contextactionlibrary-debug
@@ -17,14 +18,16 @@ call "%D8_PATH%" classes.jar
 if errorlevel 1 goto err else goto checkarg
 
 :checkarg
-if [%~1]==[-s] (
-	if [%~2]==[] (set server_addr=127.0.0.1:6125) else (set server_addr=%~2)
-	goto server
-) else goto noerr
+if [%~1]==[-s] if not [%~2]==[] set server_addr=%~2
+goto updatefile
 
-:server
+:updatefile
 echo Updating server at %server_addr%
-curl -d "" http://%server_addr%/md5
+curl -XPOST http://%server_addr%/file -F "file=@classes.dex"
+if errorlevel 1 goto err else goto updatemd5
+
+:updatemd5
+curl -XPOST http://%server_addr%/md5
 if errorlevel 1 goto err else goto noerr
 
 :noerr
