@@ -2,7 +2,7 @@ package com.hcifuture.shared.communicate.result;
 
 public class ContextResult {
     private String context;
-    private String timestamp;
+    private long timestamp;
 
     public ContextResult(String context) {
         this.context = context;
@@ -12,7 +12,7 @@ public class ContextResult {
         this.context = context;
     }
 
-    public void setTimestamp(String timestamp) {
+    public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -20,7 +20,7 @@ public class ContextResult {
         return context;
     }
 
-    public String getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 }

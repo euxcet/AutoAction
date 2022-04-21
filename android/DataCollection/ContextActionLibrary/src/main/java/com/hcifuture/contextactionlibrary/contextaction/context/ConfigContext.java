@@ -44,8 +44,6 @@ public class ConfigContext extends BaseContext {
     private int brightness;
     private final HashMap<String, Integer> volume;
 
-    private long last_audio;
-    private long last_nonimu;
     private long last_record_all;
 
     private final LogCollector logCollector;
@@ -77,8 +75,6 @@ public class ConfigContext extends BaseContext {
         volume.put("volume_voice_bt_a2dp", 0);
         volume.put("volume_tts_bt_a2dp", 0);
 
-        last_audio = 0;
-        last_nonimu = 0;
         last_record_all = 0;
     }
 
@@ -160,7 +156,7 @@ public class ConfigContext extends BaseContext {
                     } else {
                         jsonSilentPut(json, "mode", "unknown");
                     }
-                    notifyNonIMU();
+                    notifyNonIMU(timestamp);
                 }
                 if (database_key.startsWith("volume_")) {
                     if (!volume.containsKey(database_key)) {
@@ -170,7 +166,7 @@ public class ConfigContext extends BaseContext {
                     // record volume value difference and update
                     int diff = value - volume.put(database_key, value);
                     jsonSilentPut(json, "diff", diff);
-                    notifyAudio();
+                    notifyAudio(timestamp);
                 }
             }
         } else if ("BroadcastReceive".equals(type)) {
@@ -197,7 +193,7 @@ public class ConfigContext extends BaseContext {
             }
         } else if ("KeyEvent".equals(type)) {
             record = true;
-            notifyAudio();
+            notifyAudio(timestamp);
         }
 
         if (record) {
@@ -279,34 +275,24 @@ public class ConfigContext extends BaseContext {
         jsonSilentPut(json, key, jsonArray);
     }
 
-    void notifyAudio() {
-        long current_call = System.currentTimeMillis();
-        // if adjacent calls are too close, only notify once
-        if (current_call - last_audio >= 10000) {
-            if (contextListener != null) {
-                Log.e("ConfigContext", "broadcast context: " + NEED_AUDIO);
-                for (ContextListener listener: contextListener) {
-                    ContextResult contextResult = new ContextResult(NEED_AUDIO);
-                    contextResult.setTimestamp(Long.toString(current_call));
-                    listener.onContext(contextResult);
-                }
-                last_audio = current_call;
+    void notifyAudio(long timestamp) {
+        if (contextListener != null) {
+            Log.e("ConfigContext", "broadcast context: " + NEED_AUDIO);
+            for (ContextListener listener: contextListener) {
+                ContextResult contextResult = new ContextResult(NEED_AUDIO);
+                contextResult.setTimestamp(timestamp);
+                listener.onContext(contextResult);
             }
         }
     }
 
-    void notifyNonIMU() {
-        long current_call = System.currentTimeMillis();
-        // if adjacent calls are too close, only notify once
-        if (current_call - last_nonimu >= 500) {
-            if (contextListener != null) {
-                Log.e("ConfigContext", "broadcast context: " + NEED_NONIMU);
-                for (ContextListener listener: contextListener) {
-                    ContextResult contextResult = new ContextResult(NEED_NONIMU);
-                    contextResult.setTimestamp(Long.toString(current_call));
-                    listener.onContext(contextResult);
-                }
-                last_nonimu = current_call;
+    void notifyNonIMU(long timestamp) {
+        if (contextListener != null) {
+            Log.e("ConfigContext", "broadcast context: " + NEED_NONIMU);
+            for (ContextListener listener: contextListener) {
+                ContextResult contextResult = new ContextResult(NEED_NONIMU);
+                contextResult.setTimestamp(timestamp);
+                listener.onContext(contextResult);
             }
         }
     }

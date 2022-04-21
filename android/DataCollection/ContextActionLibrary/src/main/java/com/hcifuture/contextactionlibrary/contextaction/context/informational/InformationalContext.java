@@ -106,7 +106,7 @@ public class InformationalContext extends BaseContext {
             if (contextListener != null) {
                 for (ContextListener listener: contextListener) {
                     ContextResult contextResult = new ContextResult("UserAction");
-                    contextResult.setTimestamp(String.valueOf(lastIMUTime));
+                    contextResult.setTimestamp(lastIMUTime);
                     listener.onContext(contextResult);
                 }
             }
