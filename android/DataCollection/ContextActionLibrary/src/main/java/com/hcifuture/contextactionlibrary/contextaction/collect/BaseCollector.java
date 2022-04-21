@@ -91,10 +91,10 @@ public abstract class BaseCollector {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         try {
             long uploadTime = System.currentTimeMillis();
-            String newCommit = "Type: " + ((result.getType() == null)? "Unknown" : result.getType()) + "\r\n" +
-                    "Start: " + result.getStartTimestamp() + "\r\n" +
-                    "End: " + result.getEndTimestamp() + "\r\n" +
-                    "Upload: " + uploadTime + "\r\n" + commit;
+            String newCommit = "Type: " + ((result.getType() == null)? "Unknown" : result.getType()) + "\n" +
+                    "Start: " + result.getStartTimestamp() + "\n" +
+                    "End: " + result.getEndTimestamp() + "\n" +
+                    "Upload: " + uploadTime + "\n" + commit;
             Log.e("Upload name", name);
             Log.e("Upload commit", newCommit);
             Log.e("Upload file", result.getSavePath());

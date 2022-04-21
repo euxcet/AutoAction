@@ -71,7 +71,7 @@ public class TimedCollector extends BaseCollector {
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
                 () -> {
                     try {
-                        triggerAndUpload(logCollector, new TriggerConfig(), "Timed_" + name, "Fixed rate upload: " + period + "\r\n" + "Log name: " + name)
+                        triggerAndUpload(logCollector, new TriggerConfig(), "Timed_" + name, "Fixed rate upload: " + period + "\n" + "Log name: " + name)
                                 .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
                     } catch (Exception e) {
                         e.printStackTrace();
