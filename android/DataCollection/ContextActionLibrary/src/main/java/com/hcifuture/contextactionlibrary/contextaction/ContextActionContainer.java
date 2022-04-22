@@ -272,10 +272,14 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void stop() {
-        // unregister broadcast receiver
-        mContext.unregisterReceiver(mBroadcastReceiver);
-        // unregister content observer
-        mContext.getContentResolver().unregisterContentObserver(mContentObserver);
+        try { // cwh: I don't know why this may cause problems
+            // unregister broadcast receiver
+            mContext.unregisterReceiver(mBroadcastReceiver);
+            // unregister content observer
+            mContext.getContentResolver().unregisterContentObserver(mContentObserver);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         mRegURIs.clear();
 
         /*
