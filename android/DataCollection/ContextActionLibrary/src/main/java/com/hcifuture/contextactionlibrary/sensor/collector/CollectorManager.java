@@ -6,11 +6,14 @@ import android.util.Log;
 import com.hcifuture.contextactionlibrary.sensor.collector.async.AudioCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.async.BluetoothCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
+import com.hcifuture.contextactionlibrary.sensor.collector.async.GPSCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.async.IMUCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.async.LocationCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.NonIMUCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.async.WifiCollector;
+
+import org.checkerframework.checker.units.qual.C;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +36,7 @@ public class CollectorManager {
         NonIMU,
         Location,
         Weather,
+        GPS,
         Wifi,
         Log,
         All
@@ -45,6 +49,7 @@ public class CollectorManager {
         collectors.add(new WifiCollector(mContext, CollectorType.Wifi, scheduledExecutorService, futureList));
         collectors.add(new LocationCollector(mContext, CollectorType.Location, scheduledExecutorService, futureList));
         collectors.add(new AudioCollector(mContext, CollectorType.Audio, scheduledExecutorService, futureList));
+        collectors.add(new GPSCollector(mContext, CollectorType.GPS, scheduledExecutorService, futureList));
     }
 
     private void initialize(CollectorType type) {
@@ -66,6 +71,9 @@ public class CollectorManager {
                 break;
             case Audio:
                 collectors.add(new AudioCollector(mContext, CollectorType.Audio, scheduledExecutorService, futureList));
+                break;
+            case GPS:
+                collectors.add(new GPSCollector(mContext, CollectorType.GPS, scheduledExecutorService, futureList));
                 break;
             case Log:
                 Log.e("Trigger", "Do not pass CollectorType.Log in the constructor, it will be ignored.");

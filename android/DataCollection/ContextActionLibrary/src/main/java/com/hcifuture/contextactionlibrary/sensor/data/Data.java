@@ -11,6 +11,7 @@ public abstract class Data {
         WeatherData,
         WifiData,
         SingleWifiData,
+        GPSData,
         LogData
     }
 

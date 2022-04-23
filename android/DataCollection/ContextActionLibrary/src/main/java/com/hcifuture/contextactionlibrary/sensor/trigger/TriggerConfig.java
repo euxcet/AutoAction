@@ -7,7 +7,18 @@ public class TriggerConfig {
     private String audioFilename = "";
     private int bluetoothScanTime = 10000;
     private int wifiScanTime = 10000;
+    private int gpsRequestTime = 3000;
+
     public TriggerConfig() {
+    }
+
+    public int getGPSRequestTime() {
+        return gpsRequestTime;
+    }
+
+    public TriggerConfig setGPSRequestTime(int gpsRequestTime) {
+        this.gpsRequestTime = gpsRequestTime;
+        return this;
     }
 
     public int getImuHead() {

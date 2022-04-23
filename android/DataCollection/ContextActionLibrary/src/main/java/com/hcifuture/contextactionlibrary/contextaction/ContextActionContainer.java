@@ -386,6 +386,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 CollectorManager.CollectorType.Audio,
                 CollectorManager.CollectorType.Bluetooth,
                 CollectorManager.CollectorType.Wifi,
+                // CollectorManager.CollectorType.GPS,
                 CollectorManager.CollectorType.NonIMU
         ), scheduledExecutorService, futureList);
 
@@ -398,6 +399,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
 
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
+                // .scheduleFixedDelayUpload(CollectorManager.CollectorType.GPS, new TriggerConfig().setGPSRequestTime(3000), 5000, 0)
                 .scheduleFixedDelayUpload(CollectorManager.CollectorType.Audio, new TriggerConfig().setBluetoothScanTime(10000).setAudioLength(5000), 15000, 0)
                 .scheduleFixedDelayUpload(CollectorManager.CollectorType.Wifi, new TriggerConfig().setWifiScanTime(10000), 1000, 0)
                 .scheduleFixedRateUpload(CollectorManager.CollectorType.Location, new TriggerConfig(), 10000, 0);
