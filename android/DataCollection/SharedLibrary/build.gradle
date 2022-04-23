@@ -15,14 +15,17 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
 
+        /*
         externalNativeBuild {
             cmake {
                 abiFilters 'armeabi-v7a', 'arm64-v8a'
                 arguments "-DOCR_LITE_VULKAN=ON"
             }
         }
+         */
     }
 
+    /*
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
@@ -39,11 +42,12 @@ android {
             debuggable false
         }
     }
+     */
 
     libraryVariants.all {
         variant ->
             variant.outputs.all {
-                outputFileName = "${project.name}-${variant.flavorName}-${defaultConfig.versionName}.aar"
+                outputFileName = "${project.name}.aar"
             }
     }
 }

@@ -2,9 +2,7 @@ package com.hcifuture.contextactionlibrary.contextaction.action;
 
 import android.content.Context;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
 
-import com.hcifuture.contextactionlibrary.model.NcnnInstance;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ActionConfig;
@@ -85,6 +83,7 @@ public class KnockAction extends BaseAction {
         if (!isStarted) {
             return;
         }
+        /*
         if (NcnnInstance.getInstance() != null) {
             int result = NcnnInstance.getInstance().actionDetect(inputData);
             if (result == 0) {
@@ -93,5 +92,6 @@ public class KnockAction extends BaseAction {
                 }
             }
         }
+         */
     }
 }
