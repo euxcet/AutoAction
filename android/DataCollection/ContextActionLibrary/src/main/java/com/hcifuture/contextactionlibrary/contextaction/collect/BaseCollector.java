@@ -15,10 +15,9 @@ import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
-import com.lzy.okgo.callback.StringCallback;
-import com.lzy.okgo.model.Response;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Collections;
@@ -27,6 +26,10 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 
 public abstract class BaseCollector {
     protected Context mContext;
@@ -106,6 +109,18 @@ public abstract class BaseCollector {
                     getUserID(),
                     uploadTime,
                     newCommit,
+                    new Callback() {
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                            ft.completeExceptionally(e);
+                        }
+
+                        @Override
+                        public void onResponse(Call call, okhttp3.Response response) throws IOException {
+                            ft.complete(result);
+                        }
+                    });
+                    /*
                     new StringCallback() {
                         @Override
                         public void onSuccess(Response<String> response) {
@@ -118,7 +133,9 @@ public abstract class BaseCollector {
                             ft.completeExceptionally(response.getException());
                             super.onError(response);
                         }
-                    });
+                    }
+                     */
+
         } catch (Exception e) {
             e.printStackTrace();
             ft.completeExceptionally(e);
@@ -141,6 +158,18 @@ public abstract class BaseCollector {
                     getUserID(),
                     timestamp,
                     commit,
+                    new Callback() {
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                            ft.completeExceptionally(e);
+                        }
+
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+                            ft.complete(result);
+                        }
+                    });
+                    /*
                     new StringCallback() {
                         @Override
                         public void onSuccess(Response<String> response) {
@@ -154,6 +183,7 @@ public abstract class BaseCollector {
                             super.onError(response);
                         }
                     });
+                     */
         } catch (Exception e) {
             e.printStackTrace();
             ft.completeExceptionally(e);
