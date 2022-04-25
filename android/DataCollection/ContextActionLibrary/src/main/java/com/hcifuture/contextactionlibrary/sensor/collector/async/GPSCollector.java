@@ -94,21 +94,25 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
         if (isProviderEnabled) {
             if (!isRunning.get()) {
                 bindListener();
-            }
-            scheduledExecutorService.schedule(() -> {
-                try {
-                    setLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
-                    unbindListener();
-                    CollectorResult result = new CollectorResult();
-                    synchronized (data) {
-                        result.setData(data.deepClone());
-                        result.setDataString(gson.toJson(result.getData(), GPSData.class));
-                        ft.complete(result);
+                scheduledExecutorService.schedule(() -> {
+                    try {
+                        setLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+                        unbindListener();
+                        CollectorResult result = new CollectorResult();
+                        synchronized (data) {
+                            result.setData(data.deepClone());
+                            result.setDataString(gson.toJson(result.getData(), GPSData.class));
+                            ft.complete(result);
+                        }
+                    } catch (Exception e) {
+                        ft.completeExceptionally(e);
+                    } finally {
+                        isRunning.set(false);
                     }
-                } catch (Exception e) {
-                    ft.completeExceptionally(e);
-                }
-            }, config.getGPSRequestTime(), TimeUnit.MILLISECONDS);
+                }, config.getGPSRequestTime(), TimeUnit.MILLISECONDS);
+            } else {
+                ft.completeExceptionally(new Exception("Another task of GPS recording is taking place!"));
+            }
         } else {
             ft.completeExceptionally(new Exception("GPS provider is not enabled"));
         }
