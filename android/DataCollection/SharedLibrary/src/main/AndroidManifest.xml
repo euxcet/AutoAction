@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.benjaminwan.ocrlibrary">
+    package="com.hcifuture.context.sharedLibrary">
 
     /
 </manifest>
