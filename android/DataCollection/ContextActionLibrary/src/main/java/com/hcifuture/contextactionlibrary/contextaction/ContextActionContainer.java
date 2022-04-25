@@ -399,8 +399,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
 
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
-                .scheduleFixedDelayUpload(CollectorManager.CollectorType.GPS, new TriggerConfig().setGPSRequestTime(3000), 10000, 0, "Timed_Loc_GPS")
-                .scheduleFixedDelayUpload(CollectorManager.CollectorType.Location, new TriggerConfig(), 10000, 0, "Timed_Loc_GPS");
+                .scheduleFixedRateUpload(CollectorManager.CollectorType.GPS, new TriggerConfig().setGPSRequestTime(3000), 10000, 0, "Timed_Loc_GPS")
+                .scheduleFixedRateUpload(CollectorManager.CollectorType.Location, new TriggerConfig(), 10000, 0, "Timed_Loc_GPS");
         collectors.add(timedCollector);
 
         if (fromDex) {
