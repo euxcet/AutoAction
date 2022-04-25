@@ -10,6 +10,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -38,7 +39,7 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
     public GPSCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
         data = new GPSData();
-        handler = new Handler();
+        handler = new Handler(Looper.getMainLooper());
     }
 
     @Override
@@ -64,7 +65,7 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
         if (isProviderEnabled && !isRunning.get()) {
             Log.e("TEST", locationManager + " " + mContext + " " );
             locationManager.registerGnssStatusCallback(gnssStatusCallback, handler);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, this);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, this, Looper.getMainLooper());
             isRunning.set(true);
         }
     }
