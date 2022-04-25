@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Display;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
@@ -200,6 +201,8 @@ public class ConfigContext extends BaseContext {
             }
         } else if ("KeyEvent".equals(type)) {
             record = true;
+            int keycode = extras.getInt("code");
+            jsonSilentPut(json, "keycodeString", KeyEvent.keyCodeToString(keycode));
             notifyAudio(timestamp);
         }
 
