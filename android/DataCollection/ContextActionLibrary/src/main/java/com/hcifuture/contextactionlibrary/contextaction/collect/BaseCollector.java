@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -208,5 +209,15 @@ public abstract class BaseCollector {
     public CompletableFuture<CollectorResult> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String commit) {
         return clickTrigger.trigger(Collections.singletonList(type), triggerConfig)
                 .thenCompose((v) -> upload(v.get(0), name, commit));
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public CompletableFuture<Void> triggerAndUpload(List<CollectorManager.CollectorType> types, TriggerConfig triggerConfig, String name, String commit) {
+        return clickTrigger.trigger(types, triggerConfig)
+                .thenCompose((v) -> {
+                    List<CompletableFuture<CollectorResult>> fts = new ArrayList<>();
+                    v.forEach(result -> fts.add(upload(result, name, commit)));
+                    return CompletableFuture.allOf(fts.toArray(new CompletableFuture[0]));
+                });
     }
 }

@@ -67,6 +67,36 @@ public class TimedCollector extends BaseCollector {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
+    public TimedCollector scheduleFixedRateUpload(List<CollectorManager.CollectorType> types, TriggerConfig triggerConfig, long period, long initialDelay, String name) {
+        futureList.add(scheduledExecutorService.scheduleAtFixedRate(
+                () -> {
+                    try {
+                        triggerAndUpload(types, triggerConfig, name, "Fixed rate upload: " + period);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                },
+                initialDelay, period, TimeUnit.MILLISECONDS)
+        );
+        return this;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public TimedCollector scheduleFixedDelayUpload(List<CollectorManager.CollectorType> types, TriggerConfig triggerConfig, long delay, long initialDelay, String name) {
+        futureList.add(scheduledExecutorService.scheduleWithFixedDelay(
+                () -> {
+                    try {
+                        triggerAndUpload(types, triggerConfig, name, "Fixed delay upload: " + delay).join();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                },
+                initialDelay, delay, TimeUnit.MILLISECONDS)
+        );
+        return this;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public TimedCollector scheduleTimedLogUpload(LogCollector logCollector, long period, long initialDelay, String name) {
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
                 () -> {
