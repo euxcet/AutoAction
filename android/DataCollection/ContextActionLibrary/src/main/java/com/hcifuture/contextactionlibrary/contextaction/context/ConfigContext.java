@@ -203,7 +203,30 @@ public class ConfigContext extends BaseContext {
             record = true;
             int keycode = extras.getInt("code");
             jsonSilentPut(json, "keycodeString", KeyEvent.keyCodeToString(keycode));
-            notifyAudio(timestamp);
+
+            switch (keycode) {
+                case KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK:
+                case KeyEvent.KEYCODE_MEDIA_CLOSE:
+                case KeyEvent.KEYCODE_MEDIA_EJECT:
+                case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                case KeyEvent.KEYCODE_MEDIA_NEXT:
+                case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                case KeyEvent.KEYCODE_MEDIA_PLAY:
+                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+                case KeyEvent.KEYCODE_MEDIA_RECORD:
+                case KeyEvent.KEYCODE_MEDIA_REWIND:
+                case KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD:
+                case KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD:
+                case KeyEvent.KEYCODE_MEDIA_STEP_BACKWARD:
+                case KeyEvent.KEYCODE_MEDIA_STEP_FORWARD:
+                case KeyEvent.KEYCODE_MEDIA_STOP:
+                case KeyEvent.KEYCODE_MEDIA_TOP_MENU:
+                case KeyEvent.KEYCODE_VOLUME_DOWN:
+                case KeyEvent.KEYCODE_VOLUME_MUTE:
+                case KeyEvent.KEYCODE_VOLUME_UP:
+                    notifyAudio(timestamp);
+            }
         }
 
         if (record) {
