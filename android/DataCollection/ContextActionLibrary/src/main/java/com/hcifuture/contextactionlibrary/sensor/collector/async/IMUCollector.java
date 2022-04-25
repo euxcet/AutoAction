@@ -27,7 +27,7 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
     // For complete data, keep 10s, 10 * 100 * 4 = 4k data
     // in case sampling period is higher, maybe max 500Hz for acc and gyro
     private final long DELAY_TIME = 5000;
-    private final int SAMPLING_PERIOD = 10000;
+    private final int SAMPLING_PERIOD = SensorManager.SENSOR_DELAY_FASTEST;
     private int LENGTH_LIMIT = 12000;
 
     private IMUData data;
