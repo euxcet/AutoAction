@@ -19,7 +19,8 @@ import java.util.concurrent.ScheduledFuture;
 import androidx.annotation.RequiresApi;
 
 public class ConfigCollector extends BaseCollector {
-    private TriggerConfig triggerConfig;
+    private final TriggerConfig triggerConfig;
+    private long last_nonimu = 0;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ConfigCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector logCollector) {
@@ -38,11 +39,17 @@ public class ConfigCollector extends BaseCollector {
     @Override
     public void onContext(ContextResult context) {
         CollectorManager.CollectorType type = null;
+        long current_call = context.getTimestamp();
+
         if (ConfigContext.NEED_AUDIO.equals(context.getContext())) {
             type = CollectorManager.CollectorType.Audio;
         } else if (ConfigContext.NEED_NONIMU.equals(context.getContext())) {
-            type = CollectorManager.CollectorType.NonIMU;
+            if (current_call - last_nonimu >= 1000) {
+                type = CollectorManager.CollectorType.NonIMU;
+                last_nonimu = current_call;
+            }
         }
+
         if (type != null) {
             triggerAndUpload(type, triggerConfig, "Config_" + type, "Context: " + context.getContext() + "\n" + "Context timestamp: " + context.getTimestamp());
         }
