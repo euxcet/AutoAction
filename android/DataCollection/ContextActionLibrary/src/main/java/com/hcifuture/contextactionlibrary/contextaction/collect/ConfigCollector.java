@@ -12,6 +12,7 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -48,6 +49,9 @@ public class ConfigCollector extends BaseCollector {
                 type = CollectorManager.CollectorType.NonIMU;
                 last_nonimu = current_call;
             }
+        } else if (ConfigContext.NEED_SCAN.equals(context.getContext())) {
+            triggerAndUpload(Arrays.asList(CollectorManager.CollectorType.Bluetooth, CollectorManager.CollectorType.Wifi),
+                    triggerConfig, "Event_Scan", "Context: " + context.getContext() + "\n" + "Context timestamp: " + context.getTimestamp());
         }
 
         if (type != null) {

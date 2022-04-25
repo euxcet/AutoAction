@@ -39,6 +39,7 @@ public class ConfigContext extends BaseContext {
 
     public static String NEED_AUDIO = "context.config.need_audio";
     public static String NEED_NONIMU = "context.config.need_nonimu";
+    public static String NEED_SCAN = "context.config.need_scan";
 
     private String packageName;
     private int brightness;
@@ -157,8 +158,7 @@ public class ConfigContext extends BaseContext {
                         jsonSilentPut(json, "mode", "unknown");
                     }
                     notifyNonIMU(timestamp);
-                }
-                if (database_key.startsWith("volume_")) {
+                } else if (database_key.startsWith("volume_")) {
                     if (!volume.containsKey(database_key)) {
                         // record new volume value
                         volume.put(database_key, value);
@@ -167,6 +167,10 @@ public class ConfigContext extends BaseContext {
                     int diff = value - volume.put(database_key, value);
                     jsonSilentPut(json, "diff", diff);
                     notifyAudio(timestamp);
+                } else if (Settings.Global.BLUETOOTH_ON.equals(database_key) && value == 1) {
+                    notifyScan(timestamp);
+                } else if (Settings.Global.WIFI_ON.equals(database_key) && value == 1) {
+                    notifyScan(timestamp);
                 }
             }
         } else if ("BroadcastReceive".equals(type)) {
@@ -190,6 +194,9 @@ public class ConfigContext extends BaseContext {
                         jsonSilentPut(json, "displays", states);
                     }
                     break;
+            }
+            if (Intent.ACTION_SCREEN_ON.equals(action)) {
+                notifyScan(timestamp);
             }
         } else if ("KeyEvent".equals(type)) {
             record = true;
@@ -291,6 +298,17 @@ public class ConfigContext extends BaseContext {
             Log.e("ConfigContext", "broadcast context: " + NEED_NONIMU);
             for (ContextListener listener: contextListener) {
                 ContextResult contextResult = new ContextResult(NEED_NONIMU);
+                contextResult.setTimestamp(timestamp);
+                listener.onContext(contextResult);
+            }
+        }
+    }
+
+    void notifyScan(long timestamp) {
+        if (contextListener != null) {
+            Log.e("ConfigContext", "broadcast context: " + NEED_SCAN);
+            for (ContextListener listener: contextListener) {
+                ContextResult contextResult = new ContextResult(NEED_SCAN);
                 contextResult.setTimestamp(timestamp);
                 listener.onContext(contextResult);
             }
