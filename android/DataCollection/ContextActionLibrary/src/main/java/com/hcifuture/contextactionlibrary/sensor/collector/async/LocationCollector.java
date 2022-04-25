@@ -116,6 +116,6 @@ public class LocationCollector extends AsynchronousCollector {
 
     @Override
     public String getExt() {
-        return ".txt";
+        return ".json";
     }
 }

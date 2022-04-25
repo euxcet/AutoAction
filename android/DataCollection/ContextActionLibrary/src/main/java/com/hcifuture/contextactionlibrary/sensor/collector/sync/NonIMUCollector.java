@@ -69,7 +69,7 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
 
     @Override
     public String getExt() {
-        return ".txt";
+        return ".json";
     }
 
     @Override

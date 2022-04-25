@@ -160,6 +160,6 @@ public class WifiCollector extends AsynchronousCollector {
 
     @Override
     public String getExt() {
-        return ".txt";
+        return ".json";
     }
 }
