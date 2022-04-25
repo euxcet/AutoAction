@@ -27,7 +27,7 @@ public class LocationData extends Data {
     }
 
     public LocationData deepClone() {
-        return new LocationData(longitude, longitude, altitude,
+        return new LocationData(longitude, latitude, altitude,
                 accuracy, floor, city, poiName, street, time, adCode, cityCode);
     }
 
