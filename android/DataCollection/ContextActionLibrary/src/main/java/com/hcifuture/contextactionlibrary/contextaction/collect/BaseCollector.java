@@ -91,14 +91,14 @@ public abstract class BaseCollector {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<CollectorResult> upload(CollectorResult result, String name, String commit) {
+    public CompletableFuture<CollectorResult> upload(CollectorResult result, String name, String appendCommit) {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         try {
             long uploadTime = System.currentTimeMillis();
             String newCommit = "Type: " + ((result.getType() == null)? "Unknown" : result.getType()) + "\n" +
                     "Start: " + result.getStartTimestamp() + "\n" +
                     "End: " + result.getEndTimestamp() + "\n" +
-                    "Upload: " + uploadTime + "\n" + commit;
+                    "Upload: " + uploadTime + "\n" + appendCommit;
             Log.e("Upload name", name);
             Log.e("Upload commit", newCommit);
             Log.e("Upload file", result.getSavePath());
@@ -194,9 +194,9 @@ public abstract class BaseCollector {
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<CollectorResult> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String commit) {
+    public CompletableFuture<CollectorResult> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String appendCommit) {
         return clickTrigger.trigger(collector, triggerConfig)
-                .thenCompose((v) -> upload(v.get(0), name, commit));
+                .thenCompose((v) -> upload(v.get(0), name, appendCommit));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -206,17 +206,16 @@ public abstract class BaseCollector {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<CollectorResult> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String commit) {
-        return clickTrigger.trigger(Collections.singletonList(type), triggerConfig)
-                .thenCompose((v) -> upload(v.get(0), name, commit));
+    public CompletableFuture<Void> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String appendCommit) {
+        return triggerAndUpload(Collections.singletonList(type), triggerConfig, name, appendCommit);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<Void> triggerAndUpload(List<CollectorManager.CollectorType> types, TriggerConfig triggerConfig, String name, String commit) {
+    public CompletableFuture<Void> triggerAndUpload(List<CollectorManager.CollectorType> types, TriggerConfig triggerConfig, String name, String appendCommit) {
         return clickTrigger.trigger(types, triggerConfig)
                 .thenCompose((v) -> {
                     List<CompletableFuture<CollectorResult>> fts = new ArrayList<>();
-                    v.forEach(result -> fts.add(upload(result, name, commit)));
+                    v.forEach(result -> fts.add(upload(result, name, appendCommit)));
                     return CompletableFuture.allOf(fts.toArray(new CompletableFuture[0]));
                 });
     }
