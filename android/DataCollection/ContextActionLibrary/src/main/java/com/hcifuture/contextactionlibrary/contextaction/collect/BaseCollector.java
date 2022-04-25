@@ -206,17 +206,8 @@ public abstract class BaseCollector {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<Void> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String appendCommit) {
-        return triggerAndUpload(Collections.singletonList(type), triggerConfig, name, appendCommit);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<Void> triggerAndUpload(List<CollectorManager.CollectorType> types, TriggerConfig triggerConfig, String name, String appendCommit) {
-        return clickTrigger.trigger(types, triggerConfig)
-                .thenCompose((v) -> {
-                    List<CompletableFuture<CollectorResult>> fts = new ArrayList<>();
-                    v.forEach(result -> fts.add(upload(result, name, appendCommit)));
-                    return CompletableFuture.allOf(fts.toArray(new CompletableFuture[0]));
-                });
+    public CompletableFuture<CollectorResult> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String appendCommit) {
+        return clickTrigger.trigger(Collections.singletonList(type), triggerConfig)
+                .thenCompose((v) -> upload(v.get(0), name, appendCommit));
     }
 }

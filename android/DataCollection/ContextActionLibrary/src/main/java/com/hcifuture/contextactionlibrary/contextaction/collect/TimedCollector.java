@@ -29,7 +29,7 @@ public class TimedCollector extends BaseCollector {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public TimedCollector scheduleFixedRateUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, long period, long initialDelay) {
+    public TimedCollector scheduleFixedRateUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, long period, long initialDelay, String name) {
         if (type == CollectorManager.CollectorType.Log) {
             Log.e("TimedCollector", "Do not pass CollectorType.Log in scheduleFixedRateUpload(), it will be ignored.");
             return this;
@@ -37,7 +37,7 @@ public class TimedCollector extends BaseCollector {
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
                 () -> {
                     try {
-                        triggerAndUpload(type, triggerConfig, "Timed_" + type, "Fixed rate upload: " + period);
+                        triggerAndUpload(type, triggerConfig, name, "Fixed rate upload: " + period);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -48,7 +48,7 @@ public class TimedCollector extends BaseCollector {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public TimedCollector scheduleFixedDelayUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, long delay, long initialDelay) {
+    public TimedCollector scheduleFixedDelayUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, long delay, long initialDelay, String name) {
         if (type == CollectorManager.CollectorType.Log) {
             Log.e("TimedCollector", "Do not pass CollectorType.Log in scheduleFixedDelayUpload(), it will be ignored.");
             return this;
@@ -56,37 +56,7 @@ public class TimedCollector extends BaseCollector {
         futureList.add(scheduledExecutorService.scheduleWithFixedDelay(
                 () -> {
                     try {
-                        triggerAndUpload(type, triggerConfig, "Timed_" + type, "Fixed delay upload: " + delay).join();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                },
-                initialDelay, delay, TimeUnit.MILLISECONDS)
-        );
-        return this;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public TimedCollector scheduleFixedRateUpload(List<CollectorManager.CollectorType> types, TriggerConfig triggerConfig, long period, long initialDelay, String name) {
-        futureList.add(scheduledExecutorService.scheduleAtFixedRate(
-                () -> {
-                    try {
-                        triggerAndUpload(types, triggerConfig, name, "Fixed rate upload: " + period);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                },
-                initialDelay, period, TimeUnit.MILLISECONDS)
-        );
-        return this;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public TimedCollector scheduleFixedDelayUpload(List<CollectorManager.CollectorType> types, TriggerConfig triggerConfig, long delay, long initialDelay, String name) {
-        futureList.add(scheduledExecutorService.scheduleWithFixedDelay(
-                () -> {
-                    try {
-                        triggerAndUpload(types, triggerConfig, name, "Fixed delay upload: " + delay).join();
+                        triggerAndUpload(type, triggerConfig, name, "Fixed delay upload: " + delay).join();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -101,7 +71,7 @@ public class TimedCollector extends BaseCollector {
         futureList.add(scheduledExecutorService.scheduleAtFixedRate(
                 () -> {
                     try {
-                        triggerAndUpload(logCollector, new TriggerConfig(), "Timed_" + name, "Fixed rate upload: " + period + "\n" + "Log name: " + name)
+                        triggerAndUpload(logCollector, new TriggerConfig(), name, "Fixed rate upload: " + period + "\n" + "Log name: " + name)
                                 .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
                     } catch (Exception e) {
                         e.printStackTrace();
