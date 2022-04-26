@@ -4,7 +4,6 @@ import android.content.Context;
 import android.hardware.Sensor;
 import android.util.Log;
 
-import com.hcifuture.contextactionlibrary.BuildConfig;
 import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
@@ -27,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class PocketAction extends BaseAction {
 
@@ -55,7 +55,6 @@ public class PocketAction extends BaseAction {
     private MyPeakDetector peakDetectorPositive = new MyPeakDetector();
     private boolean wasPositivePeakApproaching = true;
     private long[] doublePocketTimestamps = new long[2];
-    private int result;
     private int seqLength;
     private Deque<Long> pocketTimestamps = new ArrayDeque();
     private TfClassifier tflite;
@@ -110,7 +109,6 @@ public class PocketAction extends BaseAction {
     public void onIMUSensorEvent(SingleIMUData data) {
         if (data.getType() != Sensor.TYPE_GYROSCOPE && data.getType() != Sensor.TYPE_LINEAR_ACCELERATION)
             return;
-        result = 0;
         if (data.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             gotAcc = true;
             if (!gotGyro)
@@ -129,10 +127,9 @@ public class PocketAction extends BaseAction {
                 processAccAndKeySignal(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), data.getTimestamp(), SAMPLINGINTERVALNS);
             else
                 processGyro(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), SAMPLINGINTERVALNS);
-            recognizePocketML();
-            if (result == 1) {
-                pocketTimestamps.addLast(data.getTimestamp());
-            }
+            scheduledExecutorService.schedule(() -> {
+                recognizePocketML(data.getTimestamp());
+            }, 0, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -227,7 +224,8 @@ public class PocketAction extends BaseAction {
         return doublePocketTimestamps[1];
     }
 
-    public void recognizePocketML() {
+    public void recognizePocketML(long timestamp) {
+        int result = 0;
         int peakIdxPositive = peakDetectorPositive.getIdMajorPeak();
         if (peakIdxPositive == 32) {
             wasPositivePeakApproaching = true;
@@ -245,10 +243,30 @@ public class PocketAction extends BaseAction {
         }
         else
             wasPositivePeakApproaching = false;
+        if (result == 1) {
+            pocketTimestamps.addLast(timestamp);
+            int count = checkDoublePocketTiming(lastTimestamp);
+            if (count == 2) {
+                if (actionListener != null) {
+                    for (ActionListener listener : actionListener) {
+                        ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
+                        actionResult.setTimestamp(getFirstPocketTimestamp() + ":" + getSecondPocketTimestamp());
+                        listener.onAction(actionResult);
+                        actionResult.setAction(ACTION);
+                        listener.onAction(actionResult);
+                        actionResult.setAction(ACTION_UPLOAD);
+                        actionResult.setReason("Triggered");
+                        listener.onAction(actionResult);
+                        // listener.onActionSave(actionResult);
+                    }
+                }
+            }
+        }
     }
 
     @Override
     public synchronized void getAction() {
+        /*
         if (!isStarted)
             return;
         int count = checkDoublePocketTiming(lastTimestamp);
@@ -267,5 +285,6 @@ public class PocketAction extends BaseAction {
                 }
             }
         }
+         */
     }
 }
