@@ -82,12 +82,12 @@ public class ConfigContext extends BaseContext {
 
     @Override
     public void start() {
-        record_all();
+        record_all("start");
     }
 
     @Override
     public void stop() {
-        record_all();
+        record_all("stop");
     }
 
     @Override
@@ -105,7 +105,7 @@ public class ConfigContext extends BaseContext {
         long current_call = System.currentTimeMillis();
         // periodically record_all() every 4 hour
         if (current_call - last_record_all >= 4 * 60 * 60000) {
-            record_all();
+            record_all("period_4h");
         }
     }
 
@@ -248,7 +248,7 @@ public class ConfigContext extends BaseContext {
         Log.e("ConfigContext", "in record");
     }
 
-    void record_all() {
+    void record_all(String action) {
         last_record_all = System.currentTimeMillis();
         JSONObject json = new JSONObject();
 
@@ -275,7 +275,7 @@ public class ConfigContext extends BaseContext {
         jsonPutSettings(json, "global", Settings.Global.class);
 
         // record
-        record(last_record_all, "static", "", "", json.toString());
+        record(last_record_all, "static", action, "", json.toString());
     }
 
     static void jsonSilentPut(JSONObject json, String key, Object value) {
