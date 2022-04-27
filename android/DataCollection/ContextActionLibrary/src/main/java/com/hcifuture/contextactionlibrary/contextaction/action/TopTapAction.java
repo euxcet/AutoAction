@@ -348,7 +348,7 @@ public class TopTapAction extends BaseAction {
                 if (actionListener != null) {
                     for (ActionListener listener: actionListener) {
                         ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
-                        actionResult.setTimestamp(getFirstBackTapTimestamp() + ":" + getSecondBackTapTimestamp());
+                        actionResult.getExtras().putLongArray("timestamp", new long[]{getFirstBackTapTimestamp(), getSecondBackTapTimestamp()});
                         listener.onAction(actionResult);
                         TapTapAction.onConfirmed();
                     }
@@ -362,7 +362,7 @@ public class TopTapAction extends BaseAction {
                 if (actionListener != null) {
                     for (ActionListener listener : actionListener) {
                         ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
-                        actionResult.setTimestamp(getFirstTopTapTimestamp() + ":" + getSecondTopTapTimestamp());
+                        actionResult.getExtras().putLongArray("timestamp", new long[]{getFirstTopTapTimestamp(), getSecondTopTapTimestamp()});
                         listener.onAction(actionResult);
                         actionResult.setAction(ACTION);
                         listener.onAction(actionResult);
@@ -396,7 +396,7 @@ public class TopTapAction extends BaseAction {
                 for (ActionListener listener : actionListener) {
                     ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
 //                    actionResult.setTimestamp(getFirstTopTapTimestamp() + ":" + getSecondTopTapTimestamp());
-                    actionResult.getExtras().putLongArray("timestamp", new long[]{getFirstBackTapTimestamp(), getSecondBackTapTimestamp()});
+                    actionResult.getExtras().putLongArray("timestamp", new long[]{getFirstTopTapTimestamp(), getSecondTopTapTimestamp()});
                     listener.onAction(actionResult);
                     actionResult.setAction(ACTION);
                     listener.onAction(actionResult);
