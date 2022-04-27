@@ -3,46 +3,25 @@ package com.hcifuture.datacollection.contextaction;
 import static android.content.Context.MODE_PRIVATE;
 
 import android.accessibilityservice.AccessibilityService;
-import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.database.ContentObserver;
-import android.net.Uri;
-import android.net.wifi.WifiManager;
-import android.os.Handler;
-import android.provider.Settings;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 
-import com.google.gson.Gson;
 import com.hcifuture.datacollection.BuildConfig;
 import com.hcifuture.datacollection.utils.FileUtils;
-import com.hcifuture.shared.communicate.SensorType;
-import com.hcifuture.shared.communicate.config.ActionConfig;
-import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.shared.communicate.config.RequestConfig;
-import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
-import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.RequestResult;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
-import androidx.annotation.Nullable;
 import dalvik.system.DexClassLoader;
 
 public class LoaderManager {

@@ -1,12 +1,9 @@
 package com.hcifuture.contextactionlibrary.sensor.distributor;
 
-import android.content.Context;
-
 import com.hcifuture.contextactionlibrary.contextaction.action.BaseAction;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorListener;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
-import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.SensorType;

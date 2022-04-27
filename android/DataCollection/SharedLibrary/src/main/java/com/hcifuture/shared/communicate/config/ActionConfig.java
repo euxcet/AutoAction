@@ -1,6 +1,5 @@
 package com.hcifuture.shared.communicate.config;
 
-import com.hcifuture.shared.communicate.BuiltInActionEnum;
 import com.hcifuture.shared.communicate.SensorType;
 
 import java.util.List;

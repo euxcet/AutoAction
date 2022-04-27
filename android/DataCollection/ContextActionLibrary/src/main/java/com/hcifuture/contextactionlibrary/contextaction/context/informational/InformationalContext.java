@@ -2,22 +2,19 @@ package com.hcifuture.contextactionlibrary.contextaction.context.informational;
 
 import android.content.Context;
 import android.content.Intent;
-import android.hardware.SensorEvent;
 import android.os.Build;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
 import androidx.annotation.RequiresApi;
 
-import com.hcifuture.contextactionlibrary.BuildConfig;
 import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
-import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.shared.communicate.config.ContextConfig;
-import com.hcifuture.shared.communicate.event.BroadcastEvent;
+import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ContextResult;
@@ -26,10 +23,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -37,7 +31,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 

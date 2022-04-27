@@ -1,4 +1,4 @@
-package com.hcifuture.shared.communicate.event;
+package com.hcifuture.contextactionlibrary.contextaction.event;
 
 import android.os.Bundle;
 

@@ -1,7 +1,5 @@
 package com.hcifuture.contextactionlibrary.contextaction.context.informational;
 
-import com.hcifuture.shared.communicate.event.BroadcastEvent;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

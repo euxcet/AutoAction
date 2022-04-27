@@ -9,15 +9,11 @@ import android.view.accessibility.AccessibilityEvent;
 import com.hcifuture.datacollection.BuildConfig;
 import com.hcifuture.datacollection.contextaction.sensor.IMUSensorManager;
 import com.hcifuture.datacollection.contextaction.sensor.ProximitySensorManager;
-import com.hcifuture.shared.communicate.config.ActionConfig;
-import com.hcifuture.shared.communicate.config.ContextConfig;
-import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 
 import java.lang.reflect.Method;
-import java.util.List;
 
 import dalvik.system.DexClassLoader;
 

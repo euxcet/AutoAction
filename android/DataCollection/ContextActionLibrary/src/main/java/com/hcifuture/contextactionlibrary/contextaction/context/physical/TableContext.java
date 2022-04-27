@@ -2,7 +2,6 @@ package com.hcifuture.contextactionlibrary.contextaction.context.physical;
 
 import android.content.Context;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
@@ -11,7 +10,7 @@ import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ContextConfig;
-import com.hcifuture.shared.communicate.event.BroadcastEvent;
+import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ContextResult;

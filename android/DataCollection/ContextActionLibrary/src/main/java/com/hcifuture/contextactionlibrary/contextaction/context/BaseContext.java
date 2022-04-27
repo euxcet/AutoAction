@@ -1,14 +1,12 @@
 package com.hcifuture.contextactionlibrary.contextaction.context;
 
 import android.content.Context;
-import android.hardware.SensorEvent;
 import android.view.accessibility.AccessibilityEvent;
 
-import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ContextConfig;
-import com.hcifuture.shared.communicate.event.BroadcastEvent;
+import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 

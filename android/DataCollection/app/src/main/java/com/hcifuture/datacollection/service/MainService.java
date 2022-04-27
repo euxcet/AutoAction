@@ -1,29 +1,19 @@
 package com.hcifuture.datacollection.service;
 
 import android.accessibilityservice.AccessibilityService;
-import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.database.ContentObserver;
-import android.net.Uri;
-import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
-import androidx.annotation.Nullable;
-
 import com.amap.api.services.core.ServiceSettings;
 import com.hcifuture.datacollection.contextaction.LoaderManager;
-import com.hcifuture.shared.communicate.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
