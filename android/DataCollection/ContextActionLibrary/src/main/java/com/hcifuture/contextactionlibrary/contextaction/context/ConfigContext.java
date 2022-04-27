@@ -121,7 +121,7 @@ public class ConfigContext extends BaseContext {
         long timestamp = event.getTimestamp();
         String action = event.getAction();
         String type = event.getType();
-        String tag = event.getTag();
+        String tag = "";
         Bundle extras = event.getExtras();
 
         boolean record = false;

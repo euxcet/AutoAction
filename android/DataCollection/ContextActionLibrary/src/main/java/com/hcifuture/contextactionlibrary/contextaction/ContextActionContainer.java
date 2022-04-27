@@ -678,9 +678,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     public void onKeyEventDex(KeyEvent event) {
         BroadcastEvent bc_event = new BroadcastEvent(
                 System.currentTimeMillis(),
-                "KeyEvent://"+event.getAction()+"/"+event.getKeyCode(),
-                "",
-                "KeyEvent"
+                "KeyEvent",
+                "KeyEvent://"+event.getAction()+"/"+event.getKeyCode()
         );
         bc_event.getExtras().putInt("action", event.getAction());
         bc_event.getExtras().putInt("code", event.getKeyCode());
@@ -783,9 +782,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         public void onReceive(Context context, Intent intent) {
             BroadcastEvent event = new BroadcastEvent(
                     System.currentTimeMillis(),
-                    intent.getAction(),
-                    "",
-                    "BroadcastReceive"
+                    "BroadcastReceive",
+                    intent.getAction()
             );
             event.setExtras(intent.getExtras());
             onBroadcastEventDex(event);
@@ -806,9 +804,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         public void onChange(boolean selfChange, @Nullable Uri uri) {
             BroadcastEvent event = new BroadcastEvent(
                     System.currentTimeMillis(),
-                    (uri == null)? "uri_null" : uri.toString(),
-                    "",
-                    "ContentChange"
+                    "ContentChange",
+                    (uri == null)? "uri_null" : uri.toString()
             );
             onBroadcastEventDex(event);
         }
