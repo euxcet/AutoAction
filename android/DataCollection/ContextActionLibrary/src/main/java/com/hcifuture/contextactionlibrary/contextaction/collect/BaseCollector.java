@@ -144,53 +144,53 @@ public abstract class BaseCollector {
         return ft;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<CollectorResult> upload(CollectorResult result, String name, String commit, long timestamp) {
-        CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
-        try {
-            Log.e("Upload name", name);
-            Log.e("Upload commit", commit);
-            Log.e("Upload file", result.getSavePath());
-            File file = new File(result.getSavePath());
-            NetworkUtils.uploadCollectedData(mContext,
-                    file,
-                    0,
-                    name,
-                    getUserID(),
-                    timestamp,
-                    commit,
-                    new Callback() {
-                        @Override
-                        public void onFailure(Call call, IOException e) {
-                            ft.completeExceptionally(e);
-                        }
-
-                        @Override
-                        public void onResponse(Call call, Response response) throws IOException {
-                            ft.complete(result);
-                        }
-                    });
-                    /*
-                    new StringCallback() {
-                        @Override
-                        public void onSuccess(Response<String> response) {
-                            Log.e("Upload response", "Success!");
-                            ft.complete(result);
-                        }
-
-                        @Override
-                        public void onError(Response<String> response) {
-                            ft.completeExceptionally(response.getException());
-                            super.onError(response);
-                        }
-                    });
-                     */
-        } catch (Exception e) {
-            e.printStackTrace();
-            ft.completeExceptionally(e);
-        }
-        return ft;
-    }
+//    @RequiresApi(api = Build.VERSION_CODES.N)
+//    public CompletableFuture<CollectorResult> upload(CollectorResult result, String name, String commit, long timestamp) {
+//        CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
+//        try {
+//            Log.e("Upload name", name);
+//            Log.e("Upload commit", commit);
+//            Log.e("Upload file", result.getSavePath());
+//            File file = new File(result.getSavePath());
+//            NetworkUtils.uploadCollectedData(mContext,
+//                    file,
+//                    0,
+//                    name,
+//                    getUserID(),
+//                    timestamp,
+//                    commit,
+//                    new Callback() {
+//                        @Override
+//                        public void onFailure(Call call, IOException e) {
+//                            ft.completeExceptionally(e);
+//                        }
+//
+//                        @Override
+//                        public void onResponse(Call call, Response response) throws IOException {
+//                            ft.complete(result);
+//                        }
+//                    });
+//                    /*
+//                    new StringCallback() {
+//                        @Override
+//                        public void onSuccess(Response<String> response) {
+//                            Log.e("Upload response", "Success!");
+//                            ft.complete(result);
+//                        }
+//
+//                        @Override
+//                        public void onError(Response<String> response) {
+//                            ft.completeExceptionally(response.getException());
+//                            super.onError(response);
+//                        }
+//                    });
+//                     */
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            ft.completeExceptionally(e);
+//        }
+//        return ft;
+//    }
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -199,11 +199,11 @@ public abstract class BaseCollector {
                 .thenCompose((v) -> upload(v.get(0), name, appendCommit));
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<CollectorResult> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String commit, long time) {
-        return clickTrigger.trigger(collector, triggerConfig)
-                .thenCompose((v) -> upload(v.get(0), name, commit, time));
-    }
+//    @RequiresApi(api = Build.VERSION_CODES.N)
+//    public CompletableFuture<CollectorResult> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String commit, long time) {
+//        return clickTrigger.trigger(collector, triggerConfig)
+//                .thenCompose((v) -> upload(v.get(0), name, commit, time));
+//    }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<CollectorResult> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String appendCommit) {
