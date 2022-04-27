@@ -54,6 +54,9 @@ public class Result {
     }
 
     public Bundle getExtras() {
+        if (extras == null) {
+            extras = new Bundle();
+        }
         return extras;
     }
 }
