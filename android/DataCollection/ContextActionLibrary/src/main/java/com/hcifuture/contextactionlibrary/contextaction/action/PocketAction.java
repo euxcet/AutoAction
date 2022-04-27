@@ -4,7 +4,6 @@ import android.content.Context;
 import android.hardware.Sensor;
 import android.util.Log;
 
-import com.hcifuture.contextactionlibrary.BuildConfig;
 import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
@@ -25,8 +24,12 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class PocketAction extends BaseAction {
 
@@ -38,6 +41,7 @@ public class PocketAction extends BaseAction {
 
     private long SAMPLINGINTERVALNS = 10000000L;
     private long WINDOW_NS = 400000000L;
+    private int size = 40;
 
     private boolean gotAcc = false;
     private boolean gotGyro = false;
@@ -55,16 +59,18 @@ public class PocketAction extends BaseAction {
     private MyPeakDetector peakDetectorPositive = new MyPeakDetector();
     private boolean wasPositivePeakApproaching = true;
     private long[] doublePocketTimestamps = new long[2];
-    private int result;
     private int seqLength;
     private Deque<Long> pocketTimestamps = new ArrayDeque();
     private TfClassifier tflite;
+
+    private ThreadPoolExecutor threadPoolExecutor;
 
     public PocketAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         init();
         tflite = new TfClassifier(new File(ContextActionContainer.getSavePath() + "pocket.tflite"));
         seqLength = (int)config.getValue("SeqLength");
+        threadPoolExecutor = new ThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardOldestPolicy());
     }
 
     private void init() {
@@ -110,7 +116,6 @@ public class PocketAction extends BaseAction {
     public void onIMUSensorEvent(SingleIMUData data) {
         if (data.getType() != Sensor.TYPE_GYROSCOPE && data.getType() != Sensor.TYPE_LINEAR_ACCELERATION)
             return;
-        result = 0;
         if (data.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             gotAcc = true;
             if (!gotGyro)
@@ -129,10 +134,9 @@ public class PocketAction extends BaseAction {
                 processAccAndKeySignal(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), data.getTimestamp(), SAMPLINGINTERVALNS);
             else
                 processGyro(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), SAMPLINGINTERVALNS);
-            recognizePocketML();
-            if (result == 1) {
-                pocketTimestamps.addLast(data.getTimestamp());
-            }
+            threadPoolExecutor.execute(() -> {
+                recognizePocketML(data.getTimestamp());
+            });
         }
     }
 
@@ -146,7 +150,6 @@ public class PocketAction extends BaseAction {
         ysAcc.add(y);
         zsAcc.add(z);
         lastTimestamp = t;
-        int size = (int)(WINDOW_NS / samplingInterval);
 
         while(xsAcc.size() > size) {
             xsAcc.remove(0);
@@ -161,7 +164,6 @@ public class PocketAction extends BaseAction {
         xsGyro.add(x);
         ysGyro.add(y);
         zsGyro.add(z);
-        int size = (int)(WINDOW_NS / samplingInterval);
 
         while(xsGyro.size() > size) {
             xsGyro.remove(0);
@@ -192,7 +194,7 @@ public class PocketAction extends BaseAction {
         }
     }
 
-    private int checkDoublePocketTiming(long timestamp) {
+    private synchronized int checkDoublePocketTiming(long timestamp) {
         Iterator iter = pocketTimestamps.iterator();
         while (iter.hasNext()) {
             if (timestamp - (Long) iter.next() > 500000000L) {
@@ -227,14 +229,15 @@ public class PocketAction extends BaseAction {
         return doublePocketTimestamps[1];
     }
 
-    public void recognizePocketML() {
+    public void recognizePocketML(long timestamp) {
+        int result = 0;
         int peakIdxPositive = peakDetectorPositive.getIdMajorPeak();
         if (peakIdxPositive == 32) {
             wasPositivePeakApproaching = true;
         }
         int idxPositive = peakIdxPositive - 15;
         if (idxPositive >= 0) {
-            if (idxPositive + seqLength < zsAcc.size() && wasPositivePeakApproaching && peakIdxPositive <= 30) {
+            if (idxPositive + seqLength < size && wasPositivePeakApproaching && peakIdxPositive <= 30) {
                 int tmp = Util.getMaxId(tflite.predict(getInput(idxPositive), 2, true).get(0));
                 if (tmp == 1) {
                     wasPositivePeakApproaching = false;
@@ -245,10 +248,30 @@ public class PocketAction extends BaseAction {
         }
         else
             wasPositivePeakApproaching = false;
+        if (result == 1) {
+            pocketTimestamps.addLast(timestamp);
+            int count = checkDoublePocketTiming(lastTimestamp);
+            if (count == 2) {
+                if (actionListener != null) {
+                    for (ActionListener listener : actionListener) {
+                        ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
+                        actionResult.setTimestamp(getFirstPocketTimestamp() + ":" + getSecondPocketTimestamp());
+                        listener.onAction(actionResult);
+                        actionResult.setAction(ACTION);
+                        listener.onAction(actionResult);
+                        actionResult.setAction(ACTION_UPLOAD);
+                        actionResult.setReason("Triggered");
+                        listener.onAction(actionResult);
+                        // listener.onActionSave(actionResult);
+                    }
+                }
+            }
+        }
     }
 
     @Override
     public synchronized void getAction() {
+        /*
         if (!isStarted)
             return;
         int count = checkDoublePocketTiming(lastTimestamp);
@@ -268,5 +291,6 @@ public class PocketAction extends BaseAction {
                 }
             }
         }
+         */
     }
 }

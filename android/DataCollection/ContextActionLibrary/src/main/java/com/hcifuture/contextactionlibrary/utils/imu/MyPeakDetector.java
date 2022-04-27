@@ -11,7 +11,7 @@ public class MyPeakDetector {
     public MyPeakDetector() {
     }
 
-    public int getIdMajorPeak() {
+    public synchronized int getIdMajorPeak() {
         return this._idMajorPeak;
     }
 
@@ -53,7 +53,7 @@ public class MyPeakDetector {
 
     }
 
-    public void reset() {
+    public synchronized void reset() {
         _amplitudeMajorPeak = 0.0F;
         _amplitudeReference = 0.0F;
         _idMajorPeak = -1;

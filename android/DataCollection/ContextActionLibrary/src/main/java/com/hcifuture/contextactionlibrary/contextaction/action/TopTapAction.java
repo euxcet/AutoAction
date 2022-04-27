@@ -26,8 +26,12 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class TopTapAction extends BaseAction {
 
@@ -39,6 +43,7 @@ public class TopTapAction extends BaseAction {
 
     private long SAMPLINGINTERVALNS = 10000000L;
     private long WINDOW_NS = 400000000L;
+    private int size = 40;
 
     private boolean gotAcc = false;
     private boolean gotGyro = false;
@@ -61,7 +66,6 @@ public class TopTapAction extends BaseAction {
     private boolean wasNegativePeakApproaching = true;
     private long[] doubleBackTapTimestamps = new long[2];
     private long[] doubleTopTapTimestamps = new long[2];
-    private int result;
     private int seqLength;
     private Deque<Long> backTapTimestamps = new ArrayDeque();
     private Deque<Long> topTapTimestamps = new ArrayDeque();
@@ -70,6 +74,7 @@ public class TopTapAction extends BaseAction {
     // filter related
     private HorizontalFilter horizontalFilter = new HorizontalFilter();
 
+    private ThreadPoolExecutor threadPoolExecutor;
 
     public TopTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
@@ -77,6 +82,7 @@ public class TopTapAction extends BaseAction {
         // tflite = new TfClassifier(mContext.getAssets(), "combined.tflite");
         tflite = new TfClassifier(new File(ContextActionContainer.getSavePath() + "combined.tflite"));
         seqLength = (int)config.getValue("SeqLength");
+        threadPoolExecutor = new ThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardOldestPolicy());
     }
 
     private void init() {
@@ -136,7 +142,6 @@ public class TopTapAction extends BaseAction {
 
         if (data.getType() != Sensor.TYPE_GYROSCOPE && data.getType() != Sensor.TYPE_LINEAR_ACCELERATION)
             return;
-        result = 0;
         if (data.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             gotAcc = true;
             if (!gotGyro)
@@ -157,15 +162,10 @@ public class TopTapAction extends BaseAction {
                 processAccAndKeySignal(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), data.getTimestamp(), SAMPLINGINTERVALNS);
             else
                 processGyro(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), SAMPLINGINTERVALNS);
-            recognizeTapML();
-            if (result == 1) {
-                backTapTimestamps.addLast(data.getTimestamp());
-            }
-            else if (result == 2) {
-                topTapTimestamps.addLast(data.getTimestamp());
-            }
+            threadPoolExecutor.execute(() -> {
+                recognizeTapML(data.getTimestamp());
+            });
         }
-
     }
 
     @Override
@@ -178,7 +178,6 @@ public class TopTapAction extends BaseAction {
         ysAcc.add(y);
         zsAcc.add(z);
         lastTimestamp = t;
-        int size = (int)(WINDOW_NS / samplingInterval);
 
         while(xsAcc.size() > size) {
             xsAcc.remove(0);
@@ -194,7 +193,6 @@ public class TopTapAction extends BaseAction {
         xsGyro.add(x);
         ysGyro.add(y);
         zsGyro.add(z);
-        int size = (int)(WINDOW_NS / samplingInterval);
 
         while(xsGyro.size() > size) {
             xsGyro.remove(0);
@@ -225,7 +223,7 @@ public class TopTapAction extends BaseAction {
         }
     }
 
-    private int checkDoubleBackTapTiming(long timestamp) {
+    private synchronized int checkDoubleBackTapTiming(long timestamp) {
         Iterator iter = backTapTimestamps.iterator();
         while (iter.hasNext()) {
             if (timestamp - (Long) iter.next() > 500000000L) {
@@ -252,7 +250,7 @@ public class TopTapAction extends BaseAction {
         return res;
     }
 
-    private int checkDoubleTopTapTiming(long timestamp) {
+    private synchronized int checkDoubleTopTapTiming(long timestamp) {
         Iterator iter = topTapTimestamps.iterator();
         while (iter.hasNext()) {
             if (timestamp - (Long) iter.next() > 500000000L) {
@@ -295,7 +293,8 @@ public class TopTapAction extends BaseAction {
         return doubleTopTapTimestamps[1];
     }
 
-    public void recognizeTapML() {
+    public void recognizeTapML(long timestamp) {
+        int result = 0;
         // for taptap
         int peakIdxPositive = peakDetectorPositive.getIdMajorPeak();
         if (peakIdxPositive == 32) {
@@ -303,7 +302,7 @@ public class TopTapAction extends BaseAction {
         }
         int idxPositive = peakIdxPositive - 15;
         if (idxPositive >= 0) {
-            if (idxPositive + seqLength < zsAcc.size() && wasPositivePeakApproaching && peakIdxPositive <= 30) {
+            if (idxPositive + seqLength < size && wasPositivePeakApproaching && peakIdxPositive <= 30) {
                 int tmp = Util.getMaxId(tflite.predict(getInput(idxPositive), 3).get(0));
                 if (tmp == 1) {
                     wasPositivePeakApproaching = false;
@@ -326,7 +325,7 @@ public class TopTapAction extends BaseAction {
         }
         int idxNegative = peakIdxNegative - 15;
         if (idxNegative >= 0) {
-            if (idxNegative + seqLength < zsAcc.size() && wasNegativePeakApproaching && peakIdxNegative <= 30) {
+            if (idxNegative + seqLength < size && wasNegativePeakApproaching && peakIdxNegative <= 30) {
                 int tmp = Util.getMaxId(tflite.predict(getInput(idxNegative), 3).get(0));
                 if (tmp == 1) {
                     wasPositivePeakApproaching = false;
@@ -342,10 +341,41 @@ public class TopTapAction extends BaseAction {
         }
         else
             wasNegativePeakApproaching = false;
+        if (result == 1) {
+            backTapTimestamps.addLast(timestamp);
+            int count1 = checkDoubleBackTapTiming(lastTimestamp);
+            if (count1 == 2) {
+                if (actionListener != null) {
+                    for (ActionListener listener: actionListener) {
+                        ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
+                        actionResult.setTimestamp(getFirstBackTapTimestamp() + ":" + getSecondBackTapTimestamp());
+                        listener.onAction(actionResult);
+                        TapTapAction.onConfirmed();
+                    }
+                }
+            }
+        }
+        else if (result == 2) {
+            topTapTimestamps.addLast(timestamp);
+            int count2 = checkDoubleTopTapTiming(lastTimestamp);
+            if (count2 == 2) {
+                if (actionListener != null) {
+                    for (ActionListener listener : actionListener) {
+                        ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
+                        actionResult.setTimestamp(getFirstTopTapTimestamp() + ":" + getSecondTopTapTimestamp());
+                        listener.onAction(actionResult);
+                        actionResult.setAction(ACTION);
+                        listener.onAction(actionResult);
+                    }
+                    horizontalFilter.updateCondition();
+                }
+            }
+        }
     }
 
     @Override
     public synchronized void getAction() {
+        /*
         if (!isStarted)
             return;
         int count1 = checkDoubleBackTapTiming(lastTimestamp);
@@ -374,5 +404,6 @@ public class TopTapAction extends BaseAction {
                 horizontalFilter.updateCondition();
             }
         }
+         */
     }
 }
