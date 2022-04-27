@@ -158,7 +158,7 @@ public class ConfigContext extends BaseContext {
                     } else {
                         jsonSilentPut(json, "mode", "unknown");
                     }
-                    notifyNonIMU(timestamp);
+                    notifyNonIMU(timestamp, "screen brightness change");
                 } else if (database_key.startsWith("volume_")) {
                     if (!volume.containsKey(database_key)) {
                         // record new volume value
@@ -167,11 +167,11 @@ public class ConfigContext extends BaseContext {
                     // record volume value difference and update
                     int diff = value - volume.put(database_key, value);
                     jsonSilentPut(json, "diff", diff);
-                    notifyAudio(timestamp);
+                    notifyAudio(timestamp, "volume change: " + database_key);
                 } else if (Settings.Global.BLUETOOTH_ON.equals(database_key) && value == 1) {
-                    notifyScan(timestamp);
+                    notifyScan(timestamp, "Bluetooth on");
                 } else if (Settings.Global.WIFI_ON.equals(database_key) && value == 1) {
-                    notifyScan(timestamp);
+                    notifyScan(timestamp, "Wifi on");
                 }
             }
         } else if ("BroadcastReceive".equals(type)) {
@@ -197,7 +197,7 @@ public class ConfigContext extends BaseContext {
                     break;
             }
             if (Intent.ACTION_SCREEN_ON.equals(action)) {
-                notifyScan(timestamp);
+                notifyScan(timestamp, "screen on");
             }
         } else if ("KeyEvent".equals(type)) {
             record = true;
@@ -225,7 +225,7 @@ public class ConfigContext extends BaseContext {
                 case KeyEvent.KEYCODE_VOLUME_DOWN:
                 case KeyEvent.KEYCODE_VOLUME_MUTE:
                 case KeyEvent.KEYCODE_VOLUME_UP:
-                    notifyAudio(timestamp);
+                    notifyAudio(timestamp, "key event: " + keycode + " " + KeyEvent.keyCodeToString(keycode));
             }
         }
 
@@ -308,33 +308,33 @@ public class ConfigContext extends BaseContext {
         jsonSilentPut(json, key, jsonArray);
     }
 
-    void notifyAudio(long timestamp) {
+    void notifyAudio(long timestamp, String reason) {
         if (contextListener != null) {
             Log.e("ConfigContext", "broadcast context: " + NEED_AUDIO);
             for (ContextListener listener: contextListener) {
-                ContextResult contextResult = new ContextResult(NEED_AUDIO);
+                ContextResult contextResult = new ContextResult(NEED_AUDIO, reason);
                 contextResult.setTimestamp(timestamp);
                 listener.onContext(contextResult);
             }
         }
     }
 
-    void notifyNonIMU(long timestamp) {
+    void notifyNonIMU(long timestamp, String reason) {
         if (contextListener != null) {
             Log.e("ConfigContext", "broadcast context: " + NEED_NONIMU);
             for (ContextListener listener: contextListener) {
-                ContextResult contextResult = new ContextResult(NEED_NONIMU);
+                ContextResult contextResult = new ContextResult(NEED_NONIMU, reason);
                 contextResult.setTimestamp(timestamp);
                 listener.onContext(contextResult);
             }
         }
     }
 
-    void notifyScan(long timestamp) {
+    void notifyScan(long timestamp, String reason) {
         if (contextListener != null) {
             Log.e("ConfigContext", "broadcast context: " + NEED_SCAN);
             for (ContextListener listener: contextListener) {
-                ContextResult contextResult = new ContextResult(NEED_SCAN);
+                ContextResult contextResult = new ContextResult(NEED_SCAN, reason);
                 contextResult.setTimestamp(timestamp);
                 listener.onContext(contextResult);
             }

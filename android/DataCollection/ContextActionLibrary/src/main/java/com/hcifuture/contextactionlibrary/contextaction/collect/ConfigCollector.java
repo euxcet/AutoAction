@@ -40,7 +40,9 @@ public class ConfigCollector extends BaseCollector {
     @Override
     public void onContext(ContextResult context) {
         long current_call = context.getTimestamp();
-        String appendCommit = "Context: " + context.getContext() + "\n" + "Context timestamp: " + context.getTimestamp();
+        String appendCommit = "Context: " + context.getContext() + "\n" +
+                "Context timestamp: " + context.getTimestamp() + "\n" +
+                "Context reason: " + context.getReason();
 
         if (ConfigContext.NEED_AUDIO.equals(context.getContext())) {
             String name = "Event_Audio";
