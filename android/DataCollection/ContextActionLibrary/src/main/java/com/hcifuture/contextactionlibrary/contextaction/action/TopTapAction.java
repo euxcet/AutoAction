@@ -353,8 +353,9 @@ public class TopTapAction extends BaseAction {
             if (actionListener != null) {
                 for (ActionListener listener: actionListener) {
                     ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
-                    actionResult.setTimestamp(getFirstBackTapTimestamp() + ":" + getSecondBackTapTimestamp());
-                    listener.onAction(actionResult);
+//                    actionResult.setTimestamp(getFirstBackTapTimestamp() + ":" + getSecondBackTapTimestamp());
+                    actionResult.getExtras().putLongArray("timestamp", new long[]{getFirstBackTapTimestamp(), getSecondBackTapTimestamp()});
+                    long [] a = new long[]{23};
                     TapTapAction.onConfirmed();
                 }
             }
@@ -364,7 +365,8 @@ public class TopTapAction extends BaseAction {
             if (actionListener != null) {
                 for (ActionListener listener : actionListener) {
                     ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
-                    actionResult.setTimestamp(getFirstTopTapTimestamp() + ":" + getSecondTopTapTimestamp());
+//                    actionResult.setTimestamp(getFirstTopTapTimestamp() + ":" + getSecondTopTapTimestamp());
+                    actionResult.getExtras().putLongArray("timestamp", new long[]{getFirstBackTapTimestamp(), getSecondBackTapTimestamp()});
                     listener.onAction(actionResult);
                     actionResult.setAction(ACTION);
                     listener.onAction(actionResult);

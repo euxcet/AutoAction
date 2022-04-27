@@ -256,7 +256,8 @@ public class PocketAction extends BaseAction {
             if (actionListener != null) {
                 for (ActionListener listener : actionListener) {
                     ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
-                    actionResult.setTimestamp(getFirstPocketTimestamp() + ":" + getSecondPocketTimestamp());
+//                    actionResult.setTimestamp(getFirstPocketTimestamp() + ":" + getSecondPocketTimestamp());
+                    actionResult.getExtras().putLongArray("timestamp", new long[]{getFirstPocketTimestamp(), getSecondPocketTimestamp()});
                     listener.onAction(actionResult);
                     actionResult.setAction(ACTION);
                     listener.onAction(actionResult);

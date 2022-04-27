@@ -1,26 +1,19 @@
 package com.hcifuture.shared.communicate.result;
 
-public class ContextResult {
-    private String context;
-    private long timestamp;
-
+public class ContextResult extends Result {
     public ContextResult(String context) {
-        this.context = context;
+        super(context);
     }
 
-    public void setContext(String context) {
-        this.context = context;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
+    public ContextResult(String context, String reason) {
+        super(context, reason);
     }
 
     public String getContext() {
-        return context;
+        return super.getKey();
     }
 
-    public long getTimestamp() {
-        return timestamp;
+    public void setContext(String context) {
+        super.setKey(context);
     }
 }

@@ -51,7 +51,9 @@ public class TapTapCollector extends BaseCollector {
                 }
             }
         } else if (action.getAction().equals(TopTapAction.ACTION_RECOGNIZED) || action.getAction().equals(PocketAction.ACTION_RECOGNIZED)) {
-            markTimestamp = action.getTimestamp();
+//            markTimestamp = action.getTimestamp();
+            long[] tmp = action.getExtras().getLongArray("timestamp");
+            markTimestamp = tmp[0] + ":" + tmp[1];
         }
     }
 
