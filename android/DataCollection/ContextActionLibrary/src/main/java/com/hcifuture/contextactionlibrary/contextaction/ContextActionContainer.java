@@ -1,6 +1,8 @@
 package com.hcifuture.contextactionlibrary.contextaction;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -172,6 +174,17 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             BluetoothDevice.ACTION_ACL_CONNECTED,
             BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED,
             BluetoothDevice.ACTION_ACL_DISCONNECTED,
+            BluetoothDevice.ACTION_ALIAS_CHANGED,
+            BluetoothDevice.ACTION_BOND_STATE_CHANGED,
+            BluetoothDevice.ACTION_CLASS_CHANGED,
+            BluetoothDevice.ACTION_NAME_CHANGED,
+            BluetoothDevice.ACTION_PAIRING_REQUEST,
+            BluetoothAdapter.ACTION_DISCOVERY_STARTED,
+            BluetoothAdapter.ACTION_DISCOVERY_FINISHED,
+            BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED,
+            BluetoothAdapter.ACTION_STATE_CHANGED,
+            BluetoothAdapter.ACTION_SCAN_MODE_CHANGED,
+            BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED,
             // WiFi related
             WifiManager.NETWORK_STATE_CHANGED_ACTION,
             WifiManager.WIFI_STATE_CHANGED_ACTION

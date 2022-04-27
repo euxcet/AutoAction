@@ -138,6 +138,8 @@ public class ConfigContext extends BaseContext {
                     tag = Settings.System.getString(mContext.getContentResolver(), database_key);
                 } else if ("global".equals(inter)) {
                     tag = Settings.Global.getString(mContext.getContentResolver(), database_key);
+                } else if ("secure".equals(inter)) {
+                    tag = Settings.Secure.getString(mContext.getContentResolver(), database_key);
                 }
 
                 int value = Settings.System.getInt(mContext.getContentResolver(), database_key, 0);
