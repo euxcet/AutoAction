@@ -24,8 +24,11 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class PocketAction extends BaseAction {
@@ -38,6 +41,7 @@ public class PocketAction extends BaseAction {
 
     private long SAMPLINGINTERVALNS = 10000000L;
     private long WINDOW_NS = 400000000L;
+    private int size = 40;
 
     private boolean gotAcc = false;
     private boolean gotGyro = false;
@@ -59,11 +63,14 @@ public class PocketAction extends BaseAction {
     private Deque<Long> pocketTimestamps = new ArrayDeque();
     private TfClassifier tflite;
 
+    private ThreadPoolExecutor threadPoolExecutor;
+
     public PocketAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         init();
         tflite = new TfClassifier(new File(ContextActionContainer.getSavePath() + "pocket.tflite"));
         seqLength = (int)config.getValue("SeqLength");
+        threadPoolExecutor = new ThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardOldestPolicy());
     }
 
     private void init() {
@@ -127,9 +134,9 @@ public class PocketAction extends BaseAction {
                 processAccAndKeySignal(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), data.getTimestamp(), SAMPLINGINTERVALNS);
             else
                 processGyro(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), SAMPLINGINTERVALNS);
-            scheduledExecutorService.schedule(() -> {
+            threadPoolExecutor.execute(() -> {
                 recognizePocketML(data.getTimestamp());
-            }, 0, TimeUnit.MILLISECONDS);
+            });
         }
     }
 
@@ -143,7 +150,6 @@ public class PocketAction extends BaseAction {
         ysAcc.add(y);
         zsAcc.add(z);
         lastTimestamp = t;
-        int size = (int)(WINDOW_NS / samplingInterval);
 
         while(xsAcc.size() > size) {
             xsAcc.remove(0);
@@ -158,7 +164,6 @@ public class PocketAction extends BaseAction {
         xsGyro.add(x);
         ysGyro.add(y);
         zsGyro.add(z);
-        int size = (int)(WINDOW_NS / samplingInterval);
 
         while(xsGyro.size() > size) {
             xsGyro.remove(0);
@@ -189,7 +194,7 @@ public class PocketAction extends BaseAction {
         }
     }
 
-    private int checkDoublePocketTiming(long timestamp) {
+    private synchronized int checkDoublePocketTiming(long timestamp) {
         Iterator iter = pocketTimestamps.iterator();
         while (iter.hasNext()) {
             if (timestamp - (Long) iter.next() > 500000000L) {
@@ -232,7 +237,7 @@ public class PocketAction extends BaseAction {
         }
         int idxPositive = peakIdxPositive - 15;
         if (idxPositive >= 0) {
-            if (idxPositive + seqLength < zsAcc.size() && wasPositivePeakApproaching && peakIdxPositive <= 30) {
+            if (idxPositive + seqLength < size && wasPositivePeakApproaching && peakIdxPositive <= 30) {
                 int tmp = Util.getMaxId(tflite.predict(getInput(idxPositive), 2, true).get(0));
                 if (tmp == 1) {
                     wasPositivePeakApproaching = false;

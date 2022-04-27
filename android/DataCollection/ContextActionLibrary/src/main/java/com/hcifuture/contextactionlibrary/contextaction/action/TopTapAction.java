@@ -26,8 +26,11 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class TopTapAction extends BaseAction {
@@ -71,6 +74,7 @@ public class TopTapAction extends BaseAction {
     // filter related
     private HorizontalFilter horizontalFilter = new HorizontalFilter();
 
+    private ThreadPoolExecutor threadPoolExecutor;
 
     public TopTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
@@ -78,6 +82,7 @@ public class TopTapAction extends BaseAction {
         // tflite = new TfClassifier(mContext.getAssets(), "combined.tflite");
         tflite = new TfClassifier(new File(ContextActionContainer.getSavePath() + "combined.tflite"));
         seqLength = (int)config.getValue("SeqLength");
+        threadPoolExecutor = new ThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardOldestPolicy());
     }
 
     private void init() {
@@ -157,9 +162,9 @@ public class TopTapAction extends BaseAction {
                 processAccAndKeySignal(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), data.getTimestamp(), SAMPLINGINTERVALNS);
             else
                 processGyro(data.getValues().get(0), data.getValues().get(1), data.getValues().get(2), SAMPLINGINTERVALNS);
-            scheduledExecutorService.schedule(() -> {
+            threadPoolExecutor.execute(() -> {
                 recognizeTapML(data.getTimestamp());
-            }, 0, TimeUnit.MILLISECONDS);
+            });
         }
     }
 

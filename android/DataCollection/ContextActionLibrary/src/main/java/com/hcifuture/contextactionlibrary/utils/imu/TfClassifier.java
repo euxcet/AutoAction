@@ -56,7 +56,7 @@ public class TfClassifier {
 
     }
 
-    public ArrayList<ArrayList<Float>> predict(ArrayList<Float> var1, int var2) {
+    public synchronized ArrayList<ArrayList<Float>> predict(ArrayList<Float> var1, int var2) {
         ArrayList<ArrayList<Float>> res = new ArrayList<>();
         if (this.interpreter != null) {
             float[] var3 = new float[var1.size()];
