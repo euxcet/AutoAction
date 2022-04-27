@@ -10,15 +10,10 @@ public class BroadcastEvent {
     private Bundle extras;
 
     public BroadcastEvent(long timestamp, String action, String tag, String type) {
-        this(timestamp, action, tag, type, null);
-    }
-
-    public BroadcastEvent(long timestamp, String action, String tag, String type, Bundle extras) {
         setTimestamp(timestamp);
         setAction(action);
         setTag(tag);
         setType(type);
-        setExtras(extras);
     }
 
     public long getTimestamp() {
@@ -38,6 +33,9 @@ public class BroadcastEvent {
     }
 
     public Bundle getExtras() {
+        if (extras == null) {
+            extras = new Bundle();
+        }
         return extras;
     }
 

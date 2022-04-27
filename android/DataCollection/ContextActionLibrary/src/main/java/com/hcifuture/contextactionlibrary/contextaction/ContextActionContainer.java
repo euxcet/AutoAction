@@ -785,9 +785,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     System.currentTimeMillis(),
                     intent.getAction(),
                     "",
-                    "BroadcastReceive",
-                    intent.getExtras()
+                    "BroadcastReceive"
             );
+            event.setExtras(intent.getExtras());
             onBroadcastEventDex(event);
         }
     }
