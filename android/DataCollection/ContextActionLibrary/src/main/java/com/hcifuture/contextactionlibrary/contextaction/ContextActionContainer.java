@@ -187,7 +187,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED,
             // WiFi related
             WifiManager.NETWORK_STATE_CHANGED_ACTION,
-            WifiManager.WIFI_STATE_CHANGED_ACTION
+            WifiManager.WIFI_STATE_CHANGED_ACTION,
+            WifiManager.SCAN_RESULTS_AVAILABLE_ACTION,
+            WifiManager.ACTION_WIFI_SCAN_AVAILABILITY_CHANGED
     };
 
     public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener, String SAVE_PATH) {
