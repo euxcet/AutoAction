@@ -43,7 +43,6 @@ public class ConfigContext extends BaseContext {
     public static String NEED_NONIMU = "context.config.need_nonimu";
     public static String NEED_SCAN = "context.config.need_scan";
 
-    private static int mLogID = 0;
 
     private String packageName;
     private int brightness;
@@ -52,10 +51,12 @@ public class ConfigContext extends BaseContext {
     private long last_record_all;
 
     private final LogCollector logCollector;
+    private int mLogID;
 
     public ConfigContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector logCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
         this.logCollector = logCollector;
+        mLogID = 0;
 
         // initialize
         packageName = "";
@@ -108,9 +109,9 @@ public class ConfigContext extends BaseContext {
     @Override
     public void getContext() {
         long current_call = System.currentTimeMillis();
-        // periodically record_all() every 4 hour
-        if (current_call - last_record_all >= 4 * 60 * 60000) {
-            record_all("period_4h");
+        // periodically record_all() every 30 min
+        if (current_call - last_record_all >= 30 * 60000) {
+            record_all("period_30m");
         }
     }
 
@@ -248,7 +249,7 @@ public class ConfigContext extends BaseContext {
         }
     }
 
-    private static synchronized int incLogID() {
+    private synchronized int incLogID() {
         int ret = mLogID;
         if (mLogID >= 999) {
             mLogID = 0;
@@ -258,13 +259,13 @@ public class ConfigContext extends BaseContext {
         return ret;
     }
 
-    void record(long timestamp, int logID, String type, String action, String tag, String other) {
+    private void record(long timestamp, int logID, String type, String action, String tag, String other) {
         String line = timestamp + "\t" + logID + "\t" + type + "\t" + action + "\t" + tag + "\t" + other;
         logCollector.addLog(line);
         Log.e("ConfigContext", "in record");
     }
 
-    void record_all(String action) {
+    private synchronized void record_all(String action) {
         last_record_all = System.currentTimeMillis();
         int logID = incLogID();
         JSONObject json = new JSONObject();
@@ -295,7 +296,7 @@ public class ConfigContext extends BaseContext {
         record(last_record_all, logID, "static", action, "", json.toString());
     }
 
-    void jsonPutSettings(JSONObject json, String key, Class<?> c) {
+    private void jsonPutSettings(JSONObject json, String key, Class<?> c) {
         JSONArray jsonArray = new JSONArray();
         Field[] fields_glb = c.getFields();
         for (Field f : fields_glb) {
@@ -317,7 +318,7 @@ public class ConfigContext extends BaseContext {
         JSONUtils.silentPut(json, key, jsonArray);
     }
 
-    void notify(String context, long timestamp, int logID, String reason) {
+    private void notify(String context, long timestamp, int logID, String reason) {
         if (contextListener != null) {
             Log.e("ConfigContext", "broadcast context: " + context);
             for (ContextListener listener: contextListener) {
