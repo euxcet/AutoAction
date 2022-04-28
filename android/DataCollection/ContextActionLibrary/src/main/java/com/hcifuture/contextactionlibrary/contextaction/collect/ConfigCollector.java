@@ -2,9 +2,7 @@ package com.hcifuture.contextactionlibrary.contextaction.collect;
 
 import android.content.Context;
 import android.os.Build;
-import android.os.Bundle;
 
-import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
@@ -14,9 +12,6 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
 
-import org.json.JSONObject;
-
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -47,7 +42,7 @@ public class ConfigCollector extends BaseCollector {
         String appendCommit = "Context: " + context.getContext() + "\n" +
                 "Context timestamp: " + context.getTimestamp() + "\n" +
                 "Context reason: " + context.getReason() + "\n" +
-                "Context extras: " + JSONUtils.bundle2JSON(context.getExtras());
+                "Context extras: " + JSONUtils.bundleToJSON(context.getExtras());
 
         if (ConfigContext.NEED_AUDIO.equals(context.getContext())) {
             String name = "Event_Audio";

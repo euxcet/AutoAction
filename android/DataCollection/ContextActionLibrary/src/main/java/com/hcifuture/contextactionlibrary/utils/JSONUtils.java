@@ -25,7 +25,7 @@ public class JSONUtils {
         }
     }
 
-    public static JSONObject bundle2JSON(Bundle bundle) {
+    public static JSONObject bundleToJSON(Bundle bundle) {
         JSONObject json = new JSONObject();
         silentPutBundle(json, bundle);
         return json;
