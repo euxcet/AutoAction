@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.hardware.display.DisplayManager;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -171,8 +172,8 @@ public class ConfigContext extends BaseContext {
                     notifyAudio(timestamp, "volume change: " + database_key);
                 } else if (Settings.Global.BLUETOOTH_ON.equals(database_key) && value == 1) {
                     notifyScan(timestamp, "Bluetooth on");
-                } else if (Settings.Global.WIFI_ON.equals(database_key) && value == 1) {
-                    notifyScan(timestamp, "Wifi on");
+                } else if (Settings.Global.WIFI_ON.equals(database_key) && value == 2) {
+                    notifyScan(timestamp, "Wifi on via global setting");
                 }
             }
         } else if ("BroadcastReceive".equals(type)) {
@@ -199,6 +200,8 @@ public class ConfigContext extends BaseContext {
             }
             if (Intent.ACTION_SCREEN_ON.equals(action)) {
                 notifyScan(timestamp, "screen on");
+            } else if (WifiManager.WIFI_STATE_CHANGED_ACTION.equals(action) && extras.getInt(WifiManager.EXTRA_WIFI_STATE) == WifiManager.WIFI_STATE_ENABLED) {
+                notifyScan(timestamp, "Wifi on via broadcast");
             }
         } else if ("KeyEvent".equals(type)) {
             record = true;
