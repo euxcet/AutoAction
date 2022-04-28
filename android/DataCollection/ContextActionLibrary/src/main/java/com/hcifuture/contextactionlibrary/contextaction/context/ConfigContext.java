@@ -1,5 +1,6 @@
 package com.hcifuture.contextactionlibrary.contextaction.context;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -171,7 +172,7 @@ public class ConfigContext extends BaseContext {
                     jsonSilentPut(json, "diff", diff);
                     notifyAudio(timestamp, "volume change: " + database_key);
                 } else if (Settings.Global.BLUETOOTH_ON.equals(database_key) && value == 1) {
-                    notifyScan(timestamp, "Bluetooth on");
+                    notifyScan(timestamp, "Bluetooth on via global setting");
                 } else if (Settings.Global.WIFI_ON.equals(database_key) && value == 2) {
                     notifyScan(timestamp, "Wifi on via global setting");
                 }
@@ -202,6 +203,8 @@ public class ConfigContext extends BaseContext {
                 notifyScan(timestamp, "screen on");
             } else if (WifiManager.WIFI_STATE_CHANGED_ACTION.equals(action) && extras.getInt(WifiManager.EXTRA_WIFI_STATE) == WifiManager.WIFI_STATE_ENABLED) {
                 notifyScan(timestamp, "Wifi on via broadcast");
+            } else if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action) && extras.getInt(BluetoothAdapter.EXTRA_STATE) == BluetoothAdapter.STATE_ON) {
+                notifyScan(timestamp, "Bluetooth on via broadcast");
             }
         } else if ("KeyEvent".equals(type)) {
             record = true;
