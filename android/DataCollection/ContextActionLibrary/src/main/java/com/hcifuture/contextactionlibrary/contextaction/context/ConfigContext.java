@@ -177,9 +177,9 @@ public class ConfigContext extends BaseContext {
                     JSONUtils.silentPut(json, "diff", diff);
                     notify(NEED_AUDIO, timestamp, logID, "volume change: " + database_key);
                 } else if (Settings.Global.BLUETOOTH_ON.equals(database_key) && value == 1) {
-                    notify(NEED_SCAN, timestamp, logID, "Bluetooth on via global setting");
+//                    notify(NEED_SCAN, timestamp, logID, "Bluetooth on via global setting");
                 } else if (Settings.Global.WIFI_ON.equals(database_key) && value == 2) {
-                    notify(NEED_SCAN, timestamp, logID, "Wifi on via global setting");
+//                    notify(NEED_SCAN, timestamp, logID, "Wifi on via global setting");
                 }
             }
         } else if ("BroadcastReceive".equals(type)) {
