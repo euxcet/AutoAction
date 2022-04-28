@@ -18,6 +18,7 @@ import android.view.accessibility.AccessibilityEvent;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
+import com.hcifuture.contextactionlibrary.utils.JSONUtils;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -25,7 +26,6 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ContextResult;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Field;
@@ -42,6 +42,8 @@ public class ConfigContext extends BaseContext {
     public static String NEED_AUDIO = "context.config.need_audio";
     public static String NEED_NONIMU = "context.config.need_nonimu";
     public static String NEED_SCAN = "context.config.need_scan";
+
+    private static int mLogID = 0;
 
     private String packageName;
     private int brightness;
@@ -123,6 +125,7 @@ public class ConfigContext extends BaseContext {
     @Override
     public void onBroadcastEvent(BroadcastEvent event) {
         long timestamp = event.getTimestamp();
+        int logID = incLogID();
         String action = event.getAction();
         String type = event.getType();
         String tag = "";
@@ -152,18 +155,18 @@ public class ConfigContext extends BaseContext {
                 if (Settings.System.SCREEN_BRIGHTNESS.equals(database_key)) {
                     // record brightness value difference and update
                     int diff = value - brightness;
-                    jsonSilentPut(json, "diff", diff);
+                    JSONUtils.silentPut(json, "diff", diff);
                     brightness = value;
                     // record brightness mode
                     int mode = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, -1);
                     if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL) {
-                        jsonSilentPut(json, "mode", "man");
+                        JSONUtils.silentPut(json, "mode", "man");
                     } else if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
-                        jsonSilentPut(json, "mode", "auto");
+                        JSONUtils.silentPut(json, "mode", "auto");
                     } else {
-                        jsonSilentPut(json, "mode", "unknown");
+                        JSONUtils.silentPut(json, "mode", "unknown");
                     }
-                    notifyNonIMU(timestamp, "screen brightness change");
+                    notify(NEED_NONIMU, timestamp, logID, "screen brightness change");
                 } else if (database_key.startsWith("volume_")) {
                     if (!volume.containsKey(database_key)) {
                         // record new volume value
@@ -171,12 +174,12 @@ public class ConfigContext extends BaseContext {
                     }
                     // record volume value difference and update
                     int diff = value - volume.put(database_key, value);
-                    jsonSilentPut(json, "diff", diff);
-                    notifyAudio(timestamp, "volume change: " + database_key);
+                    JSONUtils.silentPut(json, "diff", diff);
+                    notify(NEED_AUDIO, timestamp, logID, "volume change: " + database_key);
                 } else if (Settings.Global.BLUETOOTH_ON.equals(database_key) && value == 1) {
-                    notifyScan(timestamp, "Bluetooth on via global setting");
+                    notify(NEED_SCAN, timestamp, logID, "Bluetooth on via global setting");
                 } else if (Settings.Global.WIFI_ON.equals(database_key) && value == 2) {
-                    notifyScan(timestamp, "Wifi on via global setting");
+                    notify(NEED_SCAN, timestamp, logID, "Wifi on via global setting");
                 }
             }
         } else if ("BroadcastReceive".equals(type)) {
@@ -184,8 +187,8 @@ public class ConfigContext extends BaseContext {
             switch (action) {
                 case Intent.ACTION_CONFIGURATION_CHANGED:
                     Configuration config = mContext.getResources().getConfiguration();
-                    jsonSilentPut(json, "configuration", config.toString());
-                    jsonSilentPut(json, "orientation", config.orientation);
+                    JSONUtils.silentPut(json, "configuration", config.toString());
+                    JSONUtils.silentPut(json, "orientation", config.orientation);
                     break;
                 case Intent.ACTION_SCREEN_OFF:
                 case Intent.ACTION_SCREEN_ON:
@@ -197,21 +200,21 @@ public class ConfigContext extends BaseContext {
                         for (int i = 0; i < displays.length; i++) {
                             states[i] = displays[i].getState();
                         }
-                        jsonSilentPut(json, "displays", states);
+                        JSONUtils.silentPut(json, "displays", states);
                     }
                     break;
             }
             if (Intent.ACTION_SCREEN_ON.equals(action)) {
-                notifyScan(timestamp, "screen on");
+                notify(NEED_SCAN, timestamp, logID, "screen on");
             } else if (WifiManager.WIFI_STATE_CHANGED_ACTION.equals(action) && extras.getInt(WifiManager.EXTRA_WIFI_STATE) == WifiManager.WIFI_STATE_ENABLED) {
-                notifyScan(timestamp, "Wifi on via broadcast");
+                notify(NEED_SCAN, timestamp, logID, "Wifi on via broadcast");
             } else if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action) && extras.getInt(BluetoothAdapter.EXTRA_STATE) == BluetoothAdapter.STATE_ON) {
-                notifyScan(timestamp, "Bluetooth on via broadcast");
+                notify(NEED_SCAN, timestamp, logID, "Bluetooth on via broadcast");
             }
         } else if ("KeyEvent".equals(type)) {
             record = true;
             int keycode = extras.getInt("code");
-            jsonSilentPut(json, "keycodeString", KeyEvent.keyCodeToString(keycode));
+            JSONUtils.silentPut(json, "keycodeString", KeyEvent.keyCodeToString(keycode));
 
             switch (keycode) {
                 case KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK:
@@ -234,48 +237,53 @@ public class ConfigContext extends BaseContext {
                 case KeyEvent.KEYCODE_VOLUME_DOWN:
                 case KeyEvent.KEYCODE_VOLUME_MUTE:
                 case KeyEvent.KEYCODE_VOLUME_UP:
-                    notifyAudio(timestamp, "key event: " + keycode + " " + KeyEvent.keyCodeToString(keycode));
+                    notify(NEED_AUDIO, timestamp, logID, "key event: " + KeyEvent.keyCodeToString(keycode));
             }
         }
 
         if (record) {
-            jsonSilentPut(json, "package", packageName);
-            for (String key : extras.keySet()) {
-                Object obj = JSONObject.wrap(extras.get(key));
-                if (obj == null) {
-                    obj = JSONObject.wrap(extras.get(key).toString());
-                }
-                jsonSilentPut(json, key, obj);
-            }
-            record(timestamp, type, action, tag, json.toString());
+            JSONUtils.silentPut(json, "package", packageName);
+            JSONUtils.silentPutBundle(json, extras);
+            record(timestamp, logID, type, action, tag, json.toString());
         }
     }
 
-    void record(long timestamp, String type, String action, String tag, String other) {
-        String line = timestamp + "\t" + type + "\t" + action + "\t" + tag + "\t" + other;
+    private static synchronized int incLogID() {
+        int ret = mLogID;
+        if (mLogID >= 999) {
+            mLogID = 0;
+        } else {
+            mLogID++;
+        }
+        return ret;
+    }
+
+    void record(long timestamp, int logID, String type, String action, String tag, String other) {
+        String line = timestamp + "\t" + logID + "\t" + type + "\t" + action + "\t" + tag + "\t" + other;
         logCollector.addLog(line);
         Log.e("ConfigContext", "in record");
     }
 
     void record_all(String action) {
         last_record_all = System.currentTimeMillis();
+        int logID = incLogID();
         JSONObject json = new JSONObject();
 
         // store brightness
         brightness = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 0);
-        jsonSilentPut(json, "brightness", brightness);
+        JSONUtils.silentPut(json, "brightness", brightness);
 
         // store volumes
         for (String key : volume.keySet()) {
             int value = Settings.System.getInt(mContext.getContentResolver(), key, 0);
             volume.put(key, value);
-            jsonSilentPut(json, key, value);
+            JSONUtils.silentPut(json, key, value);
         }
 
         // store configuration and orientation
         Configuration config = mContext.getResources().getConfiguration();
-        jsonSilentPut(json, "configuration", config.toString());
-        jsonSilentPut(json, "orientation", config.orientation);
+        JSONUtils.silentPut(json, "configuration", config.toString());
+        JSONUtils.silentPut(json, "orientation", config.orientation);
 
         // store system settings
         jsonPutSettings(json, "system", Settings.System.class);
@@ -284,15 +292,7 @@ public class ConfigContext extends BaseContext {
         jsonPutSettings(json, "global", Settings.Global.class);
 
         // record
-        record(last_record_all, "static", action, "", json.toString());
-    }
-
-    static void jsonSilentPut(JSONObject json, String key, Object value) {
-        try {
-            json.put(key, value);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        record(last_record_all, logID, "static", action, "", json.toString());
     }
 
     void jsonPutSettings(JSONObject json, String key, Class<?> c) {
@@ -314,37 +314,16 @@ public class ConfigContext extends BaseContext {
                 }
             }
         }
-        jsonSilentPut(json, key, jsonArray);
+        JSONUtils.silentPut(json, key, jsonArray);
     }
 
-    void notifyAudio(long timestamp, String reason) {
+    void notify(String context, long timestamp, int logID, String reason) {
         if (contextListener != null) {
-            Log.e("ConfigContext", "broadcast context: " + NEED_AUDIO);
+            Log.e("ConfigContext", "broadcast context: " + context);
             for (ContextListener listener: contextListener) {
-                ContextResult contextResult = new ContextResult(NEED_AUDIO, reason);
+                ContextResult contextResult = new ContextResult(context, reason);
                 contextResult.setTimestamp(timestamp);
-                listener.onContext(contextResult);
-            }
-        }
-    }
-
-    void notifyNonIMU(long timestamp, String reason) {
-        if (contextListener != null) {
-            Log.e("ConfigContext", "broadcast context: " + NEED_NONIMU);
-            for (ContextListener listener: contextListener) {
-                ContextResult contextResult = new ContextResult(NEED_NONIMU, reason);
-                contextResult.setTimestamp(timestamp);
-                listener.onContext(contextResult);
-            }
-        }
-    }
-
-    void notifyScan(long timestamp, String reason) {
-        if (contextListener != null) {
-            Log.e("ConfigContext", "broadcast context: " + NEED_SCAN);
-            for (ContextListener listener: contextListener) {
-                ContextResult contextResult = new ContextResult(NEED_SCAN, reason);
-                contextResult.setTimestamp(timestamp);
+                contextResult.getExtras().putInt("logID", logID);
                 listener.onContext(contextResult);
             }
         }
