@@ -24,7 +24,7 @@ public class ConfigCollector extends BaseCollector {
     private long last_nonimu = 0;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public ConfigCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector logCollector) {
+    public ConfigCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger) {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
         triggerConfig = new TriggerConfig()
                 .setAudioLength(5000)

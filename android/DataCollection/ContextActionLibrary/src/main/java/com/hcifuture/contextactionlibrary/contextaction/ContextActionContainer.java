@@ -408,6 +408,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
         collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
+        collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
 
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
                 .scheduleFixedRateUpload(CollectorManager.CollectorType.GPS, new TriggerConfig().setGPSRequestTime(3000), 10000, 0, "Timed_Loc_GPS")
@@ -459,7 +460,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     case "Config":
                         LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
                         timedCollector.scheduleTimedLogUpload(configLogCollector, 60000, 5000, "Config");
-                        collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector));
                         ConfigContext configContext = new ConfigContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), configLogCollector, scheduledExecutorService, futureList);
                         contexts.add(configContext);
                         break;
