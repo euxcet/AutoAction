@@ -1,6 +1,8 @@
 package com.hcifuture.contextactionlibrary.contextaction;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -172,9 +174,22 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             BluetoothDevice.ACTION_ACL_CONNECTED,
             BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED,
             BluetoothDevice.ACTION_ACL_DISCONNECTED,
+            BluetoothDevice.ACTION_ALIAS_CHANGED,
+            BluetoothDevice.ACTION_BOND_STATE_CHANGED,
+            BluetoothDevice.ACTION_CLASS_CHANGED,
+            BluetoothDevice.ACTION_NAME_CHANGED,
+            BluetoothDevice.ACTION_PAIRING_REQUEST,
+            BluetoothAdapter.ACTION_DISCOVERY_STARTED,
+            BluetoothAdapter.ACTION_DISCOVERY_FINISHED,
+            BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED,
+            BluetoothAdapter.ACTION_STATE_CHANGED,
+            BluetoothAdapter.ACTION_SCAN_MODE_CHANGED,
+            BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED,
             // WiFi related
             WifiManager.NETWORK_STATE_CHANGED_ACTION,
-            WifiManager.WIFI_STATE_CHANGED_ACTION
+            WifiManager.WIFI_STATE_CHANGED_ACTION,
+            WifiManager.SCAN_RESULTS_AVAILABLE_ACTION,
+            WifiManager.ACTION_WIFI_SCAN_AVAILABILITY_CHANGED
     };
 
     public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener, String SAVE_PATH) {
@@ -395,6 +410,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
         collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
+        collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
 
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
                 .scheduleFixedRateUpload(CollectorManager.CollectorType.GPS, new TriggerConfig().setGPSRequestTime(3000), 10000, 0, "Timed_Loc_GPS")
@@ -446,7 +462,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     case "Config":
                         LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
                         timedCollector.scheduleTimedLogUpload(configLogCollector, 60000, 5000, "Config");
-                        collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector));
                         ConfigContext configContext = new ConfigContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), configLogCollector, scheduledExecutorService, futureList);
                         contexts.add(configContext);
                         break;
@@ -678,9 +693,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     public void onKeyEventDex(KeyEvent event) {
         BroadcastEvent bc_event = new BroadcastEvent(
                 System.currentTimeMillis(),
-                "KeyEvent://"+event.getAction()+"/"+event.getKeyCode(),
-                "",
-                "KeyEvent"
+                "KeyEvent",
+                "KeyEvent://"+event.getAction()+"/"+event.getKeyCode()
         );
         bc_event.getExtras().putInt("action", event.getAction());
         bc_event.getExtras().putInt("code", event.getKeyCode());
@@ -783,9 +797,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         public void onReceive(Context context, Intent intent) {
             BroadcastEvent event = new BroadcastEvent(
                     System.currentTimeMillis(),
-                    intent.getAction(),
-                    "",
-                    "BroadcastReceive"
+                    "BroadcastReceive",
+                    intent.getAction()
             );
             event.setExtras(intent.getExtras());
             onBroadcastEventDex(event);
@@ -806,9 +819,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         public void onChange(boolean selfChange, @Nullable Uri uri) {
             BroadcastEvent event = new BroadcastEvent(
                     System.currentTimeMillis(),
-                    (uri == null)? "uri_null" : uri.toString(),
-                    "",
-                    "ContentChange"
+                    "ContentChange",
+                    (uri == null)? "uri_null" : uri.toString()
             );
             onBroadcastEventDex(event);
         }

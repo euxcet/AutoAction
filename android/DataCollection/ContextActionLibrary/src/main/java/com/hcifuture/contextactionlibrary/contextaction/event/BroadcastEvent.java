@@ -4,16 +4,14 @@ import android.os.Bundle;
 
 public class BroadcastEvent {
     private long timestamp;
-    private String action;
-    private String tag;
     private String type;
+    private String action;
     private Bundle extras;
 
-    public BroadcastEvent(long timestamp, String action, String tag, String type) {
+    public BroadcastEvent(long timestamp, String type, String action) {
         setTimestamp(timestamp);
-        setAction(action);
-        setTag(tag);
         setType(type);
+        setAction(action);
     }
 
     public long getTimestamp() {
@@ -22,10 +20,6 @@ public class BroadcastEvent {
 
     public String getAction() {
         return action;
-    }
-
-    public String getTag() {
-        return tag;
     }
 
     public String getType() {
@@ -45,10 +39,6 @@ public class BroadcastEvent {
 
     public void setAction(String action) {
         this.action = (action == null)? "" : action;
-    }
-
-    public void setTag(String tag) {
-        this.tag = (tag == null)? "" : tag;
     }
 
     public void setType(String type) {

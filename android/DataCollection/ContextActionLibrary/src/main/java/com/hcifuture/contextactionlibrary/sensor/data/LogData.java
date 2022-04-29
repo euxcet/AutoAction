@@ -1,6 +1,6 @@
 package com.hcifuture.contextactionlibrary.sensor.data;
 
-import androidx.annotation.NonNull;
+import android.text.TextUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,11 +32,7 @@ public class LogData extends Data {
 
     public String getString() {
         synchronized (logs) {
-            StringBuilder result = new StringBuilder();
-            for (String s : logs) {
-                result.append(s).append("\n");
-            }
-            return result.toString();
+            return TextUtils.join("\n", logs);
         }
     }
 
