@@ -1,5 +1,6 @@
 package com.hcifuture.contextactionlibrary.sensor.uploader;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -31,13 +33,17 @@ import okhttp3.Response;
 
 public class Uploader {
     private static final String TAG = "Uploader";
+    private static final long SECOND = 1000;
+    private static final long MINUTE = SECOND * 60;
+    private static final long HOUR = MINUTE * 60;
+    private static final long DAY = HOUR * 24;
 
     private Context mContext;
 
     private final Lock lock = new ReentrantLock();
     private final Condition condition = lock.newCondition();
 
-    private final Queue<UploadTask> pendingQueue = new LinkedList<>();
+    private final PriorityQueue<UploadTask> pendingQueue = new PriorityQueue<>();
     private final int QUEUE_ELEMENT_LIMIT = 10000;
 
     private ScheduledExecutorService scheduledExecutorService;
@@ -46,6 +52,7 @@ public class Uploader {
     private ScheduledFuture<?> uploadFuture;
 
     private AtomicBoolean isRunning = new AtomicBoolean(false);
+
 
     enum UploaderStatus {
         OK,
@@ -120,6 +127,7 @@ public class Uploader {
                     public void onFailure(@NonNull Call call, @NonNull IOException e) {
                         if (task.getRemainingRetries() > 0) {
                             task.setRemainingRetries(task.getRemainingRetries() - 1);
+                            task.setExpectedUploadTime(task.getExpectedUploadTime() + HOUR);
                             if (pushTask(task) == UploaderStatus.PENDING_QUEUE_IS_FULL) {
                                 Log.e(TAG, task.getFile().getAbsolutePath()
                                         + " could not be uploaded because the queue is full");
@@ -139,6 +147,7 @@ public class Uploader {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private boolean isUnderWifi() {
         ConnectivityManager connectivityManager = (ConnectivityManager) mContext
                 .getSystemService(Context.CONNECTIVITY_SERVICE);

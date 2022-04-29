@@ -2,8 +2,8 @@ package com.hcifuture.contextactionlibrary.sensor.uploader;
 
 import java.io.File;
 
-public class UploadTask {
-    private static final int DEFAULT_REMAINING_RETRIES = 3;
+public class UploadTask implements Comparable<UploadTask> {
+    private static final int DEFAULT_REMAINING_RETRIES = 5;
     private File file;
     private int fileType;
     private String commit;
@@ -11,6 +11,8 @@ public class UploadTask {
     private String userId;
     private long timestamp;
     private int remainingRetries;
+
+    private long expectedUploadTime;
 
     public UploadTask(File file, int fileType,
                       String commit, String name, String userId,
@@ -22,6 +24,12 @@ public class UploadTask {
         this.userId = userId;
         this.timestamp = timestamp;
         this.remainingRetries = remainingRetries;
+        this.expectedUploadTime = System.currentTimeMillis();
+    }
+
+    @Override
+    public int compareTo(UploadTask uploadTask) {
+        return Long.compare(this.expectedUploadTime, uploadTask.expectedUploadTime);
     }
 
     public UploadTask(File file, int fileType,
@@ -84,5 +92,17 @@ public class UploadTask {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public static int getDefaultRemainingRetries() {
+        return DEFAULT_REMAINING_RETRIES;
+    }
+
+    public void setExpectedUploadTime(long expectedUploadTime) {
+        this.expectedUploadTime = expectedUploadTime;
+    }
+
+    public long getExpectedUploadTime() {
+        return expectedUploadTime;
     }
 }
