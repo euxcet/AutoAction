@@ -7,6 +7,7 @@ import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
+import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
 import com.hcifuture.contextactionlibrary.utils.JSONUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
@@ -23,8 +24,10 @@ public class ConfigCollector extends BaseCollector {
     private long last_nonimu = 0;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public ConfigCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger) {
-        super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
+    public ConfigCollector(Context context, ScheduledExecutorService scheduledExecutorService,
+                           List<ScheduledFuture<?>> futureList, RequestListener requestListener,
+                           ClickTrigger clickTrigger, Uploader uploader) {
+        super(context, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader);
         triggerConfig = new TriggerConfig()
                 .setAudioLength(5000)
                 .setBluetoothScanTime(10000)

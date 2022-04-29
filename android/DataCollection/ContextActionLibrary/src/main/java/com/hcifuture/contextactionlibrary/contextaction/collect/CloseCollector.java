@@ -10,6 +10,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
@@ -29,8 +30,11 @@ public class CloseCollector extends BaseCollector {
     private LogCollector logCollector;
 
 
-    public CloseCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector CloseLogCollector) {
-        super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
+    public CloseCollector(Context context, ScheduledExecutorService scheduledExecutorService,
+                          List<ScheduledFuture<?>> futureList, RequestListener requestListener,
+                          ClickTrigger clickTrigger, Uploader uploader,
+                          LogCollector CloseLogCollector) {
+        super(context, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader);
         logCollector = CloseLogCollector;
     }
 

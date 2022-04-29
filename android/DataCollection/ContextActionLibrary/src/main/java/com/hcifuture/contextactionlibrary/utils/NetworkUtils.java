@@ -6,6 +6,7 @@ import android.webkit.MimeTypeMap;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
 import com.google.gson.Gson;
+import com.hcifuture.contextactionlibrary.sensor.uploader.UploadTask;
 
 import java.io.File;
 
@@ -28,7 +29,8 @@ public class NetworkUtils {
         fileType:
             - 0 sensor bin
      */
-    public static void uploadCollectedData(Context context, File file, int fileType, String name, String userId, long timestamp, String commit, Callback callback) {
+    /*
+    public static void uploadCollectedData(File file, int fileType, String name, String userId, long timestamp, String commit, Callback callback) {
         String extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(file).toString());
         String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
         RequestBody requestBody = new MultipartBody.Builder()
@@ -47,17 +49,27 @@ public class NetworkUtils {
                 .post(requestBody)
                 .build();
         client.newCall(request).enqueue(callback);
+    }
+     */
 
-        /*
-        OkGo.<String>post(COLLECTED_DATA_URL)
-                .tag(context)
-                .params("file", file)
-                .params("fileType", fileType)
-                .params("userId", userId)
-                .params("name", name)
-                .params("timestamp", timestamp)
-                .params("commit", commit)
-                .execute(callback);
-         */
+    public static void uploadCollectedData(UploadTask task, Callback callback) {
+        String extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(task.getFile()).toString());
+        String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", task.getFile().getName(), RequestBody.create(MediaType.parse(mime), task.getFile()))
+                .addFormDataPart("fileType", String.valueOf(task.getFileType()))
+                .addFormDataPart("userId", task.getUserId())
+                .addFormDataPart("name", task.getName())
+                .addFormDataPart("timestamp", String.valueOf(task.getTimestamp()))
+                .addFormDataPart("commit", task.getCommit())
+                .build();
+        Request request = new Request.Builder()
+                .url(COLLECTED_DATA_URL)
+                .header("Accept", "application/json")
+                .header("Content-Type", "application/json")
+                .post(requestBody)
+                .build();
+        client.newCall(request).enqueue(callback);
     }
 }
