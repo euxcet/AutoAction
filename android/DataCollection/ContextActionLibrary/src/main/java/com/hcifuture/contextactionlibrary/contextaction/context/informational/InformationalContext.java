@@ -223,7 +223,8 @@ public class InformationalContext extends BaseContext {
     public void onBroadcastEvent(BroadcastEvent event) {
         String action = event.getAction();
         if (action.equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
-            String reason = event.getTag();
+//            String reason = event.getTag();
+            String reason = event.getExtras().getString("reason");
             if (SYSTEM_DIALOG_REASON_HOME_KEY.equals(reason)) {
                 onAction(new Action("home","global"));
             }
