@@ -27,8 +27,7 @@ public class ConfigCollector extends BaseCollector {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
         triggerConfig = new TriggerConfig()
                 .setAudioLength(5000)
-                .setBluetoothScanTime(10000)
-                .setWifiScanTime(10000);
+                .setBluetoothScanTime(10000);
     }
 
     @Override

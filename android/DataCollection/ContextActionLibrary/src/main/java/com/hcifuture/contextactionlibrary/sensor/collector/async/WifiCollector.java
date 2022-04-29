@@ -29,21 +29,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WifiCollector extends AsynchronousCollector {
 
-    private WifiData data;
+    private final WifiData data;
 
     private WifiManager wifiManager;
     private BroadcastReceiver receiver;
     private IntentFilter wifiFilter;
 
     private final AtomicBoolean isCollecting;
+    private CompletableFuture<CollectorResult> ft;
+    private long startScanTimestamp = 0;
 
     public WifiCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
-        this.data = new WifiData();
         isCollecting = new AtomicBoolean(false);
+        this.data = new WifiData();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void initialize() {
         wifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -54,18 +56,34 @@ public class WifiCollector extends AsynchronousCollector {
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)) {
-                    List<ScanResult> results = wifiManager.getScanResults();
-                    for (ScanResult result: results) {
-                        synchronized (this) {
-                            data.insert(new SingleWifiData(result.SSID, result.BSSID,
-                                    result.capabilities,
-                                    result.level, result.frequency,
-                                    result.timestamp,
-                                    result.channelWidth,
-                                    result.centerFreq0, result.centerFreq1, false));
+                try {
+                    // onReceive may be called before startScanTimestamp (due to system Wifi scan)
+                    if (isCollecting.get() && System.currentTimeMillis() >= startScanTimestamp) {
+                        if (intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)) {
+                            List<ScanResult> results = wifiManager.getScanResults();
+                            for (ScanResult result : results) {
+                                synchronized (this) {
+                                    data.insert(new SingleWifiData(result.SSID, result.BSSID,
+                                            result.capabilities,
+                                            result.level, result.frequency,
+                                            result.timestamp,
+                                            result.channelWidth,
+                                            result.centerFreq0, result.centerFreq1, false));
+                                }
+                            }
+                            CollectorResult result = new CollectorResult();
+                            result.setData(data.deepClone());
+                            result.setDataString(gson.toJson(result.getData(), WifiData.class));
+                            ft.complete(result);
+                        } else {
+                            ft.completeExceptionally(new Exception("Wifi scan results not updated!"));
                         }
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    ft.completeExceptionally(e);
+                } finally {
+                    isCollecting.set(false);
                 }
             }
         };
@@ -77,11 +95,7 @@ public class WifiCollector extends AsynchronousCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
-        CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
-        if (config.getWifiScanTime() <= 0) {
-            ft.completeExceptionally(new Exception("Invalid Wifi scan time: " + config.getWifiScanTime()));
-            return ft;
-        }
+        ft = new CompletableFuture<>();
 
         if (!isCollecting.get()) {
             isCollecting.set(true);
@@ -97,19 +111,7 @@ public class WifiCollector extends AsynchronousCollector {
                             0, 0, true));
                 }
                 wifiManager.startScan();
-                futureList.add(scheduledExecutorService.schedule(() -> {
-                    try {
-                        CollectorResult result = new CollectorResult();
-                        result.setData(data.deepClone());
-                        result.setDataString(gson.toJson(result.getData(), WifiData.class));
-                        ft.complete(result);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        ft.completeExceptionally(e);
-                    } finally {
-                        isCollecting.set(false);
-                    }
-                }, config.getWifiScanTime(), TimeUnit.MILLISECONDS));
+                startScanTimestamp = System.currentTimeMillis();
             } catch (Exception e) {
                 e.printStackTrace();
                 ft.completeExceptionally(e);
