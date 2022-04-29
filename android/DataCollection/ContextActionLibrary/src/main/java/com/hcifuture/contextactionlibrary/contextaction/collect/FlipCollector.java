@@ -40,21 +40,23 @@ public class FlipCollector extends BaseCollector{
             long time = System.currentTimeMillis();
             if (FutureIMU != null) {
                 String name = action.getAction();
-                String commit = action.getAction() + ":" + action.getReason() + " " + action.getTimestamp();
+                String commit = action.getAction() + ":" + action.getReason() + " " + action.getTimestamp()+" "+time;
                 if (FutureIMU.isDone()) {
                     try {
-                        upload(FutureIMU.get().get(0), name, commit, time);
+                        upload(FutureIMU.get().get(0), name, commit);
+//                        upload(FutureIMU.get().get(0), name, commit, time);
                     } catch (ExecutionException | InterruptedException e) {
                         e.printStackTrace();
                     }
                 } else {
-                    FutureIMU.whenComplete((v, e) -> upload(v.get(0), name, commit, time));
+//                    FutureIMU.whenComplete((v, e) -> upload(v.get(0), name, commit, time));
+                    FutureIMU.whenComplete((v, e) -> upload(v.get(0), name, commit));
                 }
             }
             if (clickTrigger != null && scheduledExecutorService != null) {
                 futureList.add(scheduledExecutorService.schedule(() -> {
                     try {
-                        triggerAndUpload(logCollector, new TriggerConfig(), "Flip", "Log: Flip",time)
+                        triggerAndUpload(logCollector, new TriggerConfig(), "Flip", "time: "+time)
                                 .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
                     } catch (Exception e) {
                         e.printStackTrace();

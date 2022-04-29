@@ -7,6 +7,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.util.Log;
 
+import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ActionConfig;
@@ -29,9 +30,11 @@ public class CloseAction extends BaseAction {
     long up_gyro_id; // 凑近嘴部的gyro的id
     long success_id; //成功时的id
     boolean success_flag;
+    LogCollector logCollector;
 
-    public CloseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+    public CloseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, LogCollector CloseLogCollector) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
+        logCollector = CloseLogCollector;
     }
 
     //对变量进行初始化
@@ -115,6 +118,11 @@ public class CloseAction extends BaseAction {
     public void onNonIMUSensorEvent(NonIMUData data) {
         dist = data.getProximity();
         Log.i("proximity:","接近光距离为："+dist);
+        logCollector.addLog(System.currentTimeMillis()+" "+dist);
+        float bright = data.getEnvironmentBrightness();
+        long bright_time = data.getEnvironmentBrightnessTimestamp();
+        logCollector.addLog(bright_time+" "+bright);
+        Log.i("proximity:","环境光为："+bright +" 时间为:"+bright_time);
         if(dist == 0 ) {
             if (upright_gyro) {
                 success_id = System.currentTimeMillis();

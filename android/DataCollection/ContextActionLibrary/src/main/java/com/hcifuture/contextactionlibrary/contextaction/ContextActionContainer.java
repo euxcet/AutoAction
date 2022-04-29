@@ -409,7 +409,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         // because it returns a fixed-size list backed by the specified array and we cannot perform add()
         collectors = new ArrayList<>();
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
-        collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
         collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
 
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
@@ -503,7 +502,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         actions.add(flipAction);
                         break;
                     case "Close":
-                        CloseAction closeAction = new CloseAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                        LogCollector CloselogCollector = collectorManager.newLogCollector("Close", 800);
+                        collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, CloselogCollector));
+                        CloseAction closeAction = new CloseAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList, CloselogCollector);
                         actions.add(closeAction);
                         break;
                     case "Pocket":
