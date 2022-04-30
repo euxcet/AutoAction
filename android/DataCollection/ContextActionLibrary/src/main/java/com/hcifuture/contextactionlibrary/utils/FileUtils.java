@@ -1,6 +1,7 @@
 package com.hcifuture.contextactionlibrary.utils;
 
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -36,7 +37,7 @@ public class FileUtils {
         }
     }
 
-    private static File makeFile(File file) {
+    public static File makeFile(File file) {
         try {
             makeDir(file.getParent());
             if (!file.exists()) {
@@ -133,11 +134,12 @@ public class FileUtils {
     }
 
     public static String getFileContent(String filename) {
+        Log.e("Uploader", "Get file content " + filename);
         StringBuffer buffer = new StringBuffer();
         BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new FileReader(new File(filename)));
-            String line = null;
+            reader = new BufferedReader(new FileReader(filename));
+            String line;
             while ((line = reader.readLine()) != null) {
                 buffer.append(line);
             }
@@ -153,5 +155,13 @@ public class FileUtils {
             }
         }
         return buffer.toString();
+    }
+
+    public static void deleteFile(File file, String tag) {
+        if (file.delete()) {
+            Log.d("FileUtils", "[" + tag + "] Delete " + file.getAbsolutePath() + " successfully");
+        } else {
+            Log.d("FileUtils", "[" + tag + "] Failed to delete " + file.getAbsolutePath());
+        }
     }
 }

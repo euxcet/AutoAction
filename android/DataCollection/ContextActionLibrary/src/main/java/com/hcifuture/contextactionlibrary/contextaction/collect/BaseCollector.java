@@ -6,11 +6,16 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
+import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.sensor.uploader.TaskMetaBean;
+import com.hcifuture.contextactionlibrary.sensor.uploader.UploadTask;
+import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
+import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
@@ -38,13 +43,17 @@ public abstract class BaseCollector {
     protected ClickTrigger clickTrigger;
     protected ScheduledExecutorService scheduledExecutorService;
     protected List<ScheduledFuture<?>> futureList;
+    private Uploader uploader;
 
-    public BaseCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger) {
+    public BaseCollector(Context context, ScheduledExecutorService scheduledExecutorService,
+                         List<ScheduledFuture<?>> futureList, RequestListener requestListener,
+                         ClickTrigger clickTrigger, Uploader uploader) {
         this.mContext = context;
         this.scheduledExecutorService = scheduledExecutorService;
         this.requestListener = requestListener;
         this.clickTrigger = clickTrigger;
         this.futureList = futureList;
+        this.uploader = uploader;
     }
 
     public abstract void onAction(ActionResult action);
@@ -91,8 +100,7 @@ public abstract class BaseCollector {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public CompletableFuture<CollectorResult> upload(CollectorResult result, String name, String appendCommit) {
-        CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
+    public CollectorResult upload(CollectorResult result, String name, String appendCommit) {
         try {
             long uploadTime = System.currentTimeMillis();
             String newCommit = "Type: " + ((result.getType() == null)? "Unknown" : result.getType()) + "\n" +
@@ -103,111 +111,25 @@ public abstract class BaseCollector {
             Log.e("Upload commit", newCommit);
             Log.e("Upload file", result.getSavePath());
             File file = new File(result.getSavePath());
-            NetworkUtils.uploadCollectedData(mContext,
-                    file,
-                    0,
-                    name,
-                    getUserID(),
-                    uploadTime,
-                    newCommit,
-                    new Callback() {
-                        @Override
-                        public void onFailure(Call call, IOException e) {
-                            ft.completeExceptionally(e);
-                        }
-
-                        @Override
-                        public void onResponse(Call call, okhttp3.Response response) throws IOException {
-                            ft.complete(result);
-                        }
-                    });
-                    /*
-                    new StringCallback() {
-                        @Override
-                        public void onSuccess(Response<String> response) {
-                            Log.e("Upload response", "Success!");
-                            ft.complete(result);
-                        }
-
-                        @Override
-                        public void onError(Response<String> response) {
-                            ft.completeExceptionally(response.getException());
-                            super.onError(response);
-                        }
-                    }
-                     */
-
+            File metaFile = new File(file.getAbsolutePath() + ".meta");
+            TaskMetaBean meta = new TaskMetaBean(file.getName(), 0, appendCommit, name, getUserID(), uploadTime);
+            FileUtils.writeStringToFile(new Gson().toJson(meta), metaFile);
+            uploader.pushTask(new UploadTask(file, metaFile, meta), true);
         } catch (Exception e) {
             e.printStackTrace();
-            ft.completeExceptionally(e);
         }
-        return ft;
+        return result;
     }
-
-//    @RequiresApi(api = Build.VERSION_CODES.N)
-//    public CompletableFuture<CollectorResult> upload(CollectorResult result, String name, String commit, long timestamp) {
-//        CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
-//        try {
-//            Log.e("Upload name", name);
-//            Log.e("Upload commit", commit);
-//            Log.e("Upload file", result.getSavePath());
-//            File file = new File(result.getSavePath());
-//            NetworkUtils.uploadCollectedData(mContext,
-//                    file,
-//                    0,
-//                    name,
-//                    getUserID(),
-//                    timestamp,
-//                    commit,
-//                    new Callback() {
-//                        @Override
-//                        public void onFailure(Call call, IOException e) {
-//                            ft.completeExceptionally(e);
-//                        }
-//
-//                        @Override
-//                        public void onResponse(Call call, Response response) throws IOException {
-//                            ft.complete(result);
-//                        }
-//                    });
-//                    /*
-//                    new StringCallback() {
-//                        @Override
-//                        public void onSuccess(Response<String> response) {
-//                            Log.e("Upload response", "Success!");
-//                            ft.complete(result);
-//                        }
-//
-//                        @Override
-//                        public void onError(Response<String> response) {
-//                            ft.completeExceptionally(response.getException());
-//                            super.onError(response);
-//                        }
-//                    });
-//                     */
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            ft.completeExceptionally(e);
-//        }
-//        return ft;
-//    }
-
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<CollectorResult> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String appendCommit) {
         return clickTrigger.trigger(collector, triggerConfig)
-                .thenCompose((v) -> upload(v.get(0), name, appendCommit));
+                .thenApply((v) -> upload(v.get(0), name, appendCommit));
     }
-
-//    @RequiresApi(api = Build.VERSION_CODES.N)
-//    public CompletableFuture<CollectorResult> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String commit, long time) {
-//        return clickTrigger.trigger(collector, triggerConfig)
-//                .thenCompose((v) -> upload(v.get(0), name, commit, time));
-//    }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<CollectorResult> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String appendCommit) {
         return clickTrigger.trigger(Collections.singletonList(type), triggerConfig)
-                .thenCompose((v) -> upload(v.get(0), name, appendCommit));
+                .thenApply((v) -> upload(v.get(0), name, appendCommit));
     }
 }

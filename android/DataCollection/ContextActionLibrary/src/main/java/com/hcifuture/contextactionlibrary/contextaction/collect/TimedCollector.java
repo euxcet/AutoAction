@@ -9,6 +9,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.Trigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
@@ -24,8 +25,9 @@ public class TimedCollector extends BaseCollector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public TimedCollector(Context context, ScheduledExecutorService scheduledExecutorService,
-                          List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger) {
-        super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
+                          List<ScheduledFuture<?>> futureList, RequestListener requestListener,
+                          ClickTrigger clickTrigger, Uploader uploader) {
+        super(context, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
