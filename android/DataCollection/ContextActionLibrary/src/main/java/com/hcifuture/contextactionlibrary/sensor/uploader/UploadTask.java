@@ -1,30 +1,41 @@
 package com.hcifuture.contextactionlibrary.sensor.uploader;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class UploadTask implements Comparable<UploadTask> {
     private static final int DEFAULT_REMAINING_RETRIES = 5;
     private File file;
-    private int fileType;
-    private String commit;
-    private String name;
-    private String userId;
-    private long timestamp;
+    private File metaFile;
+    private List<TaskMetaBean> meta;
     private int remainingRetries;
 
     private long expectedUploadTime;
 
-    public UploadTask(File file, int fileType,
-                      String commit, String name, String userId,
-                      long timestamp, int remainingRetries) {
+    public UploadTask(File file, File metaFile, TaskMetaBean meta, int remainingRetries) {
         this.file = file;
-        this.fileType = fileType;
-        this.commit = commit;
-        this.name = name;
-        this.userId = userId;
-        this.timestamp = timestamp;
+        this.metaFile = metaFile;
+        this.meta = Collections.singletonList(meta);
         this.remainingRetries = remainingRetries;
         this.expectedUploadTime = System.currentTimeMillis();
+    }
+
+    public UploadTask(File file, File metaFile, List<TaskMetaBean> meta, int remainingRetries) {
+        this.file = file;
+        this.metaFile = metaFile;
+        this.meta = meta;
+        this.remainingRetries = remainingRetries;
+        this.expectedUploadTime = System.currentTimeMillis();
+    }
+
+    public UploadTask(File file, File metaFile, TaskMetaBean meta) {
+        this(file, metaFile, meta, DEFAULT_REMAINING_RETRIES);
+    }
+
+    public UploadTask(File file, File metaFile, List<TaskMetaBean> meta) {
+        this(file, metaFile, meta, DEFAULT_REMAINING_RETRIES);
     }
 
     @Override
@@ -32,66 +43,20 @@ public class UploadTask implements Comparable<UploadTask> {
         return Long.compare(this.expectedUploadTime, uploadTask.expectedUploadTime);
     }
 
-    public UploadTask(File file, int fileType,
-                      String commit, String name, String userId,
-                      long timestamp) {
-        this(file, fileType, commit, name, userId, timestamp, DEFAULT_REMAINING_RETRIES);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
     public File getFile() {
         return file;
-    }
-
-    public int getFileType() {
-        return fileType;
     }
 
     public int getRemainingRetries() {
         return remainingRetries;
     }
 
-    public String getCommit() {
-        return commit;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setCommit(String commit) {
-        this.commit = commit;
-    }
-
     public void setFile(File file) {
         this.file = file;
     }
 
-    public void setFileType(int fileType) {
-        this.fileType = fileType;
-    }
-
     public void setRemainingRetries(int remainingRetries) {
         this.remainingRetries = remainingRetries;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
     }
 
     public static int getDefaultRemainingRetries() {
@@ -104,5 +69,21 @@ public class UploadTask implements Comparable<UploadTask> {
 
     public long getExpectedUploadTime() {
         return expectedUploadTime;
+    }
+
+    public void setMeta(List<TaskMetaBean> meta) {
+        this.meta = meta;
+    }
+
+    public List<TaskMetaBean> getMeta() {
+        return meta;
+    }
+
+    public File getMetaFile() {
+        return metaFile;
+    }
+
+    public void setMetaFile(File metaFile) {
+        this.metaFile = metaFile;
     }
 }

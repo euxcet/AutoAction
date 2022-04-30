@@ -6,13 +6,16 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
+import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.sensor.uploader.TaskMetaBean;
 import com.hcifuture.contextactionlibrary.sensor.uploader.UploadTask;
 import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
+import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
@@ -108,7 +111,10 @@ public abstract class BaseCollector {
             Log.e("Upload commit", newCommit);
             Log.e("Upload file", result.getSavePath());
             File file = new File(result.getSavePath());
-            uploader.pushTask(new UploadTask(file, 0, newCommit, name, getUserID(), uploadTime));
+            File metaFile = new File(file.getAbsolutePath() + ".meta");
+            TaskMetaBean meta = new TaskMetaBean(file.getName(), 0, appendCommit, name, getUserID(), uploadTime);
+            FileUtils.writeStringToFile(new Gson().toJson(meta), metaFile);
+            uploader.pushTask(new UploadTask(file, metaFile, meta), true);
         } catch (Exception e) {
             e.printStackTrace();
         }

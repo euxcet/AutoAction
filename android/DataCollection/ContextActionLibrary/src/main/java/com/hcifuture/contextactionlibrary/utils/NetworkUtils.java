@@ -58,11 +58,7 @@ public class NetworkUtils {
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("file", task.getFile().getName(), RequestBody.create(MediaType.parse(mime), task.getFile()))
-                .addFormDataPart("fileType", String.valueOf(task.getFileType()))
-                .addFormDataPart("userId", task.getUserId())
-                .addFormDataPart("name", task.getName())
-                .addFormDataPart("timestamp", String.valueOf(task.getTimestamp()))
-                .addFormDataPart("commit", task.getCommit())
+                .addFormDataPart("meta", gson.toJson(task.getMeta()))
                 .build();
         Request request = new Request.Builder()
                 .url(COLLECTED_DATA_URL)
