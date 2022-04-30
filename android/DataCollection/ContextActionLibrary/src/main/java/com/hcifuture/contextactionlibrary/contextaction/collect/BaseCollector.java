@@ -112,7 +112,7 @@ public abstract class BaseCollector {
             Log.e("Upload file", result.getSavePath());
             File file = new File(result.getSavePath());
             File metaFile = new File(file.getAbsolutePath() + ".meta");
-            TaskMetaBean meta = new TaskMetaBean(file.getName(), 0, appendCommit, name, getUserID(), uploadTime);
+            TaskMetaBean meta = new TaskMetaBean(file.getName(), 0, newCommit, name, getUserID(), uploadTime);
             FileUtils.writeStringToFile(new Gson().toJson(meta), metaFile);
             uploader.pushTask(new UploadTask(file, metaFile, meta), true);
         } catch (Exception e) {
