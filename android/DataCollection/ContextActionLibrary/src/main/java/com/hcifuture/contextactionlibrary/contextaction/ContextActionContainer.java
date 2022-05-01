@@ -323,6 +323,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             collectorManager.pause();
             collectorManager.close();
         }
+        uploader.stop();
         for (ScheduledFuture<?> future: futureList) {
             future.cancel(true);
         }

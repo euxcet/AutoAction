@@ -102,7 +102,7 @@ public class Uploader {
         futureList.add(localFuture);
     }
 
-    private void stop() {
+    public void stop() {
         if (uploadFuture != null) {
             uploadFuture.cancel(true);
         }
@@ -160,7 +160,7 @@ public class Uploader {
     private void compress() {
         List<File> needToDelete = new ArrayList<>();
         long threadId = Thread.currentThread().getId();
-        while (isRunning.get()) {
+        while (!Thread.currentThread().isInterrupted() && isRunning.get()) {
             List<UploadTask> pack = new ArrayList<>();
             try {
                 lock.lock();
@@ -235,7 +235,7 @@ public class Uploader {
     }
 
     private void upload() {
-        while (isRunning.get()) {
+        while (!Thread.currentThread().isInterrupted() && isRunning.get()) {
             UploadTask task;
             try {
                 lock.lock();
