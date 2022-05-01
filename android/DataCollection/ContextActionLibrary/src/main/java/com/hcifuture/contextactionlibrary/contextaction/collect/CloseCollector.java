@@ -77,20 +77,5 @@ public class CloseCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onContext(ContextResult context) {
-        if (!context.getContext().equals("UserAction")) {
-            return;
-        }
-        if (clickTrigger != null) {
-            triggerAndUpload(CollectorManager.CollectorType.IMU,
-                    new TriggerConfig().setImuHead(800).setImuTail(200),
-                    context.getContext(),
-                    context.getContext() + ":" + context.getTimestamp()
-            );
-            triggerAndUpload(CollectorManager.CollectorType.NonIMU,
-                    new TriggerConfig().setImuHead(800).setImuTail(200),
-                    context.getContext(),
-                    context.getContext() + ":" + context.getTimestamp()
-            );
-        }
     }
 }
