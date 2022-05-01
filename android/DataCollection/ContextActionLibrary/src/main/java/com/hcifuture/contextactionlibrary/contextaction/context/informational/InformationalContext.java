@@ -55,6 +55,7 @@ public class InformationalContext extends BaseContext {
 
     private LogCollector logCollector;
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public InformationalContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector informationalLogCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
 
