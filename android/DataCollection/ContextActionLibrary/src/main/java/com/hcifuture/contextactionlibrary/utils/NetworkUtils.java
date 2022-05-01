@@ -2,6 +2,7 @@ package com.hcifuture.contextactionlibrary.utils;
 
 import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import com.hcifuture.contextactionlibrary.BuildConfig;
@@ -23,6 +24,10 @@ public class NetworkUtils {
 
     private static Gson gson = new Gson();
     private static OkHttpClient client = new OkHttpClient();
+    public static final String MIME_TYPE_JSON = "application/json";
+    public static final String MIME_TYPE_BIN = "application/octet-stream";
+    public static final String MIME_TYPE_MP3 = "audio/mpeg";
+    public static final String MIME_TYPE_TXT = "text/plain";
 
     /*
         fileType:
@@ -30,7 +35,26 @@ public class NetworkUtils {
      */
     public static void uploadCollectedData(Context context, File file, int fileType, String name, String userId, long timestamp, String commit, Callback callback) {
         String extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(file).toString());
-        String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+        String mime = null;
+        if(MimeTypeMap.getSingleton().hasMimeType(extension)==false){
+            switch (extension.toLowerCase()) {
+                case "json":
+                    mime = MIME_TYPE_JSON;
+                    break;
+                case "bin":
+                    mime = MIME_TYPE_BIN;
+                    break;
+                case "mp3":
+                    mime = MIME_TYPE_MP3;
+                    break;
+                case "txt":
+                    mime = MIME_TYPE_TXT;
+                    break;
+            }
+        }
+        else
+            mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+        Log.e("upload:","extension:"+extension+" mime:"+mime);
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("file", file.getName(), RequestBody.create(MediaType.parse(mime), file))

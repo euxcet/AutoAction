@@ -117,12 +117,14 @@ public class CloseAction extends BaseAction {
     @Override
     public void onNonIMUSensorEvent(NonIMUData data) {
         dist = data.getProximity();
-        Log.i("proximity:","接近光距离为："+dist);
-        logCollector.addLog(System.currentTimeMillis()+" "+dist);
         float bright = data.getEnvironmentBrightness();
-        long bright_time = data.getEnvironmentBrightnessTimestamp();
-        logCollector.addLog(bright_time+" "+bright);
-        Log.i("proximity:","环境光为："+bright +" 时间为:"+bright_time);
+        if(upright_gyro)
+            logCollector.addLog(System.currentTimeMillis()+" "+dist+" "+bright);
+        if(upright_gyro)
+            Log.i("proximity:","接近光距离为："+dist+" 亮度为："+bright);
+//        long bright_time = data.getEnvironmentBrightnessTimestamp();
+//        logCollector.addLog(bright_time+" "+bright);
+//        Log.i("proximity:","环境光为："+bright +" 时间为:"+bright_time);
         if(dist == 0 ) {
             if (upright_gyro) {
                 success_id = System.currentTimeMillis();
