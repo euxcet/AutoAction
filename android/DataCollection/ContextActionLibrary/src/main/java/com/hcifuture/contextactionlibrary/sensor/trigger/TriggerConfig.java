@@ -6,7 +6,6 @@ public class TriggerConfig {
     private int audioLength = 5000;
     private String audioFilename = "";
     private int bluetoothScanTime = 10000;
-    private int wifiScanTime = 10000;
     private int gpsRequestTime = 3000;
 
     public TriggerConfig() {
@@ -47,10 +46,6 @@ public class TriggerConfig {
         return bluetoothScanTime;
     }
 
-    public int getWifiScanTime() {
-        return wifiScanTime;
-    }
-
     public String getAudioFilename() {
         return audioFilename;
     }
@@ -62,11 +57,6 @@ public class TriggerConfig {
 
     public TriggerConfig setBluetoothScanTime(int bluetoothScanTime) {
         this.bluetoothScanTime = bluetoothScanTime;
-        return this;
-    }
-
-    public TriggerConfig setWifiScanTime(int wifiScanTime) {
-        this.wifiScanTime = wifiScanTime;
         return this;
     }
 

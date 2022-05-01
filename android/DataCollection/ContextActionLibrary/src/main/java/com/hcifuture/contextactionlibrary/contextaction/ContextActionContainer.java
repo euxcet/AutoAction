@@ -47,6 +47,7 @@ import com.hcifuture.contextactionlibrary.contextaction.context.physical.Proximi
 import com.hcifuture.contextactionlibrary.contextaction.context.physical.TableContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.config.ContextConfig;
@@ -89,6 +90,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private RequestListener requestListener;
 
     private ClickTrigger clickTrigger;
+    private Uploader uploader;
 
     private List<BaseCollector> collectors;
 
@@ -404,14 +406,15 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         ), scheduledExecutorService, futureList);
 
         this.clickTrigger = new ClickTrigger(mContext, collectorManager, scheduledExecutorService, futureList);
+        this.uploader = new Uploader(mContext, scheduledExecutorService, futureList);
 
         // cwh: do not use Arrays.asList() to assign to collectors,
         // because it returns a fixed-size list backed by the specified array and we cannot perform add()
         collectors = new ArrayList<>();
-        collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
-        collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
+        collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader));
+        collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader));
 
-        TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
+        TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader)
                 .scheduleFixedRateUpload(CollectorManager.CollectorType.GPS, new TriggerConfig().setGPSRequestTime(3000), 10000, 0, "Timed_Loc_GPS")
                 .scheduleFixedRateUpload(CollectorManager.CollectorType.Location, new TriggerConfig(), 10000, 0, "Timed_Loc_GPS");
         collectors.add(timedCollector);
@@ -454,7 +457,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     case "Informational":
                         LogCollector informationLogCollector = collectorManager.newLogCollector("Informational", 8192);
                         timedCollector.scheduleTimedLogUpload(informationLogCollector, 60000, 5000, "Informational");
-                        collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector));
+                        collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, informationLogCollector));
                         InformationalContext informationalContext = new InformationalContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener),informationLogCollector, scheduledExecutorService, futureList);
                         contexts.add(informationalContext);
                         break;
@@ -497,13 +500,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         break;
                     case "Flip":
                         LogCollector FliplogCollector = collectorManager.newLogCollector("Flip", 800);
-                        collectors.add(new FlipCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, FliplogCollector));
+                        collectors.add(new FlipCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, FliplogCollector));
                         FlipAction flipAction = new FlipAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList, FliplogCollector);
                         actions.add(flipAction);
                         break;
                     case "Close":
                         LogCollector CloselogCollector = collectorManager.newLogCollector("Close", 800);
-                        collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, CloselogCollector));
+                        collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, CloselogCollector));
                         CloseAction closeAction = new CloseAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList, CloselogCollector);
                         actions.add(closeAction);
                         break;
@@ -514,7 +517,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     case "Example":
                         LogCollector logCollector = collectorManager.newLogCollector("Log0", 100);
                         timedCollector.scheduleTimedLogUpload(logCollector, 5000, 0, "Example");
-                        collectors.add(new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector));
+                        collectors.add(new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, logCollector));
                         ExampleAction exampleAction = new ExampleAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), logCollector, scheduledExecutorService, futureList);
                         actions.add(exampleAction);
                         break;

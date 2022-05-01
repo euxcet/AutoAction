@@ -167,7 +167,7 @@ public class ConfigContext extends BaseContext {
                     } else {
                         JSONUtils.silentPut(json, "mode", "unknown");
                     }
-                    notify(NEED_NONIMU, timestamp, logID, "screen brightness change");
+                    notifyContext(NEED_NONIMU, timestamp, logID, "screen brightness change");
                 } else if (database_key.startsWith("volume_")) {
                     if (!volume.containsKey(database_key)) {
                         // record new volume value
@@ -176,7 +176,7 @@ public class ConfigContext extends BaseContext {
                     // record volume value difference and update
                     int diff = value - volume.put(database_key, value);
                     JSONUtils.silentPut(json, "diff", diff);
-                    notify(NEED_AUDIO, timestamp, logID, "volume change: " + database_key);
+                    notifyContext(NEED_AUDIO, timestamp, logID, "volume change: " + database_key);
                 } else if (Settings.Global.BLUETOOTH_ON.equals(database_key) && value == 1) {
 //                    notify(NEED_SCAN, timestamp, logID, "Bluetooth on via global setting");
                 } else if (Settings.Global.WIFI_ON.equals(database_key) && value == 2) {
@@ -206,11 +206,11 @@ public class ConfigContext extends BaseContext {
                     break;
             }
             if (Intent.ACTION_SCREEN_ON.equals(action)) {
-                notify(NEED_SCAN, timestamp, logID, "screen on");
+                notifyContext(NEED_SCAN, timestamp, logID, "screen on");
             } else if (WifiManager.WIFI_STATE_CHANGED_ACTION.equals(action) && extras.getInt(WifiManager.EXTRA_WIFI_STATE) == WifiManager.WIFI_STATE_ENABLED) {
-                notify(NEED_SCAN, timestamp, logID, "Wifi on via broadcast");
+                notifyContext(NEED_SCAN, timestamp, logID, "Wifi on via broadcast");
             } else if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action) && extras.getInt(BluetoothAdapter.EXTRA_STATE) == BluetoothAdapter.STATE_ON) {
-                notify(NEED_SCAN, timestamp, logID, "Bluetooth on via broadcast");
+                notifyContext(NEED_SCAN, timestamp, logID, "Bluetooth on via broadcast");
             }
         } else if ("KeyEvent".equals(type)) {
             record = true;
@@ -238,7 +238,7 @@ public class ConfigContext extends BaseContext {
                 case KeyEvent.KEYCODE_VOLUME_DOWN:
                 case KeyEvent.KEYCODE_VOLUME_MUTE:
                 case KeyEvent.KEYCODE_VOLUME_UP:
-                    notify(NEED_AUDIO, timestamp, logID, "key event: " + KeyEvent.keyCodeToString(keycode));
+                    notifyContext(NEED_AUDIO, timestamp, logID, "key event: " + KeyEvent.keyCodeToString(keycode));
             }
         }
 
@@ -318,7 +318,7 @@ public class ConfigContext extends BaseContext {
         JSONUtils.silentPut(json, key, jsonArray);
     }
 
-    private void notify(String context, long timestamp, int logID, String reason) {
+    private void notifyContext(String context, long timestamp, int logID, String reason) {
         if (contextListener != null) {
             Log.e("ConfigContext", "broadcast context: " + context);
             for (ContextListener listener: contextListener) {
