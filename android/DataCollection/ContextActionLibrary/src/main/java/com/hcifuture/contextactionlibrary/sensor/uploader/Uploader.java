@@ -53,7 +53,7 @@ public class Uploader {
 
     private static final Gson gson = new Gson();
 
-    private Context mContext;
+    private final Context mContext;
 
     private final Lock lock = new ReentrantLock();
     private final Condition compressCondition = lock.newCondition();
@@ -63,17 +63,17 @@ public class Uploader {
     private final PriorityQueue<UploadTask> uploadQueue = new PriorityQueue<>();
     private final int QUEUE_ELEMENT_LIMIT = 10000;
 
-    private ScheduledExecutorService scheduledExecutorService;
-    private List<ScheduledFuture<?>> futureList;
+    private final ScheduledExecutorService scheduledExecutorService;
+    private final List<ScheduledFuture<?>> futureList;
 
     private ScheduledFuture<?> uploadFuture;
     private ScheduledFuture<?> compressFuture;
     private ScheduledFuture<?> localFuture;
 
-    private AtomicBoolean isRunning = new AtomicBoolean(false);
+    private final AtomicBoolean isRunning = new AtomicBoolean(false);
 
-    private String fileFolder;
-    private String zipFolder;
+    private final String fileFolder;
+    private final String zipFolder;
 
     enum UploaderStatus {
         OK,
@@ -159,7 +159,6 @@ public class Uploader {
 
     private void compress() {
         List<File> needToDelete = new ArrayList<>();
-        long threadId = Thread.currentThread().getId();
         while (!Thread.currentThread().isInterrupted() && isRunning.get()) {
             List<UploadTask> pack = new ArrayList<>();
             try {
@@ -192,7 +191,7 @@ public class Uploader {
                     try (ZipOutputStream os = new ZipOutputStream(new FileOutputStream(zipFile))) {
                         for (int i = 0; i < pack.size(); i++) {
                             File file = pack.get(i).getFile();
-                            Log.e(TAG+threadId, "[PACK] Compressing " + file.getAbsolutePath());
+                            Log.e(TAG, "[PACK] Compressing " + file.getAbsolutePath());
                             ZipEntry zipEntry = new ZipEntry(file.getName());
                             // may throw FileNotFoundException
                             try (FileInputStream is = new FileInputStream(file)) {
@@ -212,7 +211,7 @@ public class Uploader {
                             }
                         }
                     }
-                    Log.e(TAG+threadId, "compress: packedEntries: " + packedEntries);
+                    Log.e(TAG, "compress: packedEntries: " + packedEntries);
                     if (packedEntries > 0) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             List<TaskMetaBean> metas = pack.stream().map((x) -> x.getMeta().get(0)).collect(Collectors.toList());
@@ -294,14 +293,13 @@ public class Uploader {
     }
 
     private void uploadDirectory(File dir, long timestamp, boolean isZip) {
-        long threadId = Thread.currentThread().getId();
-        Log.e(TAG+threadId, "uploadDirectory: " + dir + " isZip: " + isZip);
+        Log.e(TAG, "uploadDirectory: " + dir + " isZip: " + isZip);
         if (dir.exists()) {
             File[] files = dir.listFiles();
             if (files != null) {
                 for (File file : files) {
                     try {
-                        Log.e(TAG+threadId, "uploadDirectory: checking file: " + file);
+                        Log.e(TAG, "uploadDirectory: checking file: " + file);
                         if (file.isDirectory()) {
                             uploadDirectory(file, timestamp, isZip);
                         } else {

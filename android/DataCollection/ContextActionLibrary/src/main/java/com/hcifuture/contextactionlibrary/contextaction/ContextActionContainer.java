@@ -72,19 +72,17 @@ import java.util.stream.Collectors;
 
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class ContextActionContainer implements ActionListener, ContextListener {
-    private Context mContext;
+    private final Context mContext;
 
     // private ThreadPoolExecutor executor;
 
-    private List<BaseAction> actions;
-    private List<BaseContext> contexts;
+    private final List<BaseAction> actions;
+    private final List<BaseContext> contexts;
 
     // private List<BaseSensorManager> sensorManagers;
 
     private boolean fromDex = false;
     private boolean openSensor = false;
-    private List<ActionConfig> actionConfig;
-    private List<ContextConfig> contextConfig;
     private ActionListener actionListener;
     private ContextListener contextListener;
     private RequestListener requestListener;
@@ -95,10 +93,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private List<BaseCollector> collectors;
 
     private ScheduledExecutorService scheduledExecutorService;
-    private List<ScheduledFuture<?>> futureList;
-
-    private TapTapAction tapTapAction;
-    private String markTimestamp;
+    private final List<ScheduledFuture<?>> futureList;
 
     private ScheduledFuture<?> actionFuture;
     private ScheduledFuture<?> contextFuture;
@@ -492,7 +487,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 }
                 switch (actionConfig.getAction()) {
                     case "TapTap":
-                        tapTapAction = new TapTapAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                        TapTapAction tapTapAction = new TapTapAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
                         actions.add(tapTapAction);
                         break;
                     case "TopTap":

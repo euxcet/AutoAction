@@ -158,11 +158,10 @@ public class FileUtils {
     }
 
     public static void deleteFile(File file, String tag) {
-        long threadId = Thread.currentThread().getId();
         if (file.delete()) {
-            Log.d("FileUtils"+threadId, "[" + tag + "] Delete " + file.getAbsolutePath() + " successfully");
+            Log.d("FileUtils", "[" + tag + "] Delete " + file.getAbsolutePath() + " successfully");
         } else {
-            Log.d("FileUtils"+threadId, "[" + tag + "] Failed to delete " + file.getAbsolutePath());
+            Log.d("FileUtils", "[" + tag + "] Failed to delete " + file.getAbsolutePath());
         }
     }
 }
