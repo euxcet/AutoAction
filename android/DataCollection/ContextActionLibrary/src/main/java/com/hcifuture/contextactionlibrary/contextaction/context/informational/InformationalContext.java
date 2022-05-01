@@ -10,6 +10,7 @@ import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
+import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
@@ -98,9 +99,14 @@ public class InformationalContext extends BaseContext {
         if (nowTime - lastActionTime > 5000) {
             if (contextListener != null) {
                 for (ContextListener listener: contextListener) {
+                    // need imu record
                     ContextResult contextResult = new ContextResult("UserAction");
                     contextResult.setTimestamp(lastIMUTime);
                     listener.onContext(contextResult);
+                    // need scan
+                    ContextResult contextResultScan = new ContextResult(ConfigContext.NEED_SCAN, "UserAction");
+                    contextResultScan.setTimestamp(nowTime);
+                    listener.onContext(contextResultScan);
                 }
             }
         }
@@ -241,21 +247,6 @@ public class InformationalContext extends BaseContext {
     @Override
     public void getContext() {
 
-//        StringBuilder sb = new StringBuilder("");
-//        sb.append("Informational:");
-//        sb.append(lastTask.getName());
-//        sb.append("#");
-//        sb.append(lastPage.getTitle());
-//        sb.append("#");
-//        sb.append(lastActivityName);
-//        sb.append("#");
-//        sb.append(lastPackageName);
-//
-//        if (contextListener != null) {
-//            for (ContextListener listener: contextListener) {
-//                listener.onContext(new ContextResult(sb.toString()));
-//            }
-//        }
     }
 
     public void initFromFile()
