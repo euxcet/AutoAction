@@ -23,8 +23,8 @@ public class NetworkUtils {
     private static final String ROOT_URL = BuildConfig.WEB_SERVER;
     private static final String COLLECTED_DATA_URL = ROOT_URL + "/collected_data";
 
-    private static Gson gson = new Gson();
-    private static OkHttpClient client = new OkHttpClient();
+    private static final Gson gson = new Gson();
+    private static final OkHttpClient client = new OkHttpClient();
     public static final String MIME_TYPE_JSON = "application/json";
     public static final String MIME_TYPE_BIN = "application/octet-stream";
     public static final String MIME_TYPE_MP3 = "audio/mpeg";
@@ -80,14 +80,12 @@ public class NetworkUtils {
     public static void uploadCollectedData(UploadTask task, Callback callback) {
         String extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(task.getFile()).toString());
 //        String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
-        String mime = null;
-        if(MimeTypeMap.getSingleton().hasMimeType(extension)==false){
+        String mime;
+        if (!MimeTypeMap.getSingleton().hasMimeType(extension)) {
             switch (extension.toLowerCase()) {
                 case "json":
+                case "meta":
                     mime = MIME_TYPE_JSON;
-                    break;
-                case "bin":
-                    mime = MIME_TYPE_BIN;
                     break;
                 case "mp3":
                     mime = MIME_TYPE_MP3;
@@ -98,10 +96,13 @@ public class NetworkUtils {
                 case "zip":
                     mime = MIME_TYPE_ZIP;
                     break;
+                case "bin":
+                default:
+                    mime = MIME_TYPE_BIN;
             }
-        }
-        else
+        } else {
             mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+        }
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("file", task.getFile().getName(), RequestBody.create(MediaType.parse(mime), task.getFile()))
