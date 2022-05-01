@@ -158,6 +158,8 @@ public class Uploader {
     }
 
     private void compress() {
+        List<File> needToDelete = new ArrayList<>();
+        long threadId = Thread.currentThread().getId();
         while (isRunning.get()) {
             List<UploadTask> pack = new ArrayList<>();
             try {
@@ -178,38 +180,52 @@ public class Uploader {
                 lock.unlock();
             }
             if (pack.size() > 0) {
-                String zipName = System.currentTimeMillis() + ".zip";
-                String metaName = zipName + ".meta";
                 try {
+                    String zipName = System.currentTimeMillis() + ".zip";
+                    String metaName = zipName + ".meta";
+                    needToDelete.clear();
                     File zipFile = new File(zipFolder + zipName);
                     File metaFile = new File(zipFolder + metaName);
                     FileUtils.makeFile(zipFile);
                     FileUtils.makeFile(metaFile);
-                    ZipOutputStream os = new ZipOutputStream(new FileOutputStream(zipFile));
-                    for (int i = 0; i < pack.size(); i++) {
-                        File file = pack.get(i).getFile();
-                        Log.d(TAG, "[PACK] Compressing " + file.getAbsolutePath());
-                        ZipEntry zipEntry = new ZipEntry(file.getName());
-                        FileInputStream is = new FileInputStream(file);
-                        os.putNextEntry(zipEntry);
-                        int len;
-                        byte[] buffer = new byte[1024 * 1024];
-                        while ((len = is.read(buffer)) != -1) {
-                            os.write(buffer, 0, len);
+                    int packedEntries = 0;
+                    try (ZipOutputStream os = new ZipOutputStream(new FileOutputStream(zipFile))) {
+                        for (int i = 0; i < pack.size(); i++) {
+                            File file = pack.get(i).getFile();
+                            Log.e(TAG+threadId, "[PACK] Compressing " + file.getAbsolutePath());
+                            ZipEntry zipEntry = new ZipEntry(file.getName());
+                            // may throw FileNotFoundException
+                            try (FileInputStream is = new FileInputStream(file)) {
+                                os.putNextEntry(zipEntry);
+                                int len;
+                                byte[] buffer = new byte[1024 * 1024];
+                                while ((len = is.read(buffer)) != -1) {
+                                    os.write(buffer, 0, len);
+                                }
+                                os.closeEntry();
+                                // delete already packed files
+                                packedEntries++;
+                                needToDelete.add(file);
+                                needToDelete.add(pack.get(i).getMetaFile());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
-                        is.close();
-                        os.closeEntry();
                     }
-                    os.finish();
-                    os.close();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        List<TaskMetaBean> metas = pack.stream().map((x) -> x.getMeta().get(0)).collect(Collectors.toList());
-                        FileUtils.writeStringToFile(gson.toJson(metas), metaFile);
-                        pushTask(new UploadTask(zipFile, metaFile, metas), false);
-                    }
-                    for (int i = 0; i < pack.size(); i++) {
-                        FileUtils.deleteFile(pack.get(i).getFile(), "PACK");
-                        FileUtils.deleteFile(pack.get(i).getMetaFile(), "PACK");
+                    Log.e(TAG+threadId, "compress: packedEntries: " + packedEntries);
+                    if (packedEntries > 0) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            List<TaskMetaBean> metas = pack.stream().map((x) -> x.getMeta().get(0)).collect(Collectors.toList());
+                            FileUtils.writeStringToFile(gson.toJson(metas), metaFile);
+                            pushTask(new UploadTask(zipFile, metaFile, metas), false);
+                        }
+                        for (int i = 0; i < needToDelete.size(); i++) {
+                            FileUtils.deleteFile(needToDelete.get(i), "PACK");
+                        }
+                    } else {
+                        // pack contains no file, delete .zip and .zip.meta
+                        FileUtils.deleteFile(zipFile, "PACK FAIL");
+                        FileUtils.deleteFile(metaFile, "PACK FAIL");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -278,13 +294,14 @@ public class Uploader {
     }
 
     private void uploadDirectory(File dir, long timestamp, boolean isZip) {
-        Log.e(TAG, "uploadDirectory: " + dir + " isZip: " + isZip);
+        long threadId = Thread.currentThread().getId();
+        Log.e(TAG+threadId, "uploadDirectory: " + dir + " isZip: " + isZip);
         if (dir.exists()) {
             File[] files = dir.listFiles();
             if (files != null) {
                 for (File file : files) {
                     try {
-                        Log.e(TAG, "uploadDirectory: checking file: " + file);
+                        Log.e(TAG+threadId, "uploadDirectory: checking file: " + file);
                         if (file.isDirectory()) {
                             uploadDirectory(file, timestamp, isZip);
                         } else {
