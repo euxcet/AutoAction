@@ -29,6 +29,7 @@ public class NetworkUtils {
     public static final String MIME_TYPE_BIN = "application/octet-stream";
     public static final String MIME_TYPE_MP3 = "audio/mpeg";
     public static final String MIME_TYPE_TXT = "text/plain";
+    public static final String MIME_TYPE_ZIP = "application/zip";
 
     /*
         fileType:
@@ -78,7 +79,29 @@ public class NetworkUtils {
 
     public static void uploadCollectedData(UploadTask task, Callback callback) {
         String extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(task.getFile()).toString());
-        String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+//        String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+        String mime = null;
+        if(MimeTypeMap.getSingleton().hasMimeType(extension)==false){
+            switch (extension.toLowerCase()) {
+                case "json":
+                    mime = MIME_TYPE_JSON;
+                    break;
+                case "bin":
+                    mime = MIME_TYPE_BIN;
+                    break;
+                case "mp3":
+                    mime = MIME_TYPE_MP3;
+                    break;
+                case "txt":
+                    mime = MIME_TYPE_TXT;
+                    break;
+                case "zip":
+                    mime = MIME_TYPE_ZIP;
+                    break;
+            }
+        }
+        else
+            mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("file", task.getFile().getName(), RequestBody.create(MediaType.parse(mime), task.getFile()))
