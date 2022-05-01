@@ -258,9 +258,11 @@ public class Uploader {
 
                     @Override
                     public void onResponse(@NonNull Call call, @NonNull Response response) {
-                        Log.d(TAG, "Successfully uploaded " + task.getFile().getAbsolutePath());
-                        FileUtils.deleteFile(task.getFile(), "UPLOAD");
-                        FileUtils.deleteFile(task.getMetaFile(), "UPLOAD");
+                        if (response.isSuccessful()) {
+                            Log.d(TAG, "Successfully uploaded " + task.getFile().getAbsolutePath());
+                            FileUtils.deleteFile(task.getFile(), "UPLOAD");
+                            FileUtils.deleteFile(task.getMetaFile(), "UPLOAD");
+                        }
                     }
                 });
             }
