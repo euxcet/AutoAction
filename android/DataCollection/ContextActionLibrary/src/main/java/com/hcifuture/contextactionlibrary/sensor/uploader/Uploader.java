@@ -276,32 +276,38 @@ public class Uploader {
     }
 
     private void uploadDirectory(File dir, long timestamp, boolean isZip) {
+        Log.e(TAG, "uploadDirectory: " + dir + " isZip: " + isZip);
         if (dir.exists()) {
             File[] files = dir.listFiles();
             if (files != null) {
                 for (File file : files) {
-                    if (file.isDirectory()) {
-                        uploadDirectory(file, timestamp, isZip);
-                    } else {
-                        File metaFile = new File(file.getAbsolutePath() + ".meta");
-                        if (metaFile.exists()) {
-                            if (isZip) {
-                                Type type = new TypeToken<List<TaskMetaBean>>(){}.getType();
-                                String content = FileUtils.getFileContent(metaFile.getAbsolutePath());
-                                List<TaskMetaBean> meta = gson.fromJson(content, type);
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                    if (meta.stream().noneMatch(v -> v.getTimestamp() >= timestamp)) {
-                                        pushTask(new UploadTask(file, metaFile, meta), false);
+                    try {
+                        Log.e(TAG, "uploadDirectory: checking file: " + file);
+                        if (file.isDirectory()) {
+                            uploadDirectory(file, timestamp, isZip);
+                        } else {
+                            File metaFile = new File(file.getAbsolutePath() + ".meta");
+                            if (metaFile.exists()) {
+                                if (isZip) {
+                                    Type type = new TypeToken<List<TaskMetaBean>>(){}.getType();
+                                    String content = FileUtils.getFileContent(metaFile.getAbsolutePath());
+                                    List<TaskMetaBean> meta = gson.fromJson(content, type);
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                        if (meta.stream().noneMatch(v -> v.getTimestamp() >= timestamp)) {
+                                            pushTask(new UploadTask(file, metaFile, meta), false);
+                                        }
                                     }
-                                }
-                            } else {
-                                String content = FileUtils.getFileContent(metaFile.getAbsolutePath());
-                                TaskMetaBean meta = gson.fromJson(content, TaskMetaBean.class);
-                                if (meta.getTimestamp() < timestamp) {
-                                    pushTask(new UploadTask(file, metaFile, meta), true);
+                                } else {
+                                    String content = FileUtils.getFileContent(metaFile.getAbsolutePath());
+                                    TaskMetaBean meta = gson.fromJson(content, TaskMetaBean.class);
+                                    if (meta.getTimestamp() < timestamp) {
+                                        pushTask(new UploadTask(file, metaFile, meta), true);
+                                    }
                                 }
                             }
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             }
