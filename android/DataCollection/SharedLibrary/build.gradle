@@ -65,7 +65,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
 
     // implementation 'com.lzy.net:okgo:3.0.4'
-//    api 'com.google.code.gson:gson:2.8.9'
+    api 'com.google.code.gson:gson:2.8.9'
 
     implementation 'com.facebook.soloader:soloader:0.10.3'
 }
