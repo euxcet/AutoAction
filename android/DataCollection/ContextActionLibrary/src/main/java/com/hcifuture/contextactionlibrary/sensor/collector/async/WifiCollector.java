@@ -36,6 +36,13 @@ public class WifiCollector extends AsynchronousCollector {
     private CompletableFuture<CollectorResult> ft;
     private long startScanTimestamp = 0;
 
+    /*
+      Error code:
+        0: no error
+        1: Cannot start Wifi scan
+        2: Wifi scan results not updated
+     */
+
     public WifiCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
         isCollecting = new AtomicBoolean(false);
@@ -70,7 +77,10 @@ public class WifiCollector extends AsynchronousCollector {
                             }
                             ft.complete(getResult());
                         } else {
-                            ft.completeExceptionally(new Exception("Wifi scan results not updated!"));
+                            CollectorResult result = getResult();
+                            result.setErrorCode(2);
+                            result.setErrorReason("Wifi scan results not updated");
+                            ft.complete(result);
                         }
                     }
                 } catch (Exception e) {

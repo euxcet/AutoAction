@@ -48,6 +48,15 @@ public class BluetoothCollector extends AsynchronousCollector {
 
     private final AtomicBoolean isCollecting;
 
+    /*
+      Error code:
+        0: no error
+        1: Cannot start Bluetooth discovery
+        2: Cannot get BluetoothLeScanner
+        3: both 1 & 2
+        4: Cannot cancel Bluetooth discovery
+     */
+
     public BluetoothCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
         data = new BluetoothData();
@@ -113,8 +122,13 @@ public class BluetoothCollector extends AsynchronousCollector {
                     futureList.add(scheduledExecutorService.schedule(() -> {
                         try {
                             bluetoothLeScanner.stopScan(leScanCallback);
-                            bluetoothAdapter.cancelDiscovery();
-                            ft.complete(getResult());
+                            boolean success = bluetoothAdapter.cancelDiscovery();
+                            CollectorResult result = getResult();
+                            if (!success) {
+                                result.setErrorCode(4);
+                                result.setErrorReason("Cannot cancel Bluetooth discovery");
+                            }
+                            ft.complete(result);
                         } catch (Exception e) {
                             e.printStackTrace();
                             ft.completeExceptionally(e);
