@@ -1,5 +1,7 @@
 package com.hcifuture.contextactionlibrary.sensor.uploader;
 
+import java.util.Map;
+
 public class TaskMetaBean {
     private String file;
     private int fileType;
@@ -7,6 +9,8 @@ public class TaskMetaBean {
     private String name;
     private String userId;
     private long timestamp;
+    private Map<String, Object> CollectorResult;
+    private Map<String, Object> ContextAction;
 
     public TaskMetaBean(String file, int fileType, String commit, String name, String userId, long timestamp) {
         this.file = file;
@@ -63,5 +67,21 @@ public class TaskMetaBean {
 
     public String getFile() {
         return file;
+    }
+
+    public Map<String, Object> getCollectorResult() {
+        return CollectorResult;
+    }
+
+    public void setCollectorResult(Map<String, Object> collectorResult) {
+        this.CollectorResult = collectorResult;
+    }
+
+    public Map<String, Object> getContextAction() {
+        return ContextAction;
+    }
+
+    public void setContextAction(Map<String, Object> contextAction) {
+        this.ContextAction = contextAction;
     }
 }

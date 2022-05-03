@@ -11,6 +11,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.ToNumberPolicy;
+import com.google.gson.ToNumberStrategy;
 import com.google.gson.reflect.TypeToken;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
@@ -51,7 +54,10 @@ public class Uploader {
     private static final long HOUR = MINUTE * 60;
     private static final int FILES_IN_PACKAGE = 5;
 
-    private static final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder()
+            .disableHtmlEscaping()
+            .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
+            .create();
 
     private final Context mContext;
 

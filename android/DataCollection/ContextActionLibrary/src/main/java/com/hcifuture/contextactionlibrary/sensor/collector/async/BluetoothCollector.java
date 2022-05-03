@@ -83,32 +83,46 @@ public class BluetoothCollector extends AsynchronousCollector {
                     insert(device, (short)0, isConnected(device), null, null);
                 }
 
+                int errorCode = 0;
+                String errorReason = "";
+
                 // start classic bluetooth scanning
-                bluetoothAdapter.startDiscovery();
+                if (!bluetoothAdapter.startDiscovery()) {
+                    errorCode += 1;
+                    errorReason += "Cannot start Bluetooth discovery";
+                    isCollecting.set(false);
+                }
+
                 // start BLE scanning
                 BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
-                if (bluetoothLeScanner != null) {
+                if (bluetoothLeScanner == null) {
+                    errorCode += 2;
+                    errorReason += " | Cannot get BluetoothLeScanner";
+                } else {
                     bluetoothLeScanner.startScan(leScanCallback);
                 }
 
-                // Stops scanning after 10 seconds
-                futureList.add(scheduledExecutorService.schedule(() -> {
-                    try {
-                        if (bluetoothLeScanner != null) {
+                if (errorCode != 0) {
+                    CollectorResult result = getResult();
+                    result.setErrorCode(errorCode);
+                    result.setErrorReason(errorReason);
+                    ft.complete(result);
+                    isCollecting.set(false);
+                } else {
+                    // Stops scanning after given time
+                    futureList.add(scheduledExecutorService.schedule(() -> {
+                        try {
                             bluetoothLeScanner.stopScan(leScanCallback);
+                            bluetoothAdapter.cancelDiscovery();
+                            ft.complete(getResult());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            ft.completeExceptionally(e);
+                        } finally {
+                            isCollecting.set(false);
                         }
-                        bluetoothAdapter.cancelDiscovery();
-                        CollectorResult result = new CollectorResult();
-                        result.setData(data.deepClone());
-                        result.setDataString(gson.toJson(result.getData(), BluetoothData.class));
-                        ft.complete(result);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        ft.completeExceptionally(e);
-                    } finally {
-                        isCollecting.set(false);
-                    }
-                }, config.getBluetoothScanTime(), TimeUnit.MILLISECONDS));
+                    }, config.getBluetoothScanTime(), TimeUnit.MILLISECONDS));
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 ft.completeExceptionally(e);
@@ -223,5 +237,13 @@ public class BluetoothCollector extends AsynchronousCollector {
     @Override
     public String getExt() {
         return ".json";
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private CollectorResult getResult() {
+        CollectorResult result = new CollectorResult();
+        result.setData(data.deepClone());
+        result.setDataString(gson.toJson(result.getData(), BluetoothData.class));
+        return result;
     }
 }

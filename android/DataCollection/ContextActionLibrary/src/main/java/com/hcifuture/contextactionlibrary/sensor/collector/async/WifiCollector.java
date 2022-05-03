@@ -9,13 +9,11 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.SystemClock;
-import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
-import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleWifiData;
 import com.hcifuture.contextactionlibrary.sensor.data.WifiData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
@@ -24,7 +22,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WifiCollector extends AsynchronousCollector {
@@ -71,10 +68,7 @@ public class WifiCollector extends AsynchronousCollector {
                                             result.centerFreq0, result.centerFreq1, false));
                                 }
                             }
-                            CollectorResult result = new CollectorResult();
-                            result.setData(data.deepClone());
-                            result.setDataString(gson.toJson(result.getData(), WifiData.class));
-                            ft.complete(result);
+                            ft.complete(getResult());
                         } else {
                             ft.completeExceptionally(new Exception("Wifi scan results not updated!"));
                         }
@@ -110,8 +104,15 @@ public class WifiCollector extends AsynchronousCollector {
                             0,
                             0, 0, true));
                 }
-                wifiManager.startScan();
-                startScanTimestamp = System.currentTimeMillis();
+                if (!wifiManager.startScan()) {
+                    CollectorResult result = getResult();
+                    result.setErrorCode(1);
+                    result.setErrorReason("Cannot start Wifi scan");
+                    ft.complete(result);
+                    isCollecting.set(false);
+                } else {
+                    startScanTimestamp = System.currentTimeMillis();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 ft.completeExceptionally(e);
@@ -163,5 +164,13 @@ public class WifiCollector extends AsynchronousCollector {
     @Override
     public String getExt() {
         return ".json";
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private CollectorResult getResult() {
+        CollectorResult result = new CollectorResult();
+        result.setData(data.deepClone());
+        result.setDataString(gson.toJson(result.getData(), WifiData.class));
+        return result;
     }
 }
