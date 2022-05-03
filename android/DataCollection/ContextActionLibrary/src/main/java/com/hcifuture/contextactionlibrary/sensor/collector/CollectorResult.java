@@ -10,6 +10,8 @@ public class CollectorResult {
     private long startTimestamp;
     private long endTimestamp;
     private CollectorManager.CollectorType type = CollectorManager.CollectorType.All;
+    private int errorCode = 0;
+    private String errorReason;
 
     public int getLogLength() {
         return logLength;
@@ -37,6 +39,14 @@ public class CollectorResult {
 
     public CollectorManager.CollectorType getType() {
         return type;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public String getErrorReason() {
+        return errorReason;
     }
 
     public CollectorResult setLogLength(int logLength) {
@@ -71,6 +81,16 @@ public class CollectorResult {
 
     public CollectorResult setType(CollectorManager.CollectorType type) {
         this.type = type;
+        return this;
+    }
+
+    public CollectorResult setErrorCode(int errorCode) {
+        this.errorCode = errorCode;
+        return this;
+    }
+
+    public CollectorResult setErrorReason(String errorReason) {
+        this.errorReason = errorReason;
         return this;
     }
 }
