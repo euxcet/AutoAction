@@ -41,24 +41,21 @@ public class ConfigCollector extends BaseCollector {
     @Override
     public void onContext(ContextResult context) {
         long current_call = context.getTimestamp();
-        String appendCommit = "Context: " + context.getContext() + "\n" +
-                "Context timestamp: " + context.getTimestamp() + "\n" +
-                "Context reason: " + context.getReason() + "\n" +
-                "Context extras: " + JSONUtils.bundleToJSON(context.getExtras());
+        String commit = "";
 
         if (ConfigContext.NEED_AUDIO.equals(context.getContext())) {
             String name = "Event_Audio";
-            triggerAndUpload(CollectorManager.CollectorType.Audio, triggerConfig, name, appendCommit);
+            triggerAndUpload(CollectorManager.CollectorType.Audio, triggerConfig, name, commit, context);
         } else if (ConfigContext.NEED_NONIMU.equals(context.getContext())) {
             if (current_call - last_nonimu >= 1000) {
                 last_nonimu = current_call;
                 String name = "Event_NonIMU";
-                triggerAndUpload(CollectorManager.CollectorType.NonIMU, triggerConfig, name, appendCommit);
+                triggerAndUpload(CollectorManager.CollectorType.NonIMU, triggerConfig, name, commit, context);
             }
         } else if (ConfigContext.NEED_SCAN.equals(context.getContext())) {
             String name = "Event_Scan";
-            triggerAndUpload(CollectorManager.CollectorType.Bluetooth, triggerConfig, name, appendCommit);
-            triggerAndUpload(CollectorManager.CollectorType.Wifi, triggerConfig, name, appendCommit);
+            triggerAndUpload(CollectorManager.CollectorType.Bluetooth, triggerConfig, name, commit, context);
+            triggerAndUpload(CollectorManager.CollectorType.Wifi, triggerConfig, name, commit, context);
         }
     }
 }
