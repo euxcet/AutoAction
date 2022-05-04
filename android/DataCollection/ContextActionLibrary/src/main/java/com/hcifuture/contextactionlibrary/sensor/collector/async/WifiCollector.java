@@ -35,6 +35,7 @@ public class WifiCollector extends AsynchronousCollector {
     private final AtomicBoolean isCollecting;
     private CompletableFuture<CollectorResult> ft;
     private long startScanTimestamp = 0;
+    private long resultTimestamp = 0;
 
     /*
       Error code:
@@ -61,27 +62,20 @@ public class WifiCollector extends AsynchronousCollector {
             @Override
             public void onReceive(Context context, Intent intent) {
                 try {
+                    boolean updated = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false);
+                    if (updated) {
+                        resultTimestamp = System.currentTimeMillis();
+                    }
+
+                    // Is recording
                     // onReceive may be called before startScanTimestamp (due to system Wifi scan)
                     if (isCollecting.get() && System.currentTimeMillis() >= startScanTimestamp) {
-                        if (intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)) {
-                            List<ScanResult> results = wifiManager.getScanResults();
-                            for (ScanResult result : results) {
-                                synchronized (this) {
-                                    data.insert(new SingleWifiData(result.SSID, result.BSSID,
-                                            result.capabilities,
-                                            result.level, result.frequency,
-                                            result.timestamp,
-                                            result.channelWidth,
-                                            result.centerFreq0, result.centerFreq1, false));
-                                }
-                            }
-                            ft.complete(getResult());
-                        } else {
-                            CollectorResult result = getResult();
+                        CollectorResult result = getResult();
+                        if (!updated) {
                             result.setErrorCode(2);
                             result.setErrorReason("Wifi scan results not updated");
-                            ft.complete(result);
                         }
+                        ft.complete(result);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -114,14 +108,13 @@ public class WifiCollector extends AsynchronousCollector {
                             0,
                             0, 0, true));
                 }
+                startScanTimestamp = System.currentTimeMillis();
                 if (!wifiManager.startScan()) {
                     CollectorResult result = getResult();
                     result.setErrorCode(1);
                     result.setErrorReason("Cannot start Wifi scan");
                     ft.complete(result);
                     isCollecting.set(false);
-                } else {
-                    startScanTimestamp = System.currentTimeMillis();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -178,9 +171,22 @@ public class WifiCollector extends AsynchronousCollector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private CollectorResult getResult() {
+        List<ScanResult> results = wifiManager.getScanResults();
+        for (ScanResult result : results) {
+            synchronized (this) {
+                data.insert(new SingleWifiData(result.SSID, result.BSSID,
+                        result.capabilities,
+                        result.level, result.frequency,
+                        result.timestamp,
+                        result.channelWidth,
+                        result.centerFreq0, result.centerFreq1, false));
+            }
+        }
+
         CollectorResult result = new CollectorResult();
         result.setData(data.deepClone());
         result.setDataString(gson.toJson(result.getData(), WifiData.class));
+        result.getExtras().putLong("ResultTimestamp", resultTimestamp);
         return result;
     }
 }
