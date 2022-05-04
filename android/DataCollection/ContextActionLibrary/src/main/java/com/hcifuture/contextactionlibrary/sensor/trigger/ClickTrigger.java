@@ -29,11 +29,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 
 public class ClickTrigger extends Trigger {
     private final HashMap<String, List<File>> history;
     private final String saveFolder;
+    private final AtomicInteger mFileID = new AtomicInteger(0);
+    private final IntUnaryOperator operator = x -> (x < 999)? (x + 1) : 0;
+
     public ClickTrigger(Context context, CollectorManager collectorManager, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, collectorManager, scheduledExecutorService, futureList);
         this.saveFolder = context.getExternalMediaDirs()[0].getAbsolutePath() + "/Data/Click/";
@@ -49,7 +54,8 @@ public class ClickTrigger extends Trigger {
 
         for (Collector collector: collectors) {
             String name = collector.getName();
-            File saveFile = new File(this.saveFolder + name + "/" + name + "_" + timestamp + collector.getExt());
+            int fileID = mFileID.getAndUpdate(operator);
+            File saveFile = new File(this.saveFolder + name + "/" + name + "_" + timestamp + "_" + fileID + collector.getExt());
             synchronized (history) {
                 if (!history.containsKey(name)) {
                     history.put(name, new ArrayList<>());
