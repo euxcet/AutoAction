@@ -77,8 +77,7 @@ public class BluetoothCollector extends AsynchronousCollector {
             return ft;
         }
 
-        if (!isCollecting.get()) {
-            isCollecting.set(true);
+        if (isCollecting.compareAndSet(false, true)) {
             try {
                 data.clear();
 

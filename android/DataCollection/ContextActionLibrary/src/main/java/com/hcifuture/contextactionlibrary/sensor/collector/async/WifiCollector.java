@@ -102,8 +102,7 @@ public class WifiCollector extends AsynchronousCollector {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         CollectorResult result = new CollectorResult();
 
-        if (!isCollecting.get()) {
-            isCollecting.set(true);
+        if (isCollecting.compareAndSet(false, true)) {
             try {
                 data.clear();
                 WifiInfo info = wifiManager.getConnectionInfo();
