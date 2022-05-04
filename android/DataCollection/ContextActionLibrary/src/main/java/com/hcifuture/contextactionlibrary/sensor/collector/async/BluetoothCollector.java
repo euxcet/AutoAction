@@ -158,7 +158,7 @@ public class BluetoothCollector extends AsynchronousCollector {
      */
 
     @SuppressLint("MissingPermission")
-    private synchronized void insert(BluetoothDevice device, short rssi, boolean linked, String scanResult, String intentExtra) {
+    private void insert(BluetoothDevice device, short rssi, boolean linked, String scanResult, String intentExtra) {
         data.insert(new SingleBluetoothData(device.getName(), device.getAddress(),
                 device.getBondState(), device.getType(),
                 device.getBluetoothClass().getDeviceClass(),

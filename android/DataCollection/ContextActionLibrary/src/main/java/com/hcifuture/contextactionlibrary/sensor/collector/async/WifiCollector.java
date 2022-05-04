@@ -173,14 +173,12 @@ public class WifiCollector extends AsynchronousCollector {
     private CollectorResult getResult() {
         List<ScanResult> results = wifiManager.getScanResults();
         for (ScanResult result : results) {
-            synchronized (this) {
-                data.insert(new SingleWifiData(result.SSID, result.BSSID,
-                        result.capabilities,
-                        result.level, result.frequency,
-                        result.timestamp,
-                        result.channelWidth,
-                        result.centerFreq0, result.centerFreq1, false));
-            }
+            data.insert(new SingleWifiData(result.SSID, result.BSSID,
+                    result.capabilities,
+                    result.level, result.frequency,
+                    result.timestamp,
+                    result.channelWidth,
+                    result.centerFreq0, result.centerFreq1, false));
         }
 
         CollectorResult result = new CollectorResult();
