@@ -98,7 +98,8 @@ public class ConfigContext extends BaseContext {
 
     @Override
     public void stop() {
-        record_all("stop");
+        // do not perform record_all() in stop(),
+        // it may cause crashes when frequently called
     }
 
     @Override
