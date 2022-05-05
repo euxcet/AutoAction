@@ -115,7 +115,7 @@ public class FlipAction extends BaseAction {
                     Log.i("FLIP","角速度1:第一次大于200:"+"gy: "+gy+" gx: "+gx+"gz:" +gz+"ID："+gyro_id1);
                 }
                 else if(!gyro_flag2){
-                    Log.i("FLIP","角速度2:第二次大于200"+"gy: "+gy+" gx: "+gx+"gz:" +gz+"ID："+gyro_id1);
+//                    Log.i("FLIP","角速度2:第二次大于200"+"gy: "+gy+" gx: "+gx+"gz:" +gz+"ID："+gyro_id1);
                     if(postive){
                         if(gy<0 && flag1){
                             if(System.currentTimeMillis()-gyro_id1<20000) {

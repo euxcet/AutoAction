@@ -43,18 +43,24 @@ public class CloseCollector extends BaseCollector {
     @Override
     public void onAction(ActionResult action) {
         if (action.getAction().equals("Close")) {
+            long time = System.currentTimeMillis();
+            //先传log
+            if (clickTrigger != null && scheduledExecutorService != null) {
+                try {
+                    triggerAndUpload(logCollector, new TriggerConfig(), "Close", "time: "+time)
+                            .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             FutureIMU = clickTrigger.trigger(Collections.singletonList(CollectorManager.CollectorType.IMU), new TriggerConfig());
 //            FutureNon = clickTrigger.trigger(Collections.singletonList(CollectorManager.CollectorType.NonIMU), new TriggerConfig());
-            long time = System.currentTimeMillis();
             if(FutureIMU !=null){
                 String name = action.getAction();
                 String commit = action.getAction() + ":" + action.getReason() + " " + action.getTimestamp()+" "+time;
                 if(FutureIMU.isDone()) {
                     try {
                         upload(FutureIMU.get().get(0), name, commit);
-//                        upload(FutureNon.get().get(0), name, commit);
-//                       upload(FutureIMU.get().get(0), name, commit, time);
-//                       upload(FutureNon.get().get(0), name, commit, time);
                     } catch (ExecutionException | InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -64,16 +70,7 @@ public class CloseCollector extends BaseCollector {
 //                    FutureNon.whenComplete((v, e) -> upload(v.get(0), name, commit));
                 }
             }
-            if (clickTrigger != null && scheduledExecutorService != null) {
-                futureList.add(scheduledExecutorService.schedule(() -> {
-                    try {
-                        triggerAndUpload(logCollector, new TriggerConfig(), "Close", "time: "+time)
-                                .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }, 20000L, TimeUnit.MILLISECONDS));
-            }
+
 
         }
     }
