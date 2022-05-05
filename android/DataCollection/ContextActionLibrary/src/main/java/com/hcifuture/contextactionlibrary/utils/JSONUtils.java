@@ -47,6 +47,12 @@ public class JSONUtils {
             map.put("Type", result.getType());
             map.put("ErrorCode", result.getErrorCode());
             map.put("ErrorReason", result.getErrorReason());
+            Bundle bundle = result.getExtras();
+            if (bundle != null) {
+                for (String key : bundle.keySet()) {
+                    map.put(key, bundle.get(key));
+                }
+            }
             return map;
         }
     }
@@ -60,8 +66,10 @@ public class JSONUtils {
             map.put("Timestamp", result.getTimestamp());
             map.put("Reason", result.getReason());
             Bundle bundle = result.getExtras();
-            for (String key : bundle.keySet()) {
-                map.put(key, bundle.get(key));
+            if (bundle != null) {
+                for (String key : bundle.keySet()) {
+                    map.put(key, bundle.get(key));
+                }
             }
             return map;
         }

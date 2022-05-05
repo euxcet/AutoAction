@@ -1,5 +1,7 @@
 package com.hcifuture.contextactionlibrary.sensor.collector;
 
+import android.os.Bundle;
+
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 
 public class CollectorResult {
@@ -12,6 +14,7 @@ public class CollectorResult {
     private CollectorManager.CollectorType type = CollectorManager.CollectorType.All;
     private int errorCode = 0;
     private String errorReason;
+    private Bundle extras;
 
     public int getLogLength() {
         return logLength;
@@ -47,6 +50,13 @@ public class CollectorResult {
 
     public String getErrorReason() {
         return errorReason;
+    }
+
+    public Bundle getExtras() {
+        if (extras == null) {
+            extras = new Bundle();
+        }
+        return extras;
     }
 
     public CollectorResult setLogLength(int logLength) {
@@ -91,6 +101,11 @@ public class CollectorResult {
 
     public CollectorResult setErrorReason(String errorReason) {
         this.errorReason = errorReason;
+        return this;
+    }
+
+    public CollectorResult setExtras(Bundle extras) {
+        this.extras = (extras == null)? new Bundle() : extras;
         return this;
     }
 }

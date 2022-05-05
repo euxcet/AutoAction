@@ -104,8 +104,7 @@ public class AudioCollector extends AsynchronousCollector {
             ft.completeExceptionally(new Exception("NULL audio filename!"));
             return ft;
         }
-        if (!isCollecting.get()) {
-            isCollecting.set(true);
+        if (!isCollecting.compareAndSet(false, true)) {
             try {
                 saveFile = new File(config.getAudioFilename());
                 if (!Objects.requireNonNull(saveFile.getParentFile()).exists()) {

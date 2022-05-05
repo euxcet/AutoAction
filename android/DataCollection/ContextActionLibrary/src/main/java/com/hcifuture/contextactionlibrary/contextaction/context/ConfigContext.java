@@ -8,6 +8,7 @@ import android.content.res.Configuration;
 import android.hardware.display.DisplayManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -36,6 +37,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntUnaryOperator;
+
+import androidx.annotation.RequiresApi;
 
 public class ConfigContext extends BaseContext {
 
@@ -51,12 +56,12 @@ public class ConfigContext extends BaseContext {
     private long last_record_all;
 
     private final LogCollector logCollector;
-    private int mLogID;
+    private final AtomicInteger mLogID = new AtomicInteger(0);
+    private final IntUnaryOperator operator = x -> (x < 999)? (x + 1) : 0;
 
     public ConfigContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector logCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
         this.logCollector = logCollector;
-        mLogID = 0;
 
         // initialize
         packageName = "";
@@ -123,6 +128,7 @@ public class ConfigContext extends BaseContext {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onBroadcastEvent(BroadcastEvent event) {
         long timestamp = event.getTimestamp();
@@ -249,14 +255,9 @@ public class ConfigContext extends BaseContext {
         }
     }
 
-    private synchronized int incLogID() {
-        int ret = mLogID;
-        if (mLogID >= 999) {
-            mLogID = 0;
-        } else {
-            mLogID++;
-        }
-        return ret;
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private int incLogID() {
+        return mLogID.getAndUpdate(operator);
     }
 
     private void record(long timestamp, int logID, String type, String action, String tag, String other) {

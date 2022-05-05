@@ -13,18 +13,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.BluetoothData;
-import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleBluetoothData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
-
-import org.checkerframework.checker.units.qual.A;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -48,6 +44,19 @@ public class BluetoothCollector extends AsynchronousCollector {
 
     private final AtomicBoolean isCollecting;
 
+    /*
+      Error code:
+        0: No error
+        1: Cannot start Bluetooth discovery
+        2: Cannot get BluetoothLeScanner
+        3: Both 1 & 2
+        4: Cannot cancel Bluetooth discovery
+        5: Invalid Bluetooth scan time
+        6: Concurrent task of Bluetooth scanning
+        7: Unknown collecting exception
+        8: Unknown exception when stopping scan
+     */
+
     public BluetoothCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
         data = new BluetoothData();
@@ -59,13 +68,16 @@ public class BluetoothCollector extends AsynchronousCollector {
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
+        CollectorResult result = new CollectorResult();
+
         if (config.getBluetoothScanTime() <= 0) {
-            ft.completeExceptionally(new Exception("Invalid Bluetooth scan time: " + config.getBluetoothScanTime()));
+            result.setErrorCode(5);
+            result.setErrorReason("Invalid Bluetooth scan time: " + config.getBluetoothScanTime());
+            ft.complete(result);
             return ft;
         }
 
-        if (!isCollecting.get()) {
-            isCollecting.set(true);
+        if (isCollecting.compareAndSet(false, true)) {
             try {
                 data.clear();
 
@@ -88,6 +100,7 @@ public class BluetoothCollector extends AsynchronousCollector {
 
                 // start classic bluetooth scanning
                 if (!bluetoothAdapter.startDiscovery()) {
+                    bluetoothAdapter.cancelDiscovery();
                     errorCode += 1;
                     errorReason += "Cannot start Bluetooth discovery";
                     isCollecting.set(false);
@@ -103,7 +116,7 @@ public class BluetoothCollector extends AsynchronousCollector {
                 }
 
                 if (errorCode != 0) {
-                    CollectorResult result = getResult();
+                    setCollectData(result);
                     result.setErrorCode(errorCode);
                     result.setErrorReason(errorReason);
                     ft.complete(result);
@@ -113,23 +126,33 @@ public class BluetoothCollector extends AsynchronousCollector {
                     futureList.add(scheduledExecutorService.schedule(() -> {
                         try {
                             bluetoothLeScanner.stopScan(leScanCallback);
-                            bluetoothAdapter.cancelDiscovery();
-                            ft.complete(getResult());
+                            boolean success = bluetoothAdapter.cancelDiscovery();
+                            if (!success) {
+                                result.setErrorCode(4);
+                                result.setErrorReason("Cannot cancel Bluetooth discovery");
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
-                            ft.completeExceptionally(e);
+                            result.setErrorCode(8);
+                            result.setErrorReason(e.toString());
                         } finally {
+                            setCollectData(result);
+                            ft.complete(result);
                             isCollecting.set(false);
                         }
                     }, config.getBluetoothScanTime(), TimeUnit.MILLISECONDS));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                ft.completeExceptionally(e);
+                result.setErrorCode(7);
+                result.setErrorReason(e.toString());
+                ft.complete(result);
                 isCollecting.set(false);
             }
         } else {
-            ft.completeExceptionally(new Exception("Another task of Bluetooth scanning is taking place!"));
+            result.setErrorCode(6);
+            result.setErrorReason("Concurrent task of Bluetooth scanning");
+            ft.complete(result);
         }
 
         return ft;
@@ -144,7 +167,7 @@ public class BluetoothCollector extends AsynchronousCollector {
      */
 
     @SuppressLint("MissingPermission")
-    private synchronized void insert(BluetoothDevice device, short rssi, boolean linked, String scanResult, String intentExtra) {
+    private void insert(BluetoothDevice device, short rssi, boolean linked, String scanResult, String intentExtra) {
         data.insert(new SingleBluetoothData(device.getName(), device.getAddress(),
                 device.getBondState(), device.getType(),
                 device.getBluetoothClass().getDeviceClass(),
@@ -240,10 +263,8 @@ public class BluetoothCollector extends AsynchronousCollector {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private CollectorResult getResult() {
-        CollectorResult result = new CollectorResult();
+    private void setCollectData(CollectorResult result) {
         result.setData(data.deepClone());
         result.setDataString(gson.toJson(result.getData(), BluetoothData.class));
-        return result;
     }
 }
