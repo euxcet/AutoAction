@@ -135,7 +135,7 @@ public class CloseAction extends BaseAction {
         }
         if(dist==5) {
             success_id = -1;
-            if (System.currentTimeMillis() - register_time > 10000) {
+            if (System.currentTimeMillis() - register_time > 10000 && register_flag) {
                 //TODO: 取消传感器注册
 //                for (ActionListener listener : actionListener) {
 //                    listener.onAction(new ActionResult("STOP_PROXIMITY"));

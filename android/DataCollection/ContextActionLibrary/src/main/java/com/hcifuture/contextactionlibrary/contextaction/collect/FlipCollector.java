@@ -58,14 +58,12 @@ public class FlipCollector extends BaseCollector{
                 }
             }
             if (clickTrigger != null && scheduledExecutorService != null) {
-                futureList.add(scheduledExecutorService.schedule(() -> {
-                    try {
-                        triggerAndUpload(logCollector, new TriggerConfig(), "Flip", "time: "+time)
-                                .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }, 20000L, TimeUnit.MILLISECONDS));
+                try {
+                    triggerAndUpload(logCollector, new TriggerConfig(), "Flip", "time: "+time)
+                            .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
