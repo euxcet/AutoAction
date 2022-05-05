@@ -33,8 +33,9 @@ public class WifiCollector extends AsynchronousCollector {
     private IntentFilter wifiFilter;
 
     private final AtomicBoolean isCollecting;
+    private final AtomicBoolean isScanning;
+    private final Object lockScan;
     private CompletableFuture<CollectorResult> mFt;
-    private long startScanTimestamp = 0;
     private long resultTimestamp = 0;
 
     /*
@@ -50,6 +51,8 @@ public class WifiCollector extends AsynchronousCollector {
     public WifiCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
         isCollecting = new AtomicBoolean(false);
+        isScanning = new AtomicBoolean(false);
+        lockScan = new Object();
         this.data = new WifiData();
     }
 
@@ -69,24 +72,30 @@ public class WifiCollector extends AsynchronousCollector {
                     resultTimestamp = System.currentTimeMillis();
                 }
 
-                // Is recording
+                // Is scanning
                 // onReceive may be called before startScanTimestamp (due to system Wifi scan)
-                if (isCollecting.get() && System.currentTimeMillis() >= startScanTimestamp) {
-                    CollectorResult result = new CollectorResult();
-                    try {
-                        if (!updated) {
-                            result.setErrorCode(2);
-                            result.setErrorReason("Wifi scan results not updated");
+                synchronized (lockScan) {
+                    if (isCollecting.get() && isScanning.get()) {
+                        CollectorResult result = new CollectorResult();
+                        try {
+                            if (!updated) {
+                                result.setErrorCode(2);
+                                result.setErrorReason("Wifi scan results not updated");
+                            }
+                            insertScanResults();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            result.setErrorCode(5);
+                            result.setErrorReason(e.toString());
+                        } finally {
+                            setCollectData(result);
+                            // (mFt == null) should NEVER happen
+                            if (mFt != null) {
+                                mFt.complete(result);
+                            }
+                            isCollecting.set(false);
+                            isScanning.set(false);
                         }
-                        insertScanResults();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        result.setErrorCode(5);
-                        result.setErrorReason(e.toString());
-                    } finally {
-                        setCollectData(result);
-                        mFt.complete(result);
-                        isCollecting.set(false);
                     }
                 }
             }
@@ -114,16 +123,19 @@ public class WifiCollector extends AsynchronousCollector {
                             0,
                             0, 0, true));
                 }
-                startScanTimestamp = System.currentTimeMillis();
-                if (!wifiManager.startScan()) {
-                    insertScanResults();
-                    setCollectData(result);
-                    result.setErrorCode(1);
-                    result.setErrorReason("Cannot start Wifi scan");
-                    ft.complete(result);
-                    isCollecting.set(false);
-                } else {
+                synchronized (lockScan) {
                     mFt = ft;
+                    if (!wifiManager.startScan()) {
+                        insertScanResults();
+                        setCollectData(result);
+                        result.setErrorCode(1);
+                        result.setErrorReason("Cannot start Wifi scan");
+                        ft.complete(result);
+                        isCollecting.set(false);
+                        isScanning.set(false);
+                    } else {
+                        isScanning.set(true);
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
