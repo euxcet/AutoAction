@@ -64,7 +64,7 @@ public class BluetoothCollector extends AsynchronousCollector {
         isCollecting = new AtomicBoolean(false);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @SuppressLint("MissingPermission")
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
@@ -75,11 +75,9 @@ public class BluetoothCollector extends AsynchronousCollector {
             result.setErrorCode(5);
             result.setErrorReason("Invalid Bluetooth scan time: " + config.getBluetoothScanTime());
             ft.complete(result);
-            return ft;
-        }
-
-        if (isCollecting.compareAndSet(false, true)) {
+        } else if (isCollecting.compareAndSet(false, true)) {
             try {
+                setBasicInfo();
                 data.clear();
 
                 // scan bonded (paired) devices
@@ -280,5 +278,27 @@ public class BluetoothCollector extends AsynchronousCollector {
     private void setCollectData(CollectorResult result) {
         result.setData(data.deepClone());
         result.setDataString(gson.toJson(result.getData(), BluetoothData.class));
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    @SuppressLint("MissingPermission")
+    private void setBasicInfo() {
+        if (bluetoothAdapter != null) {
+            data.setAddress(bluetoothAdapter.getAddress());
+            data.setLeMaximumAdvertisingDataLength(bluetoothAdapter.getLeMaximumAdvertisingDataLength());
+            data.setName(bluetoothAdapter.getName());
+            data.setProfileConnectionState_A2DP(bluetoothAdapter.getProfileConnectionState(BluetoothProfile.A2DP));
+            data.setProfileConnectionState_HEADSET(bluetoothAdapter.getProfileConnectionState(BluetoothProfile.HEADSET));
+            data.setScanMode(bluetoothAdapter.getScanMode());
+            data.setState(bluetoothAdapter.getState());
+            data.setDiscovering(bluetoothAdapter.isDiscovering());
+            data.setLe2MPhySupported(bluetoothAdapter.isLe2MPhySupported());
+            data.setLeCodedPhySupported(bluetoothAdapter.isLeCodedPhySupported());
+            data.setLeExtendedAdvertisingSupported(bluetoothAdapter.isLeExtendedAdvertisingSupported());
+            data.setLePeriodicAdvertisingSupported(bluetoothAdapter.isLePeriodicAdvertisingSupported());
+            data.setMultipleAdvertisementSupported(bluetoothAdapter.isMultipleAdvertisementSupported());
+            data.setOffloadedFilteringSupported(bluetoothAdapter.isOffloadedFilteringSupported());
+            data.setOffloadedScanBatchingSupported(bluetoothAdapter.isOffloadedScanBatchingSupported());
+        }
     }
 }
