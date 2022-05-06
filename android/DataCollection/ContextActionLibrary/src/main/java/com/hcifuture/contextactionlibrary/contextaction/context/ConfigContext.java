@@ -42,6 +42,7 @@ import java.util.function.IntUnaryOperator;
 
 import androidx.annotation.RequiresApi;
 
+@RequiresApi(api = Build.VERSION_CODES.N)
 public class ConfigContext extends BaseContext {
 
     public static String NEED_AUDIO = "context.config.need_audio";
@@ -129,7 +130,6 @@ public class ConfigContext extends BaseContext {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onBroadcastEvent(BroadcastEvent event) {
         long timestamp = event.getTimestamp();
@@ -256,7 +256,6 @@ public class ConfigContext extends BaseContext {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     private int incLogID() {
         return mLogID.getAndUpdate(operator);
     }
@@ -293,6 +292,9 @@ public class ConfigContext extends BaseContext {
 
         // store global settings
         jsonPutSettings(json, "global", Settings.Global.class);
+
+        // store secure settings
+        jsonPutSettings(json, "secure", Settings.Secure.class);
 
         // record
         record(last_record_all, logID, "static", action, "", json.toString());
