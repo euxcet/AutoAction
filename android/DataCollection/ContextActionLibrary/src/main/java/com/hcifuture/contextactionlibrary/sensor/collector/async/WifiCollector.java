@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WifiCollector extends AsynchronousCollector {
@@ -35,6 +37,7 @@ public class WifiCollector extends AsynchronousCollector {
     private final AtomicBoolean isCollecting;
     private final AtomicBoolean isScanning;
     private final Object lockScan;
+    private final Object lockStopScan;
     private CompletableFuture<CollectorResult> mFt;
     private long resultTimestamp = 0;
 
@@ -46,6 +49,10 @@ public class WifiCollector extends AsynchronousCollector {
         3: Concurrent task of Wifi scanning
         4: Unknown collecting exception
         5: Unknown exception when getting scan results
+        6: Scan timeout
+        7: Unknown exception when ft.get()
+        8: 5 & 6, or 5 & 7
+        9: Invalid Wifi scan timeout
      */
 
     public WifiCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
@@ -53,6 +60,7 @@ public class WifiCollector extends AsynchronousCollector {
         isCollecting = new AtomicBoolean(false);
         isScanning = new AtomicBoolean(false);
         lockScan = new Object();
+        lockStopScan = new Object();
         this.data = new WifiData();
     }
 
@@ -73,28 +81,28 @@ public class WifiCollector extends AsynchronousCollector {
                 }
 
                 // Is scanning
-                // onReceive may be called before startScanTimestamp (due to system Wifi scan)
                 synchronized (lockScan) {
                     if (isCollecting.get() && isScanning.get()) {
-                        CollectorResult result = new CollectorResult();
-                        try {
-                            if (!updated) {
-                                result.setErrorCode(2);
-                                result.setErrorReason("Wifi scan results not updated");
+                        synchronized (lockStopScan) {
+                            if (mFt != null && !mFt.isDone()) {
+                                CollectorResult result = new CollectorResult();
+                                try {
+                                    if (!updated) {
+                                        result.setErrorCode(2);
+                                        result.setErrorReason("Wifi scan results not updated");
+                                    }
+                                    insertScanResults();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    result.setErrorCode(5);
+                                    result.setErrorReason(e.toString());
+                                } finally {
+                                    setCollectData(result);
+                                    mFt.complete(result);
+                                    isCollecting.set(false);
+                                    isScanning.set(false);
+                                }
                             }
-                            insertScanResults();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            result.setErrorCode(5);
-                            result.setErrorReason(e.toString());
-                        } finally {
-                            setCollectData(result);
-                            // (mFt == null) should NEVER happen
-                            if (mFt != null) {
-                                mFt.complete(result);
-                            }
-                            isCollecting.set(false);
-                            isScanning.set(false);
                         }
                     }
                 }
@@ -111,7 +119,11 @@ public class WifiCollector extends AsynchronousCollector {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         CollectorResult result = new CollectorResult();
 
-        if (isCollecting.compareAndSet(false, true)) {
+        if (config.getWifiScanTimeout() <= 0) {
+            result.setErrorCode(9);
+            result.setErrorReason("Invalid Wifi scan timeout: " + config.getWifiScanTimeout());
+            ft.complete(result);
+        } else if (isCollecting.compareAndSet(false, true)) {
             try {
                 data.clear();
                 WifiInfo info = wifiManager.getConnectionInfo();
@@ -135,6 +147,35 @@ public class WifiCollector extends AsynchronousCollector {
                         isScanning.set(false);
                     } else {
                         isScanning.set(true);
+                        // start a new thread to check Bluetooth scan timeout
+                        futureList.add(scheduledExecutorService.schedule(() -> {
+                            try {
+                                ft.get(config.getWifiScanTimeout(), TimeUnit.MILLISECONDS);
+                            } catch (Exception e) {
+                                synchronized (lockStopScan) {
+                                    if (!ft.isDone()) {
+                                        try {
+                                            if (e instanceof TimeoutException) {
+                                                result.setErrorCode(6);
+                                                result.setErrorReason("Wifi scan timeout: longer than " + config.getWifiScanTimeout());
+                                            } else {
+                                                result.setErrorCode(7);
+                                                result.setErrorReason(e.toString());
+                                            }
+                                            insertScanResults();
+                                        } catch (Exception e1) {
+                                            result.setErrorCode(8);
+                                            result.setErrorReason(result.getErrorReason() + " | " + e1);
+                                        } finally {
+                                            setCollectData(result);
+                                            ft.complete(result);
+                                            isCollecting.set(false);
+                                            isScanning.set(false);
+                                        }
+                                    }
+                                }
+                            }
+                        }, 0, TimeUnit.MILLISECONDS));
                     }
                 }
             } catch (Exception e) {

@@ -40,6 +40,7 @@ public class BluetoothCollector extends AsynchronousCollector {
         
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothManager bluetoothManager;
+    private BluetoothLeScanner bluetoothLeScanner;
     private ScanCallback leScanCallback;
 
     private final AtomicBoolean isCollecting;
@@ -107,7 +108,7 @@ public class BluetoothCollector extends AsynchronousCollector {
                 }
 
                 // start BLE scanning
-                BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+                bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
                 if (bluetoothLeScanner == null) {
                     errorCode += 2;
                     errorReason += " | Cannot get BluetoothLeScanner";
@@ -227,8 +228,15 @@ public class BluetoothCollector extends AsynchronousCollector {
     }
      */
 
+    @SuppressLint("MissingPermission")
     @Override
     public void close() {
+        if (bluetoothLeScanner != null) {
+            bluetoothLeScanner.stopScan(leScanCallback);
+        }
+        if (bluetoothAdapter != null) {
+            bluetoothAdapter.cancelDiscovery();
+        }
         if (isRegistered.get() && receiver != null) {
             mContext.unregisterReceiver(receiver);
             isRegistered.set(false);
