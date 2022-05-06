@@ -80,6 +80,25 @@ if not os.path.exists("../data/file/config.json"):
                 "booleanParamValue": []
             }
         ],
+        "timed": [
+            {
+                "builtInSensor": "Wifi",
+                "triggerConfig": {
+                    "wifiScanTimeout": 10000
+                },
+                "initialDelay": 0,
+                "periodOrDelay": 3600000,
+                "name": "Timed_Scan",
+                "fixedDelay": False
+            },
+            {
+                "builtInSensor": "Location",
+                "initialDelay": 10000,
+                "periodOrDelay": 3600000,
+                "name": "Timed_Loc_GPS",
+                "fixedDelay": False
+            }
+        ],
         "listenedSystemActions": [
             "android.intent.action.AIRPLANE_MODE",
             "android.intent.action.SCREEN_OFF",
