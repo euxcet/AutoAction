@@ -86,14 +86,14 @@ public class BluetoothCollector extends AsynchronousCollector {
                 Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
                 if (pairedDevices.size() > 0) {
                     for (BluetoothDevice device: pairedDevices) {
-                        insert(device, (short)0, isConnected(device), null, null);
+                        insert(device, (short)0, isConnected(device, false), null, null);
                     }
                 }
 
                 // scan connected BLE devices
                 List<BluetoothDevice> connectedDevices = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
                 for (BluetoothDevice device : connectedDevices) {
-                    insert(device, (short)0, isConnected(device), null, null);
+                    insert(device, (short)0, isConnected(device, true), null, null);
                 }
 
                 int errorCode = 0;
@@ -190,7 +190,7 @@ public class BluetoothCollector extends AsynchronousCollector {
                 if (intent.getAction().equals(BluetoothDevice.ACTION_FOUND)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     short rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short) 0);
-                    insert(device, rssi, isConnected(device), null, intent.getExtras().toString());
+                    insert(device, rssi, isConnected(device, false), null, intent.getExtras().toString());
                 }
             }
         };
@@ -205,18 +205,24 @@ public class BluetoothCollector extends AsynchronousCollector {
             public void onScanResult (int callbackType, ScanResult result) {
                 BluetoothDevice device = result.getDevice();
                 int rssi = result.getRssi();
-                insert(device, (short) rssi, isConnected(device), result.toString(), null);
+                insert(device, (short) rssi, isConnected(device, false), result.toString(), null);
             }
         };
     }
 
     // ref: https://stackoverflow.com/a/58882930/11854304
-    public static boolean isConnected(BluetoothDevice device) {
+    @SuppressLint("MissingPermission")
+    private boolean isConnected(BluetoothDevice device, boolean defaultValue) {
         try {
             Method m = device.getClass().getMethod("isConnected", (Class[]) null);
             return (boolean) m.invoke(device, (Object[]) null);
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+//            throw new IllegalStateException(e);
+            try {
+                return bluetoothManager.getConnectionState(device, BluetoothProfile.GATT) == BluetoothProfile.STATE_CONNECTED;
+            } catch (Exception e1) {
+                return defaultValue;
+            }
         }
     }
 
