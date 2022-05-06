@@ -101,24 +101,19 @@ public abstract class BaseCollector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CollectorResult upload(CollectorResult collectorResult, String name, String commit, Result contextOrAction) {
-        try {
-            long uploadTime = System.currentTimeMillis();
-            Log.e("Upload name", name);
-            Log.e("Upload commit", commit);
-            Log.e("Upload file", collectorResult.getSavePath());
+        long uploadTime = System.currentTimeMillis();
+        Log.e("Upload name", name);
+        Log.e("Upload commit", commit);
+        Log.e("Upload file", collectorResult.getSavePath());
 
-            File file = new File(collectorResult.getSavePath());
-            File metaFile = new File(file.getAbsolutePath() + ".meta");
+        File file = new File(collectorResult.getSavePath());
+        File metaFile = new File(file.getAbsolutePath() + ".meta");
+        TaskMetaBean meta = new TaskMetaBean(file.getName(), 0, commit, name, getUserID(), uploadTime);
+        meta.setCollectorResult(JSONUtils.collectorResultToMap(collectorResult));
+        meta.setContextAction(JSONUtils.resultToMap(contextOrAction));
+        FileUtils.writeStringToFile(new Gson().toJson(meta), metaFile);
 
-            TaskMetaBean meta = new TaskMetaBean(file.getName(), 0, commit, name, getUserID(), uploadTime);
-            meta.setCollectorResult(JSONUtils.collectorResultToMap(collectorResult));
-            meta.setContextAction(JSONUtils.resultToMap(contextOrAction));
-
-            FileUtils.writeStringToFile(new Gson().toJson(meta), metaFile);
-            uploader.pushTask(new UploadTask(file, metaFile, meta), true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        uploader.pushTask(new UploadTask(file, metaFile, meta), true);
         return collectorResult;
     }
 
