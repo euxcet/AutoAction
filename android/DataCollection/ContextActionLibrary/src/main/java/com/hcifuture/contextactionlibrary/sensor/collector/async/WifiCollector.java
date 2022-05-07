@@ -125,7 +125,9 @@ public class WifiCollector extends AsynchronousCollector {
             ft.complete(result);
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
+                setBasicInfo();
                 data.clear();
+
                 WifiInfo info = wifiManager.getConnectionInfo();
                 if (info != null && info.getBSSID() != null) {
                     data.insert(new SingleWifiData(info.getSSID(), info.getBSSID(),
@@ -253,5 +255,11 @@ public class WifiCollector extends AsynchronousCollector {
         collectorResult.setData(data.deepClone());
         collectorResult.setDataString(gson.toJson(collectorResult.getData(), WifiData.class));
         collectorResult.getExtras().putLong("ResultTimestamp", resultTimestamp);
+    }
+
+    private void setBasicInfo() {
+        if (wifiManager != null) {
+            data.setState(wifiManager.getWifiState());
+        }
     }
 }
