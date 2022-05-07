@@ -160,12 +160,12 @@ public class BluetoothData extends Data {
         synchronized (devices) {
             for (int i = 0; i < devices.size(); i++) {
                 SingleBluetoothData old = devices.get(i);
-                if (old.getAddress().equals(single.getAddress()) && old.getLinked() == single.getLinked()) {
-                    if (single.getScanResult().equals("") && !old.getScanResult().equals("")) {
-                        single.setScanResult(old.getScanResult());
-                    }
-                    if (single.getIntentExtra().equals("") && !old.getIntentExtra().equals("")) {
+                if (old.getDevice().getAddress().equals(single.getDevice().getAddress()) && old.getLinked() == single.getLinked()) {
+                    if (single.getIntentExtra() == null && old.getIntentExtra() != null) {
                         single.setIntentExtra(old.getIntentExtra());
+                    }
+                    if (single.getScanResult() == null && old.getScanResult() != null) {
+                        single.setScanResult(old.getScanResult());
                     }
                     devices.set(i, single);
                     return;

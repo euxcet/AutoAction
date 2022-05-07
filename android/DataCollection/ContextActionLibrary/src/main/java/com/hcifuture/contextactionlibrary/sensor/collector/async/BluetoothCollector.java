@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.Bundle;
 
 import androidx.annotation.RequiresApi;
 
@@ -56,6 +57,7 @@ public class BluetoothCollector extends AsynchronousCollector {
         6: Concurrent task of Bluetooth scanning
         7: Unknown collecting exception
         8: Unknown exception when stopping scan
+        9: Gson serialization error
      */
 
     public BluetoothCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
@@ -84,14 +86,14 @@ public class BluetoothCollector extends AsynchronousCollector {
                 Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
                 if (pairedDevices.size() > 0) {
                     for (BluetoothDevice device: pairedDevices) {
-                        insert(device, (short)0, isConnected(device, false), null, null);
+                        insert(device, isConnected(device, false), null, null);
                     }
                 }
 
                 // scan connected BLE devices
                 List<BluetoothDevice> connectedDevices = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
                 for (BluetoothDevice device : connectedDevices) {
-                    insert(device, (short)0, isConnected(device, true), null, null);
+                    insert(device, isConnected(device, true), null, null);
                 }
 
                 int errorCode = 0;
@@ -135,9 +137,15 @@ public class BluetoothCollector extends AsynchronousCollector {
                             result.setErrorCode(8);
                             result.setErrorReason(e.toString());
                         } finally {
-                            setCollectData(result);
-                            ft.complete(result);
-                            isCollecting.set(false);
+                            try {
+                                setCollectData(result);
+                            } catch (Exception e) {
+                                result.setErrorCode(9);
+                                result.setErrorReason(e.toString());
+                            } finally {
+                                ft.complete(result);
+                                isCollecting.set(false);
+                            }
                         }
                     }, config.getBluetoothScanTime(), TimeUnit.MILLISECONDS));
                 }
@@ -166,12 +174,9 @@ public class BluetoothCollector extends AsynchronousCollector {
      */
 
     @SuppressLint("MissingPermission")
-    private void insert(BluetoothDevice device, short rssi, boolean linked, String scanResult, String intentExtra) {
-        data.insert(new SingleBluetoothData(device.getName(), device.getAddress(),
-                device.getBondState(), device.getType(),
-                device.getBluetoothClass().getDeviceClass(),
-                device.getBluetoothClass().getMajorDeviceClass(),
-                rssi, linked, scanResult, intentExtra));
+    private void insert(BluetoothDevice device, boolean linked, ScanResult scanResult, Bundle intentExtra) {
+        SingleBluetoothData singleBluetoothData = new SingleBluetoothData(device, linked, scanResult, intentExtra);
+        data.insert(singleBluetoothData);
     }
 
     @Override
@@ -187,8 +192,7 @@ public class BluetoothCollector extends AsynchronousCollector {
             public void onReceive(Context context, Intent intent) {
                 if (intent.getAction().equals(BluetoothDevice.ACTION_FOUND)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    short rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short) 0);
-                    insert(device, rssi, isConnected(device, false), null, intent.getExtras().toString());
+                    insert(device, isConnected(device, false), null, intent.getExtras());
                 }
             }
         };
@@ -202,8 +206,7 @@ public class BluetoothCollector extends AsynchronousCollector {
             @Override
             public void onScanResult (int callbackType, ScanResult result) {
                 BluetoothDevice device = result.getDevice();
-                int rssi = result.getRssi();
-                insert(device, (short) rssi, isConnected(device, false), result.toString(), null);
+                insert(device, isConnected(device, false), result, null);
             }
         };
     }
@@ -274,7 +277,7 @@ public class BluetoothCollector extends AsynchronousCollector {
         return ".json";
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void setCollectData(CollectorResult result) {
         result.setData(data.deepClone());
         result.setDataString(gson.toJson(result.getData(), BluetoothData.class));
