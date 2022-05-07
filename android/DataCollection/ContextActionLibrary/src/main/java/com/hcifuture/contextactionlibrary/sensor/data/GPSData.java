@@ -14,6 +14,7 @@ public class GPSData extends Data {
     private float time;
     private String provider;
     private int satelliteCount;
+    private boolean isProviderEnabled;
 
     public GPSData deepClone() {
         GPSData result = new GPSData();
@@ -26,6 +27,7 @@ public class GPSData extends Data {
         result.setTime(time);
         result.setProvider(provider);
         result.setSatelliteCount(satelliteCount);
+        result.setProviderEnabled(isProviderEnabled);
         if (satellites != null) {
             List<SatelliteData> satelliteData = new ArrayList<>();
             for (SatelliteData satellite: satellites) {
@@ -76,6 +78,10 @@ public class GPSData extends Data {
         return provider;
     }
 
+    public boolean isProviderEnabled() {
+        return isProviderEnabled;
+    }
+
     public void setAccuracy(float accuracy) {
         this.accuracy = accuracy;
     }
@@ -106,6 +112,10 @@ public class GPSData extends Data {
 
     public void setTime(float time) {
         this.time = time;
+    }
+
+    public void setProviderEnabled(boolean providerEnabled) {
+        isProviderEnabled = providerEnabled;
     }
 
     @Override
