@@ -61,6 +61,7 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
     public void close() {
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void pause() {
         unbindListener();
@@ -70,6 +71,8 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
     public void resume() {
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @SuppressLint("MissingPermission")
     private boolean bindListener() {
         if (isProviderEnabled && isRunning.compareAndSet(false, true)) {
             Log.e("TEST", locationManager + " " + mContext + " " );
@@ -81,6 +84,8 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @SuppressLint("MissingPermission")
     private boolean unbindListener() {
         if (isProviderEnabled && isRunning.compareAndSet(true, false)) {
             locationManager.unregisterGnssStatusCallback(gnssStatusCallback);
@@ -101,6 +106,7 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
         return ".json";
     }
 
+    @SuppressLint("MissingPermission")
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
@@ -113,7 +119,7 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
             ft.complete(result);
         } else if (isProviderEnabled) {
             if (bindListener()) {
-                scheduledExecutorService.schedule(() -> {
+                futureList.add(scheduledExecutorService.schedule(() -> {
                     try {
                         setLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
                         unbindListener();
@@ -126,7 +132,7 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
                         ft.complete(result);
                         isRunning.set(false);
                     }
-                }, config.getGPSRequestTime(), TimeUnit.MILLISECONDS);
+                }, config.getGPSRequestTime(), TimeUnit.MILLISECONDS));
             } else {
                 result.setErrorCode(2);
                 result.setErrorReason("Concurrent task of GPS collecting");
