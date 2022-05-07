@@ -104,7 +104,6 @@ public class BluetoothCollector extends AsynchronousCollector {
                     bluetoothAdapter.cancelDiscovery();
                     errorCode += 1;
                     errorReason += "Cannot start Bluetooth discovery";
-                    isCollecting.set(false);
                 }
 
                 // start BLE scanning
@@ -126,8 +125,7 @@ public class BluetoothCollector extends AsynchronousCollector {
                     // Stops scanning after given time
                     futureList.add(scheduledExecutorService.schedule(() -> {
                         try {
-                            bluetoothLeScanner.stopScan(leScanCallback);
-                            boolean success = bluetoothAdapter.cancelDiscovery();
+                            boolean success = stopScan();
                             if (!success) {
                                 result.setErrorCode(4);
                                 result.setErrorReason("Cannot cancel Bluetooth discovery");
@@ -151,6 +149,7 @@ public class BluetoothCollector extends AsynchronousCollector {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                stopScan();
                 result.setErrorCode(7);
                 result.setErrorReason(e.toString());
                 ft.complete(result);
@@ -163,6 +162,18 @@ public class BluetoothCollector extends AsynchronousCollector {
         }
 
         return ft;
+    }
+
+    @SuppressLint("MissingPermission")
+    private boolean stopScan() {
+        boolean ret = true;
+        if (bluetoothLeScanner != null) {
+            bluetoothLeScanner.stopScan(leScanCallback);
+        }
+        if (bluetoothAdapter != null) {
+            ret = bluetoothAdapter.cancelDiscovery();
+        }
+        return ret;
     }
 
     /*
@@ -238,12 +249,7 @@ public class BluetoothCollector extends AsynchronousCollector {
     @SuppressLint("MissingPermission")
     @Override
     public void close() {
-        if (bluetoothLeScanner != null) {
-            bluetoothLeScanner.stopScan(leScanCallback);
-        }
-        if (bluetoothAdapter != null) {
-            bluetoothAdapter.cancelDiscovery();
-        }
+        stopScan();
         if (isRegistered.get() && receiver != null) {
             mContext.unregisterReceiver(receiver);
             isRegistered.set(false);
@@ -253,6 +259,7 @@ public class BluetoothCollector extends AsynchronousCollector {
 
     @Override
     public void pause() {
+        stopScan();
         if (isRegistered.get() && receiver != null) {
             mContext.unregisterReceiver(receiver);
             isRegistered.set(false);
