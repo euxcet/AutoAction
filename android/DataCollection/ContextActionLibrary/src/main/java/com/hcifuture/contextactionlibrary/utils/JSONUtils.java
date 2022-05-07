@@ -5,6 +5,7 @@ import android.os.Bundle;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.shared.communicate.result.Result;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -13,7 +14,7 @@ import java.util.Map;
 
 public class JSONUtils {
 
-    public static void silentPut(JSONObject json, String key, Object value) {
+    public static void jsonPut(JSONObject json, String key, Object value) {
         try {
             json.put(key, value);
         } catch (JSONException e) {
@@ -21,20 +22,71 @@ public class JSONUtils {
         }
     }
 
-    public static void silentPutBundle(JSONObject json, Bundle bundle) {
-        for (String key : bundle.keySet()) {
-            Object obj = JSONObject.wrap(bundle.get(key));
-            if (obj == null) {
-                obj = JSONObject.wrap(bundle.get(key).toString());
+    public static Object wrapObjRecursive(Object obj) {
+        if (obj == null) {
+            return null;
+        } else if (obj.getClass().isArray() &&
+                obj.getClass().getComponentType() != null &&
+                !obj.getClass().getComponentType().isPrimitive()) {
+            // exclude primitive type array
+            JSONArray array = new JSONArray();
+            for (Object tmp : (Object[]) obj) {
+                array.put(wrapObjRecursive(tmp));
             }
-            silentPut(json, key, obj);
+            return array;
+        } else {
+            Object obj_wrap = JSONObject.wrap(obj);
+            if (obj_wrap == null) {
+                obj_wrap = JSONObject.wrap(obj.toString());
+            }
+            return obj_wrap;
+        }
+    }
+
+    public static void jsonPutBundle(JSONObject json, Bundle bundle) {
+        if (bundle != null && json != null) {
+            for (String key : bundle.keySet()) {
+                Object obj = bundle.get(key);
+                if (obj instanceof Bundle) {
+                    jsonPut(json, key, bundleToJSON((Bundle) obj));
+                } else {
+                    jsonPut(json, key, wrapObjRecursive(obj));
+                }
+            }
         }
     }
 
     public static JSONObject bundleToJSON(Bundle bundle) {
-        JSONObject json = new JSONObject();
-        silentPutBundle(json, bundle);
-        return json;
+        if (bundle == null) {
+            return null;
+        } else {
+            JSONObject json = new JSONObject();
+            jsonPutBundle(json, bundle);
+            return json;
+        }
+    }
+
+    public static void mapPutBundle(Map<String, Object> map, Bundle bundle) {
+        if (bundle != null && map != null) {
+            for (String key : bundle.keySet()) {
+                Object obj = bundle.get(key);
+                if (obj instanceof Bundle) {
+                    map.put(key, bundleToMap((Bundle) obj));
+                } else {
+                    map.put(key, obj);
+                }
+            }
+        }
+    }
+
+    public static Map<String, Object> bundleToMap(Bundle bundle) {
+        if (bundle == null) {
+            return null;
+        } else {
+            Map<String, Object> map = new HashMap<>();
+            mapPutBundle(map, bundle);
+            return map;
+        }
     }
 
     public static Map<String, Object> collectorResultToMap(CollectorResult result) {
@@ -48,11 +100,7 @@ public class JSONUtils {
             map.put("ErrorCode", result.getErrorCode());
             map.put("ErrorReason", result.getErrorReason());
             Bundle bundle = result.getExtras();
-            if (bundle != null) {
-                for (String key : bundle.keySet()) {
-                    map.put(key, bundle.get(key));
-                }
-            }
+            mapPutBundle(map, bundle);
             return map;
         }
     }
@@ -66,11 +114,7 @@ public class JSONUtils {
             map.put("Timestamp", result.getTimestamp());
             map.put("Reason", result.getReason());
             Bundle bundle = result.getExtras();
-            if (bundle != null) {
-                for (String key : bundle.keySet()) {
-                    map.put(key, bundle.get(key));
-                }
-            }
+            mapPutBundle(map, bundle);
             return map;
         }
     }

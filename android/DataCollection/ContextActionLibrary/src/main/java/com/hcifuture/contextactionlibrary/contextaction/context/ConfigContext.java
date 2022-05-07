@@ -163,16 +163,16 @@ public class ConfigContext extends BaseContext {
                 if (Settings.System.SCREEN_BRIGHTNESS.equals(database_key)) {
                     // record brightness value difference and update
                     int diff = value - brightness;
-                    JSONUtils.silentPut(json, "diff", diff);
+                    JSONUtils.jsonPut(json, "diff", diff);
                     brightness = value;
                     // record brightness mode
                     int mode = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, -1);
                     if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL) {
-                        JSONUtils.silentPut(json, "mode", "man");
+                        JSONUtils.jsonPut(json, "mode", "man");
                     } else if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
-                        JSONUtils.silentPut(json, "mode", "auto");
+                        JSONUtils.jsonPut(json, "mode", "auto");
                     } else {
-                        JSONUtils.silentPut(json, "mode", "unknown");
+                        JSONUtils.jsonPut(json, "mode", "unknown");
                     }
                     notifyContext(NEED_NONIMU, timestamp, logID, "screen brightness change");
                 } else if (database_key.startsWith("volume_")) {
@@ -182,7 +182,7 @@ public class ConfigContext extends BaseContext {
                     }
                     // record volume value difference and update
                     int diff = value - volume.put(database_key, value);
-                    JSONUtils.silentPut(json, "diff", diff);
+                    JSONUtils.jsonPut(json, "diff", diff);
                     notifyContext(NEED_AUDIO, timestamp, logID, "volume change: " + database_key);
                 } else if (Settings.Global.BLUETOOTH_ON.equals(database_key) && value == 1) {
 //                    notify(NEED_SCAN, timestamp, logID, "Bluetooth on via global setting");
@@ -195,8 +195,8 @@ public class ConfigContext extends BaseContext {
             switch (action) {
                 case Intent.ACTION_CONFIGURATION_CHANGED:
                     Configuration config = mContext.getResources().getConfiguration();
-                    JSONUtils.silentPut(json, "configuration", config.toString());
-                    JSONUtils.silentPut(json, "orientation", config.orientation);
+                    JSONUtils.jsonPut(json, "configuration", config.toString());
+                    JSONUtils.jsonPut(json, "orientation", config.orientation);
                     break;
                 case Intent.ACTION_SCREEN_OFF:
                 case Intent.ACTION_SCREEN_ON:
@@ -208,7 +208,7 @@ public class ConfigContext extends BaseContext {
                         for (int i = 0; i < displays.length; i++) {
                             states[i] = displays[i].getState();
                         }
-                        JSONUtils.silentPut(json, "displays", states);
+                        JSONUtils.jsonPut(json, "displays", states);
                     }
                     break;
             }
@@ -222,7 +222,7 @@ public class ConfigContext extends BaseContext {
         } else if ("KeyEvent".equals(type)) {
             record = true;
             int keycode = extras.getInt("code");
-            JSONUtils.silentPut(json, "keycodeString", KeyEvent.keyCodeToString(keycode));
+            JSONUtils.jsonPut(json, "keycodeString", KeyEvent.keyCodeToString(keycode));
 
             switch (keycode) {
                 case KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK:
@@ -250,8 +250,8 @@ public class ConfigContext extends BaseContext {
         }
 
         if (record) {
-            JSONUtils.silentPut(json, "package", packageName);
-            JSONUtils.silentPutBundle(json, extras);
+            JSONUtils.jsonPut(json, "package", packageName);
+            JSONUtils.jsonPutBundle(json, extras);
             record(timestamp, logID, type, action, tag, json.toString());
         }
     }
@@ -273,19 +273,19 @@ public class ConfigContext extends BaseContext {
 
         // store brightness
         brightness = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 0);
-        JSONUtils.silentPut(json, "brightness", brightness);
+        JSONUtils.jsonPut(json, "brightness", brightness);
 
         // store volumes
         for (String key : volume.keySet()) {
             int value = Settings.System.getInt(mContext.getContentResolver(), key, 0);
             volume.put(key, value);
-            JSONUtils.silentPut(json, key, value);
+            JSONUtils.jsonPut(json, key, value);
         }
 
         // store configuration and orientation
         Configuration config = mContext.getResources().getConfiguration();
-        JSONUtils.silentPut(json, "configuration", config.toString());
-        JSONUtils.silentPut(json, "orientation", config.orientation);
+        JSONUtils.jsonPut(json, "configuration", config.toString());
+        JSONUtils.jsonPut(json, "orientation", config.orientation);
 
         // store system settings
         jsonPutSettings(json, "system", Settings.System.class);
@@ -319,7 +319,7 @@ public class ConfigContext extends BaseContext {
                 }
             }
         }
-        JSONUtils.silentPut(json, key, jsonArray);
+        JSONUtils.jsonPut(json, key, jsonArray);
     }
 
     private void notifyContext(String context, long timestamp, int logID, String reason) {
