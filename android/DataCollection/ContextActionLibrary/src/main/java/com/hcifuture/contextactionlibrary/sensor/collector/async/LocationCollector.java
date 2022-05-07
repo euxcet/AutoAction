@@ -23,6 +23,13 @@ public class LocationCollector extends AsynchronousCollector {
 
     private LocationData data;
 
+    /*
+      Error code:
+        0: No error
+        1: Null LocationClient
+        2: Error in client.requestLocation()
+     */
+
     public LocationCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
     }
@@ -30,29 +37,37 @@ public class LocationCollector extends AsynchronousCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
+        CollectorResult result = new CollectorResult();
         if (client != null) {
-            return client.requestLocation().thenApply(aMapLocation -> {
-                CollectorResult result = new CollectorResult();
-                data = new LocationData(
-                        aMapLocation.getLongitude(),
-                        aMapLocation.getLatitude(),
-                        aMapLocation.getAltitude(),
-                        aMapLocation.getAccuracy(),
-                        aMapLocation.getFloor(),
-                        aMapLocation.getCity(),
-                        aMapLocation.getPoiName(),
-                        aMapLocation.getStreet(),
-                        aMapLocation.getTime(),
-                        aMapLocation.getAdCode(),
-                        aMapLocation.getCityCode()
-                );
-                result.setData(data.deepClone());
-                result.setDataString(gson.toJson(result.getData(), LocationData.class));
-                return result;
-            });
+            return client.requestLocation()
+                    .handle((aMapLocation, ex) -> {
+                        if (ex != null) {
+                            result.setErrorCode(2);
+                            result.setErrorReason(ex.toString());
+                        } else {
+                            data = new LocationData(
+                                    aMapLocation.getLongitude(),
+                                    aMapLocation.getLatitude(),
+                                    aMapLocation.getAltitude(),
+                                    aMapLocation.getAccuracy(),
+                                    aMapLocation.getFloor(),
+                                    aMapLocation.getCity(),
+                                    aMapLocation.getPoiName(),
+                                    aMapLocation.getStreet(),
+                                    aMapLocation.getTime(),
+                                    aMapLocation.getAdCode(),
+                                    aMapLocation.getCityCode()
+                            );
+                            result.setData(data.deepClone());
+                            result.setDataString(gson.toJson(result.getData(), LocationData.class));
+                        }
+                        return result;
+                    });
         } else {
+            result.setErrorCode(1);
+            result.setErrorReason("Null LocationClient");
             CompletableFuture<CollectorResult> ft =  new CompletableFuture<>();
-            ft.completeExceptionally(new Exception("LocationClient instance is null!"));
+            ft.complete(result);
             return ft;
         }
     }
