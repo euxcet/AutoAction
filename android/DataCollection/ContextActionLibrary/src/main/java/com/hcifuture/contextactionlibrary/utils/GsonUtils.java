@@ -38,19 +38,18 @@ public class GsonUtils {
         } else if (obj.getClass().isArray() &&
                 obj.getClass().getComponentType() != null &&
                 !obj.getClass().getComponentType().isPrimitive()) {
-            Log.e(TAG, "wrapObjRecursive: array");
+//            Log.e(TAG, "wrapObjRecursive: start array conversion");
             JsonArray jsonArray = new JsonArray();
             Object[] arr = (Object[]) obj;
             for (Object tmp : arr) {
                 jsonArray.add(wrapObjRecursive(tmp, context));
             }
+//            Log.e(TAG, "wrapObjRecursive: finish array conversion");
             return jsonArray;
         } else {
-            Log.e(TAG, "wrapObjRecursive: object");
             JsonElement jsonElement = (obj instanceof JsonElement)? (JsonElement) obj : context.serialize(obj);
             if (jsonElement.isJsonObject() && ((JsonObject) jsonElement).entrySet().isEmpty()) {
-                Log.e(TAG, "wrapObjRecursive: toString");
-
+//                Log.e(TAG, "wrapObjRecursive: toString");
                 return new JsonPrimitive(obj.toString());
             }
             return jsonElement;
@@ -119,9 +118,7 @@ public class GsonUtils {
                 return JsonNull.INSTANCE;
             } else {
                 JsonObject jsonObject = new JsonObject();
-                Log.e(TAG, "serialize: SparseArray byte [] size: " + src.size());
                 for (int index = 0; index < src.size(); index++) {
-                    Log.e(TAG, "serialize: SparseArray byte [] add: " + src.keyAt(index));
                     jsonObject.add(Integer.toString(src.keyAt(index)), context.serialize(src.valueAt(index)));
                 }
                 return jsonObject;
