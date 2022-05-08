@@ -446,10 +446,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         LogCollector contextActionLogCollector = collectorManager.newLogCollector("ContextAction", 8192);
                         configCollector.setContextActionLogCollector(contextActionLogCollector);
                         timedCollector.scheduleTimedLogUpload(contextActionLogCollector, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
-                        Log.e("TimedCollector", "register fixed rate upload log: ContextAction" +
-                                " delay: " + bean.getPeriodOrDelay() +
-                                " initialDelay: " + bean.getInitialDelay() +
-                                " name: " + bean.getName());
                     } else {
                         TriggerConfig triggerConfig = bean.getTriggerConfig();
                         if (triggerConfig == null) {
@@ -457,16 +453,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         }
                         if (bean.isFixedDelay()) {
                             timedCollector.scheduleFixedDelayUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
-                            Log.e("TimedCollector", "register fixed delay upload: " + type.name() +
-                                    " delay: " + bean.getPeriodOrDelay() +
-                                    " initialDelay: " + bean.getInitialDelay() +
-                                    " name: " + bean.getName());
                         } else {
                             timedCollector.scheduleFixedRateUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
-                            Log.e("TimedCollector", "register fixed rate upload: " + type.name() +
-                                    " period: " + bean.getPeriodOrDelay() +
-                                    " initialDelay: " + bean.getInitialDelay() +
-                                    " name: " + bean.getName());
                         }
                     }
                 }

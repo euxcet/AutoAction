@@ -56,6 +56,10 @@ public class TimedCollector extends BaseCollector {
                 },
                 initialDelay, period, TimeUnit.MILLISECONDS)
         );
+        Log.e("TimedCollector", "register fixed rate upload: " + type.name() +
+                " period: " + period +
+                " initialDelay: " + initialDelay +
+                " name: " + name);
         return this;
     }
 
@@ -81,6 +85,10 @@ public class TimedCollector extends BaseCollector {
                 },
                 initialDelay, delay, TimeUnit.MILLISECONDS)
         );
+        Log.e("TimedCollector", "register fixed delay upload: " + type.name() +
+                " delay: " + delay +
+                " initialDelay: " + initialDelay +
+                " name: " + name);
         return this;
     }
 
@@ -101,7 +109,12 @@ public class TimedCollector extends BaseCollector {
                         e.printStackTrace();
                     }
                 },
-                initialDelay, period, TimeUnit.MILLISECONDS));
+                initialDelay, period, TimeUnit.MILLISECONDS)
+        );
+        Log.e("TimedCollector", "register fixed rate upload Log" +
+                " period: " + period +
+                " initialDelay: " + initialDelay +
+                " name: " + name);
         return this;
     }
 
