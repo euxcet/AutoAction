@@ -27,6 +27,7 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
     private Sensor mPressure;
     private Sensor mLight;
     private Sensor mProximity;
+    private Sensor mStepCounter;
 
     public NonIMUCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
@@ -41,6 +42,7 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
         mPressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         mLight = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         mProximity = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        mStepCounter = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
 
         this.resume();
     }
@@ -60,6 +62,7 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
         sensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, mLight, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, mStepCounter, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
@@ -106,6 +109,10 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
                 case Sensor.TYPE_PROXIMITY:
                     data.setProximity(event.values[0]);
                     data.setProximityTimestamp(event.timestamp);
+                    break;
+                case Sensor.TYPE_STEP_COUNTER:
+                    data.setStepCounter(event.values[0]);
+                    data.setStepCounterTimestamp(event.timestamp);
                     break;
                 default:
                     break;
