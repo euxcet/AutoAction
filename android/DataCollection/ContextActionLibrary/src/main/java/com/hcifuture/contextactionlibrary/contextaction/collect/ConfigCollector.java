@@ -3,6 +3,7 @@ package com.hcifuture.contextactionlibrary.contextaction.collect;
 import android.content.Context;
 import android.os.Build;
 
+import com.hcifuture.contextactionlibrary.contextaction.action.MotionAction;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
@@ -22,6 +23,7 @@ import androidx.annotation.RequiresApi;
 public class ConfigCollector extends BaseCollector {
     private final TriggerConfig triggerConfig;
     private long last_nonimu = 0;
+    private long last_position = 0;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ConfigCollector(Context context, ScheduledExecutorService scheduledExecutorService,
@@ -30,11 +32,25 @@ public class ConfigCollector extends BaseCollector {
         super(context, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader);
         triggerConfig = new TriggerConfig()
                 .setAudioLength(5000)
-                .setBluetoothScanTime(10000);
+                .setBluetoothScanTime(10000)
+                .setGPSRequestTime(3000);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAction(ActionResult action) {
+        long current_call = action.getTimestamp();
+        String commit = "";
+
+        if (MotionAction.NEED_POSITION.equals(action.getAction())) {
+            // called every 10 min at most
+            if (current_call - last_position >= 10 * 60000) {
+                last_position = current_call;
+                String name = "Event_Position";
+                triggerAndUpload(CollectorManager.CollectorType.GPS, triggerConfig, name, commit, action);
+                triggerAndUpload(CollectorManager.CollectorType.Location, triggerConfig, name, commit, action);
+            }
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
