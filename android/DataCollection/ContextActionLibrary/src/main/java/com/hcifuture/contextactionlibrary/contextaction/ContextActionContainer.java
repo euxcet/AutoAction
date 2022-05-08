@@ -508,7 +508,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                             break;
                         case "Config":
                             LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
-                            timedCollector.scheduleTimedLogUpload(configLogCollector, 60000, 5000, "Config");
+                            Number initialDelay = contextConfig.getValue("intialDelay");
+                            Number period = contextConfig.getValue("period");
+                            String name = contextConfig.getString("name");
+                            initialDelay = (initialDelay == null)? 5000 : initialDelay;
+                            period = (period == null)? 60000 : period;
+                            name = (name == null)? "Config" : name;
+                            timedCollector.scheduleTimedLogUpload(configLogCollector, period.longValue(), initialDelay.longValue(), name);
                             ConfigContext configContext = new ConfigContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), configLogCollector, scheduledExecutorService, futureList);
                             contexts.add(configContext);
                             break;
