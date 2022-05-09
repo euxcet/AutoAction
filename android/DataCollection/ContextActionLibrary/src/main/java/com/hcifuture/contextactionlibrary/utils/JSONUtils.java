@@ -96,6 +96,7 @@ public class JSONUtils {
             Map<String, Object> map = new HashMap<>();
             map.put("StartTimestamp", result.getStartTimestamp());
             map.put("EndTimestamp", result.getEndTimestamp());
+            map.put("Name", result.getName());
             map.put("Type", result.getType());
             map.put("ErrorCode", result.getErrorCode());
             map.put("ErrorReason", result.getErrorReason());
