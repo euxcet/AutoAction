@@ -122,7 +122,8 @@ public class WifiCollector extends AsynchronousCollector {
         if (config.getWifiScanTimeout() <= 0) {
             result.setErrorCode(9);
             result.setErrorReason("Invalid Wifi scan timeout: " + config.getWifiScanTimeout());
-            ft.complete(result);
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Invalid Wifi scan timeout: " + config.getWifiScanTimeout()));
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
                 setBasicInfo();
@@ -190,7 +191,8 @@ public class WifiCollector extends AsynchronousCollector {
         } else {
             result.setErrorCode(3);
             result.setErrorReason("Concurrent task of Wifi scanning");
-            ft.complete(result);
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Concurrent task of Wifi scanning"));
         }
 
         return ft;

@@ -76,7 +76,8 @@ public class BluetoothCollector extends AsynchronousCollector {
         if (config.getBluetoothScanTime() <= 0) {
             result.setErrorCode(5);
             result.setErrorReason("Invalid Bluetooth scan time: " + config.getBluetoothScanTime());
-            ft.complete(result);
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Invalid Bluetooth scan time: " + config.getBluetoothScanTime()));
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
                 setBasicInfo();
@@ -158,7 +159,8 @@ public class BluetoothCollector extends AsynchronousCollector {
         } else {
             result.setErrorCode(6);
             result.setErrorReason("Concurrent task of Bluetooth scanning");
-            ft.complete(result);
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Concurrent task of Bluetooth scanning"));
         }
 
         return ft;

@@ -40,34 +40,30 @@ public class LocationCollector extends AsynchronousCollector {
         CollectorResult result = new CollectorResult();
         if (client != null) {
             return client.requestLocation()
-                    .handle((aMapLocation, ex) -> {
-                        if (ex != null) {
-                            result.setErrorCode(2);
-                            result.setErrorReason(ex.toString());
-                        } else {
-                            data = new LocationData(
-                                    aMapLocation.getLongitude(),
-                                    aMapLocation.getLatitude(),
-                                    aMapLocation.getAltitude(),
-                                    aMapLocation.getAccuracy(),
-                                    aMapLocation.getFloor(),
-                                    aMapLocation.getCity(),
-                                    aMapLocation.getPoiName(),
-                                    aMapLocation.getStreet(),
-                                    aMapLocation.getTime(),
-                                    aMapLocation.getAdCode(),
-                                    aMapLocation.getCityCode()
-                            );
-                            result.setData(data.deepClone());
-                            result.setDataString(gson.toJson(result.getData(), LocationData.class));
-                        }
+                    .thenApply((aMapLocation) -> {
+                        data = new LocationData(
+                                aMapLocation.getLongitude(),
+                                aMapLocation.getLatitude(),
+                                aMapLocation.getAltitude(),
+                                aMapLocation.getAccuracy(),
+                                aMapLocation.getFloor(),
+                                aMapLocation.getCity(),
+                                aMapLocation.getPoiName(),
+                                aMapLocation.getStreet(),
+                                aMapLocation.getTime(),
+                                aMapLocation.getAdCode(),
+                                aMapLocation.getCityCode()
+                        );
+                        result.setData(data.deepClone());
+                        result.setDataString(gson.toJson(result.getData(), LocationData.class));
                         return result;
                     });
         } else {
             result.setErrorCode(1);
             result.setErrorReason("Null LocationClient");
             CompletableFuture<CollectorResult> ft =  new CompletableFuture<>();
-            ft.complete(result);
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Null LocationClient"));
             return ft;
         }
     }
