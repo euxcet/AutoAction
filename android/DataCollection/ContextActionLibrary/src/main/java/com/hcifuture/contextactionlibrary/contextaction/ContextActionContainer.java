@@ -22,6 +22,7 @@ import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
+import com.hcifuture.contextactionlibrary.contextaction.action.MotionAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.CloseCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ConfigCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ExampleCollector;
@@ -415,7 +416,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader);
         collectors.add(timedCollector);
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader));
-        collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader));
+        ConfigCollector configCollector = new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader);
+        collectors.add(configCollector);
 
         if (fromDex) {
             Gson gson = new Gson();
@@ -425,6 +427,38 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             );
 
             if (config != null) {
+                // firstly schedule timed behavior, because it may use log to record contexts and actions
+                for (ContextActionConfigBean.TimedConfigBean bean: config.getTimed()) {
+                    if (bean == null) {
+                        continue;
+                    }
+                    CollectorManager.CollectorType type;
+                    try {
+                        type = CollectorManager.CollectorType.valueOf(bean.getBuiltInSensor());
+                    } catch (Exception e) {
+                        continue;
+                    }
+                    if (bean.getName() == null) {
+                        continue;
+                    }
+                    // ContextAction log records all contexts and actions
+                    if (type == CollectorManager.CollectorType.Log) {
+                        LogCollector contextActionLogCollector = collectorManager.newLogCollector("ContextAction", 8192);
+                        configCollector.setContextActionLogCollector(contextActionLogCollector);
+                        timedCollector.scheduleTimedLogUpload(contextActionLogCollector, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                    } else {
+                        TriggerConfig triggerConfig = bean.getTriggerConfig();
+                        if (triggerConfig == null) {
+                            triggerConfig = new TriggerConfig();
+                        }
+                        if (bean.isFixedDelay()) {
+                            timedCollector.scheduleFixedDelayUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                        } else {
+                            timedCollector.scheduleFixedRateUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                        }
+                    }
+                }
+
                 for (ContextActionConfigBean.ContextConfigBean bean: config.getContext()) {
                     if (bean == null) {
                         continue;
@@ -462,7 +496,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                             break;
                         case "Config":
                             LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
-                            timedCollector.scheduleTimedLogUpload(configLogCollector, 60000, 5000, "Config");
+                            Number initialDelay = contextConfig.getValue("intialDelay");
+                            Number period = contextConfig.getValue("period");
+                            String name = contextConfig.getString("name");
+                            initialDelay = (initialDelay == null)? 5000 : initialDelay;
+                            period = (period == null)? 60000 : period;
+                            name = (name == null)? "Config" : name;
+                            timedCollector.scheduleTimedLogUpload(configLogCollector, period.longValue(), initialDelay.longValue(), name);
                             ConfigContext configContext = new ConfigContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), configLogCollector, scheduledExecutorService, futureList);
                             contexts.add(configContext);
                             break;
@@ -513,6 +553,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                             PocketAction pocketAction = new PocketAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
                             actions.add(pocketAction);
                             break;
+                        case "Motion":
+                            MotionAction motionAction = new MotionAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                            actions.add(motionAction);
+                            break;
                         case "Example":
                             LogCollector logCollector = collectorManager.newLogCollector("Log0", 100);
                             timedCollector.scheduleTimedLogUpload(logCollector, 5000, 0, "Example");
@@ -520,38 +564,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                             ExampleAction exampleAction = new ExampleAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), logCollector, scheduledExecutorService, futureList);
                             actions.add(exampleAction);
                             break;
-                    }
-                }
-
-                for (ContextActionConfigBean.TimedConfigBean bean: config.getTimed()) {
-                    if (bean == null) {
-                        continue;
-                    }
-                    CollectorManager.CollectorType type;
-                    try {
-                        type = CollectorManager.CollectorType.valueOf(bean.getBuiltInSensor());
-                    } catch (Exception e) {
-                        continue;
-                    }
-                    if (bean.getName() == null) {
-                        continue;
-                    }
-                    TriggerConfig triggerConfig = bean.getTriggerConfig();
-                    if (triggerConfig == null) {
-                        triggerConfig = new TriggerConfig();
-                    }
-                    if (bean.isFixedDelay()) {
-                        timedCollector.scheduleFixedDelayUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
-                        Log.e("TimedCollector", "register fixed delay upload: " + type.name() +
-                                " delay: " + bean.getPeriodOrDelay() +
-                                " initialDelay: " + bean.getInitialDelay() +
-                                " name: " + bean.getName());
-                    } else {
-                        timedCollector.scheduleFixedRateUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
-                        Log.e("TimedCollector", "register fixed rate upload: " + type.name() +
-                                " period: " + bean.getPeriodOrDelay() +
-                                " initialDelay: " + bean.getInitialDelay() +
-                                " name: " + bean.getName());
                     }
                 }
 
