@@ -1,6 +1,7 @@
 package com.hcifuture.contextactionlibrary.sensor.data;
 
 public class NonIMUData extends Data {
+    private int type;
     private float environmentBrightness;
     private float airPressure;
     private int screenBrightness;
@@ -23,6 +24,14 @@ public class NonIMUData extends Data {
         screenBrightnessTimestamp = 0;
         proximityTimestamp = 0;
         stepCounterTimestamp = 0;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 
     public float getAirPressure() {
