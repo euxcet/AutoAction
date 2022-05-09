@@ -113,11 +113,13 @@ public class AudioCollector extends AsynchronousCollector {
         if (config.getAudioLength() <= 0) {
             result.setErrorCode(1);
             result.setErrorReason("Invalid audio length: " + config.getAudioLength());
-            ft.complete(result);
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Invalid audio length: " + config.getAudioLength()));
         } else if (config.getAudioFilename() == null) {
             result.setErrorCode(2);
             result.setErrorReason("Null audio filename");
-            ft.complete(result);
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Null audio filename"));
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
                 FileUtils.makeDir(saveFile.getParent());
@@ -125,12 +127,14 @@ public class AudioCollector extends AsynchronousCollector {
                 futureList.add(scheduledExecutorService.schedule(() -> {
                     try {
                         stopRecording();
+                        ft.complete(result);
                     } catch (Exception e) {
                         e.printStackTrace();
                         result.setErrorCode(5);
                         result.setErrorReason(e.toString());
+                        ft.completeExceptionally(e);
                     } finally {
-                        ft.complete(result);
+//                        ft.complete(result);
                         isCollecting.set(false);
                     }
                 }, config.getAudioLength(), TimeUnit.MILLISECONDS));
@@ -139,21 +143,18 @@ public class AudioCollector extends AsynchronousCollector {
                 stopRecording();
                 result.setErrorCode(4);
                 result.setErrorReason(e.toString());
-                ft.complete(result);
+//                ft.complete(result);
+                ft.completeExceptionally(e);
                 isCollecting.set(false);
             }
         } else {
             result.setErrorCode(3);
             result.setErrorReason("Concurrent task of audio recording");
-            ft.complete(result);
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Concurrent task of audio recording"));
         }
 
-        return ft.thenApply(v -> {
-            if (v.getErrorCode() != 0) {
-                FileUtils.makeFile(saveFile);
-            }
-            return v;
-        });
+        return ft;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
