@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.IntUnaryOperator;
 
 import androidx.annotation.RequiresApi;
 
@@ -58,7 +57,6 @@ public class ConfigContext extends BaseContext {
 
     private final LogCollector logCollector;
     private final AtomicInteger mLogID = new AtomicInteger(0);
-    private final IntUnaryOperator operator = x -> (x < 999)? (x + 1) : 0;
 
     public ConfigContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector logCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
@@ -257,7 +255,7 @@ public class ConfigContext extends BaseContext {
     }
 
     private int incLogID() {
-        return mLogID.getAndUpdate(operator);
+        return mLogID.getAndIncrement();
     }
 
     private void record(long timestamp, int logID, String type, String action, String tag, String other) {
