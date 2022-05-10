@@ -120,13 +120,13 @@ public abstract class BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<CollectorResult> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String commit) {
         return clickTrigger.trigger(collector, triggerConfig)
-                .thenApply((v) -> upload(v.get(0), name, commit));
+                .thenApply((v) -> upload(v, name, commit));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<CollectorResult> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String commit, Result contextOrAction) {
         return clickTrigger.trigger(collector, triggerConfig)
-                .thenApply((v) -> upload(v.get(0), name, commit, contextOrAction));
+                .thenApply((v) -> upload(v, name, commit, contextOrAction));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

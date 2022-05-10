@@ -4,7 +4,7 @@ public class TriggerConfig {
     private int imuHead = -1;
     private int imuTail = -1;
     private int audioLength = 5000;
-    private String audioFilename = "";
+    private String audioFilename;
     private int bluetoothScanTime = 10000;
     private int wifiScanTimeout = 10000;
     private int gpsRequestTime = 3000;

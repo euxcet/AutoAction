@@ -44,6 +44,10 @@ public class LogCollector extends SynchronousCollector {
         data.addLog(log);
     }
 
+    public void addLogs(List<String> logs) {
+        data.addLogs(logs);
+    }
+
     public void eraseLog(int length) {
         Log.e("TEST", "Log erase length: " + length);
         data.eraseLog(length);

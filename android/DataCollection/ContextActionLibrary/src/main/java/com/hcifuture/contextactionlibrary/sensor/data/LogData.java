@@ -18,9 +18,21 @@ public class LogData extends Data {
     public void addLog(String log) {
         synchronized (logs) {
             logs.add(log);
-            while (logs.size() > historyLength) {
-                logs.remove(0);
-            }
+            checkSize();
+        }
+    }
+
+    public void addLogs(List<String> newLogs) {
+        synchronized (logs) {
+            logs.addAll(newLogs);
+            checkSize();
+        }
+    }
+
+    private void checkSize() {
+        int overflow = logs.size() - historyLength;
+        if (overflow > 0) {
+            eraseLog(overflow);
         }
     }
 

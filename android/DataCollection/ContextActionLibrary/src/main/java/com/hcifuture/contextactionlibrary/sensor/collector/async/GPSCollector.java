@@ -110,7 +110,8 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
         if (config.getGPSRequestTime() <= 0) {
             result.setErrorCode(4);
             result.setErrorReason("Invalid GPS request time: " + config.getGPSRequestTime());
-            ft.complete(result);
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Invalid GPS request time: " + config.getGPSRequestTime()));
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
                 setBasicInfo();
@@ -148,7 +149,8 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
         } else {
             result.setErrorCode(2);
             result.setErrorReason("Concurrent task of GPS collecting");
-            ft.complete(result);
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Concurrent task of GPS collecting"));
         }
 
         return ft;

@@ -11,7 +11,8 @@ public class CollectorResult {
     private int logLength;
     private long startTimestamp;
     private long endTimestamp;
-    private CollectorManager.CollectorType type = CollectorManager.CollectorType.All;
+    private String name;
+    private CollectorManager.CollectorType type;
     private int errorCode = 0;
     private String errorReason;
     private Bundle extras;
@@ -38,6 +39,10 @@ public class CollectorResult {
 
     public long getEndTimestamp() {
         return endTimestamp;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public CollectorManager.CollectorType getType() {
@@ -86,6 +91,11 @@ public class CollectorResult {
 
     public CollectorResult setEndTimestamp(long endTimestamp) {
         this.endTimestamp = endTimestamp;
+        return this;
+    }
+
+    public CollectorResult setName(String name) {
+        this.name = name;
         return this;
     }
 

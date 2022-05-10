@@ -49,6 +49,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
+import com.hcifuture.contextactionlibrary.utils.JSONUtils;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
@@ -58,6 +59,7 @@ import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
+import com.hcifuture.shared.communicate.result.Result;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,6 +70,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @RequiresApi(api = Build.VERSION_CODES.N)
@@ -102,6 +105,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private DataDistributor dataDistributor;
 
     private static String SAVE_PATH;
+
+    private final AtomicInteger mContextActionIDCounter = new AtomicInteger(0);
+    LogCollector contextActionLogCollector;
 
     private final CustomBroadcastReceiver mBroadcastReceiver;
     private final CustomContentObserver mContentObserver;
@@ -432,29 +438,35 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     if (bean == null) {
                         continue;
                     }
-                    CollectorManager.CollectorType type;
-                    try {
-                        type = CollectorManager.CollectorType.valueOf(bean.getBuiltInSensor());
-                    } catch (Exception e) {
-                        continue;
-                    }
                     if (bean.getName() == null) {
                         continue;
                     }
-                    // ContextAction log records all contexts and actions
-                    if (type == CollectorManager.CollectorType.Log) {
-                        LogCollector contextActionLogCollector = collectorManager.newLogCollector("ContextAction", 8192);
-                        configCollector.setContextActionLogCollector(contextActionLogCollector);
+                    if ("TriggerLog".equals(bean.getBuiltInSensor())) {
+                        // Trigger log records all trigger events
+                        LogCollector triggerLogCollector = collectorManager.newLogCollector("Trigger", 8192);
+                        clickTrigger.setTriggerLogCollector(triggerLogCollector);
+                        timedCollector.scheduleTimedLogUpload(triggerLogCollector, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                    } else if ("ContextActionLog".equals(bean.getBuiltInSensor())) {
+                        // ContextAction log records all contexts and actions
+                        this.contextActionLogCollector = collectorManager.newLogCollector("ContextAction", 8192);
                         timedCollector.scheduleTimedLogUpload(contextActionLogCollector, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
                     } else {
-                        TriggerConfig triggerConfig = bean.getTriggerConfig();
-                        if (triggerConfig == null) {
-                            triggerConfig = new TriggerConfig();
+                        CollectorManager.CollectorType type;
+                        try {
+                            type = CollectorManager.CollectorType.valueOf(bean.getBuiltInSensor());
+                        } catch (Exception e) {
+                            continue;
                         }
-                        if (bean.isFixedDelay()) {
-                            timedCollector.scheduleFixedDelayUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
-                        } else {
-                            timedCollector.scheduleFixedRateUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                        if (type != CollectorManager.CollectorType.Log) {
+                            TriggerConfig triggerConfig = bean.getTriggerConfig();
+                            if (triggerConfig == null) {
+                                triggerConfig = new TriggerConfig();
+                            }
+                            if (bean.isFixedDelay()) {
+                                timedCollector.scheduleFixedDelayUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                            } else {
+                                timedCollector.scheduleFixedRateUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                            }
                         }
                     }
                 }
@@ -798,41 +810,17 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAction(ActionResult action) {
+        assignIDAndRecord(action);
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
                 collector.onAction(action);
             }
         }
-            /*
-        if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap") || action.getAction().equals("Pocket")) {
-            if (clickTrigger != null) {
-                clickTrigger.trigger(Collections.singletonList(Trigger.CollectorType.CompleteIMU), new TriggerConfig());
-            }
-        }
-             */
-//        if (collectors != null) {
-//            for (BaseCollector collector: collectors) {
-//                collector.onAction(action);
-//            }
-//        }
     }
-
-    /*
-    @Override
-    public void onActionSave(ActionResult action) {
-        if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap")) {
-            action.setTimestamp(markTimestamp);
-        }
-        if (collectors != null) {
-            for (BaseCollector collector : collectors) {
-                collector.onAction(action);
-            }
-        }
-    }
-     */
 
     @Override
     public void onContext(ContextResult context) {
+        assignIDAndRecord(context);
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
                 collector.onContext(context);
@@ -881,5 +869,30 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 mRegURIs.add(uri);
             }
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private int incContextActionID() {
+        return mContextActionIDCounter.getAndIncrement();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void assignIDAndRecord(Result contextOrAction) {
+        int contextActionID = incContextActionID();
+        /*
+            Logging:
+                timestamp | contextActionID | contextOrAction | reason | extras
+
+         */
+        if (contextActionLogCollector != null) {
+            String line = contextOrAction.getTimestamp() + "\t" +
+                    contextActionID + "\t" +
+                    contextOrAction.getKey() + "\t" +
+                    contextOrAction.getReason() + "\t" +
+                    JSONUtils.bundleToJSON(contextOrAction.getExtras()).toString();
+            contextActionLogCollector.addLog(line);
+        }
+        // assign ID
+        contextOrAction.getExtras().putInt("contextActionID", contextActionID);
     }
 }
