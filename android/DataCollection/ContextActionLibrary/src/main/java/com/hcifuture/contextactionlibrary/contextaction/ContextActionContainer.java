@@ -810,7 +810,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAction(ActionResult action) {
-        action.getExtras().putInt("contextActionID", incContextActionID());
         assignIDAndRecord(action);
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
@@ -821,7 +820,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     @Override
     public void onContext(ContextResult context) {
-        context.getExtras().putInt("contextActionID", incContextActionID());
         assignIDAndRecord(context);
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
