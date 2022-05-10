@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 public class ClickTrigger extends Trigger {
     private final String saveFolder;
     private final AtomicInteger mTriggerIDCounter = new AtomicInteger(0);
-    private final IntUnaryOperator operator = x -> (x < 999)? (x + 1) : 0;
     private LogCollector triggerLogCollector;
     private final Gson gson;
 
@@ -47,7 +46,7 @@ public class ClickTrigger extends Trigger {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private int incTriggerID() {
-        return mTriggerIDCounter.getAndUpdate(operator);
+        return mTriggerIDCounter.getAndIncrement();
     }
 
     public void setTriggerLogCollector(LogCollector triggerLogCollector) {
@@ -99,7 +98,7 @@ public class ClickTrigger extends Trigger {
         CompletableFuture<CollectorResult> ft;
         long startTimestamp = System.currentTimeMillis();
 
-        Log.e(TAG, "数据收集开始执行: [" + startTimestamp + "] " + collectorName + " " + saveFile.getAbsolutePath());
+        Log.e(TAG, "数据收集开始执行: [" + startTimestamp + "] " + triggerID + " " + collectorName + " " + saveFile.getAbsolutePath());
 
         if (collector instanceof SynchronousCollector) { // sync
             ft = FileUtils.writeStringToFile(((SynchronousCollector)collector).getData(config),
@@ -122,9 +121,11 @@ public class ClickTrigger extends Trigger {
         }
 
         return ft.whenComplete((v, ex) -> {
+            // post processing of collector result
+            long curTimestamp = System.currentTimeMillis();
             if (ex == null) {
                 v.setStartTimestamp(startTimestamp);
-                v.setEndTimestamp(System.currentTimeMillis());
+                v.setEndTimestamp(curTimestamp);
                 v.setType(collector.getType());
                 if (collector.getType() == CollectorManager.CollectorType.Log) {
                     v.setName(collectorName);
@@ -132,13 +133,13 @@ public class ClickTrigger extends Trigger {
             }
             /*
                 Logging:
-                    timestamp | triggerID | type | name | code | filename | triggerConfig | collectorResult
+                    timestamp | triggerID | type | name | code | filename | triggerConfig | collectorResult/exception
                 code:
                     0: successful complete
                     1: exception
             */
             if (triggerLogCollector != null) {
-                String line = System.currentTimeMillis() + "\t"
+                String line = curTimestamp + "\t"
                         + triggerID + "\t"
                         + collector.getType() + "\t"
                         + collectorName + "\t"
@@ -147,6 +148,10 @@ public class ClickTrigger extends Trigger {
                         + gson.toJson(config) + "\t"
                         + ((ex == null) ? gson.toJson(JSONUtils.collectorResultToMap(v)) : ex.toString());
                 triggerLogCollector.addLog(line);
+            }
+            // assign ID
+            if (ex == null) {
+                v.getExtras().putInt("triggerID", triggerID);
             }
         });
     }
