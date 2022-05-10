@@ -4,23 +4,18 @@ import android.content.Context;
 import android.os.Build;
 
 import com.hcifuture.contextactionlibrary.contextaction.action.MotionAction;
-import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
-import com.hcifuture.contextactionlibrary.utils.JSONUtils;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
-import com.hcifuture.shared.communicate.result.Result;
 
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.IntUnaryOperator;
 
 import androidx.annotation.RequiresApi;
 
@@ -28,9 +23,6 @@ public class ConfigCollector extends BaseCollector {
     private final TriggerConfig triggerConfig;
     private long last_nonimu = 0;
     private long last_position = 0;
-    private LogCollector contextActionLogCollector;
-    private final AtomicInteger mLogID = new AtomicInteger(0);
-    private final IntUnaryOperator operator = x -> (x < 999)? (x + 1) : 0;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ConfigCollector(Context context, ScheduledExecutorService scheduledExecutorService,
@@ -43,31 +35,9 @@ public class ConfigCollector extends BaseCollector {
                 .setGPSRequestTime(3000);
     }
 
-    public void setContextActionLogCollector(LogCollector contextActionLogCollector) {
-        this.contextActionLogCollector = contextActionLogCollector;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    private int incLogID() {
-        return mLogID.getAndUpdate(operator);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    private void recordContextAction(Result contextOrAction) {
-        if (contextActionLogCollector != null) {
-            String line = incLogID() + "\t" +
-                    contextOrAction.getTimestamp() + "\t" +
-                    contextOrAction.getKey() + "\t" +
-                    contextOrAction.getReason() + "\t" +
-                    JSONUtils.bundleToJSON(contextOrAction.getExtras()).toString();
-            contextActionLogCollector.addLog(line);
-        }
-    }
-
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAction(ActionResult action) {
-        recordContextAction(action);
         long current_call = action.getTimestamp();
         String commit = "";
 
@@ -85,7 +55,6 @@ public class ConfigCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onContext(ContextResult context) {
-        recordContextAction(context);
         long current_call = context.getTimestamp();
         String commit = "";
 
