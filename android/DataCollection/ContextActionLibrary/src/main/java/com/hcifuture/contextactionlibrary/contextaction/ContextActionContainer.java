@@ -21,11 +21,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
-import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.MotionAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.CloseCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ConfigCollector;
-import com.hcifuture.contextactionlibrary.contextaction.collect.ExampleCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.FlipCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.InformationalContextCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
@@ -568,13 +566,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         case "Motion":
                             MotionAction motionAction = new MotionAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
                             actions.add(motionAction);
-                            break;
-                        case "Example":
-                            LogCollector logCollector = collectorManager.newLogCollector("Log0", 100);
-                            timedCollector.scheduleTimedLogUpload(logCollector, 5000, 0, "Example");
-                            collectors.add(new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, logCollector));
-                            ExampleAction exampleAction = new ExampleAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), logCollector, scheduledExecutorService, futureList);
-                            actions.add(exampleAction);
                             break;
                     }
                 }
