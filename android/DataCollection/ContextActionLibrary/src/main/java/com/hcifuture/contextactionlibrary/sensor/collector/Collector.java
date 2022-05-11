@@ -3,6 +3,7 @@ package com.hcifuture.contextactionlibrary.sensor.collector;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
+import android.os.Handler;
 import android.os.Bundle;
 import android.os.ParcelUuid;
 import android.util.SparseArray;
@@ -31,6 +32,8 @@ public abstract class Collector {
             .registerTypeAdapter(ParcelUuid.class, GsonUtils.parcelUuidSerializer)
             .create();
 
+    protected static Handler handler = null;
+
     protected Context mContext;
     protected ScheduledExecutorService scheduledExecutorService;
     protected List<ScheduledFuture<?>> futureList;
@@ -38,6 +41,10 @@ public abstract class Collector {
     protected final List<CollectorListener> listenerList = new ArrayList<>();
     protected AtomicBoolean isRegistered = new AtomicBoolean(false);
     protected RequestListener requestListener = null;
+
+    public static void setHandler(Handler handler) {
+        Collector.handler = handler;
+    }
 
     public Collector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;
