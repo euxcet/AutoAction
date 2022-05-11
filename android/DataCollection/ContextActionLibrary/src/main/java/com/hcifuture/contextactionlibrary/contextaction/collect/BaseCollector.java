@@ -17,6 +17,7 @@ import com.hcifuture.contextactionlibrary.sensor.uploader.UploadTask;
 import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.contextactionlibrary.utils.JSONUtils;
+import com.hcifuture.shared.communicate.config.RequestConfig;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
@@ -38,6 +39,7 @@ public abstract class BaseCollector {
     protected ClickTrigger clickTrigger;
     protected ScheduledExecutorService scheduledExecutorService;
     protected List<ScheduledFuture<?>> futureList;
+    private String userId;
     private Uploader uploader;
 
     public BaseCollector(Context context, ScheduledExecutorService scheduledExecutorService,
@@ -49,42 +51,19 @@ public abstract class BaseCollector {
         this.clickTrigger = clickTrigger;
         this.futureList = futureList;
         this.uploader = uploader;
+        RequestConfig request = new RequestConfig();
+        request.putString("getDeviceId", "");
+        this.userId = (String)requestListener.onRequest(request).getObject("getDeviceId");
     }
 
     public abstract void onAction(ActionResult action);
 
     public abstract void onContext(ContextResult context);
 
-    protected static String getMacMoreThanM() {
-        try {
-            Enumeration enumeration = NetworkInterface.getNetworkInterfaces();
-            while (enumeration.hasMoreElements()) {
-                NetworkInterface networkInterface = (NetworkInterface) enumeration.nextElement();
 
-                byte[] arrayOfByte = networkInterface.getHardwareAddress();
-                if (arrayOfByte == null || arrayOfByte.length == 0) {
-                    continue;
-                }
-
-                StringBuilder stringBuilder = new StringBuilder();
-                for (byte b : arrayOfByte) {
-                    stringBuilder.append(String.format("%02X:", b));
-                }
-                if (stringBuilder.length() > 0) {
-                    stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-                }
-                String str = stringBuilder.toString();
-                if (networkInterface.getName().equals("wlan0")) {
-                    return str;
-                }
-            }
-        } catch (SocketException socketException) {
-            return null;
-        }
-        return null;
-    }
-
-    public static String getUserID() {
+    public String getUserID() {
+        return userId;
+        /*
         // TODO: implement in the future
         String macAddress = getMacMoreThanM();
         if (macAddress != null) {
@@ -92,6 +71,7 @@ public abstract class BaseCollector {
         } else {
             return "TEST_USERID";
         }
+         */
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -105,6 +85,7 @@ public abstract class BaseCollector {
         Log.e("Upload name", name);
         Log.e("Upload commit", commit);
         Log.e("Upload file", collectorResult.getSavePath());
+        Log.e("User id", getUserID());
 
         File file = new File(collectorResult.getSavePath());
         File metaFile = new File(file.getAbsolutePath() + ".meta");
