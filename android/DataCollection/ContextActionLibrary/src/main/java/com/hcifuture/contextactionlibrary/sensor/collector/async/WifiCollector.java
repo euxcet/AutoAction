@@ -109,7 +109,7 @@ public class WifiCollector extends AsynchronousCollector {
             }
         };
 
-        mContext.registerReceiver(receiver, wifiFilter);
+        mContext.registerReceiver(receiver, wifiFilter, null, handler);
         isRegistered.set(true);
     }
 
@@ -225,7 +225,7 @@ public class WifiCollector extends AsynchronousCollector {
     @Override
     public void resume() {
         if (!isRegistered.get() && receiver != null && wifiFilter != null) {
-            mContext.registerReceiver(receiver, wifiFilter);
+            mContext.registerReceiver(receiver, wifiFilter, null, handler);
             isRegistered.set(true);
         }
     }
