@@ -31,6 +31,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
@@ -150,7 +151,9 @@ public class InformationalContext extends BaseContext {
             nodeInfos.add(AccessibilityNodeInfo.obtain(root));
         final Date date = new Date();
         futureList.add(scheduledExecutorService.schedule(() -> {
-            Page page = PageController.recognizePage(AccessibilityNodeInfoRecordFromFile.buildAllTrees(nodeInfos,lastActivityName), lastPackageName);
+            HashSet<String> allFunctionWords = PageController.getAllFunctionWords(AccessibilityNodeInfoRecordFromFile.buildAllTrees(nodeInfos,lastActivityName));
+            addTaskLog(new LogItem(allFunctionWords.toString(), "functionWords", date));
+            Page page = PageController.recognizePage(allFunctionWords, lastPackageName);
             if (page != null) {
                 // 从页面端不重复记录
                 if (lastPage != null && lastPage.getId() == page.getId())

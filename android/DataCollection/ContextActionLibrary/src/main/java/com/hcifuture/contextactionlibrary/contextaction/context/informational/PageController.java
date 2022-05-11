@@ -103,7 +103,26 @@ public class PageController {
         return res;
     }
 
-    private static HashSet<String> getAllFunctionWords(List<AccessibilityNodeInfoRecordFromFile> roots) {
+    public static Page recognizePage(HashSet<String> words,String packageName) {
+        double max_sim = 0.5;
+        Page res=null;
+        if(pages.containsKey(packageName)) {
+            for (Page page : pages.get(packageName)) {
+                double sim = page.match(packageName, words);
+                if (sim>max_sim) {
+                    max_sim=sim;
+                    res = page;
+                }else if(sim==max_sim&&res!=null)
+                {
+                    if(res.functionWords.size()<page.functionWords.size())
+                        res = page;
+                }
+            }
+        }
+        return res;
+    }
+
+    public static HashSet<String> getAllFunctionWords(List<AccessibilityNodeInfoRecordFromFile> roots) {
         HashSet<String> res = new HashSet<>();
         for(AccessibilityNodeInfoRecordFromFile root:roots)
         {
