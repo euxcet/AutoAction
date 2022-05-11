@@ -149,7 +149,6 @@ public class InformationalContext extends BaseContext {
         for(AccessibilityNodeInfo root:AccessibilityNodeInfoRecordFromFile.getAllRoots(requestListener))
             nodeInfos.add(AccessibilityNodeInfo.obtain(root));
         final Date date = new Date();
-
         futureList.add(scheduledExecutorService.schedule(() -> {
             Page page = PageController.recognizePage(AccessibilityNodeInfoRecordFromFile.buildAllTrees(nodeInfos,lastActivityName), lastPackageName);
             if (page != null) {
@@ -190,11 +189,15 @@ public class InformationalContext extends BaseContext {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public void onAccessibilityEvent(AccessibilityEvent eventori) {
-        AccessibilityEvent event = AccessibilityEvent.obtain(eventori);
+    public void onAccessibilityEvent(AccessibilityEvent event) {
         String eventString =event.toString();
         long eventTime  = System.currentTimeMillis();
         final String eventStr = ("timeStamp:"+eventTime+";"+eventString).replace("\n"," ");
+
+        if(event.getEventType()==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+            eventAnalyzer.add(eventStr);
+            return;
+        }
 
         int eventType = event.getEventType();
 
@@ -206,7 +209,8 @@ public class InformationalContext extends BaseContext {
                 onActivityChange(activityName);
                 lastActivityName = activityName;
             }
-            packageName = activityName.split("/")[0];
+            if(activityName!=null)
+                packageName = activityName.split("/")[0];
             if(packageName!=null&&(lastPackageName==null || !lastPackageName.equals(packageName)))
             {
                 onPackageChange(packageName);
@@ -241,7 +245,6 @@ public class InformationalContext extends BaseContext {
         }
         if(model_result<=0.5)
             windowStable = false;
-        event.recycle();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
