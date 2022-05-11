@@ -72,9 +72,7 @@ public class Uploader {
     private final ScheduledExecutorService scheduledExecutorService;
     private final List<ScheduledFuture<?>> futureList;
 
-    private ScheduledFuture<?> uploadFuture;
-    private ScheduledFuture<?> compressFuture;
-    private ScheduledFuture<?> localFuture;
+    private final List<ScheduledFuture<?>> mFutureList = new ArrayList<>();
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
 
@@ -102,25 +100,21 @@ public class Uploader {
     private void start() {
         stop();
         isRunning.set(true);
-        uploadFuture = scheduledExecutorService.schedule(this::upload, 0, TimeUnit.MILLISECONDS);
-        compressFuture = scheduledExecutorService.schedule(this::compress, 0, TimeUnit.MILLISECONDS);
-        localFuture = scheduledExecutorService.scheduleWithFixedDelay(this::uploadLocalFiles, 0, 12 * HOUR, TimeUnit.MILLISECONDS);
-        futureList.add(uploadFuture);
-        futureList.add(compressFuture);
-        futureList.add(localFuture);
+        addFuture(scheduledExecutorService.schedule(this::upload, 0, TimeUnit.MILLISECONDS));
+        addFuture(scheduledExecutorService.schedule(this::compress, 0, TimeUnit.MILLISECONDS));
+        addFuture(scheduledExecutorService.scheduleWithFixedDelay(this::uploadLocalFiles, 0, 12 * HOUR, TimeUnit.MILLISECONDS));
+    }
+
+    private synchronized void addFuture(ScheduledFuture<?> future) {
+        mFutureList.add(future);
+        futureList.add(future);
     }
 
     public void stop() {
-        if (uploadFuture != null) {
-            uploadFuture.cancel(true);
-        }
-        if (compressFuture != null) {
-            compressFuture.cancel(true);
-        }
-        if (localFuture != null) {
-            localFuture.cancel(true);
-        }
         isRunning.set(false);
+        for (ScheduledFuture<?> future: mFutureList) {
+            future.cancel(true);
+        }
     }
 
     public UploaderStatus flush() {
@@ -264,7 +258,7 @@ public class Uploader {
             }
 
             if (!lastWifiStatus) {
-                localFuture = scheduledExecutorService.schedule(this::uploadLocalFiles, 0, TimeUnit.MILLISECONDS);
+                addFuture(scheduledExecutorService.schedule(this::uploadLocalFiles, 0, TimeUnit.MILLISECONDS));
                 lastWifiStatus = true;
             }
 
