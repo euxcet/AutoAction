@@ -409,7 +409,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 CollectorManager.CollectorType.Wifi,
                 CollectorManager.CollectorType.GPS,
                 CollectorManager.CollectorType.NonIMU
-        ), scheduledExecutorService, futureList);
+        ), scheduledExecutorService, futureList, requestListener);
 
         this.clickTrigger = new ClickTrigger(mContext, collectorManager, scheduledExecutorService, futureList);
         this.uploader = new Uploader(mContext, scheduledExecutorService, futureList);

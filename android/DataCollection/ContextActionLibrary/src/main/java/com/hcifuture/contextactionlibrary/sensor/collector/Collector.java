@@ -2,6 +2,9 @@ package com.hcifuture.contextactionlibrary.sensor.collector;
 
 import android.content.Context;
 
+import com.hcifuture.shared.communicate.config.RequestConfig;
+import com.hcifuture.shared.communicate.listener.RequestListener;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -15,6 +18,7 @@ public abstract class Collector {
     protected CollectorManager.CollectorType type;
     protected final List<CollectorListener> listenerList = new ArrayList<>();
     protected AtomicBoolean isRegistered = new AtomicBoolean(false);
+    protected RequestListener requestListener = null;
 
     public Collector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;
@@ -22,6 +26,18 @@ public abstract class Collector {
         this.scheduledExecutorService = scheduledExecutorService;
         this.futureList = futureList;
         initialize();
+    }
+
+    public void setRequestListener(RequestListener requestListener) {
+        this.requestListener = requestListener;
+    }
+
+    protected void notifyWake() {
+        if (requestListener != null) {
+            RequestConfig requestConfig = new RequestConfig();
+            requestConfig.putValue("wake", true);
+            requestListener.onRequest(requestConfig);
+        }
     }
 
     public abstract void initialize();
