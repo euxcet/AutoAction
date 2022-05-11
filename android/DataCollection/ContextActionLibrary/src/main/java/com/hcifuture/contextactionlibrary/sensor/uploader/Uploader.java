@@ -132,10 +132,9 @@ public class Uploader {
 
     public UploaderStatus pushTask(UploadTask task, boolean needCompression) {
         if (needCompression) {
+            lock.lock();
             try {
-                lock.lock();
                 if (compressQueue.size() >= QUEUE_ELEMENT_LIMIT) {
-                    lock.unlock();
                     return UploaderStatus.QUEUE_IS_FULL;
                 }
                 compressQueue.add(task);
@@ -144,10 +143,9 @@ public class Uploader {
                 lock.unlock();
             }
         } else {
+            lock.lock();
             try {
-                lock.lock();
                 if (uploadQueue.size() >= QUEUE_ELEMENT_LIMIT) {
-                    lock.unlock();
                     return UploaderStatus.QUEUE_IS_FULL;
                 }
                 uploadQueue.add(task);
@@ -162,132 +160,144 @@ public class Uploader {
     private void compress() {
         List<File> needToDelete = new ArrayList<>();
         while (!Thread.currentThread().isInterrupted() && isRunning.get()) {
-            List<UploadTask> pack = new ArrayList<>();
             try {
+                List<UploadTask> pack = new ArrayList<>();
                 lock.lock();
-                if (compressQueue.size() < FILES_IN_PACKAGE) {
+                try {
+                    if (compressQueue.size() < FILES_IN_PACKAGE) {
+                        try {
+                            compressCondition.await();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (compressQueue.size() >= FILES_IN_PACKAGE) {
+                        for (int i = 0; i < FILES_IN_PACKAGE; i++) {
+                            pack.add(compressQueue.poll());
+                        }
+                    }
+                } finally {
+                    lock.unlock();
+                }
+
+                if (pack.size() > 0) {
                     try {
-                        compressCondition.await();
-                    } catch (InterruptedException e) {
+                        String zipName = System.currentTimeMillis() + ".zip";
+                        String metaName = zipName + ".meta";
+                        needToDelete.clear();
+                        File zipFile = new File(zipFolder + zipName);
+                        File metaFile = new File(zipFolder + metaName);
+                        FileUtils.makeFile(zipFile);
+                        FileUtils.makeFile(metaFile);
+                        int packedEntries = 0;
+                        try (ZipOutputStream os = new ZipOutputStream(new FileOutputStream(zipFile))) {
+                            for (int i = 0; i < pack.size(); i++) {
+                                File file = pack.get(i).getFile();
+                                Log.e(TAG, "[PACK] Compressing " + file.getAbsolutePath());
+                                ZipEntry zipEntry = new ZipEntry(file.getName());
+                                // may throw FileNotFoundException
+                                try (FileInputStream is = new FileInputStream(file)) {
+                                    os.putNextEntry(zipEntry);
+                                    int len;
+                                    byte[] buffer = new byte[1024 * 1024];
+                                    while ((len = is.read(buffer)) != -1) {
+                                        os.write(buffer, 0, len);
+                                    }
+                                    os.closeEntry();
+                                    // delete already packed files
+                                    packedEntries++;
+                                    needToDelete.add(file);
+                                    needToDelete.add(pack.get(i).getMetaFile());
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                        Log.e(TAG, "compress: packedEntries: " + packedEntries);
+                        if (packedEntries > 0) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                List<TaskMetaBean> metas = pack.stream().map((x) -> x.getMeta().get(0)).collect(Collectors.toList());
+                                FileUtils.writeStringToFile(gson.toJson(metas), metaFile);
+                                pushTask(new UploadTask(zipFile, metaFile, metas), false);
+                            }
+                            for (int i = 0; i < needToDelete.size(); i++) {
+                                FileUtils.deleteFile(needToDelete.get(i), "PACK");
+                            }
+                        } else {
+                            // pack contains no file, delete .zip and .zip.meta
+                            FileUtils.deleteFile(zipFile, "PACK FAIL");
+                            FileUtils.deleteFile(metaFile, "PACK FAIL");
+                        }
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
-                if (compressQueue.size() >= FILES_IN_PACKAGE) {
-                    for (int i = 0; i < FILES_IN_PACKAGE; i++) {
-                        pack.add(compressQueue.poll());
-                    }
-                }
-            } finally {
-                lock.unlock();
-            }
-            if (pack.size() > 0) {
-                try {
-                    String zipName = System.currentTimeMillis() + ".zip";
-                    String metaName = zipName + ".meta";
-                    needToDelete.clear();
-                    File zipFile = new File(zipFolder + zipName);
-                    File metaFile = new File(zipFolder + metaName);
-                    FileUtils.makeFile(zipFile);
-                    FileUtils.makeFile(metaFile);
-                    int packedEntries = 0;
-                    try (ZipOutputStream os = new ZipOutputStream(new FileOutputStream(zipFile))) {
-                        for (int i = 0; i < pack.size(); i++) {
-                            File file = pack.get(i).getFile();
-                            Log.e(TAG, "[PACK] Compressing " + file.getAbsolutePath());
-                            ZipEntry zipEntry = new ZipEntry(file.getName());
-                            // may throw FileNotFoundException
-                            try (FileInputStream is = new FileInputStream(file)) {
-                                os.putNextEntry(zipEntry);
-                                int len;
-                                byte[] buffer = new byte[1024 * 1024];
-                                while ((len = is.read(buffer)) != -1) {
-                                    os.write(buffer, 0, len);
-                                }
-                                os.closeEntry();
-                                // delete already packed files
-                                packedEntries++;
-                                needToDelete.add(file);
-                                needToDelete.add(pack.get(i).getMetaFile());
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                    Log.e(TAG, "compress: packedEntries: " + packedEntries);
-                    if (packedEntries > 0) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            List<TaskMetaBean> metas = pack.stream().map((x) -> x.getMeta().get(0)).collect(Collectors.toList());
-                            FileUtils.writeStringToFile(gson.toJson(metas), metaFile);
-                            pushTask(new UploadTask(zipFile, metaFile, metas), false);
-                        }
-                        for (int i = 0; i < needToDelete.size(); i++) {
-                            FileUtils.deleteFile(needToDelete.get(i), "PACK");
-                        }
-                    } else {
-                        // pack contains no file, delete .zip and .zip.meta
-                        FileUtils.deleteFile(zipFile, "PACK FAIL");
-                        FileUtils.deleteFile(metaFile, "PACK FAIL");
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
 
     private void upload() {
         while (!Thread.currentThread().isInterrupted() && isRunning.get()) {
-            UploadTask task;
             try {
+                UploadTask task;
                 lock.lock();
-                if (uploadQueue.isEmpty()) {
-                    try {
-                        uploadCondition.await();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                try {
+                    if (uploadQueue.isEmpty()) {
+                        try {
+                            uploadCondition.await();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-                if (!isUnderWifi()) {
-                    lock.unlock();
-                    lastWifiStatus = false;
+                    if (!isUnderWifi()) {
+                        lastWifiStatus = false;
+                        continue;
+                    }
+                    task = uploadQueue.poll();
+                } catch (Exception e) {
+                    e.printStackTrace();
                     continue;
+                } finally {
+                    lock.unlock();
                 }
-                task = uploadQueue.poll();
-            } finally {
-                lock.unlock();
-            }
 
-            if (!lastWifiStatus) {
-                addFuture(scheduledExecutorService.schedule(this::uploadLocalFiles, 0, TimeUnit.MILLISECONDS));
-                lastWifiStatus = true;
-            }
+                if (!lastWifiStatus) {
+                    addFuture(scheduledExecutorService.schedule(this::uploadLocalFiles, 0, TimeUnit.MILLISECONDS));
+                    lastWifiStatus = true;
+                    Log.e(TAG, "upload: Wifi available now");
+                }
 
-            if (task != null) {
-                NetworkUtils.uploadCollectedData(task, new Callback() {
-                    @Override
-                    public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                        if (task.getRemainingRetries() > 0) {
-                            task.setRemainingRetries(task.getRemainingRetries() - 1);
-                            task.setExpectedUploadTime(task.getExpectedUploadTime() + HOUR);
-                            if (pushTask(task, true) == UploaderStatus.QUEUE_IS_FULL) {
+                if (task != null) {
+                    NetworkUtils.uploadCollectedData(task, new Callback() {
+                        @Override
+                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                            if (task.getRemainingRetries() > 0) {
+                                task.setRemainingRetries(task.getRemainingRetries() - 1);
+                                task.setExpectedUploadTime(task.getExpectedUploadTime() + HOUR);
+                                if (pushTask(task, true) == UploaderStatus.QUEUE_IS_FULL) {
+                                    Log.e(TAG, task.getFile().getAbsolutePath()
+                                            + " could not be uploaded because the queue is full");
+                                }
+                            } else {
                                 Log.e(TAG, task.getFile().getAbsolutePath()
-                                        + " could not be uploaded because the queue is full");
+                                        + " could not be uploaded because the maximum number of retries is reached");
                             }
-                        } else {
-                            Log.e(TAG, task.getFile().getAbsolutePath()
-                                    + " could not be uploaded because the maximum number of retries is reached");
                         }
-                    }
 
-                    @Override
-                    public void onResponse(@NonNull Call call, @NonNull Response response) {
-                        if (response.isSuccessful()) {
-                            Log.d(TAG, "Successfully uploaded " + task.getFile().getAbsolutePath());
-                            FileUtils.deleteFile(task.getFile(), "UPLOAD");
-                            FileUtils.deleteFile(task.getMetaFile(), "UPLOAD");
+                        @Override
+                        public void onResponse(@NonNull Call call, @NonNull Response response) {
+                            if (response.isSuccessful()) {
+                                Log.d(TAG, "Successfully uploaded " + task.getFile().getAbsolutePath());
+                                FileUtils.deleteFile(task.getFile(), "UPLOAD");
+                                FileUtils.deleteFile(task.getMetaFile(), "UPLOAD");
+                            }
                         }
-                    }
-                });
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
