@@ -80,6 +80,7 @@ public class BluetoothCollector extends AsynchronousCollector {
             ft.completeExceptionally(new Exception("Invalid Bluetooth scan time: " + config.getBluetoothScanTime()));
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
+                notifyWake();
                 setBasicInfo();
                 data.clear();
 

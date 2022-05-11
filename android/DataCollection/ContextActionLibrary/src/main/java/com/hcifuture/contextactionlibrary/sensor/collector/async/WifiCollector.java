@@ -126,6 +126,7 @@ public class WifiCollector extends AsynchronousCollector {
             ft.completeExceptionally(new Exception("Invalid Wifi scan timeout: " + config.getWifiScanTimeout()));
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
+                notifyWake();
                 setBasicInfo();
                 data.clear();
 
