@@ -8,6 +8,7 @@ public class TriggerConfig {
     private int bluetoothScanTime = 10000;
     private int wifiScanTimeout = 10000;
     private int gpsRequestTime = 3000;
+    private int locationTimeout = 60000;
 
     public TriggerConfig() {
     }
@@ -55,6 +56,10 @@ public class TriggerConfig {
         return audioFilename;
     }
 
+    public int getLocationTimeout() {
+        return locationTimeout;
+    }
+
     public TriggerConfig setAudioLength(int audioLength) {
         this.audioLength = audioLength;
         return this;
@@ -73,5 +78,9 @@ public class TriggerConfig {
     public TriggerConfig setAudioFilename(String audioFilename) {
         this.audioFilename = audioFilename;
         return this;
+    }
+
+    public void setLocationTimeout(int locationTimeout) {
+        this.locationTimeout = locationTimeout;
     }
 }
