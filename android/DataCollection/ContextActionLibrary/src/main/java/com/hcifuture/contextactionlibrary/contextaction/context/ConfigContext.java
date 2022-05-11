@@ -86,8 +86,6 @@ public class ConfigContext extends BaseContext {
         volume.put("volume_tts_bt_a2dp", 0);
 
         last_record_all = 0;
-
-        record_all("ConfigContext");
     }
 
     @Override

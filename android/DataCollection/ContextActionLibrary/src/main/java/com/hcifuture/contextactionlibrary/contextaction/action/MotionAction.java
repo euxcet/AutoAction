@@ -1,6 +1,7 @@
 package com.hcifuture.contextactionlibrary.contextaction.action;
 
 import android.content.Context;
+import android.hardware.Sensor;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
@@ -44,30 +45,31 @@ public class MotionAction extends BaseAction {
 
     @Override
     public void onNonIMUSensorEvent(NonIMUData data) {
-        int curCount = (int)data.getStepCounter();
-        if (!inited) {
-            inited = true;
-            initCount = curCount;
-            lastCount = curCount;
-        }
-        // notify action to collect GPS & Location data
-        if (curCount - lastCount >= threshold) {
-            if (actionListener != null) {
-                Log.e("MotionAction", "notifyAction: " + NEED_POSITION);
-                long timestamp = System.currentTimeMillis();
-                for (ActionListener listener : actionListener) {
-                    ActionResult actionResult = new ActionResult(NEED_POSITION, "steps reach threshold: " + threshold);
-                    actionResult.setTimestamp(timestamp);
-                    actionResult.getExtras().putInt("curCount", curCount);
-                    actionResult.getExtras().putInt("lastCount", lastCount);
-                    actionResult.getExtras().putInt("threshold", threshold);
-                    actionResult.getExtras().putInt("initCount", initCount);
-                    listener.onAction(actionResult);
-                }
+        if (data.getType() == Sensor.TYPE_STEP_COUNTER) {
+            int curCount = (int)data.getStepCounter();
+            if (!inited) {
+                inited = true;
+                initCount = curCount;
+                lastCount = curCount;
             }
-            lastCount = curCount;
+            // notify action to collect GPS & Location data
+            if (curCount - lastCount >= threshold) {
+                if (actionListener != null) {
+                    Log.e("MotionAction", "notifyAction: " + NEED_POSITION);
+                    long timestamp = System.currentTimeMillis();
+                    for (ActionListener listener : actionListener) {
+                        ActionResult actionResult = new ActionResult(NEED_POSITION, "steps reach threshold: " + threshold);
+                        actionResult.setTimestamp(timestamp);
+                        actionResult.getExtras().putInt("curCount", curCount);
+                        actionResult.getExtras().putInt("lastCount", lastCount);
+                        actionResult.getExtras().putInt("threshold", threshold);
+                        actionResult.getExtras().putInt("initCount", initCount);
+                        listener.onAction(actionResult);
+                    }
+                }
+                lastCount = curCount;
+            }
         }
-//        Log.e("Step counter", String.valueOf(curCount));
     }
 
     @Override
