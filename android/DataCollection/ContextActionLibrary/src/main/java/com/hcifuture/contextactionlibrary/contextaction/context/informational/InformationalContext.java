@@ -151,7 +151,6 @@ public class InformationalContext extends BaseContext {
         final Date date = new Date();
 
         futureList.add(scheduledExecutorService.schedule(() -> {
-            // 50ms内不计两棵树
             Page page = PageController.recognizePage(AccessibilityNodeInfoRecordFromFile.buildAllTrees(nodeInfos,lastActivityName), lastPackageName);
             if (page != null) {
                 // 从页面端不重复记录
