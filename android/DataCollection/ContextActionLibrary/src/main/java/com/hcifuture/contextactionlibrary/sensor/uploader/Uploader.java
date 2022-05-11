@@ -81,6 +81,8 @@ public class Uploader {
     private final String fileFolder;
     private final String zipFolder;
 
+    private boolean lastWifiStatus = true;
+
     enum UploaderStatus {
         OK,
         QUEUE_IS_FULL,
@@ -102,7 +104,7 @@ public class Uploader {
         isRunning.set(true);
         uploadFuture = scheduledExecutorService.schedule(this::upload, 0, TimeUnit.MILLISECONDS);
         compressFuture = scheduledExecutorService.schedule(this::compress, 0, TimeUnit.MILLISECONDS);
-        localFuture = scheduledExecutorService.schedule(this::uploadLocalFiles, 0, TimeUnit.MILLISECONDS);
+        localFuture = scheduledExecutorService.scheduleWithFixedDelay(this::uploadLocalFiles, 0, 12 * HOUR, TimeUnit.MILLISECONDS);
         futureList.add(uploadFuture);
         futureList.add(compressFuture);
         futureList.add(localFuture);
@@ -253,11 +255,17 @@ public class Uploader {
                 }
                 if (!isUnderWifi()) {
                     lock.unlock();
+                    lastWifiStatus = false;
                     continue;
                 }
                 task = uploadQueue.poll();
             } finally {
                 lock.unlock();
+            }
+
+            if (!lastWifiStatus) {
+                localFuture = scheduledExecutorService.schedule(this::uploadLocalFiles, 0, TimeUnit.MILLISECONDS);
+                lastWifiStatus = true;
             }
 
             if (task != null) {
@@ -338,7 +346,7 @@ public class Uploader {
     }
 
     private void uploadLocalFiles() {
-        long timestamp = System.currentTimeMillis();
+        long timestamp = System.currentTimeMillis() - 5 * MINUTE;
         uploadDirectory(new File(this.fileFolder), timestamp, false);
         uploadDirectory(new File(this.zipFolder), timestamp, true);
     }
