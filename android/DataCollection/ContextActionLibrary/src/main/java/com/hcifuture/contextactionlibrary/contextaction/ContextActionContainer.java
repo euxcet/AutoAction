@@ -20,6 +20,7 @@ import android.view.accessibility.AccessibilityEvent;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.amap.api.services.core.ServiceSettings;
 import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.contextaction.action.MotionAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.CloseCollector;
@@ -398,6 +399,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void initialize() {
+        ServiceSettings.updatePrivacyShow(mContext.getApplicationContext(), true , true);
+        ServiceSettings.updatePrivacyAgree(mContext.getApplicationContext(), true);
         this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
 
