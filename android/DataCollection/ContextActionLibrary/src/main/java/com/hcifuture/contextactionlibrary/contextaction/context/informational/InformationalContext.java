@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
 
 import androidx.annotation.RequiresApi;
 
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class InformationalContext extends BaseContext {
     private static final String TAG = "TaskContext";
@@ -53,20 +55,22 @@ public class InformationalContext extends BaseContext {
     private long lastIMUTime = 0;
     private long lastActionTime = 0;
 
+    private long lastWindowChange = 0;
+
     private LogCollector logCollector;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public InformationalContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector informationalLogCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
-
         logCollector = informationalLogCollector;
-
         activityUtil = new ActivityUtil(context);
         eventAnalyzer = new EventAnalyzer();
-        eventAnalyzer.initialize(context);
 
-        PageController.initPages(context);
-        initFromFile();
+        futureList.add(scheduledExecutorService.schedule(() -> {
+            eventAnalyzer.initialize(context);
+            PageController.initPages(context);
+            initFromFile();
+        }, 0, TimeUnit.MILLISECONDS));
     }
 
     @Override
@@ -89,6 +93,7 @@ public class InformationalContext extends BaseContext {
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void onAction(Action action) {
         long nowTime = System.currentTimeMillis();
         addTaskLog(new LogItem(action.toString(),"action",new Date()));
@@ -134,25 +139,37 @@ public class InformationalContext extends BaseContext {
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void onWindowStable()
     {
-        Page page=PageController.recognizePage(AccessibilityNodeInfoRecordFromFile.buildAllTrees(requestListener,lastPackageName),lastPackageName);
-        if(page!=null)
-        {
-            // 从页面端不重复记录
-            if(lastPage!=null&&lastPage.getId()==page.getId())
-                return;
+        final long timestamp = System.currentTimeMillis();
+        if (timestamp - lastWindowChange < 100)
+            return;
+        this.lastWindowChange = timestamp;
+        final String lastActivityName = this.lastActivityName;
+        final String lastPackageName = this.lastPackageName;
+        final List<AccessibilityNodeInfo> nodeInfos = new ArrayList<>();
+        for(AccessibilityNodeInfo root:AccessibilityNodeInfoRecordFromFile.getAllRoots(requestListener))
+            nodeInfos.add(AccessibilityNodeInfo.obtain(root));
+        final Date date = new Date();
 
-            System.out.println("page match"+page.getTitle());
-            addTaskLog(new LogItem(page.getTitle(),"page",new Date()));
-            pageList.add(page);
-            Task task = recognizeTask();
-            if(task!=null) {
-                System.out.println("task match" + task.getName());
-                addTaskLog(new LogItem(task.getName(), "task", new Date()));
+        futureList.add(scheduledExecutorService.schedule(() -> {
+            // 50ms内不计两棵树
+            Page page = PageController.recognizePage(AccessibilityNodeInfoRecordFromFile.buildAllTrees(nodeInfos,lastActivityName), lastPackageName);
+            if (page != null) {
+                // 从页面端不重复记录
+                if (lastPage != null && lastPage.getId() == page.getId())
+                    return;
+                Log.d("InformationalContext","page match" + page.getTitle());
+                addTaskLog(new LogItem(page.getTitle(), "page",date));
+                pageList.add(page);
+                Task task = recognizeTask();
+                if (task != null) {
+                    Log.d("InformationalContext","task match" + task.getName());
+                    addTaskLog(new LogItem(task.getName(), "task", date));
+                }
+                lastTask = task;
             }
-            lastTask = task;
+            lastPage = page;
+        },0,TimeUnit.MILLISECONDS));
 
-        }
-        lastPage = page;
     }
 
     private Task recognizeTask() {
@@ -174,7 +191,8 @@ public class InformationalContext extends BaseContext {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public void onAccessibilityEvent(AccessibilityEvent event) {
+    public void onAccessibilityEvent(AccessibilityEvent eventori) {
+        AccessibilityEvent event = AccessibilityEvent.obtain(eventori);
         String eventString =event.toString();
         long eventTime  = System.currentTimeMillis();
         final String eventStr = ("timeStamp:"+eventTime+";"+eventString).replace("\n"," ");
@@ -224,8 +242,10 @@ public class InformationalContext extends BaseContext {
         }
         if(model_result<=0.5)
             windowStable = false;
+        event.recycle();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onBroadcastEvent(BroadcastEvent event) {
         String action = event.getAction();
@@ -250,6 +270,7 @@ public class InformationalContext extends BaseContext {
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void initFromFile()
     {
         try

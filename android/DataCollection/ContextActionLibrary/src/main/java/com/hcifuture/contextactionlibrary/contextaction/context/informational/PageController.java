@@ -3,6 +3,7 @@ package com.hcifuture.contextactionlibrary.contextaction.context.informational;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -26,6 +27,7 @@ public class PageController {
     private static Map<Integer,Page> idToPage = new HashMap<>();
     private static HashSet<String> allFunctionWords = new HashSet<>();
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public static void initPages(Context context)
     {
         try
@@ -107,6 +109,8 @@ public class PageController {
         {
             getNodeFunctionWords(root,res);
         }
+        Log.d("InformationalContext","getAllFunctionWords" + res);
+
         return res;
     }
 
