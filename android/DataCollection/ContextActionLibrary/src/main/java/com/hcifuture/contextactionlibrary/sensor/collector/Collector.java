@@ -1,6 +1,16 @@
 package com.hcifuture.contextactionlibrary.sensor.collector;
 
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanResult;
 import android.content.Context;
+import android.os.Bundle;
+import android.os.ParcelUuid;
+import android.util.SparseArray;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.hcifuture.contextactionlibrary.utils.GsonUtils;
 
 import com.hcifuture.shared.communicate.config.RequestConfig;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -12,6 +22,15 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Collector {
+
+    protected static final Gson gson = new GsonBuilder().disableHtmlEscaping()
+            .registerTypeAdapter(Bundle.class, GsonUtils.bundleSerializer)
+            .registerTypeAdapter(ScanResult.class, GsonUtils.scanResultSerializer)
+            .registerTypeAdapter(new TypeToken<SparseArray<byte[]>>(){}.getType(), new GsonUtils.SparseArraySerializer<byte[]>())
+            .registerTypeAdapter(BluetoothDevice.class, GsonUtils.bluetoothDeviceSerializer)
+            .registerTypeAdapter(ParcelUuid.class, GsonUtils.parcelUuidSerializer)
+            .create();
+
     protected Context mContext;
     protected ScheduledExecutorService scheduledExecutorService;
     protected List<ScheduledFuture<?>> futureList;
