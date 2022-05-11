@@ -1,8 +1,10 @@
 package com.hcifuture.contextactionlibrary.contextaction.context;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
+import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ContextConfig;
@@ -27,6 +29,8 @@ public abstract class BaseContext {
     protected ScheduledExecutorService scheduledExecutorService;
     protected List<ScheduledFuture<?>> futureList;
 
+    protected LogCollector logCollector;
+
     public BaseContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;
         this.config = config;
@@ -34,6 +38,15 @@ public abstract class BaseContext {
         this.contextListener = contextListener;
         this.scheduledExecutorService = scheduledExecutorService;
         this.futureList = futureList;
+        this.logCollector = null;
+    }
+
+    public void setLogCollector(LogCollector collector) {
+        this.logCollector = collector;
+    }
+
+    public LogCollector getLogCollector() {
+        return this.logCollector;
     }
 
     public abstract void start();

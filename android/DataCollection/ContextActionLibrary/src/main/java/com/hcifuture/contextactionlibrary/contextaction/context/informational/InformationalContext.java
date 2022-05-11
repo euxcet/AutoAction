@@ -53,14 +53,11 @@ public class InformationalContext extends BaseContext {
     private long lastIMUTime = 0;
     private long lastActionTime = 0;
 
-    private LogCollector logCollector;
-
     @RequiresApi(api = Build.VERSION_CODES.N)
     public InformationalContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector informationalLogCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
 
         logCollector = informationalLogCollector;
-
         activityUtil = new ActivityUtil(context);
         eventAnalyzer = new EventAnalyzer();
         eventAnalyzer.initialize(context);
@@ -344,7 +341,9 @@ public class InformationalContext extends BaseContext {
         sb.append(item.type);
         sb.append("#");
         sb.append(LogItem.formatter.format(item.getTime()));
-        logCollector.addLog(sb.toString());
+        if (logCollector != null) {
+            logCollector.addLog(sb.toString());
+        }
     }
 
 }
