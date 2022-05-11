@@ -12,6 +12,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.async.LocationCollect
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.NonIMUCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.async.WifiCollector;
+import com.hcifuture.shared.communicate.listener.RequestListener;
 
 import org.checkerframework.checker.units.qual.C;
 
@@ -25,6 +26,7 @@ public class CollectorManager {
     private Context mContext;
     private ScheduledExecutorService scheduledExecutorService;
     private List<ScheduledFuture<?>> futureList;
+    private RequestListener requestListener;
 
     private AtomicBoolean running = new AtomicBoolean(false);
     private List<Collector> collectors = new ArrayList<>();
@@ -43,37 +45,38 @@ public class CollectorManager {
     }
 
     private void initializeAll() {
-        collectors.add(new BluetoothCollector(mContext, CollectorType.Bluetooth, scheduledExecutorService, futureList));
-        collectors.add(new IMUCollector(mContext, CollectorType.IMU, scheduledExecutorService, futureList));
-        collectors.add(new NonIMUCollector(mContext, CollectorType.NonIMU, scheduledExecutorService, futureList));
-        collectors.add(new WifiCollector(mContext, CollectorType.Wifi, scheduledExecutorService, futureList));
-        collectors.add(new LocationCollector(mContext, CollectorType.Location, scheduledExecutorService, futureList));
-        collectors.add(new AudioCollector(mContext, CollectorType.Audio, scheduledExecutorService, futureList));
-        collectors.add(new GPSCollector(mContext, CollectorType.GPS, scheduledExecutorService, futureList));
+        initialize(CollectorType.Bluetooth);
+        initialize(CollectorType.IMU);
+        initialize(CollectorType.NonIMU);
+        initialize(CollectorType.Wifi);
+        initialize(CollectorType.Location);
+        initialize(CollectorType.Audio);
+        initialize(CollectorType.GPS);
     }
 
     private void initialize(CollectorType type) {
+        Collector collector = null;
         switch (type) {
             case Bluetooth:
-                collectors.add(new BluetoothCollector(mContext, CollectorType.Bluetooth, scheduledExecutorService, futureList));
+                collector = new BluetoothCollector(mContext, CollectorType.Bluetooth, scheduledExecutorService, futureList);
                 break;
             case IMU:
-                collectors.add(new IMUCollector(mContext, CollectorType.IMU, scheduledExecutorService, futureList));
+                collector = new IMUCollector(mContext, CollectorType.IMU, scheduledExecutorService, futureList);
                 break;
             case NonIMU:
-                collectors.add(new NonIMUCollector(mContext, CollectorType.NonIMU, scheduledExecutorService, futureList));
+                collector = new NonIMUCollector(mContext, CollectorType.NonIMU, scheduledExecutorService, futureList);
                 break;
             case Wifi:
-                collectors.add(new WifiCollector(mContext, CollectorType.Wifi, scheduledExecutorService, futureList));
+                collector = new WifiCollector(mContext, CollectorType.Wifi, scheduledExecutorService, futureList);
                 break;
             case Location:
-                collectors.add(new LocationCollector(mContext, CollectorType.Location, scheduledExecutorService, futureList));
+                collector = new LocationCollector(mContext, CollectorType.Location, scheduledExecutorService, futureList);
                 break;
             case Audio:
-                collectors.add(new AudioCollector(mContext, CollectorType.Audio, scheduledExecutorService, futureList));
+                collector = new AudioCollector(mContext, CollectorType.Audio, scheduledExecutorService, futureList);
                 break;
             case GPS:
-                collectors.add(new GPSCollector(mContext, CollectorType.GPS, scheduledExecutorService, futureList));
+                collector = new GPSCollector(mContext, CollectorType.GPS, scheduledExecutorService, futureList);
                 break;
             case Log:
                 Log.e("Trigger", "Do not pass CollectorType.Log in the constructor, it will be ignored.");
@@ -84,12 +87,17 @@ public class CollectorManager {
             default:
                 break;
         }
+        if (collector != null) {
+            collector.setRequestListener(requestListener);
+            collectors.add(collector);
+        }
     }
 
-    public CollectorManager(Context context, List<CollectorType> types, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+    public CollectorManager(Context context, List<CollectorType> types, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener) {
         this.mContext = context;
         this.scheduledExecutorService = scheduledExecutorService;
         this.futureList = futureList;
+        this.requestListener = requestListener;
         try {
             for (CollectorType type : types) {
                 initialize(type);
@@ -100,10 +108,11 @@ public class CollectorManager {
         running.set(true);
     }
 
-    public CollectorManager(Context context, CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+    public CollectorManager(Context context, CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener) {
         this.mContext = context;
         this.scheduledExecutorService = scheduledExecutorService;
         this.futureList = futureList;
+        this.requestListener = requestListener;
         try {
             initialize(type);
         } catch (Exception e) {
