@@ -218,8 +218,10 @@ public class BluetoothCollector extends AsynchronousCollector {
         leScanCallback = new ScanCallback() {
             @Override
             public void onScanResult (int callbackType, ScanResult result) {
-                BluetoothDevice device = result.getDevice();
-                insert(device, isConnected(device, false), result, null);
+                handler.post(() -> {
+                    BluetoothDevice device = result.getDevice();
+                    insert(device, isConnected(device, false), result, null);
+                });
             }
         };
     }

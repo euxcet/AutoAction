@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -30,6 +31,7 @@ import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TimedCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
+import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.distributor.DataDistributor;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
@@ -95,6 +97,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     private ScheduledExecutorService scheduledExecutorService;
     private final List<ScheduledFuture<?>> futureList;
+    private HandlerThread handlerThread;
+    private Handler handler;
 
     private ScheduledFuture<?> actionFuture;
     private ScheduledFuture<?> contextFuture;
@@ -107,8 +111,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private final AtomicInteger mContextActionIDCounter = new AtomicInteger(0);
     LogCollector contextActionLogCollector;
 
-    private final CustomBroadcastReceiver mBroadcastReceiver;
-    private final CustomContentObserver mContentObserver;
+    private CustomBroadcastReceiver mBroadcastReceiver;
+    private CustomContentObserver mContentObserver;
     private final List<Uri> mRegURIs;
 
     // listening
@@ -227,8 +231,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
         // scheduleCleanData();
 
-        mBroadcastReceiver = new CustomBroadcastReceiver();
-        mContentObserver = new CustomContentObserver(new Handler());
         mRegURIs = new ArrayList<>();
     }
 
@@ -334,6 +336,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
         futureList.clear();
         scheduledExecutorService.shutdownNow();
+        handlerThread.quit();
     }
 
     public void pause() {
@@ -398,6 +401,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void initialize() {
+        handlerThread = new HandlerThread("CallbackHandlerThread");
+        handlerThread.start();
+        handler = new Handler(handlerThread.getLooper());
+        Collector.setHandler(handler);
+        mBroadcastReceiver = new CustomBroadcastReceiver();
+        mContentObserver = new CustomContentObserver(handler);
+
         this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
 
@@ -578,7 +588,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 if (!config.isOverrideSystemActions()) {
                     Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
                 }
-                mContext.registerReceiver(mBroadcastReceiver, intentFilter);
+                mContext.registerReceiver(mBroadcastReceiver, intentFilter, null, handler);
                 Log.e("OverrideSystemActions", Boolean.toString(config.isOverrideSystemActions()));
                 intentFilter.actionsIterator().forEachRemaining(item -> Log.e("Register broadcast", item));
 
@@ -731,28 +741,27 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onAccessibilityEventDex(AccessibilityEvent event) {
-        for (BaseContext context: contexts) {
-            context.onAccessibilityEvent(event);
-        }
-        /*
-        for (BaseSensorManager sensorManager: sensorManagers) {
-            sensorManager.onAccessibilityEventDex(event);
-        }
-         */
+        handler.post(() -> {
+            for (BaseContext context: contexts) {
+                context.onAccessibilityEvent(event);
+            }
+        });
     }
 
     public void onKeyEventDex(KeyEvent event) {
-        BroadcastEvent bc_event = new BroadcastEvent(
-                System.currentTimeMillis(),
-                "KeyEvent",
-                "KeyEvent://"+event.getAction()+"/"+event.getKeyCode()
-        );
-        bc_event.getExtras().putInt("action", event.getAction());
-        bc_event.getExtras().putInt("code", event.getKeyCode());
-        bc_event.getExtras().putInt("source", event.getSource());
-        bc_event.getExtras().putLong("eventTime", event.getEventTime());
-        bc_event.getExtras().putLong("downTime", event.getDownTime());
-        onBroadcastEventDex(bc_event);
+        handler.post(() -> {
+            BroadcastEvent bc_event = new BroadcastEvent(
+                    System.currentTimeMillis(),
+                    "KeyEvent",
+                    "KeyEvent://"+event.getAction()+"/"+event.getKeyCode()
+            );
+            bc_event.getExtras().putInt("action", event.getAction());
+            bc_event.getExtras().putInt("code", event.getKeyCode());
+            bc_event.getExtras().putInt("source", event.getSource());
+            bc_event.getExtras().putLong("eventTime", event.getEventTime());
+            bc_event.getExtras().putLong("downTime", event.getDownTime());
+            onBroadcastEventDex(bc_event);
+        });
     }
 
     public void onBroadcastEventDex(BroadcastEvent event) {
@@ -853,7 +862,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
     }
 
-    void registerURI(Uri uri) {
+    private void registerURI(Uri uri) {
         if (uri != null) {
             if (!mRegURIs.contains(uri)) {
                 mContext.getContentResolver().registerContentObserver(uri, true, mContentObserver);

@@ -1,6 +1,7 @@
 package com.hcifuture.contextactionlibrary.sensor.collector;
 
 import android.content.Context;
+import android.os.Handler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,12 +10,19 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Collector {
+
+    protected static Handler handler = null;
+
     protected Context mContext;
     protected ScheduledExecutorService scheduledExecutorService;
     protected List<ScheduledFuture<?>> futureList;
     protected CollectorManager.CollectorType type;
     protected final List<CollectorListener> listenerList = new ArrayList<>();
     protected AtomicBoolean isRegistered = new AtomicBoolean(false);
+
+    public static void setHandler(Handler handler) {
+        Collector.handler = handler;
+    }
 
     public Collector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;

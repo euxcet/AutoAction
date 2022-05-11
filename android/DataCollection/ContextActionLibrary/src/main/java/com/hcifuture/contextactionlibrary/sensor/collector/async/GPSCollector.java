@@ -32,7 +32,6 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
     private final AtomicBoolean isCollecting = new AtomicBoolean(false);
     private boolean isProviderEnabled;
     private final GPSData data;
-    private final Handler handler;
 
     /*
       Error code:
@@ -47,7 +46,6 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
     public GPSCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
         data = new GPSData();
-        handler = new Handler(Looper.getMainLooper());
     }
 
     @Override
@@ -76,7 +74,7 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
     private void bindListener() {
         Log.e("TEST", locationManager + " " + mContext + " " );
         locationManager.registerGnssStatusCallback(gnssStatusCallback, handler);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, this, Looper.getMainLooper());
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, this, handler.getLooper());
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
