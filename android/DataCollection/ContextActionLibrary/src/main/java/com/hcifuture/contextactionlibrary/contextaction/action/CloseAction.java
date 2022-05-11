@@ -30,7 +30,6 @@ public class CloseAction extends BaseAction {
     long up_gyro_id; // 凑近嘴部的gyro的id
     long success_id; //成功时的id
     boolean success_flag;
-    LogCollector logCollector;
 
     public CloseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, LogCollector CloseLogCollector) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
@@ -118,8 +117,11 @@ public class CloseAction extends BaseAction {
     public void onNonIMUSensorEvent(NonIMUData data) {
         dist = data.getProximity();
         float bright = data.getEnvironmentBrightness();
-        if(upright_gyro)
-            logCollector.addLog(System.currentTimeMillis()+" "+dist+" "+bright);
+        if(upright_gyro) {
+            if (logCollector != null) {
+                logCollector.addLog(System.currentTimeMillis() + " " + dist + " " + bright);
+            }
+        }
         if(upright_gyro)
             Log.i("proximity:","接近光距离为："+dist+" 亮度为："+bright);
 //        long bright_time = data.getEnvironmentBrightnessTimestamp();

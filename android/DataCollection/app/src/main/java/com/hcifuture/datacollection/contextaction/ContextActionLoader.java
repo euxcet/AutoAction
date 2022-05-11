@@ -63,7 +63,15 @@ public class ContextActionLoader {
             start.invoke(container);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
 
+    private void startCollectors(Object container) {
+        try {
+            Method start = containerClass.getMethod("startCollectors");
+            start.invoke(container);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -130,6 +138,7 @@ public class ContextActionLoader {
             onAccessibilityEvent = getOnAccessibilityEvent(container);
             onKeyEvent = getOnKeyEvent(container);
             startContainer(container);
+            startCollectors(container);
             imuSensorManager.start();
             proximitySensorManager.start();
         } catch (Exception e) {

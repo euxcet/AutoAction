@@ -35,7 +35,6 @@ public class FlipAction extends BaseAction {
     long gx_id; //最大gx的下标
     private float[] values, r, gravity, geomagnetic;
     boolean success_flag;
-    LogCollector logCollector;
 
     public FlipAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, LogCollector FlipLogCollector) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
@@ -220,7 +219,9 @@ public class FlipAction extends BaseAction {
                 pitch = Math.toDegrees(values[1]);
                 double roll = Math.toDegrees(values[2]);
 //                Log.i("FLIP","roll: "+Math.floor(roll)+"ptich: "+Math.floor(pitch));
-                logCollector.addLog(System.currentTimeMillis()+" "+azimuth+" "+pitch+" "+roll);
+                if (logCollector != null) {
+                    logCollector.addLog(System.currentTimeMillis() + " " + azimuth + " " + pitch + " " + roll);
+                }
                 if(pitch>40){
                     reset();
                     Log.i("FLIP:","pitch太大了，重置"+pitch);
