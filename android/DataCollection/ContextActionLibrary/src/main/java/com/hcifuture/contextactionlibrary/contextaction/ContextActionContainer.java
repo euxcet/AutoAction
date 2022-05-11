@@ -693,7 +693,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             if (!config.isOverrideSystemActions()) {
                 Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
             }
-            mContext.registerReceiver(mBroadcastReceiver, intentFilter);
+            mContext.registerReceiver(mBroadcastReceiver, intentFilter, null, handler);
             Log.e("OverrideSystemActions", Boolean.toString(config.isOverrideSystemActions()));
             intentFilter.actionsIterator().forEachRemaining(item -> Log.e("Register broadcast", item));
 
