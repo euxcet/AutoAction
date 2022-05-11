@@ -68,10 +68,10 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
 
     @Override
     public synchronized void resume() {
-        sensorManager.registerListener(this, mGyroSensor, SAMPLING_PERIOD);
-        sensorManager.registerListener(this, mLinearAccSensor, SAMPLING_PERIOD);
-        sensorManager.registerListener(this, mAccSensor, SAMPLING_PERIOD);
-        sensorManager.registerListener(this, mMagSensor, SAMPLING_PERIOD);
+        sensorManager.registerListener(this, mGyroSensor, SAMPLING_PERIOD, handler);
+        sensorManager.registerListener(this, mLinearAccSensor, SAMPLING_PERIOD, handler);
+        sensorManager.registerListener(this, mAccSensor, SAMPLING_PERIOD, handler);
+        sensorManager.registerListener(this, mMagSensor, SAMPLING_PERIOD, handler);
     }
 
     @Override
