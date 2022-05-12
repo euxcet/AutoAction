@@ -228,6 +228,15 @@ public class EventAnalyzer {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
+    public void add(String eventString) {
+        long[] features = parseEventString(eventString);
+        if (features == null)
+            return ;
+        updateValues(features);
+        return ;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public long[] parseEventString(String str) {
         int index = 0;
         long[] res = new long[29];

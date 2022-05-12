@@ -31,6 +31,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
@@ -147,19 +148,20 @@ public class InformationalContext extends BaseContext {
         for(AccessibilityNodeInfo root:AccessibilityNodeInfoRecordFromFile.getAllRoots(requestListener))
             nodeInfos.add(AccessibilityNodeInfo.obtain(root));
         final Date date = new Date();
-
         futureList.add(scheduledExecutorService.schedule(() -> {
-            Page page = PageController.recognizePage(AccessibilityNodeInfoRecordFromFile.buildAllTrees(nodeInfos,lastActivityName), lastPackageName);
+            HashSet<String> allFunctionWords = PageController.getAllFunctionWords(AccessibilityNodeInfoRecordFromFile.buildAllTrees(nodeInfos,lastActivityName));
+            addTaskLog(new LogItem(allFunctionWords.toString(), "functionWords", date));
+            Page page = PageController.recognizePage(allFunctionWords, lastPackageName);
             if (page != null) {
                 // 从页面端不重复记录
                 if (lastPage != null && lastPage.getId() == page.getId())
                     return;
-                Log.d("InformationalContext","page match" + page.getTitle());
+//                Log.d("InformationalContext","page match" + page.getTitle());
                 addTaskLog(new LogItem(page.getTitle(), "page",date));
                 pageList.add(page);
                 Task task = recognizeTask();
                 if (task != null) {
-                    Log.d("InformationalContext","task match" + task.getName());
+//                    Log.d("InformationalContext","task match" + task.getName());
                     addTaskLog(new LogItem(task.getName(), "task", date));
                 }
                 lastTask = task;
@@ -188,11 +190,15 @@ public class InformationalContext extends BaseContext {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public void onAccessibilityEvent(AccessibilityEvent eventori) {
-        AccessibilityEvent event = AccessibilityEvent.obtain(eventori);
+    public void onAccessibilityEvent(AccessibilityEvent event) {
         String eventString =event.toString();
         long eventTime  = System.currentTimeMillis();
         final String eventStr = ("timeStamp:"+eventTime+";"+eventString).replace("\n"," ");
+
+        if(event.getEventType()==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+            eventAnalyzer.add(eventStr);
+            return;
+        }
 
         int eventType = event.getEventType();
 
@@ -204,7 +210,8 @@ public class InformationalContext extends BaseContext {
                 onActivityChange(activityName);
                 lastActivityName = activityName;
             }
-            packageName = activityName.split("/")[0];
+            if(activityName!=null)
+                packageName = activityName.split("/")[0];
             if(packageName!=null&&(lastPackageName==null || !lastPackageName.equals(packageName)))
             {
                 onPackageChange(packageName);
@@ -239,7 +246,6 @@ public class InformationalContext extends BaseContext {
         }
         if(model_result<=0.5)
             windowStable = false;
-        event.recycle();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -312,7 +318,7 @@ public class InformationalContext extends BaseContext {
             for(String p:ps) {
                 Page tp=PageController.getIdToPage().get(Integer.parseInt(p));
                 if(tp==null) {
-                    System.out.println("page not exist"+p);
+                    Log.e("InformationalContext","page not exist"+p);
                     return;
                 }
                 pl.add(tp);
@@ -362,6 +368,7 @@ public class InformationalContext extends BaseContext {
         sb.append(item.type);
         sb.append("#");
         sb.append(LogItem.formatter.format(item.getTime()));
+        Log.d("InformationalContext",sb.toString());
         if (logCollector != null) {
             logCollector.addLog(sb.toString());
         }
