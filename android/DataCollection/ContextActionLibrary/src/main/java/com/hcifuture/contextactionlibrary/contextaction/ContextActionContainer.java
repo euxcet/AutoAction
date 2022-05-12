@@ -646,7 +646,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                             Number period = contextConfig.getValue("period");
                             String name = contextConfig.getString("name");
                             initialDelay = (initialDelay == null) ? 5000 : initialDelay;
-                            period = (period == null) ? 60000 : period;
+                            period = (period == null) ? 30 * 60000 : period;
                             name = (name == null) ? "Config" : name;
                             timedCollector.scheduleTimedLogUpload(configLogCollector, period.longValue(), initialDelay.longValue(), name);
                             setLogCollector(ConfigContext.class, configLogCollector);
