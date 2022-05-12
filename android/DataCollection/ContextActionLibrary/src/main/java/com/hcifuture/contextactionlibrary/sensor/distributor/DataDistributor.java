@@ -1,5 +1,7 @@
 package com.hcifuture.contextactionlibrary.sensor.distributor;
 
+import android.util.Log;
+
 import com.hcifuture.contextactionlibrary.contextaction.action.BaseAction;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorListener;
@@ -30,6 +32,7 @@ public class DataDistributor implements CollectorListener {
                     break;
                 case NonIMUData:
                     if (types.contains(SensorType.PROXIMITY)) {
+                        Log.e("proximity:","onNonIMUSensorChanged");
                         action.onNonIMUSensorEvent((NonIMUData)data);
                     }
                     break;
