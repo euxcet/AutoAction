@@ -2,7 +2,6 @@ package com.hcifuture.contextactionlibrary.contextaction.collect;
 
 import android.content.Context;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -48,7 +47,6 @@ public class CloseCollector extends BaseCollector {
             //先传log
             if (clickTrigger != null && scheduledExecutorService != null) {
                 try {
-                    Log.e("uplaod:","Close try to upload log");
                     triggerAndUpload(logCollector, new TriggerConfig(), "Close", "time: "+time)
                             .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
                 } catch (Exception e) {
@@ -62,7 +60,6 @@ public class CloseCollector extends BaseCollector {
                 String commit = action.getAction() + ":" + action.getReason() + " " + action.getTimestamp()+" "+time;
                 if(FutureIMU.isDone()) {
                     try {
-                        Log.e("uplaod:","Close try to upload IMU");
                         upload(FutureIMU.get().get(0), name, commit);
                     } catch (ExecutionException | InterruptedException e) {
                         e.printStackTrace();
