@@ -60,8 +60,6 @@ public class MainService extends AccessibilityService implements ContextListener
         this.loaderManager = new LoaderManager(this, this, this);
         loaderManager.start();
 
-        ServiceSettings.updatePrivacyShow(getApplicationContext(), true , true);
-        ServiceSettings.updatePrivacyAgree(getApplicationContext(), true);
         Log.e("Location", sHA1(getApplicationContext()));
     }
 

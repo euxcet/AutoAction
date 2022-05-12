@@ -3,6 +3,7 @@ package com.hcifuture.contextactionlibrary.contextaction.action;
 import android.content.Context;
 import android.hardware.SensorEvent;
 
+import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
@@ -27,6 +28,7 @@ public abstract class BaseAction {
 
     protected ScheduledExecutorService scheduledExecutorService;
     protected List<ScheduledFuture<?>> futureList;
+    protected LogCollector logCollector;
 
     public BaseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;
@@ -35,6 +37,15 @@ public abstract class BaseAction {
         this.actionListener = actionListener;
         this.scheduledExecutorService = scheduledExecutorService;
         this.futureList = futureList;
+        this.logCollector = null;
+    }
+
+    public void setLogCollector(LogCollector collector) {
+        this.logCollector = collector;
+    }
+
+    public LogCollector getLogCollector() {
+        return this.logCollector;
     }
 
     public abstract void start();

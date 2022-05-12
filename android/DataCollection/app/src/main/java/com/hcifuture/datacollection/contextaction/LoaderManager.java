@@ -16,7 +16,10 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.RequestResult;
 
 import java.io.File;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -78,6 +81,15 @@ public class LoaderManager {
 
         if (config.getValue("getWindows") != null) {
             result.putObject("getWindows", mService.getWindows());
+        }
+
+        if (config.getString("getDeviceId") != null) {
+            String mac = getMacMoreThanM();
+            if (mac == null) {
+                result.putObject("getDeviceId", "NULL");
+            } else {
+                result.putObject("getDeviceId", mac.replace(":", "_"));
+            }
         }
 
         return result;
@@ -245,5 +257,34 @@ public class LoaderManager {
         if (loader != null) {
             loader.onKeyEvent(event);
         }
+    }
+
+    protected static String getMacMoreThanM() {
+        try {
+            Enumeration enumeration = NetworkInterface.getNetworkInterfaces();
+            while (enumeration.hasMoreElements()) {
+                NetworkInterface networkInterface = (NetworkInterface) enumeration.nextElement();
+
+                byte[] arrayOfByte = networkInterface.getHardwareAddress();
+                if (arrayOfByte == null || arrayOfByte.length == 0) {
+                    continue;
+                }
+
+                StringBuilder stringBuilder = new StringBuilder();
+                for (byte b : arrayOfByte) {
+                    stringBuilder.append(String.format("%02X:", b));
+                }
+                if (stringBuilder.length() > 0) {
+                    stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+                }
+                String str = stringBuilder.toString();
+                if (networkInterface.getName().equals("wlan0")) {
+                    return str;
+                }
+            }
+        } catch (SocketException socketException) {
+            return null;
+        }
+        return null;
     }
 }

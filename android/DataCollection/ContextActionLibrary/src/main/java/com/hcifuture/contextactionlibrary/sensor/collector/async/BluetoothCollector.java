@@ -80,6 +80,7 @@ public class BluetoothCollector extends AsynchronousCollector {
             ft.completeExceptionally(new Exception("Invalid Bluetooth scan time: " + config.getBluetoothScanTime()));
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
+                notifyWake();
                 setBasicInfo();
                 data.clear();
 
@@ -210,7 +211,7 @@ public class BluetoothCollector extends AsynchronousCollector {
             }
         };
 
-        mContext.registerReceiver(receiver, bluetoothFilter);
+        mContext.registerReceiver(receiver, bluetoothFilter, null, handler);
         isRegistered.set(true);
 
         // ref: https://developer.android.com/guide/topics/connectivity/bluetooth-le#find
@@ -218,8 +219,10 @@ public class BluetoothCollector extends AsynchronousCollector {
         leScanCallback = new ScanCallback() {
             @Override
             public void onScanResult (int callbackType, ScanResult result) {
-                BluetoothDevice device = result.getDevice();
-                insert(device, isConnected(device, false), result, null);
+                handler.post(() -> {
+                    BluetoothDevice device = result.getDevice();
+                    insert(device, isConnected(device, false), result, null);
+                });
             }
         };
     }
@@ -271,7 +274,7 @@ public class BluetoothCollector extends AsynchronousCollector {
     @Override
     public void resume() {
         if (!isRegistered.get() && receiver != null && bluetoothFilter != null) {
-            mContext.registerReceiver(receiver, bluetoothFilter);
+            mContext.registerReceiver(receiver, bluetoothFilter, null, handler);
             isRegistered.set(true);
         }
     }

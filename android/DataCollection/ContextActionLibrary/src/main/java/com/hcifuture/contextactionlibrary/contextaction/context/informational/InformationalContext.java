@@ -57,9 +57,7 @@ public class InformationalContext extends BaseContext {
     private long lastActionTime = 0;
 
     private long lastWindowChange = 0;
-
-    private LogCollector logCollector;
-
+  
     @RequiresApi(api = Build.VERSION_CODES.N)
     public InformationalContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector informationalLogCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
@@ -371,7 +369,9 @@ public class InformationalContext extends BaseContext {
         sb.append("#");
         sb.append(LogItem.formatter.format(item.getTime()));
         Log.d("InformationalContext",sb.toString());
-        logCollector.addLog(sb.toString());
+        if (logCollector != null) {
+            logCollector.addLog(sb.toString());
+        }
     }
 
 }

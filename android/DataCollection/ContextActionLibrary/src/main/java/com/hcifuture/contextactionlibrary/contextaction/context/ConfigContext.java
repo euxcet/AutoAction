@@ -55,7 +55,6 @@ public class ConfigContext extends BaseContext {
 
     private long last_record_all;
 
-    private final LogCollector logCollector;
     private final AtomicInteger mLogID = new AtomicInteger(0);
 
     public ConfigContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector logCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
@@ -258,7 +257,9 @@ public class ConfigContext extends BaseContext {
 
     private void record(long timestamp, int logID, String type, String action, String tag, String other) {
         String line = timestamp + "\t" + logID + "\t" + type + "\t" + action + "\t" + tag + "\t" + other;
-        logCollector.addLog(line);
+        if (logCollector != null) {
+            logCollector.addLog(line);
+        }
         Log.e("ConfigContext", "in record");
     }
 

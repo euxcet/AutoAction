@@ -109,7 +109,7 @@ public class WifiCollector extends AsynchronousCollector {
             }
         };
 
-        mContext.registerReceiver(receiver, wifiFilter);
+        mContext.registerReceiver(receiver, wifiFilter, null, handler);
         isRegistered.set(true);
     }
 
@@ -126,6 +126,7 @@ public class WifiCollector extends AsynchronousCollector {
             ft.completeExceptionally(new Exception("Invalid Wifi scan timeout: " + config.getWifiScanTimeout()));
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
+                notifyWake();
                 setBasicInfo();
                 data.clear();
 
@@ -224,7 +225,7 @@ public class WifiCollector extends AsynchronousCollector {
     @Override
     public void resume() {
         if (!isRegistered.get() && receiver != null && wifiFilter != null) {
-            mContext.registerReceiver(receiver, wifiFilter);
+            mContext.registerReceiver(receiver, wifiFilter, null, handler);
             isRegistered.set(true);
         }
     }
