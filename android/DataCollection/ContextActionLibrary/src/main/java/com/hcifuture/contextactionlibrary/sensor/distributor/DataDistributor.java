@@ -32,7 +32,6 @@ public class DataDistributor implements CollectorListener {
                     break;
                 case NonIMUData:
                     if (types.contains(SensorType.PROXIMITY)) {
-                        Log.e("proximity:","onNonIMUSensorChanged");
                         action.onNonIMUSensorEvent((NonIMUData)data);
                     }
                     break;
