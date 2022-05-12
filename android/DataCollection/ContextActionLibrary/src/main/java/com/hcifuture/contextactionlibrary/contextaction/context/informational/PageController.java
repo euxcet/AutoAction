@@ -32,6 +32,8 @@ public class PageController {
     {
         try
         {
+            loadFunctionWords(context);
+
             InputStream inStream = new FileInputStream(ContextActionContainer.getSavePath() + "pages.csv");
             BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
             String line;
@@ -40,6 +42,27 @@ public class PageController {
             }
             br.close();
             inStream.close();
+        }catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static void loadFunctionWords(Context context)
+    {
+        try
+        {
+            InputStream inStream = new FileInputStream(ContextActionContainer.getSavePath() + "words.csv");
+            BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
+            String line;
+            while ((line = br.readLine()) != null) {
+                String word = line.split("\t")[0];
+                allFunctionWords.add(word);
+            }
+            br.close();
+            inStream.close();
+
         }catch(Exception e)
         {
             e.printStackTrace();
@@ -128,7 +151,7 @@ public class PageController {
         {
             getNodeFunctionWords(root,res);
         }
-        Log.d("InformationalContext","getAllFunctionWords" + res);
+//        Log.d("InformationalContext","getAllFunctionWords" + res);
 
         return res;
     }

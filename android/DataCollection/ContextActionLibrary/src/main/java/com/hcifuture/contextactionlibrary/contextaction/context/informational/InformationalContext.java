@@ -158,12 +158,12 @@ public class InformationalContext extends BaseContext {
                 // 从页面端不重复记录
                 if (lastPage != null && lastPage.getId() == page.getId())
                     return;
-                Log.d("InformationalContext","page match" + page.getTitle());
+//                Log.d("InformationalContext","page match" + page.getTitle());
                 addTaskLog(new LogItem(page.getTitle(), "page",date));
                 pageList.add(page);
                 Task task = recognizeTask();
                 if (task != null) {
-                    Log.d("InformationalContext","task match" + task.getName());
+//                    Log.d("InformationalContext","task match" + task.getName());
                     addTaskLog(new LogItem(task.getName(), "task", date));
                 }
                 lastTask = task;
@@ -320,7 +320,7 @@ public class InformationalContext extends BaseContext {
             for(String p:ps) {
                 Page tp=PageController.getIdToPage().get(Integer.parseInt(p));
                 if(tp==null) {
-                    System.out.println("page not exist"+p);
+                    Log.e("InformationalContext","page not exist"+p);
                     return;
                 }
                 pl.add(tp);
@@ -370,6 +370,7 @@ public class InformationalContext extends BaseContext {
         sb.append(item.type);
         sb.append("#");
         sb.append(LogItem.formatter.format(item.getTime()));
+        Log.d("InformationalContext",sb.toString());
         logCollector.addLog(sb.toString());
     }
 
