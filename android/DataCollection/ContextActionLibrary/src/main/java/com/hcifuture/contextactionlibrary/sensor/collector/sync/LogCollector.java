@@ -67,6 +67,14 @@ public class LogCollector extends SynchronousCollector {
         return result;
     }
 
+    public CollectorResult getData() {
+        CollectorResult result = new CollectorResult();
+        result.setData(data.deepClone());
+        result.setDataString(((LogData)result.getData()).getString());
+        result.setLogLength(((LogData)result.getData()).getSize());
+        return result;
+    }
+
     /*
     @Override
     public CollectorResult getDataString(TriggerConfig config) {

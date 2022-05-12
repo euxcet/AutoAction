@@ -21,7 +21,7 @@ import android.view.accessibility.AccessibilityEvent;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.amap.api.services.core.ServiceSettings;
+//import com.amap.api.services.core.ServiceSettings;
 import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.contextaction.action.MotionAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.CloseCollector;
@@ -402,8 +402,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void initialize() {
-        ServiceSettings.updatePrivacyShow(mContext.getApplicationContext(), true , true);
-        ServiceSettings.updatePrivacyAgree(mContext.getApplicationContext(), true);
+//        ServiceSettings.updatePrivacyShow(mContext.getApplicationContext(), true , true);
+//        ServiceSettings.updatePrivacyAgree(mContext.getApplicationContext(), true);
 
         handlerThread = new HandlerThread("CallbackHandlerThread");
         handlerThread.start();
@@ -508,6 +508,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                             actions.add(topTapAction);
                             break;
                         case "Flip":
+                            LogCollector flipLogCollector = collectorManager.newLogCollector("Flip", 800);
                             FlipAction flipAction = new FlipAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList, null);
                             actions.add(flipAction);
                             break;
@@ -537,17 +538,17 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private void setLogCollector(Class c, LogCollector logCollector) {
         for (BaseContext context: contexts) {
             if (c.isInstance(context)) {
-                if (context.getLogCollector() != null) {
-                    context.setLogCollector(logCollector);
-                }
+//                if (context.getLogCollector() == null) {
+                context.setLogCollector(logCollector);
+//                }
             }
         }
 
         for (BaseAction action: actions) {
             if (c.isInstance(action)) {
-                if (action.getLogCollector() != null) {
-                    action.setLogCollector(logCollector);
-                }
+//                if (action.getLogCollector() == null) {
+                action.setLogCollector(logCollector);
+//                }
             }
         }
     }
@@ -682,11 +683,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     }
                     switch (actionConfig.getAction()) {
                         case "Flip":
+                            Log.e("upload:","register Flip LogCollector");
                             LogCollector flipLogCollector = collectorManager.newLogCollector("Flip", 800);
                             collectors.add(new FlipCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, flipLogCollector));
                             setLogCollector(FlipAction.class, flipLogCollector);
                             break;
                         case "Close":
+                            Log.e("upload:","register Close LogCollector");
                             LogCollector closeLogCollector = collectorManager.newLogCollector("Close", 800);
                             collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, closeLogCollector));
                             setLogCollector(CloseAction.class, closeLogCollector);
