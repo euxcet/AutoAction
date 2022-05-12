@@ -2,6 +2,7 @@ package com.hcifuture.contextactionlibrary.contextaction.collect;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -47,6 +48,7 @@ public class FlipCollector extends BaseCollector{
                 String commit = action.getAction() + ":" + action.getReason() + " " + action.getTimestamp()+" "+time;
                 if (FutureIMU.isDone()) {
                     try {
+                        Log.e("uplaod:","Flip try to upload IMU");
                         upload(FutureIMU.get().get(0), name, commit);
 //                        upload(FutureIMU.get().get(0), name, commit, time);
                     } catch (ExecutionException | InterruptedException e) {
@@ -59,6 +61,7 @@ public class FlipCollector extends BaseCollector{
             }
             if (clickTrigger != null && scheduledExecutorService != null) {
                 try {
+                    Log.e("uplaod:","Flip try to upload log");
                     triggerAndUpload(logCollector, new TriggerConfig(), "Flip", "time: "+time)
                             .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
                 } catch (Exception e) {
