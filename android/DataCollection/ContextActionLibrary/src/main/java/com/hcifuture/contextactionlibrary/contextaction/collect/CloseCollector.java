@@ -48,6 +48,8 @@ public class CloseCollector extends BaseCollector {
             //先传log
             if (clickTrigger != null && scheduledExecutorService != null) {
                 try {
+                    Log.e("upload","log_close:"+logCollector.getData().getDataString());
+//                    Log.e("upload","log_close:"+logCollector.toString());
                     Log.e("uplaod:","Close try to upload log");
                     triggerAndUpload(logCollector, new TriggerConfig(), "Close", "time: "+time)
                             .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
