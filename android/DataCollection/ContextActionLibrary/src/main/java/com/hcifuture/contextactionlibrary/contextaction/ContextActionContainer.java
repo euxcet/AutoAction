@@ -33,6 +33,7 @@ import com.hcifuture.contextactionlibrary.contextaction.collect.TimedCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.distributor.DataDistributor;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
@@ -64,6 +65,7 @@ import com.hcifuture.shared.communicate.result.Result;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;

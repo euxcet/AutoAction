@@ -11,6 +11,7 @@ import android.provider.Settings;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorListener;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
@@ -43,6 +44,11 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
         mLight = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         mProximity = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         mStepCounter = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+
+        CollectorStatusHolder.getInstance().setStatus(Sensor.TYPE_PRESSURE, mPressure != null);
+        CollectorStatusHolder.getInstance().setStatus(Sensor.TYPE_LIGHT, mLight != null);
+        CollectorStatusHolder.getInstance().setStatus(Sensor.TYPE_PROXIMITY, mProximity != null);
+        CollectorStatusHolder.getInstance().setStatus(Sensor.TYPE_STEP_COUNTER , mStepCounter != null);
 
         this.resume();
     }
