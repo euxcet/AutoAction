@@ -256,14 +256,20 @@ public class ConfigContext extends BaseContext {
     }
 
     private void record(long timestamp, int logID, String type, String action, String tag, String other) {
-        String line = timestamp + "\t" + logID + "\t" + type + "\t" + action + "\t" + tag + "\t" + other;
-        if (logCollector != null) {
-            logCollector.addLog(line);
+        if (logCollector == null) {
+            return;
         }
+
+        String line = timestamp + "\t" + logID + "\t" + type + "\t" + action + "\t" + tag + "\t" + other;
+        logCollector.addLog(line);
         Log.e("ConfigContext", "in record");
     }
 
     private synchronized void record_all(String action) {
+        if (logCollector == null) {
+            return;
+        }
+
         last_record_all = System.currentTimeMillis();
         int logID = incLogID();
         JSONObject json = new JSONObject();
