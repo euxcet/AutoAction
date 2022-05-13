@@ -237,7 +237,7 @@ public class InformationalContext extends BaseContext {
         }
 
         float model_result = eventAnalyzer.analyze(eventStr);
-        Log.i("model_result:",eventString+"\n"+model_result);
+        Log.i("InformationalContext",eventString+"\n"+model_result);
 
         if(model_result>0.5 && !windowStable)
         {
