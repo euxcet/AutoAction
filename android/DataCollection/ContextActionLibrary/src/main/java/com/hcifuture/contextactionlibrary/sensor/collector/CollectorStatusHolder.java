@@ -11,7 +11,7 @@ public class CollectorStatusHolder {
 
     private final HashMap<Integer, CollectorStatus> statusMap;
 
-    private static CollectorStatusHolder instance = null;
+    private static volatile CollectorStatusHolder instance = null;
     private CollectorStatusHolder() {
         statusMap = new HashMap<>();
     }
@@ -39,7 +39,7 @@ public class CollectorStatusHolder {
         }
     }
 
-    public synchronized static CollectorStatusHolder getInstance() {
+    public static CollectorStatusHolder getInstance() {
         if (instance == null) {
             synchronized (CollectorStatusHolder.class) {
                 if (instance == null) {

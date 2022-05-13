@@ -15,6 +15,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.async.AudioCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.async.IMUCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.SynchronousCollector;
+import com.hcifuture.contextactionlibrary.utils.FileSaver;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.contextactionlibrary.utils.JSONUtils;
 
@@ -101,19 +102,18 @@ public class ClickTrigger extends Trigger {
         Log.e(TAG, "数据收集开始执行: [" + startTimestamp + "] " + triggerID + " " + collectorName + " " + saveFile.getAbsolutePath());
 
         if (collector instanceof SynchronousCollector) { // sync
-            ft = FileUtils.writeStringToFile(((SynchronousCollector)collector).getData(config),
-                    saveFile, scheduledExecutorService, futureList);
+            ft = FileSaver.getInstance().writeStringToFile(((SynchronousCollector)collector).getData(config), saveFile);
         } else if (collector instanceof AsynchronousCollector) {
             if (collector instanceof IMUCollector) { // imu
                 ft = ((IMUCollector) collector).getData(config)
-                        .thenCompose(v -> FileUtils.writeIMUDataToFile(v, saveFile, scheduledExecutorService, futureList));
+                        .thenCompose(v -> FileSaver.getInstance().writeIMUDataToFile(v, saveFile));
             } else if (collector instanceof AudioCollector) { // audio
                 config.setAudioFilename(saveFile.getAbsolutePath());
                 ft = ((AsynchronousCollector)collector).getData(config);
                 config.setAudioFilename(null);
             } else { // async
                 ft = ((AsynchronousCollector)collector).getData(config)
-                        .thenCompose(v -> FileUtils.writeStringToFile(v, saveFile, scheduledExecutorService, futureList));
+                        .thenCompose(v -> FileSaver.getInstance().writeStringToFile(v, saveFile));
             }
         } else { // unknown collector
             ft = new CompletableFuture<>();
