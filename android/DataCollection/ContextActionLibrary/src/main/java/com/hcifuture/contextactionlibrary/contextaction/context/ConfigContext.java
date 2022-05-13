@@ -179,6 +179,7 @@ public class ConfigContext extends BaseContext {
                     int diff = value - volume.put(database_key, value);
                     JSONUtils.jsonPut(json, "diff", diff);
                     notifyContext(NEED_AUDIO, timestamp, logID, "volume change: " + database_key);
+                    notifyContext(NEED_SCAN, timestamp, logID, "volume change: " + database_key);
                 } else if (Settings.Global.BLUETOOTH_ON.equals(database_key) && value == 1) {
 //                    notify(NEED_SCAN, timestamp, logID, "Bluetooth on via global setting");
                 } else if (Settings.Global.WIFI_ON.equals(database_key) && value == 2) {
@@ -241,6 +242,7 @@ public class ConfigContext extends BaseContext {
                 case KeyEvent.KEYCODE_VOLUME_MUTE:
                 case KeyEvent.KEYCODE_VOLUME_UP:
                     notifyContext(NEED_AUDIO, timestamp, logID, "key event: " + KeyEvent.keyCodeToString(keycode));
+                    notifyContext(NEED_SCAN, timestamp, logID, "key event: " + KeyEvent.keyCodeToString(keycode));
             }
         }
 
