@@ -82,7 +82,7 @@ public class TfClassifier {
         return res;
     }
 
-    public ArrayList<ArrayList<Float>> predict(ArrayList<Float> var1, int var2, boolean isPocket) {
+    public synchronized ArrayList<ArrayList<Float>> predict(ArrayList<Float> var1, int var2, boolean isPocket) {
         ArrayList<ArrayList<Float>> res = new ArrayList<>();
         if (this.interpreter != null) {
             float[][][][] var3 = new float[1][1][var1.size()][1];
