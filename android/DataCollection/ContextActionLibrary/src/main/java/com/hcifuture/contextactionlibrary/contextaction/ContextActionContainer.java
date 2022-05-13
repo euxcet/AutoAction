@@ -637,7 +637,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     switch (contextConfig.getContext()) {
                         case "Informational":
                             LogCollector informationLogCollector = collectorManager.newLogCollector("Informational", 8192);
-                            timedCollector.scheduleTimedLogUpload(informationLogCollector, 60000, 5000, "Informational");
+                            timedCollector.scheduleTimedLogUpload(informationLogCollector, 60000 * 30, 60000, "Informational");
                             collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, informationLogCollector));
                             setLogCollector(InformationalContext.class, informationLogCollector);
                             break;
@@ -762,9 +762,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onAccessibilityEventDex(AccessibilityEvent event) {
+        final AccessibilityEvent event1 = AccessibilityEvent.obtain(event);
         handler.post(() -> {
             for (BaseContext context: contexts) {
-                context.onAccessibilityEvent(event);
+                context.onAccessibilityEvent(event1);
             }
         });
     }
