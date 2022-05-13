@@ -61,6 +61,7 @@ public class FileUtils {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
+    @Deprecated
     public static CompletableFuture<CollectorResult> writeStringToFile(CollectorResult result, File saveFile, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         futureList.add(scheduledExecutorService.schedule(() -> {
@@ -80,6 +81,7 @@ public class FileUtils {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
+    @Deprecated
     public static CompletableFuture<CollectorResult> writeIMUDataToFile(CollectorResult result, File saveFile, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         assert result.getData() instanceof IMUData;
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();

@@ -50,6 +50,7 @@ import com.hcifuture.contextactionlibrary.contextaction.context.physical.TableCo
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
+import com.hcifuture.contextactionlibrary.utils.FileSaver;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.contextactionlibrary.utils.JSONUtils;
 import com.hcifuture.shared.communicate.config.ActionConfig;
@@ -291,6 +292,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void stop() {
+        if (FileSaver.getInstance() != null) {
+            FileSaver.getInstance().close();
+        }
         try {
             // unregister broadcast receiver
             mContext.unregisterReceiver(mBroadcastReceiver);
@@ -416,6 +420,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
         this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
+
+        FileSaver.initialize(scheduledExecutorService, futureList);
 
         this.collectorManager = new CollectorManager(mContext, Arrays.asList(
                 CollectorManager.CollectorType.IMU,
