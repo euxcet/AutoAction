@@ -42,8 +42,8 @@ public class ConfigCollector extends BaseCollector {
         String commit = "";
 
         if (MotionAction.NEED_POSITION.equals(action.getAction())) {
-            // called every 10 min at most
-            if (current_call - last_position >= 10 * 60000) {
+            // called every 5 min at most
+            if (current_call - last_position >= 5 * 60000) {
                 last_position = current_call;
                 String name = "Event_Position";
                 triggerAndUpload(CollectorManager.CollectorType.GPS, triggerConfig, name, commit, action);
