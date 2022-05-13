@@ -23,6 +23,8 @@ public class ConfigCollector extends BaseCollector {
     private final TriggerConfig triggerConfig;
     private long last_nonimu = 0;
     private long last_position = 0;
+    private long last_scan = 0;
+    private long last_audio = 0;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public ConfigCollector(Context context, ScheduledExecutorService scheduledExecutorService,
@@ -59,18 +61,24 @@ public class ConfigCollector extends BaseCollector {
         String commit = "";
 
         if (ConfigContext.NEED_AUDIO.equals(context.getContext())) {
+            last_audio = current_call;
             String name = "Event_Audio";
             triggerAndUpload(CollectorManager.CollectorType.Audio, triggerConfig, name, commit, context);
         } else if (ConfigContext.NEED_NONIMU.equals(context.getContext())) {
+            // called every second at most
             if (current_call - last_nonimu >= 1000) {
                 last_nonimu = current_call;
                 String name = "Event_NonIMU";
                 triggerAndUpload(CollectorManager.CollectorType.NonIMU, triggerConfig, name, commit, context);
             }
         } else if (ConfigContext.NEED_SCAN.equals(context.getContext())) {
-            String name = "Event_Scan";
-            triggerAndUpload(CollectorManager.CollectorType.Bluetooth, triggerConfig, name, commit, context);
-            triggerAndUpload(CollectorManager.CollectorType.Wifi, triggerConfig, name, commit, context);
+            // called every minute at most
+            if (current_call - last_scan >= 60000) {
+                last_scan = current_call;
+                String name = "Event_Scan";
+                triggerAndUpload(CollectorManager.CollectorType.Bluetooth, triggerConfig, name, commit, context);
+                triggerAndUpload(CollectorManager.CollectorType.Wifi, triggerConfig, name, commit, context);
+            }
         }
     }
 }
