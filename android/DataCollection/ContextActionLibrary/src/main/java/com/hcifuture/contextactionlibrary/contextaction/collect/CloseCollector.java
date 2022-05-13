@@ -75,9 +75,20 @@ public class CloseCollector extends BaseCollector {
 //                    FutureNon.whenComplete((v, e) -> upload(v.get(0), name, commit));
                 }
             }
-
-
         }
+        if (action.getAction().equals("CloseStart")) {
+            if (clickTrigger != null && scheduledExecutorService != null) {
+                try {
+                    Log.e("upload","log_close_start:"+logCollector.getData().getDataString());
+//                    Log.e("upload","log_close:"+logCollector.toString());
+                    triggerAndUpload(logCollector, new TriggerConfig(), "Close", "SensorInformation")
+                            .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
