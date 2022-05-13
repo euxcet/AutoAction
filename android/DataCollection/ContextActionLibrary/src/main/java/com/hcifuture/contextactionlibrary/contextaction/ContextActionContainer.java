@@ -468,14 +468,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                             TableContext tableContext = new TableContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), scheduledExecutorService, futureList);
                             contexts.add(tableContext);
                             break;
-                        case "Informational":
-                            InformationalContext informationalContext = new InformationalContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), null, scheduledExecutorService, futureList);
-                            contexts.add(informationalContext);
-                            break;
-                        case "Config":
-                            ConfigContext configContext = new ConfigContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), null, scheduledExecutorService, futureList);
-                            contexts.add(configContext);
-                            break;
                         default:
                             break;
                     }
@@ -568,8 +560,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader);
         collectors.add(timedCollector);
         collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader));
-        ConfigCollector configCollector = new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader);
-        collectors.add(configCollector);
+        collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader));
 
 
         if (config != null) {
@@ -636,23 +627,32 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
                         contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
                     }
+                    Number initialDelay = contextConfig.getValue("intialDelay");
+                    Number period = contextConfig.getValue("period");
+                    String name = contextConfig.getString("name");
                     switch (contextConfig.getContext()) {
                         case "Informational":
                             LogCollector informationLogCollector = collectorManager.newLogCollector("Informational", 8192);
-                            timedCollector.scheduleTimedLogUpload(informationLogCollector, 60000 * 30, 60000, "Informational");
+                            contexts.add(new InformationalContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), informationLogCollector, scheduledExecutorService, futureList));
+//                            setLogCollector(InformationalContext.class, informationLogCollector);
                             collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, informationLogCollector));
-                            setLogCollector(InformationalContext.class, informationLogCollector);
+                            timedCollector.scheduleTimedLogUpload(
+                                    informationLogCollector,
+                                    (period == null) ? 30 * 60000 : period.longValue(),
+                                    (initialDelay == null) ? 60000 : initialDelay.longValue(),
+                                    (name == null) ? "Informational" : name
+                            );
                             break;
                         case "Config":
                             LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
-                            Number initialDelay = contextConfig.getValue("intialDelay");
-                            Number period = contextConfig.getValue("period");
-                            String name = contextConfig.getString("name");
-                            initialDelay = (initialDelay == null) ? 5000 : initialDelay;
-                            period = (period == null) ? 30 * 60000 : period;
-                            name = (name == null) ? "Config" : name;
-                            timedCollector.scheduleTimedLogUpload(configLogCollector, period.longValue(), initialDelay.longValue(), name);
-                            setLogCollector(ConfigContext.class, configLogCollector);
+                            contexts.add(new ConfigContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), configLogCollector, scheduledExecutorService, futureList));
+//                            setLogCollector(ConfigContext.class, configLogCollector);
+                            timedCollector.scheduleTimedLogUpload(
+                                    configLogCollector,
+                                    (period == null) ? 30 * 60000 : period.longValue(),
+                                    (initialDelay == null) ? 5000 : initialDelay.longValue(),
+                                    (name == null) ? "Config" : name
+                            );
                             break;
                         default:
                             break;
