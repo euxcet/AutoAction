@@ -39,8 +39,7 @@ public abstract class BaseCollector {
     protected ClickTrigger clickTrigger;
     protected ScheduledExecutorService scheduledExecutorService;
     protected List<ScheduledFuture<?>> futureList;
-    private String userId;
-    private Uploader uploader;
+    private final Uploader uploader;
 
     public BaseCollector(Context context, ScheduledExecutorService scheduledExecutorService,
                          List<ScheduledFuture<?>> futureList, RequestListener requestListener,
@@ -51,9 +50,6 @@ public abstract class BaseCollector {
         this.clickTrigger = clickTrigger;
         this.futureList = futureList;
         this.uploader = uploader;
-        RequestConfig request = new RequestConfig();
-        request.putString("getDeviceId", "");
-        this.userId = (String)requestListener.onRequest(request).getObject("getDeviceId");
     }
 
     public abstract void onAction(ActionResult action);
@@ -62,9 +58,8 @@ public abstract class BaseCollector {
 
 
     public String getUserID() {
-        return userId;
+        return uploader.getUserId();
         /*
-        // TODO: implement in the future
         String macAddress = getMacMoreThanM();
         if (macAddress != null) {
             return macAddress.replace(":", "_");

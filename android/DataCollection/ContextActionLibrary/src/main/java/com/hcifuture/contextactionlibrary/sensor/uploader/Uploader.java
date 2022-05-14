@@ -34,6 +34,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -78,6 +79,8 @@ public class Uploader {
 
     private final String fileFolder;
     private final String zipFolder;
+    private final AtomicInteger mZipIDCounter = new AtomicInteger(0);
+    private final String userId;
 
     private boolean lastWifiStatus = true;
 
@@ -88,12 +91,14 @@ public class Uploader {
     }
 
     public Uploader(Context context,
-                    ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+                    ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList,
+                    String userId) {
         this.mContext = context;
         this.scheduledExecutorService = scheduledExecutorService;
         this.futureList = futureList;
         this.fileFolder = mContext.getExternalMediaDirs()[0].getAbsolutePath() + "/Data/Click/";
         this.zipFolder = mContext.getExternalMediaDirs()[0].getAbsolutePath() + "/Data/Zip/";
+        this.userId = userId;
         start();
     }
 
@@ -182,7 +187,12 @@ public class Uploader {
 
                 if (pack.size() > 0) {
                     try {
-                        String zipName = System.currentTimeMillis() + ".zip";
+                        /*
+                          for each zip file:
+                            1. must assign user ID to avoid naming conflicts on server
+                            2. must assign unique ID to avoid naming conflicts on local device
+                         */
+                        String zipName = userId + "_" + System.currentTimeMillis() + "_" + mZipIDCounter.getAndIncrement() + ".zip";
                         String metaName = zipName + ".meta";
                         needToDelete.clear();
                         File zipFile = new File(zipFolder + zipName);
@@ -213,7 +223,8 @@ public class Uploader {
                                 }
                             }
                         }
-                        Log.e(TAG, "compress: packedEntries: " + packedEntries);
+                        Log.e(TAG, "compress packedEntries: " + packedEntries);
+                        Log.e(TAG, "compress zip filename: " + zipName);
                         if (packedEntries > 0) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                 List<TaskMetaBean> metas = pack.stream().map((x) -> x.getMeta().get(0)).collect(Collectors.toList());
@@ -353,5 +364,9 @@ public class Uploader {
         long timestamp = System.currentTimeMillis() - 5 * MINUTE;
         uploadDirectory(new File(this.fileFolder), timestamp, false);
         uploadDirectory(new File(this.zipFolder), timestamp, true);
+    }
+
+    public String getUserId() {
+        return userId;
     }
 }
