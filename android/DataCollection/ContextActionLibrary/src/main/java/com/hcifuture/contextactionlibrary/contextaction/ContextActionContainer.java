@@ -775,6 +775,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             for (BaseContext context: contexts) {
                 context.onAccessibilityEvent(event1);
             }
+            event1.recycle();
         });
     }
 

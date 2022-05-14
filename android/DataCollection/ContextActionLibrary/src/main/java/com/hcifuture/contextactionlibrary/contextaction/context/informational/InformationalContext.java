@@ -34,8 +34,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class InformationalContext extends BaseContext {
@@ -57,19 +61,22 @@ public class InformationalContext extends BaseContext {
     private long lastActionTime = 0;
 
     private long lastWindowChange = 0;
-  
+    private ThreadPoolExecutor threadPoolExecutor;
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     public InformationalContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector informationalLogCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
         logCollector = informationalLogCollector;
         activityUtil = new ActivityUtil(context);
         eventAnalyzer = new EventAnalyzer();
+        threadPoolExecutor = new ThreadPoolExecutor(1, 1, 1000, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(10), Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardOldestPolicy());
 
         futureList.add(scheduledExecutorService.schedule(() -> {
             eventAnalyzer.initialize(context);
             PageController.initPages(context);
             initFromFile();
         }, 0, TimeUnit.MILLISECONDS));
+
     }
 
     @Override
@@ -79,7 +86,7 @@ public class InformationalContext extends BaseContext {
 
     @Override
     public void stop() {
-
+        threadPoolExecutor.shutdown();
     }
 
     @Override
@@ -148,27 +155,31 @@ public class InformationalContext extends BaseContext {
         for(AccessibilityNodeInfo root:AccessibilityNodeInfoRecordFromFile.getAllRoots(requestListener))
             nodeInfos.add(AccessibilityNodeInfo.obtain(root));
         final Date date = new Date();
-        futureList.add(scheduledExecutorService.schedule(() -> {
-            HashSet<String> allFunctionWords = PageController.getAllFunctionWords(AccessibilityNodeInfoRecordFromFile.buildAllTrees(nodeInfos,lastActivityName));
-            addTaskLog(new LogItem(allFunctionWords.toString(), "functionWords", date));
-            Page page = PageController.recognizePage(allFunctionWords, lastPackageName);
-            if (page != null) {
-                // 从页面端不重复记录
-                if (lastPage != null && lastPage.getId() == page.getId())
-                    return;
+//        futureList.add(scheduledExecutorService.schedule(() -> {
+        // change to one thread
+        threadPoolExecutor.execute(() -> {
+                    HashSet<String> allFunctionWords = PageController.getAllFunctionWords(AccessibilityNodeInfoRecordFromFile.buildAllTrees(nodeInfos, lastActivityName));
+                    addTaskLog(new LogItem(allFunctionWords.toString(), "functionWords", date));
+                    Page page = PageController.recognizePage(allFunctionWords, lastPackageName);
+                    if (page != null) {
+                        // 从页面端不重复记录
+                        if (lastPage != null && lastPage.getId() == page.getId())
+                            return;
 //                Log.d("InformationalContext","page match" + page.getTitle());
-                addTaskLog(new LogItem(page.getTitle(), "page",date));
-                pageList.add(page);
-                Task task = recognizeTask();
-                if (task != null) {
+                        addTaskLog(new LogItem(page.getTitle(), "page", date));
+                        pageList.add(page);
+                        Task task = recognizeTask();
+                        if (task != null) {
 //                    Log.d("InformationalContext","task match" + task.getName());
-                    addTaskLog(new LogItem(task.getName(), "task", date));
-                }
-                lastTask = task;
-            }
-            lastPage = page;
-        },0,TimeUnit.MILLISECONDS));
-
+                            addTaskLog(new LogItem(task.getName(), "task", date));
+                        }
+                        lastTask = task;
+                    }
+                    lastPage = page;
+                    for(AccessibilityNodeInfo nodeInfo:nodeInfos)
+                        nodeInfo.recycle();
+                });
+//        },0,TimeUnit.MILLISECONDS));
     }
 
     private Task recognizeTask() {
