@@ -56,6 +56,7 @@ import com.hcifuture.contextactionlibrary.utils.JSONUtils;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
+import com.hcifuture.shared.communicate.config.RequestConfig;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.SensorType;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -433,8 +434,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 CollectorManager.CollectorType.NonIMU
         ), scheduledExecutorService, futureList, requestListener);
 
-        this.clickTrigger = new ClickTrigger(mContext, collectorManager, scheduledExecutorService, futureList);
-        this.uploader = new Uploader(mContext, scheduledExecutorService, futureList);
+
 
         if (fromDex) {
             Gson gson = new Gson();
@@ -554,6 +554,14 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void startCollectors() {
+        // get unique user ID
+        RequestConfig request = new RequestConfig();
+        request.putString("getDeviceId", "");
+        String userId = (String) requestListener.onRequest(request).getObject("getDeviceId");
+
+        uploader = new Uploader(mContext, scheduledExecutorService, futureList, userId);
+        clickTrigger = new ClickTrigger(mContext, collectorManager, scheduledExecutorService, futureList);
+
         Gson gson = new Gson();
         ContextActionConfigBean config = gson.fromJson(
                 FileUtils.getFileContent(SAVE_PATH + "config.json"),
