@@ -160,6 +160,7 @@ public class AudioCollector extends AsynchronousCollector {
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void startRecording(File file) throws IOException {
         mMediaRecorder = new MediaRecorder();
+        // may throw IllegalStateException due to lack of permission
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mMediaRecorder.setAudioChannels(2);
         mMediaRecorder.setAudioSamplingRate(44100);
@@ -173,8 +174,17 @@ public class AudioCollector extends AsynchronousCollector {
 
     private void stopRecording() {
         if (mMediaRecorder != null) {
-            mMediaRecorder.stop();
-            mMediaRecorder.release();
+            try {
+                // may throw IllegalStateException because no valid audio data has been received
+                mMediaRecorder.stop();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            try {
+                mMediaRecorder.release();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             mMediaRecorder = null;
         }
     }
