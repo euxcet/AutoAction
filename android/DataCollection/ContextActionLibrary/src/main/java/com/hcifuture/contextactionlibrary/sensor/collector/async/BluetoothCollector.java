@@ -154,7 +154,8 @@ public class BluetoothCollector extends AsynchronousCollector {
                 stopScan();
                 result.setErrorCode(7);
                 result.setErrorReason(e.toString());
-                ft.complete(result);
+//                ft.complete(result);
+                ft.completeExceptionally(e);
                 isCollecting.set(false);
             }
         } else {
