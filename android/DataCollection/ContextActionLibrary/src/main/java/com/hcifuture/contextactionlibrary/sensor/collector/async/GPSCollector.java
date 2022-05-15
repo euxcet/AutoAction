@@ -40,7 +40,7 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
         2: Concurrent task of GPS collecting
         3: Unknown exception when stopping collecting
         4: Invalid GPS request time
-        5: Unknown collecting exception
+        5: Unknown collecting exception (may be binding listener error due to lack of permission)
      */
 
     public GPSCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
@@ -141,7 +141,8 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
                 unbindListener();
                 result.setErrorCode(5);
                 result.setErrorReason(e.toString());
-                ft.complete(result);
+//                ft.complete(result);
+                ft.completeExceptionally(e);
                 isCollecting.set(false);
             }
         } else {

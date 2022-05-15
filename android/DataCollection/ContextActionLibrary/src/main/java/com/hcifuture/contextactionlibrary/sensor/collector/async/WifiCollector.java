@@ -186,8 +186,10 @@ public class WifiCollector extends AsynchronousCollector {
                 e.printStackTrace();
                 result.setErrorCode(4);
                 result.setErrorReason(e.toString());
-                ft.complete(result);
+//                ft.complete(result);
+                ft.completeExceptionally(e);
                 isCollecting.set(false);
+                isScanning.set(false);
             }
         } else {
             result.setErrorCode(3);
