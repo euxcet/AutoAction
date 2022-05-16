@@ -42,6 +42,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.crypto.spec.PSource;
+
 public class InformationalContext extends BaseContext {
     private static final String TAG = "TaskContext";
     private Map<String, List<Task>> tasks = new HashMap<>();
@@ -245,16 +247,35 @@ public class InformationalContext extends BaseContext {
                 onWindowStable();
             }
             String text = "";
-            if(event.getText()!=null&&!event.getText().isEmpty())
-                text = event.getText().get(0).toString();
-            if(event.getContentDescription()!=null && text.equals(""))
-                text = event.getContentDescription().toString();
+            try {
+                AccessibilityNodeInfo source = null;
+                if (event.getSource() != null)
+                    source = AccessibilityNodeInfo.obtain(event.getSource());
+                if(source!=null) {
+                    if (source.getClassName() != null)
+                        text = "class:" + source.getClassName().toString();
+                    if (source.getText() != null)
+                        text = "text:" + source.getText().toString();
+                    if (source.getContentDescription() != null)
+                        text += ",cd:" + source.getContentDescription().toString();
+                    source.recycle();
+                }
+            }catch (Exception e)
+            {
+                Log.e("InformationalContext",eventString+"error on source");
+                e.printStackTrace();
+            }
+            if(event.getText()!=null&&!event.getText().isEmpty() && text.equals(""))
+                text += ",event-text:"+event.getText().get(0).toString();
+            if(event.getContentDescription()!=null)
+                text += ",event-cd:"+event.getContentDescription().toString();
             Action ac = new Action(text,eventTypeToString(event.getEventType()));
             onAction(ac);
             windowStable = false;
         }
 
         float model_result = eventAnalyzer.analyze(eventStr);
+        addTaskLog(new LogItem(eventString+"--"+model_result,"accessibilityEvent",new Date()));
         Log.i("InformationalContext",eventString+"\n"+model_result);
 
         if(model_result>0.5 && !windowStable)
