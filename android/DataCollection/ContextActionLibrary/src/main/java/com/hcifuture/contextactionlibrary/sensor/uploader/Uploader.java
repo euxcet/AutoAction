@@ -163,10 +163,12 @@ public class Uploader {
     }
 
     private void compress() {
-        List<File> needToDelete = new ArrayList<>();
+        List<File> needToDelete = new ArrayList<>(FILES_IN_PACKAGE * 2);
+        List<UploadTask> pack = new ArrayList<>(FILES_IN_PACKAGE);
         while (!Thread.currentThread().isInterrupted() && isRunning.get()) {
             try {
-                List<UploadTask> pack = new ArrayList<>();
+                pack.clear();
+                needToDelete.clear();
                 lock.lock();
                 try {
                     if (compressQueue.size() < FILES_IN_PACKAGE) {
@@ -194,12 +196,11 @@ public class Uploader {
                          */
                         String zipName = userId + "_" + System.currentTimeMillis() + "_" + mZipIDCounter.getAndIncrement() + ".zip";
                         String metaName = zipName + ".meta";
-                        needToDelete.clear();
                         File zipFile = new File(zipFolder + zipName);
                         File metaFile = new File(zipFolder + metaName);
                         FileUtils.makeFile(zipFile);
                         FileUtils.makeFile(metaFile);
-                        int packedEntries = 0;
+                        List<TaskMetaBean> metas = new ArrayList<>(FILES_IN_PACKAGE);
                         try (ZipOutputStream os = new ZipOutputStream(new FileOutputStream(zipFile))) {
                             for (int i = 0; i < pack.size(); i++) {
                                 File file = pack.get(i).getFile();
@@ -214,8 +215,8 @@ public class Uploader {
                                         os.write(buffer, 0, len);
                                     }
                                     os.closeEntry();
-                                    // delete already packed files
-                                    packedEntries++;
+                                    // add meta info and mark already packed files for later deletion
+                                    metas.add(pack.get(i).getMeta().get(0));
                                     needToDelete.add(file);
                                     needToDelete.add(pack.get(i).getMetaFile());
                                 } catch (Exception e) {
@@ -223,11 +224,11 @@ public class Uploader {
                                 }
                             }
                         }
-                        Log.e(TAG, "compress packedEntries: " + packedEntries);
+                        Log.e(TAG, "compress packed entries: " + metas.size());
                         Log.e(TAG, "compress zip filename: " + zipName);
-                        if (packedEntries > 0) {
+                        if (metas.size() > 0) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                List<TaskMetaBean> metas = pack.stream().map((x) -> x.getMeta().get(0)).collect(Collectors.toList());
+//                                List<TaskMetaBean> metas = pack.stream().map((x) -> x.getMeta().get(0)).collect(Collectors.toList());
                                 FileUtils.writeStringToFile(gson.toJson(metas), metaFile);
                                 pushTask(new UploadTask(zipFile, metaFile, metas, false));
                             }
