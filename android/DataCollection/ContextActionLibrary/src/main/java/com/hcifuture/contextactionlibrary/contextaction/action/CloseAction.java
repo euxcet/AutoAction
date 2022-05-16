@@ -132,11 +132,9 @@ public class CloseAction extends BaseAction {
             if (logCollector != null) {
                 logCollector.addLog("Proximity_sensor:" + proximity_flag);
                 logCollector.addLog("Light_sensor:" + light_flag);
-                Log.e("proximity:","pro: "+proximity_flag+" light: "+light_flag);
                 for (ActionListener listener : actionListener) {
                     listener.onAction(new ActionResult("CloseStart"));
                 }
-                Log.e("proximity:","CloseStart");
                 send_flag = true;
             }
         }
@@ -153,7 +151,11 @@ public class CloseAction extends BaseAction {
         }
         if(upright_gyro) {
             if (logCollector != null) {
-                logCollector.addLog(System.currentTimeMillis() + " " + dist + " " + bright);
+                if(data.getType() == Sensor.TYPE_PROXIMITY)
+                    logCollector.addLog(data.getProximityTimestamp() + " " + dist + " " + bright);
+                else if(data.getType() == Sensor.TYPE_LIGHT) {
+                    logCollector.addLog(data.getEnvironmentBrightnessTimestamp() + " " + dist + " " + bright);
+                }
             }
         }
         if(dist == 0 ) {

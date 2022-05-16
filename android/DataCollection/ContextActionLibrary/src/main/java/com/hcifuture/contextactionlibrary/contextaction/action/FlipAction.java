@@ -35,6 +35,7 @@ public class FlipAction extends BaseAction {
     long gx_id; //最大gx的下标
     private float[] values, r, gravity, geomagnetic;
     boolean success_flag;
+    long value_timestamp;
 
     public FlipAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, LogCollector FlipLogCollector) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
@@ -83,6 +84,7 @@ public class FlipAction extends BaseAction {
             gravity[0] = data.getValues().get(0);
             gravity[1] = data.getValues().get(1);
             gravity[2] = data.getValues().get(2);
+            value_timestamp = data.getTimestamp();
             getValue(); //更新方位角
             if(abs(gravity[2])>20){
                 Log.i("FLIP","角速度过大"+abs(gravity[2]));
@@ -93,6 +95,7 @@ public class FlipAction extends BaseAction {
             geomagnetic[0] = data.getValues().get(0);
             geomagnetic[1] = data.getValues().get(1);
             geomagnetic[2] = data.getValues().get(2);
+            value_timestamp = data.getTimestamp();
             getValue();
         }
         else if(data.getType() == Sensor.TYPE_GYROSCOPE){
@@ -220,7 +223,7 @@ public class FlipAction extends BaseAction {
                 double roll = Math.toDegrees(values[2]);
 //                Log.i("FLIP","roll: "+Math.floor(roll)+"ptich: "+Math.floor(pitch));
                 if (logCollector != null) {
-                    logCollector.addLog(System.currentTimeMillis() + " " + azimuth + " " + pitch + " " + roll);
+                    logCollector.addLog(value_timestamp + " " + azimuth + " " + pitch + " " + roll);
                 }
                 if(pitch>40){
                     reset();
