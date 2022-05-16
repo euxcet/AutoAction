@@ -730,13 +730,15 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onAccessibilityEventDex(AccessibilityEvent event) {
-        final AccessibilityEvent event1 = AccessibilityEvent.obtain(event);
-        handler.post(() -> {
-            if (dataDistributor != null) {
-                dataDistributor.onAccessibilityEvent(event1);
+        if (handler != null) {
+            final AccessibilityEvent event1 = AccessibilityEvent.obtain(event);
+            handler.post(() -> {
+                if (dataDistributor != null) {
+                    dataDistributor.onAccessibilityEvent(event1);
+                }
                 event1.recycle();
-            }
-        });
+            });
+        }
     }
 
     public void onKeyEventDex(KeyEvent event) {
@@ -754,11 +756,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onBroadcastEventDex(BroadcastEvent event) {
-        handler.post(() -> {
-            if (dataDistributor != null) {
-                dataDistributor.onBroadcastEvent(event);
-            }
-        });
+        if (handler != null) {
+            handler.post(() -> {
+                if (dataDistributor != null) {
+                    dataDistributor.onBroadcastEvent(event);
+                }
+            });
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
