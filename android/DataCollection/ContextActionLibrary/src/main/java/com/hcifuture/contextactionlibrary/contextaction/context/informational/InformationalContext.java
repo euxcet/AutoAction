@@ -63,6 +63,8 @@ public class InformationalContext extends BaseContext {
     private long lastWindowChange = 0;
     private ThreadPoolExecutor threadPoolExecutor;
 
+    private long lastEventTime = 0;
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     public InformationalContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, LogCollector informationalLogCollector, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, contextListener, scheduledExecutorService, futureList);
@@ -202,6 +204,11 @@ public class InformationalContext extends BaseContext {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        // remove duplicated
+        if(event.getEventTime()==lastEventTime)
+            return;
+        lastEventTime = event.getEventTime();
+
         String eventString =event.toString();
         long eventTime  = System.currentTimeMillis();
         final String eventStr = ("timeStamp:"+eventTime+";"+eventString).replace("\n"," ");

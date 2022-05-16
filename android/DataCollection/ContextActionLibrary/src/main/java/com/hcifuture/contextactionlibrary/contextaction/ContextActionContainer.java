@@ -734,9 +734,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         handler.post(() -> {
             if (dataDistributor != null) {
                 dataDistributor.onAccessibilityEvent(event1);
+                event1.recycle();
             }
         });
-        event1.recycle();
     }
 
     public void onKeyEventDex(KeyEvent event) {
