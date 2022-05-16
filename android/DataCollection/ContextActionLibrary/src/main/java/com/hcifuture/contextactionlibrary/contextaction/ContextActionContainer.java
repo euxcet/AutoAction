@@ -519,7 +519,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         request.putString("getDeviceId", "");
         String userId = (String) requestListener.onRequest(request).getObject("getDeviceId");
 
-        uploader = new Uploader(mContext, scheduledExecutorService, futureList, userId);
+        uploader = new Uploader(mContext, scheduledExecutorService, futureList, userId, handler);
         clickTrigger = new ClickTrigger(mContext, collectorManager, scheduledExecutorService, futureList);
 
         Gson gson = new Gson();
