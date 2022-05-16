@@ -282,31 +282,37 @@ public class Uploader {
                 }
 
                 if (task != null) {
-                    NetworkUtils.uploadCollectedData(task, new Callback() {
-                        @Override
-                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                            if (task.getRemainingRetries() > 0) {
-                                task.setRemainingRetries(task.getRemainingRetries() - 1);
-                                task.setExpectedUploadTime(task.getExpectedUploadTime() + HOUR);
-                                if (pushTask(task) == UploaderStatus.QUEUE_IS_FULL) {
-                                    Log.e(TAG, task.getFile().getAbsolutePath()
-                                            + " could not be uploaded because the queue is full");
+                    try {
+                        if (task.getFile().exists()) {
+                            NetworkUtils.uploadCollectedData(task, new Callback() {
+                                @Override
+                                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                                    if (task.getRemainingRetries() > 0) {
+                                        task.setRemainingRetries(task.getRemainingRetries() - 1);
+                                        task.setExpectedUploadTime(task.getExpectedUploadTime() + HOUR);
+                                        if (pushTask(task) == UploaderStatus.QUEUE_IS_FULL) {
+                                            Log.e(TAG, task.getFile().getAbsolutePath()
+                                                    + " could not be uploaded because the queue is full");
+                                        }
+                                    } else {
+                                        Log.e(TAG, task.getFile().getAbsolutePath()
+                                                + " could not be uploaded because the maximum number of retries is reached");
+                                    }
                                 }
-                            } else {
-                                Log.e(TAG, task.getFile().getAbsolutePath()
-                                        + " could not be uploaded because the maximum number of retries is reached");
-                            }
-                        }
 
-                        @Override
-                        public void onResponse(@NonNull Call call, @NonNull Response response) {
-                            if (response.isSuccessful()) {
-                                Log.d(TAG, "Successfully uploaded " + task.getFile().getAbsolutePath());
-                                FileUtils.deleteFile(task.getFile(), "UPLOAD");
-                                FileUtils.deleteFile(task.getMetaFile(), "UPLOAD");
-                            }
+                                @Override
+                                public void onResponse(@NonNull Call call, @NonNull Response response) {
+                                    if (response.isSuccessful()) {
+                                        Log.d(TAG, "Successfully uploaded " + task.getFile().getAbsolutePath());
+                                        FileUtils.deleteFile(task.getFile(), "UPLOAD");
+                                        FileUtils.deleteFile(task.getMetaFile(), "UPLOAD");
+                                    }
+                                }
+                            });
                         }
-                    });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
