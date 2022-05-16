@@ -730,11 +730,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onAccessibilityEventDex(AccessibilityEvent event) {
+        final AccessibilityEvent event1 = AccessibilityEvent.obtain(event);
         handler.post(() -> {
             if (dataDistributor != null) {
-                dataDistributor.onAccessibilityEvent(event);
+                dataDistributor.onAccessibilityEvent(event1);
             }
         });
+        event1.recycle();
     }
 
     public void onKeyEventDex(KeyEvent event) {
