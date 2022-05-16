@@ -135,8 +135,8 @@ public class Uploader {
         return UploaderStatus.OK;
     }
 
-    public UploaderStatus pushTask(UploadTask task, boolean needCompression) {
-        if (needCompression) {
+    public UploaderStatus pushTask(UploadTask task) {
+        if (task.isNeedCompression()) {
             lock.lock();
             try {
                 if (compressQueue.size() >= QUEUE_ELEMENT_LIMIT) {
@@ -229,7 +229,7 @@ public class Uploader {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                 List<TaskMetaBean> metas = pack.stream().map((x) -> x.getMeta().get(0)).collect(Collectors.toList());
                                 FileUtils.writeStringToFile(gson.toJson(metas), metaFile);
-                                pushTask(new UploadTask(zipFile, metaFile, metas), false);
+                                pushTask(new UploadTask(zipFile, metaFile, metas, false));
                             }
                             for (int i = 0; i < needToDelete.size(); i++) {
                                 FileUtils.deleteFile(needToDelete.get(i), "PACK");
@@ -287,7 +287,7 @@ public class Uploader {
                             if (task.getRemainingRetries() > 0) {
                                 task.setRemainingRetries(task.getRemainingRetries() - 1);
                                 task.setExpectedUploadTime(task.getExpectedUploadTime() + HOUR);
-                                if (pushTask(task, true) == UploaderStatus.QUEUE_IS_FULL) {
+                                if (pushTask(task) == UploaderStatus.QUEUE_IS_FULL) {
                                     Log.e(TAG, task.getFile().getAbsolutePath()
                                             + " could not be uploaded because the queue is full");
                                 }
@@ -340,14 +340,14 @@ public class Uploader {
                                     List<TaskMetaBean> meta = gson.fromJson(content, type);
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                         if (meta.stream().noneMatch(v -> v.getTimestamp() >= timestamp)) {
-                                            pushTask(new UploadTask(file, metaFile, meta), false);
+                                            pushTask(new UploadTask(file, metaFile, meta, false));
                                         }
                                     }
                                 } else {
                                     String content = FileUtils.getFileContent(metaFile.getAbsolutePath());
                                     TaskMetaBean meta = gson.fromJson(content, TaskMetaBean.class);
                                     if (meta.getTimestamp() < timestamp) {
-                                        pushTask(new UploadTask(file, metaFile, meta), true);
+                                        pushTask(new UploadTask(file, metaFile, meta, true));
                                     }
                                 }
                             }

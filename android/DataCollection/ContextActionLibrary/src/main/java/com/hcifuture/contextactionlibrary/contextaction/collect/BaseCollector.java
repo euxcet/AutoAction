@@ -89,7 +89,7 @@ public abstract class BaseCollector {
         meta.setContextAction(JSONUtils.resultToMap(contextOrAction));
         FileUtils.writeStringToFile(new Gson().toJson(meta), metaFile);
 
-        uploader.pushTask(new UploadTask(file, metaFile, meta), true);
+        uploader.pushTask(new UploadTask(file, metaFile, meta, true));
         return collectorResult;
     }
 
