@@ -44,11 +44,9 @@ public class DataDistributor implements CollectorListener {
 
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if (isRunning.get()) {
-            final AccessibilityEvent event1 = AccessibilityEvent.obtain(event);
             for (BaseContext context : contexts) {
-                context.onAccessibilityEvent(event1);
+                context.onAccessibilityEvent(event);
             }
-            event1.recycle();
         }
     }
 
