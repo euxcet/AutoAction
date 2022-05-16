@@ -275,6 +275,7 @@ public class InformationalContext extends BaseContext {
         }
 
         float model_result = eventAnalyzer.analyze(eventStr);
+        addTaskLog(new LogItem(eventString+"--"+model_result,"accessibilityEvent",new Date()));
         Log.i("InformationalContext",eventString+"\n"+model_result);
 
         if(model_result>0.5 && !windowStable)
