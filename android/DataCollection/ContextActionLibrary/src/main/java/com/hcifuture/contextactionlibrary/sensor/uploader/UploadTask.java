@@ -11,31 +11,34 @@ public class UploadTask implements Comparable<UploadTask> {
     private File metaFile;
     private List<TaskMetaBean> meta;
     private int remainingRetries;
+    private final boolean needCompression;
 
     private long expectedUploadTime;
 
-    public UploadTask(File file, File metaFile, TaskMetaBean meta, int remainingRetries) {
+    public UploadTask(File file, File metaFile, TaskMetaBean meta, int remainingRetries, boolean needCompression) {
         this.file = file;
         this.metaFile = metaFile;
         this.meta = Collections.singletonList(meta);
         this.remainingRetries = remainingRetries;
         this.expectedUploadTime = System.currentTimeMillis();
+        this.needCompression = needCompression;
     }
 
-    public UploadTask(File file, File metaFile, List<TaskMetaBean> meta, int remainingRetries) {
+    public UploadTask(File file, File metaFile, List<TaskMetaBean> meta, int remainingRetries, boolean needCompression) {
         this.file = file;
         this.metaFile = metaFile;
         this.meta = meta;
         this.remainingRetries = remainingRetries;
         this.expectedUploadTime = System.currentTimeMillis();
+        this.needCompression = needCompression;
     }
 
-    public UploadTask(File file, File metaFile, TaskMetaBean meta) {
-        this(file, metaFile, meta, DEFAULT_REMAINING_RETRIES);
+    public UploadTask(File file, File metaFile, TaskMetaBean meta, boolean needCompression) {
+        this(file, metaFile, meta, DEFAULT_REMAINING_RETRIES, needCompression);
     }
 
-    public UploadTask(File file, File metaFile, List<TaskMetaBean> meta) {
-        this(file, metaFile, meta, DEFAULT_REMAINING_RETRIES);
+    public UploadTask(File file, File metaFile, List<TaskMetaBean> meta, boolean needCompression) {
+        this(file, metaFile, meta, DEFAULT_REMAINING_RETRIES, needCompression);
     }
 
     @Override
@@ -85,5 +88,9 @@ public class UploadTask implements Comparable<UploadTask> {
 
     public void setMetaFile(File metaFile) {
         this.metaFile = metaFile;
+    }
+
+    public boolean isNeedCompression() {
+        return needCompression;
     }
 }
