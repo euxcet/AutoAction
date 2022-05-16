@@ -231,11 +231,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
          */
 
-        // clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Bluetooth));
         this.futureList = new ArrayList<>();
-
-        // scheduleCleanData();
-
         mRegURIs = new ArrayList<>();
     }
 
@@ -274,6 +270,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
          */
 
+        if (dataDistributor != null) {
+            dataDistributor.start();
+        }
+
         for (BaseAction action: actions) {
             action.start();
         }
@@ -285,11 +285,6 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         if (collectorManager != null) {
             collectorManager.resume();
         }
-        /*
-        if (clickTrigger != null) {
-            clickTrigger.resume();
-        }
-         */
     }
 
     public void stop() {
@@ -310,25 +305,18 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
         mRegURIs.clear();
 
-        /*
-        if (openSensor) {
-            for (BaseSensorManager sensorManager: sensorManagers) {
-                sensorManager.stop();
-            }
+        if (dataDistributor != null) {
+            dataDistributor.stop();
         }
-         */
+
         for (BaseAction action: actions) {
             action.stop();
         }
+
         for (BaseContext context: contexts) {
             context.stop();
         }
-        /*
-        if (clickTrigger != null) {
-            clickTrigger.pause();
-            clickTrigger.close();
-        }
-         */
+
         if (collectorManager != null) {
             if (dataDistributor != null) {
                 collectorManager.unregisterListener(dataDistributor);
@@ -354,17 +342,18 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         for (BaseContext context: contexts) {
             context.stop();
         }
+        if (dataDistributor != null) {
+            dataDistributor.stop();
+        }
         if (collectorManager != null) {
             collectorManager.pause();
         }
-        /*
-        if (clickTrigger != null) {
-            clickTrigger.pause();
-        }
-         */
     }
 
     public void resume() {
+        if (dataDistributor != null) {
+            dataDistributor.start();
+        }
         for (BaseAction action: actions) {
             action.start();
         }
@@ -377,34 +366,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         if (contextFuture != null && (contextFuture.isDone() || contextFuture.isCancelled())) {
             monitorContext();
         }
-        /*
-        if (clickTrigger != null) {
-            clickTrigger.resume();
-        }
-         */
         if (collectorManager != null) {
             collectorManager.resume();
         }
-    }
-
-    private List<BaseAction> selectBySensorTypeAction(List<BaseAction> actions, SensorType sensorType) {
-        List<BaseAction> result = new ArrayList<>();
-        for (BaseAction action: actions) {
-            if (action.getConfig().getSensorType().contains(sensorType)) {
-                result.add(action);
-            }
-        }
-        return result;
-    }
-
-    private List<BaseContext> selectBySensorTypeContext(List<BaseContext> contexts, SensorType sensorType) {
-        List<BaseContext> result = new ArrayList<>();
-        for (BaseContext context: contexts) {
-            if (context.getConfig().getSensorType().contains(sensorType)) {
-                result.add(context);
-            }
-        }
-        return result;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -538,17 +502,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private void setLogCollector(Class c, LogCollector logCollector) {
         for (BaseContext context: contexts) {
             if (c.isInstance(context)) {
-//                if (context.getLogCollector() == null) {
                 context.setLogCollector(logCollector);
-//                }
             }
         }
 
         for (BaseAction action: actions) {
             if (c.isInstance(action)) {
-//                if (action.getLogCollector() == null) {
                 action.setLogCollector(logCollector);
-//                }
             }
         }
     }
@@ -767,84 +727,37 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onSensorChangedDex(SensorEvent event) {
-        int type = event.sensor.getType();
-        /*
-        for (BaseSensorManager sensorManager: sensorManagers) {
-            if (sensorManager.getSensorTypeList() != null && sensorManager.getSensorTypeList().contains(type)) {
-                sensorManager.onSensorChangedDex(event);
-            }
-        }
-         */
     }
 
     public void onAccessibilityEventDex(AccessibilityEvent event) {
-        final AccessibilityEvent event1 = AccessibilityEvent.obtain(event);
         handler.post(() -> {
-            for (BaseContext context: contexts) {
-                context.onAccessibilityEvent(event1);
+            if (dataDistributor != null) {
+                dataDistributor.onAccessibilityEvent(event);
             }
-            event1.recycle();
         });
     }
 
     public void onKeyEventDex(KeyEvent event) {
-        handler.post(() -> {
-            BroadcastEvent bc_event = new BroadcastEvent(
-                    System.currentTimeMillis(),
-                    "KeyEvent",
-                    "KeyEvent://"+event.getAction()+"/"+event.getKeyCode()
-            );
-            bc_event.getExtras().putInt("action", event.getAction());
-            bc_event.getExtras().putInt("code", event.getKeyCode());
-            bc_event.getExtras().putInt("source", event.getSource());
-            bc_event.getExtras().putLong("eventTime", event.getEventTime());
-            bc_event.getExtras().putLong("downTime", event.getDownTime());
-            onBroadcastEventDex(bc_event);
-        });
+        BroadcastEvent bc_event = new BroadcastEvent(
+                System.currentTimeMillis(),
+                "KeyEvent",
+                "KeyEvent://"+event.getAction()+"/"+event.getKeyCode()
+        );
+        bc_event.getExtras().putInt("action", event.getAction());
+        bc_event.getExtras().putInt("code", event.getKeyCode());
+        bc_event.getExtras().putInt("source", event.getSource());
+        bc_event.getExtras().putLong("eventTime", event.getEventTime());
+        bc_event.getExtras().putLong("downTime", event.getDownTime());
+        onBroadcastEventDex(bc_event);
     }
 
     public void onBroadcastEventDex(BroadcastEvent event) {
-        for (BaseContext context: contexts) {
-            context.onBroadcastEvent(event);
-        }
-    }
-
-    /*
-    private void scheduleCleanData() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH),3, 0, 0);
-        Date date = calendar.getTime();
-        if (date.before(new Date())) {
-            calendar.add(Calendar.DATE, 1);
-            date = calendar.getTime();
-        }
-
-        Timer timer= new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (clickTrigger != null) {
-                    clickTrigger.cleanData();
-                }
-                Log.e("TapTapCollector", "triggered");
+        handler.post(() -> {
+            if (dataDistributor != null) {
+                dataDistributor.onBroadcastEvent(event);
             }
-        }, date, 24 * 60 * 60 * 1000);
-
+        });
     }
-     */
-
-    /*
-    @Override
-    public void onActionRecognized(ActionResult action) {
-        if (action.getAction().equals("TapTapConfirmed")) {
-            markTimestamp = action.getTimestamp();
-            tapTapAction.onConfirmed();
-        }
-        else if (action.getAction().equals("TopTap")) {
-            markTimestamp = action.getTimestamp();
-        }
-    }
-     */
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
