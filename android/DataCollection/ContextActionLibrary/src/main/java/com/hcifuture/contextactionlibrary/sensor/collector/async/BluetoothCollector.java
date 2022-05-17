@@ -172,10 +172,18 @@ public class BluetoothCollector extends AsynchronousCollector {
     private boolean stopScan() {
         boolean ret = true;
         if (bluetoothLeScanner != null) {
-            bluetoothLeScanner.stopScan(leScanCallback);
+            try {
+                bluetoothLeScanner.stopScan(leScanCallback);
+            } catch (Exception e) {
+                ret = false;
+            }
         }
         if (bluetoothAdapter != null) {
-            ret = bluetoothAdapter.cancelDiscovery();
+            try {
+                ret = bluetoothAdapter.cancelDiscovery();
+            } catch (Exception e) {
+                ret = false;
+            }
         }
         return ret;
     }
