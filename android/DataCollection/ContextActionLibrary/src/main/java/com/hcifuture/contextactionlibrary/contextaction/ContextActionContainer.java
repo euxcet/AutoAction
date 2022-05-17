@@ -76,6 +76,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 @RequiresApi(api = Build.VERSION_CODES.N)
@@ -119,6 +121,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     private CustomBroadcastReceiver mBroadcastReceiver;
     private CustomContentObserver mContentObserver;
     private final List<Uri> mRegURIs;
+    private final Lock contextLock = new ReentrantLock();
 
     // listening
     private final Uri [] listenedURIs = {
@@ -495,7 +498,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             }
         }
 
-        this.dataDistributor = new DataDistributor(actions, contexts);
+        this.dataDistributor = new DataDistributor(actions, contexts, contextLock);
         collectorManager.registerListener(dataDistributor);
     }
 
@@ -514,192 +517,197 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void startCollectors() {
-        // get unique user ID
-        RequestConfig request = new RequestConfig();
-        request.putString("getDeviceId", "");
-        String userId = (String) requestListener.onRequest(request).getObject("getDeviceId");
-        if ("Unknown".equals(userId)) {
-            userId = "Unknown_" + System.currentTimeMillis();
-        }
+        try {
+            contextLock.lock();
+            // get unique user ID
+            RequestConfig request = new RequestConfig();
+            request.putString("getDeviceId", "");
+            String userId = (String) requestListener.onRequest(request).getObject("getDeviceId");
+            if ("Unknown".equals(userId)) {
+                userId = "Unknown_" + System.currentTimeMillis();
+            }
 
-        uploader = new Uploader(mContext, scheduledExecutorService, futureList, userId, handler);
-        clickTrigger = new ClickTrigger(mContext, collectorManager, scheduledExecutorService, futureList);
+            uploader = new Uploader(mContext, scheduledExecutorService, futureList, userId, handler);
+            clickTrigger = new ClickTrigger(mContext, collectorManager, scheduledExecutorService, futureList);
 
-        Gson gson = new Gson();
-        ContextActionConfigBean config = gson.fromJson(
-                FileUtils.getFileContent(SAVE_PATH + "config.json"),
-                ContextActionConfigBean.class
-        );
+            Gson gson = new Gson();
+            ContextActionConfigBean config = gson.fromJson(
+                    FileUtils.getFileContent(SAVE_PATH + "config.json"),
+                    ContextActionConfigBean.class
+            );
 
-        // cwh: do not use Arrays.asList() to assign to collectors,
-        // because it returns a fixed-size list backed by the specified array and we cannot perform add()
-        collectors = new ArrayList<>();
-        TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader);
-        collectors.add(timedCollector);
-        collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader));
-        collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader));
+            // cwh: do not use Arrays.asList() to assign to collectors,
+            // because it returns a fixed-size list backed by the specified array and we cannot perform add()
+            collectors = new ArrayList<>();
+            TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader);
+            collectors.add(timedCollector);
+            collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader));
+            collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader));
 
 
-        if (config != null) {
-            // firstly schedule timed behavior, because it may use log to record contexts and actions
-            if (config.getTimed() != null) {
-                for (ContextActionConfigBean.TimedConfigBean bean : config.getTimed()) {
-                    if (bean == null) {
-                        continue;
-                    }
-                    if (bean.getName() == null) {
-                        continue;
-                    }
-                    if ("TriggerLog".equals(bean.getBuiltInSensor())) {
-                        // Trigger log records all trigger events
-                        LogCollector triggerLogCollector = collectorManager.newLogCollector("Trigger", 8192);
-                        clickTrigger.setTriggerLogCollector(triggerLogCollector);
-                        timedCollector.scheduleTimedLogUpload(triggerLogCollector, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
-                    } else if ("ContextActionLog".equals(bean.getBuiltInSensor())) {
-                        // ContextAction log records all contexts and actions
-                        this.contextActionLogCollector = collectorManager.newLogCollector("ContextAction", 8192);
-                        timedCollector.scheduleTimedLogUpload(contextActionLogCollector, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
-                    } else {
-                        CollectorManager.CollectorType type;
-                        try {
-                            type = CollectorManager.CollectorType.valueOf(bean.getBuiltInSensor());
-                        } catch (Exception e) {
+            if (config != null) {
+                // firstly schedule timed behavior, because it may use log to record contexts and actions
+                if (config.getTimed() != null) {
+                    for (ContextActionConfigBean.TimedConfigBean bean : config.getTimed()) {
+                        if (bean == null) {
                             continue;
                         }
-                        if (type != CollectorManager.CollectorType.Log) {
-                            TriggerConfig triggerConfig = bean.getTriggerConfig();
-                            if (triggerConfig == null) {
-                                triggerConfig = new TriggerConfig();
+                        if (bean.getName() == null) {
+                            continue;
+                        }
+                        if ("TriggerLog".equals(bean.getBuiltInSensor())) {
+                            // Trigger log records all trigger events
+                            LogCollector triggerLogCollector = collectorManager.newLogCollector("Trigger", 8192);
+                            clickTrigger.setTriggerLogCollector(triggerLogCollector);
+                            timedCollector.scheduleTimedLogUpload(triggerLogCollector, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                        } else if ("ContextActionLog".equals(bean.getBuiltInSensor())) {
+                            // ContextAction log records all contexts and actions
+                            this.contextActionLogCollector = collectorManager.newLogCollector("ContextAction", 8192);
+                            timedCollector.scheduleTimedLogUpload(contextActionLogCollector, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                        } else {
+                            CollectorManager.CollectorType type;
+                            try {
+                                type = CollectorManager.CollectorType.valueOf(bean.getBuiltInSensor());
+                            } catch (Exception e) {
+                                continue;
                             }
-                            if (bean.isFixedDelay()) {
-                                timedCollector.scheduleFixedDelayUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
-                            } else {
-                                timedCollector.scheduleFixedRateUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                            if (type != CollectorManager.CollectorType.Log) {
+                                TriggerConfig triggerConfig = bean.getTriggerConfig();
+                                if (triggerConfig == null) {
+                                    triggerConfig = new TriggerConfig();
+                                }
+                                if (bean.isFixedDelay()) {
+                                    timedCollector.scheduleFixedDelayUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                                } else {
+                                    timedCollector.scheduleFixedRateUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            if (config.getContext() != null) {
-                for (ContextActionConfigBean.ContextConfigBean bean : config.getContext()) {
-                    if (bean == null) {
-                        continue;
-                    }
-                    if (bean.getBuiltInContext() == null) {
-                        continue;
-                    }
-                    ContextConfig contextConfig = new ContextConfig();
-                    contextConfig.setContext(bean.getBuiltInContext());
-                    contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
-                    for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
-                        contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
-                    }
-                    for (int i = 0; i < bean.getLongParamKey().size(); i++) {
-                        contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
-                    }
-                    for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
-                        contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
-                    }
-                    for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
-                        contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
-                    }
-                    Number initialDelay = contextConfig.getValue("intialDelay");
-                    Number period = contextConfig.getValue("period");
-                    String name = contextConfig.getString("name");
-                    switch (contextConfig.getContext()) {
-                        case "Informational":
-                            LogCollector informationLogCollector = collectorManager.newLogCollector("Informational", 8192);
-                            contexts.add(new InformationalContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), informationLogCollector, scheduledExecutorService, futureList));
-//                            setLogCollector(InformationalContext.class, informationLogCollector);
-                            collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, informationLogCollector));
-                            timedCollector.scheduleTimedLogUpload(
-                                    informationLogCollector,
-                                    (period == null) ? 30 * 60000 : period.longValue(),
-                                    (initialDelay == null) ? 60000 : initialDelay.longValue(),
-                                    (name == null) ? "Informational" : name
-                            );
-                            break;
-                        case "Config":
-                            LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
-                            contexts.add(new ConfigContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), configLogCollector, scheduledExecutorService, futureList));
-//                            setLogCollector(ConfigContext.class, configLogCollector);
-                            timedCollector.scheduleTimedLogUpload(
-                                    configLogCollector,
-                                    (period == null) ? 30 * 60000 : period.longValue(),
-                                    (initialDelay == null) ? 5000 : initialDelay.longValue(),
-                                    (name == null) ? "Config" : name
-                            );
-                            break;
-                        default:
-                            break;
+                if (config.getContext() != null) {
+                    for (ContextActionConfigBean.ContextConfigBean bean : config.getContext()) {
+                        if (bean == null) {
+                            continue;
+                        }
+                        if (bean.getBuiltInContext() == null) {
+                            continue;
+                        }
+                        ContextConfig contextConfig = new ContextConfig();
+                        contextConfig.setContext(bean.getBuiltInContext());
+                        contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                        for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                            contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                        }
+                        for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                            contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                        }
+                        for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                            contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                        }
+                        for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                            contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                        }
+                        Number initialDelay = contextConfig.getValue("intialDelay");
+                        Number period = contextConfig.getValue("period");
+                        String name = contextConfig.getString("name");
+                        switch (contextConfig.getContext()) {
+                            case "Informational":
+                                LogCollector informationLogCollector = collectorManager.newLogCollector("Informational", 8192);
+                                contexts.add(new InformationalContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), informationLogCollector, scheduledExecutorService, futureList));
+                                //                            setLogCollector(InformationalContext.class, informationLogCollector);
+                                collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, informationLogCollector));
+                                timedCollector.scheduleTimedLogUpload(
+                                        informationLogCollector,
+                                        (period == null) ? 30 * 60000 : period.longValue(),
+                                        (initialDelay == null) ? 60000 : initialDelay.longValue(),
+                                        (name == null) ? "Informational" : name
+                                );
+                                break;
+                            case "Config":
+                                LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
+                                contexts.add(new ConfigContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), configLogCollector, scheduledExecutorService, futureList));
+                                //                            setLogCollector(ConfigContext.class, configLogCollector);
+                                timedCollector.scheduleTimedLogUpload(
+                                        configLogCollector,
+                                        (period == null) ? 30 * 60000 : period.longValue(),
+                                        (initialDelay == null) ? 5000 : initialDelay.longValue(),
+                                        (name == null) ? "Config" : name
+                                );
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
-            }
 
-            if (config.getAction() != null) {
-                for (ContextActionConfigBean.ActionConfigBean bean : config.getAction()) {
-                    if (bean == null) {
-                        continue;
-                    }
-                    if (bean.getBuiltInAction() == null) {
-                        continue;
-                    }
-                    ActionConfig actionConfig = new ActionConfig();
-                    actionConfig.setAction(bean.getBuiltInAction());
-                    actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
-                    for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
-                        actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
-                    }
-                    for (int i = 0; i < bean.getLongParamKey().size(); i++) {
-                        actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
-                    }
-                    for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
-                        actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
-                    }
-                    for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
-                        actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
-                    }
-                    switch (actionConfig.getAction()) {
-                        case "Flip":
-                            Log.e("upload:","register Flip LogCollector");
-                            LogCollector flipLogCollector = collectorManager.newLogCollector("Flip", 800);
-                            collectors.add(new FlipCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, flipLogCollector));
-                            setLogCollector(FlipAction.class, flipLogCollector);
-                            break;
-                        case "Close":
-                            Log.e("upload:","register Close LogCollector");
-                            LogCollector closeLogCollector = collectorManager.newLogCollector("Close", 800);
-                            collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, closeLogCollector));
-                            setLogCollector(CloseAction.class, closeLogCollector);
-                            break;
-                        default:
-                            break;
+                if (config.getAction() != null) {
+                    for (ContextActionConfigBean.ActionConfigBean bean : config.getAction()) {
+                        if (bean == null) {
+                            continue;
+                        }
+                        if (bean.getBuiltInAction() == null) {
+                            continue;
+                        }
+                        ActionConfig actionConfig = new ActionConfig();
+                        actionConfig.setAction(bean.getBuiltInAction());
+                        actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                        for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                            actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                        }
+                        for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                            actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                        }
+                        for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                            actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                        }
+                        for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                            actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                        }
+                        switch (actionConfig.getAction()) {
+                            case "Flip":
+                                Log.e("upload:", "register Flip LogCollector");
+                                LogCollector flipLogCollector = collectorManager.newLogCollector("Flip", 800);
+                                collectors.add(new FlipCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, flipLogCollector));
+                                setLogCollector(FlipAction.class, flipLogCollector);
+                                break;
+                            case "Close":
+                                Log.e("upload:", "register Close LogCollector");
+                                LogCollector closeLogCollector = collectorManager.newLogCollector("Close", 800);
+                                collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, closeLogCollector));
+                                setLogCollector(CloseAction.class, closeLogCollector);
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
-            }
 
-            // register broadcast receiver
-            IntentFilter intentFilter = new IntentFilter();
-            if (config.getListenedSystemActions() != null) {
-                config.getListenedSystemActions().stream().filter(Objects::nonNull).forEach(intentFilter::addAction);
-            }
-            if (!config.isOverrideSystemActions()) {
-                Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
-            }
-            mContext.registerReceiver(mBroadcastReceiver, intentFilter, null, handler);
-            Log.e("OverrideSystemActions", Boolean.toString(config.isOverrideSystemActions()));
-            intentFilter.actionsIterator().forEachRemaining(item -> Log.e("Register broadcast", item));
+                // register broadcast receiver
+                IntentFilter intentFilter = new IntentFilter();
+                if (config.getListenedSystemActions() != null) {
+                    config.getListenedSystemActions().stream().filter(Objects::nonNull).forEach(intentFilter::addAction);
+                }
+                if (!config.isOverrideSystemActions()) {
+                    Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
+                }
+                mContext.registerReceiver(mBroadcastReceiver, intentFilter, null, handler);
+                Log.e("OverrideSystemActions", Boolean.toString(config.isOverrideSystemActions()));
+                intentFilter.actionsIterator().forEachRemaining(item -> Log.e("Register broadcast", item));
 
-            // register content observer
-            if (config.getListenedSystemURIs() != null) {
-                config.getListenedSystemURIs().stream().filter(Objects::nonNull).map(Uri::parse).forEach(this::registerURI);
+                // register content observer
+                if (config.getListenedSystemURIs() != null) {
+                    config.getListenedSystemURIs().stream().filter(Objects::nonNull).map(Uri::parse).forEach(this::registerURI);
+                }
+                if (!config.isOverrideSystemURIs()) {
+                    Arrays.stream(listenedURIs).forEach(this::registerURI);
+                }
+                Log.e("OverrideSystemURIs", Boolean.toString(config.isOverrideSystemURIs()));
+                mRegURIs.forEach(uri -> Log.e("Register URI", uri.toString()));
             }
-            if (!config.isOverrideSystemURIs()) {
-                Arrays.stream(listenedURIs).forEach(this::registerURI);
-            }
-            Log.e("OverrideSystemURIs", Boolean.toString(config.isOverrideSystemURIs()));
-            mRegURIs.forEach(uri -> Log.e("Register URI", uri.toString()));
+        } finally {
+            contextLock.unlock();
         }
     }
 
