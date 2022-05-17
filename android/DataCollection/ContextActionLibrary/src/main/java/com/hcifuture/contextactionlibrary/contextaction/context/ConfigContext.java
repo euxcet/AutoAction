@@ -137,118 +137,126 @@ public class ConfigContext extends BaseContext {
         boolean record = false;
         JSONObject json = new JSONObject();
 
-        if ("ContentChange".equals(type)) {
-            record = true;
-            if (!"uri_null".equals(action)) {
-                Uri uri = Uri.parse(action);
+        try {
+            if ("ContentChange".equals(type)) {
+                record = true;
+                if (!"uri_null".equals(action)) {
+                    Uri uri = Uri.parse(action);
 
-                String database_key = uri.getLastPathSegment();
-                String inter = uri.getPathSegments().get(0);
-                if ("system".equals(inter)) {
-                    tag = Settings.System.getString(mContext.getContentResolver(), database_key);
-                } else if ("global".equals(inter)) {
-                    tag = Settings.Global.getString(mContext.getContentResolver(), database_key);
-                } else if ("secure".equals(inter)) {
-                    tag = Settings.Secure.getString(mContext.getContentResolver(), database_key);
-                }
-
-                int value = Settings.System.getInt(mContext.getContentResolver(), database_key, 0);
-
-                // record special information
-                if (Settings.System.SCREEN_BRIGHTNESS.equals(database_key)) {
-                    // record brightness value difference and update
-                    int diff = value - brightness;
-                    JSONUtils.jsonPut(json, "diff", diff);
-                    brightness = value;
-                    // record brightness mode
-                    int mode = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, -1);
-                    if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL) {
-                        JSONUtils.jsonPut(json, "mode", "man");
-                    } else if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
-                        JSONUtils.jsonPut(json, "mode", "auto");
-                    } else {
-                        JSONUtils.jsonPut(json, "mode", "unknown");
+                    String database_key = uri.getLastPathSegment();
+                    String inter = uri.getPathSegments().get(0);
+                    if ("system".equals(inter)) {
+                        tag = Settings.System.getString(mContext.getContentResolver(), database_key);
+                    } else if ("global".equals(inter)) {
+                        tag = Settings.Global.getString(mContext.getContentResolver(), database_key);
+                    } else if ("secure".equals(inter)) {
+                        tag = Settings.Secure.getString(mContext.getContentResolver(), database_key);
                     }
-                    notifyContext(NEED_NONIMU, timestamp, logID, "screen brightness change");
-                } else if (database_key.startsWith("volume_")) {
-                    if (!volume.containsKey(database_key)) {
-                        // record new volume value
-                        volume.put(database_key, value);
-                    }
-                    // record volume value difference and update
-                    int diff = value - volume.put(database_key, value);
-                    JSONUtils.jsonPut(json, "diff", diff);
-                    notifyContext(NEED_AUDIO, timestamp, logID, "volume change: " + database_key);
-                    notifyContext(NEED_SCAN, timestamp, logID, "volume change: " + database_key);
-                } else if (Settings.Global.BLUETOOTH_ON.equals(database_key) && value == 1) {
-//                    notify(NEED_SCAN, timestamp, logID, "Bluetooth on via global setting");
-                } else if (Settings.Global.WIFI_ON.equals(database_key) && value == 2) {
-//                    notify(NEED_SCAN, timestamp, logID, "Wifi on via global setting");
-                }
-            }
-        } else if ("BroadcastReceive".equals(type)) {
-            record = true;
-            switch (action) {
-                case Intent.ACTION_CONFIGURATION_CHANGED:
-                    Configuration config = mContext.getResources().getConfiguration();
-                    JSONUtils.jsonPut(json, "configuration", config.toString());
-                    JSONUtils.jsonPut(json, "orientation", config.orientation);
-                    break;
-                case Intent.ACTION_SCREEN_OFF:
-                case Intent.ACTION_SCREEN_ON:
-                    // ref: https://stackoverflow.com/a/17348755/11854304
-                    DisplayManager dm = (DisplayManager) mContext.getSystemService(Context.DISPLAY_SERVICE);
-                    if (dm != null) {
-                        Display[] displays = dm.getDisplays();
-                        int [] states = new int[displays.length];
-                        for (int i = 0; i < displays.length; i++) {
-                            states[i] = displays[i].getState();
+
+                    int value = Settings.System.getInt(mContext.getContentResolver(), database_key, 0);
+
+                    // record special information
+                    if (Settings.System.SCREEN_BRIGHTNESS.equals(database_key)) {
+                        // record brightness value difference and update
+                        int diff = value - brightness;
+                        JSONUtils.jsonPut(json, "diff", diff);
+                        brightness = value;
+                        // record brightness mode
+                        int mode = Settings.System.getInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, -1);
+                        if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL) {
+                            JSONUtils.jsonPut(json, "mode", "man");
+                        } else if (mode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
+                            JSONUtils.jsonPut(json, "mode", "auto");
+                        } else {
+                            JSONUtils.jsonPut(json, "mode", "unknown");
                         }
-                        JSONUtils.jsonPut(json, "displays", states);
+                        notifyContext(NEED_NONIMU, timestamp, logID, "screen brightness change");
+                    } else if (database_key.startsWith("volume_")) {
+                        if (!volume.containsKey(database_key)) {
+                            // record new volume value
+                            volume.put(database_key, value);
+                        }
+                        // record volume value difference and update
+                        int diff = value - volume.put(database_key, value);
+                        JSONUtils.jsonPut(json, "diff", diff);
+                        notifyContext(NEED_AUDIO, timestamp, logID, "volume change: " + database_key);
+                        notifyContext(NEED_SCAN, timestamp, logID, "volume change: " + database_key);
+                    } else if (Settings.Global.BLUETOOTH_ON.equals(database_key) && value == 1) {
+//                    notify(NEED_SCAN, timestamp, logID, "Bluetooth on via global setting");
+                    } else if (Settings.Global.WIFI_ON.equals(database_key) && value == 2) {
+//                    notify(NEED_SCAN, timestamp, logID, "Wifi on via global setting");
                     }
-                    break;
-            }
-            if (Intent.ACTION_SCREEN_ON.equals(action)) {
-                notifyContext(NEED_SCAN, timestamp, logID, "screen on");
-            } else if (WifiManager.WIFI_STATE_CHANGED_ACTION.equals(action) && extras.getInt(WifiManager.EXTRA_WIFI_STATE) == WifiManager.WIFI_STATE_ENABLED) {
-                notifyContext(NEED_SCAN, timestamp, logID, "Wifi on via broadcast");
-            } else if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action) && extras.getInt(BluetoothAdapter.EXTRA_STATE) == BluetoothAdapter.STATE_ON) {
-                notifyContext(NEED_SCAN, timestamp, logID, "Bluetooth on via broadcast");
-            }
-        } else if ("KeyEvent".equals(type)) {
-            record = true;
-            int keycode = extras.getInt("code");
-            JSONUtils.jsonPut(json, "keycodeString", KeyEvent.keyCodeToString(keycode));
+                }
+            } else if ("BroadcastReceive".equals(type)) {
+                record = true;
+                switch (action) {
+                    case Intent.ACTION_CONFIGURATION_CHANGED:
+                        Configuration config = mContext.getResources().getConfiguration();
+                        JSONUtils.jsonPut(json, "configuration", config.toString());
+                        JSONUtils.jsonPut(json, "orientation", config.orientation);
+                        break;
+                    case Intent.ACTION_SCREEN_OFF:
+                    case Intent.ACTION_SCREEN_ON:
+                        // ref: https://stackoverflow.com/a/17348755/11854304
+                        DisplayManager dm = (DisplayManager) mContext.getSystemService(Context.DISPLAY_SERVICE);
+                        if (dm != null) {
+                            Display[] displays = dm.getDisplays();
+                            int[] states = new int[displays.length];
+                            for (int i = 0; i < displays.length; i++) {
+                                states[i] = displays[i].getState();
+                            }
+                            JSONUtils.jsonPut(json, "displays", states);
+                        }
+                        break;
+                }
+                if (Intent.ACTION_SCREEN_ON.equals(action)) {
+                    notifyContext(NEED_SCAN, timestamp, logID, "screen on");
+                } else if (WifiManager.WIFI_STATE_CHANGED_ACTION.equals(action) && extras.getInt(WifiManager.EXTRA_WIFI_STATE) == WifiManager.WIFI_STATE_ENABLED) {
+                    notifyContext(NEED_SCAN, timestamp, logID, "Wifi on via broadcast");
+                } else if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action) && extras.getInt(BluetoothAdapter.EXTRA_STATE) == BluetoothAdapter.STATE_ON) {
+                    notifyContext(NEED_SCAN, timestamp, logID, "Bluetooth on via broadcast");
+                }
+            } else if ("KeyEvent".equals(type)) {
+                record = true;
+                int keycode = extras.getInt("code");
+                JSONUtils.jsonPut(json, "keycodeString", KeyEvent.keyCodeToString(keycode));
 
-            switch (keycode) {
-                case KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK:
-                case KeyEvent.KEYCODE_MEDIA_CLOSE:
-                case KeyEvent.KEYCODE_MEDIA_EJECT:
-                case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
-                case KeyEvent.KEYCODE_MEDIA_NEXT:
-                case KeyEvent.KEYCODE_MEDIA_PAUSE:
-                case KeyEvent.KEYCODE_MEDIA_PLAY:
-                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
-                case KeyEvent.KEYCODE_MEDIA_RECORD:
-                case KeyEvent.KEYCODE_MEDIA_REWIND:
-                case KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD:
-                case KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD:
-                case KeyEvent.KEYCODE_MEDIA_STEP_BACKWARD:
-                case KeyEvent.KEYCODE_MEDIA_STEP_FORWARD:
-                case KeyEvent.KEYCODE_MEDIA_STOP:
-                case KeyEvent.KEYCODE_MEDIA_TOP_MENU:
-                case KeyEvent.KEYCODE_VOLUME_DOWN:
-                case KeyEvent.KEYCODE_VOLUME_MUTE:
-                case KeyEvent.KEYCODE_VOLUME_UP:
-                    notifyContext(NEED_AUDIO, timestamp, logID, "key event: " + KeyEvent.keyCodeToString(keycode));
-                    notifyContext(NEED_SCAN, timestamp, logID, "key event: " + KeyEvent.keyCodeToString(keycode));
+                switch (keycode) {
+                    case KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK:
+                    case KeyEvent.KEYCODE_MEDIA_CLOSE:
+                    case KeyEvent.KEYCODE_MEDIA_EJECT:
+                    case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                    case KeyEvent.KEYCODE_MEDIA_NEXT:
+                    case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                    case KeyEvent.KEYCODE_MEDIA_PLAY:
+                    case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                    case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+                    case KeyEvent.KEYCODE_MEDIA_RECORD:
+                    case KeyEvent.KEYCODE_MEDIA_REWIND:
+                    case KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD:
+                    case KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD:
+                    case KeyEvent.KEYCODE_MEDIA_STEP_BACKWARD:
+                    case KeyEvent.KEYCODE_MEDIA_STEP_FORWARD:
+                    case KeyEvent.KEYCODE_MEDIA_STOP:
+                    case KeyEvent.KEYCODE_MEDIA_TOP_MENU:
+                    case KeyEvent.KEYCODE_VOLUME_DOWN:
+                    case KeyEvent.KEYCODE_VOLUME_MUTE:
+                    case KeyEvent.KEYCODE_VOLUME_UP:
+                        notifyContext(NEED_AUDIO, timestamp, logID, "key event: " + KeyEvent.keyCodeToString(keycode));
+                        notifyContext(NEED_SCAN, timestamp, logID, "key event: " + KeyEvent.keyCodeToString(keycode));
+                }
             }
-        }
 
-        if (record) {
+            if (record) {
+                JSONUtils.jsonPut(json, "package", packageName);
+                JSONUtils.jsonPutBundle(json, extras);
+                record(timestamp, logID, type, action, tag, json.toString());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
             JSONUtils.jsonPut(json, "package", packageName);
             JSONUtils.jsonPutBundle(json, extras);
+            JSONUtils.jsonPut(json, "exception", e.toString());
             record(timestamp, logID, type, action, tag, json.toString());
         }
     }
