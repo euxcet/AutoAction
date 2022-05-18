@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.Session2CommandGroup;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -12,6 +13,7 @@ import androidx.annotation.RequiresApi;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorListener;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder;
 import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
@@ -53,6 +55,11 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
         mAccSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMagSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
+        CollectorStatusHolder.getInstance().setStatus(Sensor.TYPE_GYROSCOPE, mGyroSensor != null);
+        CollectorStatusHolder.getInstance().setStatus(Sensor.TYPE_LINEAR_ACCELERATION, mLinearAccSensor!= null);
+        CollectorStatusHolder.getInstance().setStatus(Sensor.TYPE_ACCELEROMETER, mAccSensor != null);
+        CollectorStatusHolder.getInstance().setStatus(Sensor.TYPE_MAGNETIC_FIELD, mMagSensor != null);
+
         this.resume();
     }
 
@@ -68,10 +75,10 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
 
     @Override
     public synchronized void resume() {
-        sensorManager.registerListener(this, mGyroSensor, SAMPLING_PERIOD);
-        sensorManager.registerListener(this, mLinearAccSensor, SAMPLING_PERIOD);
-        sensorManager.registerListener(this, mAccSensor, SAMPLING_PERIOD);
-        sensorManager.registerListener(this, mMagSensor, SAMPLING_PERIOD);
+        sensorManager.registerListener(this, mGyroSensor, SAMPLING_PERIOD, handler);
+        sensorManager.registerListener(this, mLinearAccSensor, SAMPLING_PERIOD, handler);
+        sensorManager.registerListener(this, mAccSensor, SAMPLING_PERIOD, handler);
+        sensorManager.registerListener(this, mMagSensor, SAMPLING_PERIOD, handler);
     }
 
     @Override

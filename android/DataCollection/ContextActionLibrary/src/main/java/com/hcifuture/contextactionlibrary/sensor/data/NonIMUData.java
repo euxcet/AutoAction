@@ -1,24 +1,37 @@
 package com.hcifuture.contextactionlibrary.sensor.data;
 
 public class NonIMUData extends Data {
+    private int type;
     private float environmentBrightness;
     private float airPressure;
     private int screenBrightness;
     private float proximity;
+    private float stepCounter;
     private long environmentBrightnessTimestamp;
     private long airPressureTimestamp;
     private long screenBrightnessTimestamp;
     private long proximityTimestamp;
+    private long stepCounterTimestamp;
 
     public NonIMUData() {
         environmentBrightness = 0;
         airPressure = 0;
         screenBrightness = 0;
         proximity = 0;
+        stepCounter = 0;
         environmentBrightnessTimestamp = 0;
         airPressureTimestamp = 0;
         screenBrightnessTimestamp = 0;
         proximityTimestamp = 0;
+        stepCounterTimestamp = 0;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 
     public float getAirPressure() {
@@ -37,6 +50,10 @@ public class NonIMUData extends Data {
         return proximity;
     }
 
+    public float getStepCounter() {
+        return stepCounter;
+    }
+
     public void setAirPressure(float airPressure) {
         this.airPressure = airPressure;
     }
@@ -51,6 +68,10 @@ public class NonIMUData extends Data {
 
     public void setProximity(float proximity) {
         this.proximity = proximity;
+    }
+
+    public void setStepCounter(float stepCounter) {
+        this.stepCounter = stepCounter;
     }
 
     public long getAirPressureTimestamp() {
@@ -69,6 +90,10 @@ public class NonIMUData extends Data {
         return proximityTimestamp;
     }
 
+    public long getStepCounterTimestamp() {
+        return stepCounterTimestamp;
+    }
+
     public void setAirPressureTimestamp(long airPressureTimestamp) {
         this.airPressureTimestamp = airPressureTimestamp;
     }
@@ -83,6 +108,10 @@ public class NonIMUData extends Data {
 
     public void setProximityTimestamp(long proximityTimestamp) {
         this.proximityTimestamp = proximityTimestamp;
+    }
+
+    public void setStepCounterTimestamp(long stepCounterTimestamp) {
+        this.stepCounterTimestamp = stepCounterTimestamp;
     }
 
     public NonIMUData deepClone() {

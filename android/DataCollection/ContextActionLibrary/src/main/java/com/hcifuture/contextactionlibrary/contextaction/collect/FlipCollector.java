@@ -2,6 +2,7 @@ package com.hcifuture.contextactionlibrary.contextaction.collect;
 
 import android.content.Context;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -10,6 +11,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
@@ -27,8 +29,11 @@ public class FlipCollector extends BaseCollector{
     private CompletableFuture<List<CollectorResult>> FutureIMU;
     private LogCollector logCollector;
 
-    public FlipCollector(Context context, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, RequestListener requestListener, ClickTrigger clickTrigger, LogCollector FlipLogCollector) {
-        super(context, scheduledExecutorService, futureList, requestListener, clickTrigger);
+    public FlipCollector(Context context, ScheduledExecutorService scheduledExecutorService,
+                         List<ScheduledFuture<?>> futureList, RequestListener requestListener,
+                         ClickTrigger clickTrigger, Uploader uploader,
+                         LogCollector FlipLogCollector) {
+        super(context, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader);
         logCollector = FlipLogCollector;
     }
 
@@ -40,26 +45,29 @@ public class FlipCollector extends BaseCollector{
             long time = System.currentTimeMillis();
             if (FutureIMU != null) {
                 String name = action.getAction();
-                String commit = action.getAction() + ":" + action.getReason() + " " + action.getTimestamp();
+                String commit = action.getAction() + ":" + action.getReason() + " " + action.getTimestamp()+" "+time;
                 if (FutureIMU.isDone()) {
                     try {
-                        upload(FutureIMU.get().get(0), name, commit, time);
+                        Log.e("uplaod:","Flip try to upload IMU");
+                        upload(FutureIMU.get().get(0), name, commit);
+//                        upload(FutureIMU.get().get(0), name, commit, time);
                     } catch (ExecutionException | InterruptedException e) {
                         e.printStackTrace();
                     }
                 } else {
-                    FutureIMU.whenComplete((v, e) -> upload(v.get(0), name, commit, time));
+//                    FutureIMU.whenComplete((v, e) -> upload(v.get(0), name, commit, time));
+                    FutureIMU.whenComplete((v, e) -> upload(v.get(0), name, commit));
                 }
             }
             if (clickTrigger != null && scheduledExecutorService != null) {
-                futureList.add(scheduledExecutorService.schedule(() -> {
-                    try {
-                        triggerAndUpload(logCollector, new TriggerConfig(), "Flip", "Log: Flip",time)
-                                .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }, 20000L, TimeUnit.MILLISECONDS));
+                try {
+                    Log.e("upload","log_flip:"+logCollector.getData().getDataString());
+                    Log.e("uplaod:","Flip try to upload log");
+                    triggerAndUpload(logCollector, new TriggerConfig(), "Flip", "time: "+time)
+                            .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -67,15 +75,5 @@ public class FlipCollector extends BaseCollector{
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onContext(ContextResult context) {
-        if (!context.getContext().equals("UserAction")) {
-            return;
-        }
-        if (clickTrigger != null) {
-            triggerAndUpload(CollectorManager.CollectorType.IMU,
-                    new TriggerConfig().setImuHead(800).setImuTail(200),
-                    context.getContext(),
-                    context.getContext() + ":" + context.getTimestamp()
-            );
-        }
     }
 }

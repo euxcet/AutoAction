@@ -35,11 +35,12 @@ public class FlipAction extends BaseAction {
     long gx_id; //最大gx的下标
     private float[] values, r, gravity, geomagnetic;
     boolean success_flag;
-    LogCollector logCollector;
+    long value_timestamp;
 
     public FlipAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, LogCollector FlipLogCollector) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         logCollector = FlipLogCollector;
+        reset();
     }
 
     //对变量进行初始化
@@ -84,6 +85,7 @@ public class FlipAction extends BaseAction {
             gravity[0] = data.getValues().get(0);
             gravity[1] = data.getValues().get(1);
             gravity[2] = data.getValues().get(2);
+            value_timestamp = data.getTimestamp();
             getValue(); //更新方位角
             if(abs(gravity[2])>20){
                 Log.i("FLIP","角速度过大"+abs(gravity[2]));
@@ -91,9 +93,13 @@ public class FlipAction extends BaseAction {
             }
         }
         else if(data.getType() == Sensor.TYPE_MAGNETIC_FIELD){
+            if(geomagnetic == null){
+                geomagnetic = new float[3];
+            }
             geomagnetic[0] = data.getValues().get(0);
             geomagnetic[1] = data.getValues().get(1);
             geomagnetic[2] = data.getValues().get(2);
+            value_timestamp = data.getTimestamp();
             getValue();
         }
         else if(data.getType() == Sensor.TYPE_GYROSCOPE){
@@ -115,7 +121,7 @@ public class FlipAction extends BaseAction {
                     Log.i("FLIP","角速度1:第一次大于200:"+"gy: "+gy+" gx: "+gx+"gz:" +gz+"ID："+gyro_id1);
                 }
                 else if(!gyro_flag2){
-                    Log.i("FLIP","角速度2:第二次大于200"+"gy: "+gy+" gx: "+gx+"gz:" +gz+"ID："+gyro_id1);
+//                    Log.i("FLIP","角速度2:第二次大于200"+"gy: "+gy+" gx: "+gx+"gz:" +gz+"ID："+gyro_id1);
                     if(postive){
                         if(gy<0 && flag1){
                             if(System.currentTimeMillis()-gyro_id1<20000) {
@@ -220,7 +226,9 @@ public class FlipAction extends BaseAction {
                 pitch = Math.toDegrees(values[1]);
                 double roll = Math.toDegrees(values[2]);
 //                Log.i("FLIP","roll: "+Math.floor(roll)+"ptich: "+Math.floor(pitch));
-                logCollector.addLog(System.currentTimeMillis()+" "+azimuth+" "+pitch+" "+roll);
+                if (logCollector != null) {
+                    logCollector.addLog(value_timestamp + " " + azimuth + " " + pitch + " " + roll);
+                }
                 if(pitch>40){
                     reset();
                     Log.i("FLIP:","pitch太大了，重置"+pitch);

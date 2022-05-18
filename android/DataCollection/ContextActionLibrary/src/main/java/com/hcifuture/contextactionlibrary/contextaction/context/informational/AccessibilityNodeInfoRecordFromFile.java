@@ -94,7 +94,43 @@ public class AccessibilityNodeInfoRecordFromFile {
         return roots;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static List<AccessibilityNodeInfo> getAllRoots(RequestListener requestListener)
+    {
+        List<AccessibilityNodeInfo> roots = new ArrayList<>();
+        for(AccessibilityNodeInfo nodeInfo: getRootsInActiveWindow(requestListener))
+        {
+            if(nodeInfo==null)
+                continue;
+            roots.add(nodeInfo);
+        }
+        return roots;
+    }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static List<AccessibilityNodeInfoRecordFromFile> buildAllTrees( List<AccessibilityNodeInfo> nodeInfos, String activityName)
+    {
+        List<AccessibilityNodeInfoRecordFromFile> roots = new ArrayList<>();
+        idToRecord_.clear();
+        nodeInfoHashtoId_.clear();
+        for(AccessibilityNodeInfo nodeInfo: nodeInfos)
+        {
+            if(nodeInfo==null)
+                continue;
+            AccessibilityNodeInfoRecordFromFile record = new AccessibilityNodeInfoRecordFromFile(nodeInfo, null, 0,0);
+            AccessibilityWindowInfo windowInfo=nodeInfo.getWindow();
+            if(windowInfo!=null) {
+                record.windowTitle = windowInfo.getTitle();
+                record.windowType = windowInfo.getType();
+                record.windowLayer = windowInfo.getLayer();
+            }
+            record.activityName = activityName;
+            Log.i("InformationalContext", record.activityName + " " + record.windowTitle + " " + record.windowType);
+            roots.add(record);
+        }
+        roots_ =new ArrayList<>(roots);
+        return roots;
+    }
 
     public static void clearTree(List<AccessibilityNodeInfoRecordFromFile> roots){
         for(AccessibilityNodeInfoRecordFromFile node:roots)

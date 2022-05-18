@@ -33,7 +33,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+@RequiresApi(api = Build.VERSION_CODES.N)
 public class EventAnalyzer {
     public static final String TAG = "EventAnalyzer";
 
@@ -47,16 +47,16 @@ public class EventAnalyzer {
     private float[][][] values;
 
     /** Load TF Lite model from asset file. */
-    public static MappedByteBuffer loadModelFile(AssetManager assetManager, String modelPath)
-            throws IOException {
-        try (AssetFileDescriptor fileDescriptor = assetManager.openFd(modelPath);
-             FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor())) {
-            FileChannel fileChannel = inputStream.getChannel();
-            long startOffset = fileDescriptor.getStartOffset();
-            long declaredLength = fileDescriptor.getDeclaredLength();
-            return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
-        }
-    }
+//    public static MappedByteBuffer loadModelFile(AssetManager assetManager, String modelPath)
+//            throws IOException {
+//        try (AssetFileDescriptor fileDescriptor = assetManager.openFd(modelPath);
+//             FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor())) {
+//            FileChannel fileChannel = inputStream.getChannel();
+//            long startOffset = fileDescriptor.getStartOffset();
+//            long declaredLength = fileDescriptor.getDeclaredLength();
+//            return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+//        }
+//    }
 
     public boolean loadMaxMin() {
         max = new float[29];
@@ -94,6 +94,7 @@ public class EventAnalyzer {
         return false;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public boolean loadEncoderMap() {
         encodeMap = new ArrayList<>();
         try {
@@ -132,8 +133,9 @@ public class EventAnalyzer {
 
     private synchronized void loadModel() {
         try {
-            ByteBuffer buffer = loadModelFile(this.context.getAssets(), "ResultModel.tflite");
-            model = new Interpreter(buffer);
+            Log.e(TAG,ContextActionContainer.getSavePath()+"ResultModel.tflite" );
+//            ByteBuffer buffer = loadModelFile(this.context.getAssets(), ContextActionContainer.getSavePath()+"ResultModel.tflite");
+            model = new Interpreter(new File(ContextActionContainer.getSavePath()+"ResultModel.tflite"));
             // model = new Interpreter(new File(BuildConfig.SAVE_PATH + "ResultModel.tflite"));
             Log.v(TAG, "TFLite model loaded.");
 
@@ -223,6 +225,15 @@ public class EventAnalyzer {
         float[][] out = new float[][]{{-1}};
         model.run(input, out);
         return out[0][0];
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public void add(String eventString) {
+        long[] features = parseEventString(eventString);
+        if (features == null)
+            return ;
+        updateValues(features);
+        return ;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

@@ -3,8 +3,6 @@ package com.hcifuture.contextactionlibrary.sensor.collector.async;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.location.GnssStatus;
-import android.location.GpsSatellite;
-import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -31,27 +29,37 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GPSCollector extends AsynchronousCollector implements LocationListener {
     private LocationManager locationManager;
-    private final AtomicBoolean isRunning = new AtomicBoolean(false);
+    private final AtomicBoolean isCollecting = new AtomicBoolean(false);
     private boolean isProviderEnabled;
     private final GPSData data;
-    private Handler handler;
+
+    /*
+      Error code:
+        0: No error
+        1: GPS provider not enabled
+        2: Concurrent task of GPS collecting
+        3: Unknown exception when stopping collecting
+        4: Invalid GPS request time
+        5: Unknown collecting exception (may be binding listener error due to lack of permission)
+     */
 
     public GPSCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
         data = new GPSData();
-        handler = new Handler(Looper.getMainLooper());
     }
 
     @Override
     public void initialize() {
         locationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
-        isProviderEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void close() {
+        unbindListener();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void pause() {
         unbindListener();
@@ -61,20 +69,22 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
     public void resume() {
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @SuppressLint("MissingPermission")
     private void bindListener() {
-        if (isProviderEnabled && !isRunning.get()) {
-            Log.e("TEST", locationManager + " " + mContext + " " );
-            locationManager.registerGnssStatusCallback(gnssStatusCallback, handler);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, this, Looper.getMainLooper());
-            isRunning.set(true);
-        }
+        Log.e("TEST", locationManager + " " + mContext + " " );
+        locationManager.registerGnssStatusCallback(gnssStatusCallback, handler);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, this, handler.getLooper());
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @SuppressLint("MissingPermission")
     private void unbindListener() {
-        if (isProviderEnabled && isRunning.get()) {
-            locationManager.unregisterGnssStatusCallback(gnssStatusCallback);
+        try {
             locationManager.removeUpdates(this);
-            isRunning.set(false);
+            locationManager.unregisterGnssStatusCallback(gnssStatusCallback);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -88,35 +98,60 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
         return ".json";
     }
 
+    @SuppressLint("MissingPermission")
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
-        if (isProviderEnabled) {
-            if (!isRunning.get()) {
-                bindListener();
-                scheduledExecutorService.schedule(() -> {
-                    try {
-                        setLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
-                        unbindListener();
-                        CollectorResult result = new CollectorResult();
-                        synchronized (data) {
-                            result.setData(data.deepClone());
-                            result.setDataString(gson.toJson(result.getData(), GPSData.class));
+        CollectorResult result = new CollectorResult();
+
+        if (config.getGPSRequestTime() <= 0) {
+            result.setErrorCode(4);
+            result.setErrorReason("Invalid GPS request time: " + config.getGPSRequestTime());
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Invalid GPS request time: " + config.getGPSRequestTime()));
+        } else if (isCollecting.compareAndSet(false, true)) {
+            try {
+                setBasicInfo();
+                if (!isProviderEnabled) {
+                    setCollectData(result);
+                    result.setErrorCode(1);
+                    result.setErrorReason("GPS provider not enabled");
+                    ft.complete(result);
+                    isCollecting.set(false);
+                } else {
+                    bindListener();
+                    futureList.add(scheduledExecutorService.schedule(() -> {
+                        try {
+                            setLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            result.setErrorCode(3);
+                            result.setErrorReason(e.toString());
+                        } finally {
+                            unbindListener();
+                            setCollectData(result);
                             ft.complete(result);
+                            isCollecting.set(false);
                         }
-                    } catch (Exception e) {
-                        ft.completeExceptionally(e);
-                    } finally {
-                        isRunning.set(false);
-                    }
-                }, config.getGPSRequestTime(), TimeUnit.MILLISECONDS);
-            } else {
-                ft.completeExceptionally(new Exception("Another task of GPS recording is taking place!"));
+                    }, config.getGPSRequestTime(), TimeUnit.MILLISECONDS));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                unbindListener();
+                result.setErrorCode(5);
+                result.setErrorReason(e.toString());
+//                ft.complete(result);
+                ft.completeExceptionally(e);
+                isCollecting.set(false);
             }
         } else {
-            ft.completeExceptionally(new Exception("GPS provider is not enabled"));
+            result.setErrorCode(2);
+            result.setErrorReason("Concurrent task of GPS collecting");
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Concurrent task of GPS collecting"));
         }
+
         return ft;
     }
 
@@ -138,6 +173,21 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
         synchronized (data) {
             setLocation(location);
         }
+    }
+
+    @Override
+    public void onProviderEnabled(@NonNull java.lang.String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(@NonNull java.lang.String provider) {
+
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, android.os.Bundle extras) {
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -178,4 +228,18 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
             }
         }
     };
+
+    private void setCollectData(CollectorResult result) {
+        synchronized (data) {
+            result.setData(data.deepClone());
+            result.setDataString(gson.toJson(result.getData(), GPSData.class));
+        }
+    }
+
+    private void setBasicInfo() {
+        if (locationManager != null) {
+            isProviderEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            data.setProviderEnabled(isProviderEnabled);
+        }
+    }
 }

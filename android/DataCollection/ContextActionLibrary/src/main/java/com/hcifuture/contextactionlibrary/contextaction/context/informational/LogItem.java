@@ -19,7 +19,7 @@ public class LogItem {
         this.type = type;
         this.time = time;
     }
-    public static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
+    public static SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd_HHmmssSSS");
 
 
     public Date getTime() {

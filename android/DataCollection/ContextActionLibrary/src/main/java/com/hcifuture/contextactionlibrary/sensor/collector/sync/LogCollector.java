@@ -44,6 +44,10 @@ public class LogCollector extends SynchronousCollector {
         data.addLog(log);
     }
 
+    public void addLogs(List<String> logs) {
+        data.addLogs(logs);
+    }
+
     public void eraseLog(int length) {
         Log.e("TEST", "Log erase length: " + length);
         data.eraseLog(length);
@@ -56,6 +60,14 @@ public class LogCollector extends SynchronousCollector {
 
     @Override
     public CollectorResult getData(TriggerConfig config) {
+        CollectorResult result = new CollectorResult();
+        result.setData(data.deepClone());
+        result.setDataString(((LogData)result.getData()).getString());
+        result.setLogLength(((LogData)result.getData()).getSize());
+        return result;
+    }
+
+    public CollectorResult getData() {
         CollectorResult result = new CollectorResult();
         result.setData(data.deepClone());
         result.setDataString(((LogData)result.getData()).getString());

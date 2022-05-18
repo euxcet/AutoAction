@@ -67,7 +67,7 @@ dependencies {
 
     implementation 'com.lzy.net:okgo:3.0.4'
     implementation 'pub.devrel:easypermissions:2.0.1'
-    api 'com.google.code.gson:gson:2.8.5'
+    api 'com.google.code.gson:gson:2.8.9'
 
     // CameraX core library using the camera2 implementation
     def camerax_version = "1.1.0-alpha12"

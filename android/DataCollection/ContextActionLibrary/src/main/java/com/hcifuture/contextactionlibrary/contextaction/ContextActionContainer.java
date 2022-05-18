@@ -1,5 +1,6 @@
 package com.hcifuture.contextactionlibrary.contextaction;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,6 +12,7 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -19,17 +21,19 @@ import android.view.accessibility.AccessibilityEvent;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+//import com.amap.api.services.core.ServiceSettings;
 import com.google.gson.Gson;
-import com.hcifuture.contextactionlibrary.contextaction.action.ExampleAction;
+import com.hcifuture.contextactionlibrary.contextaction.action.MotionAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.CloseCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ConfigCollector;
-import com.hcifuture.contextactionlibrary.contextaction.collect.ExampleCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.FlipCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.InformationalContextCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TimedCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
+import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.distributor.DataDistributor;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
@@ -45,19 +49,25 @@ import com.hcifuture.contextactionlibrary.contextaction.context.physical.Proximi
 import com.hcifuture.contextactionlibrary.contextaction.context.physical.TableContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
+import com.hcifuture.contextactionlibrary.utils.FileSaver;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
+import com.hcifuture.contextactionlibrary.utils.JSONUtils;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
+import com.hcifuture.shared.communicate.config.RequestConfig;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.SensorType;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
+import com.hcifuture.shared.communicate.result.Result;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -65,36 +75,37 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class ContextActionContainer implements ActionListener, ContextListener {
-    private Context mContext;
+    private final Context mContext;
 
     // private ThreadPoolExecutor executor;
 
-    private List<BaseAction> actions;
-    private List<BaseContext> contexts;
+    private final List<BaseAction> actions;
+    private final List<BaseContext> contexts;
 
     // private List<BaseSensorManager> sensorManagers;
 
     private boolean fromDex = false;
     private boolean openSensor = false;
-    private List<ActionConfig> actionConfig;
-    private List<ContextConfig> contextConfig;
     private ActionListener actionListener;
     private ContextListener contextListener;
     private RequestListener requestListener;
 
     private ClickTrigger clickTrigger;
+    private Uploader uploader;
 
     private List<BaseCollector> collectors;
 
     private ScheduledExecutorService scheduledExecutorService;
-    private List<ScheduledFuture<?>> futureList;
-
-    private TapTapAction tapTapAction;
-    private String markTimestamp;
+    private final List<ScheduledFuture<?>> futureList;
+    private HandlerThread handlerThread;
+    private Handler handler;
 
     private ScheduledFuture<?> actionFuture;
     private ScheduledFuture<?> contextFuture;
@@ -104,9 +115,13 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     private static String SAVE_PATH;
 
-    private final CustomBroadcastReceiver mBroadcastReceiver;
-    private final CustomContentObserver mContentObserver;
+    private final AtomicInteger mContextActionIDCounter = new AtomicInteger(0);
+    LogCollector contextActionLogCollector;
+
+    private CustomBroadcastReceiver mBroadcastReceiver;
+    private CustomContentObserver mContentObserver;
     private final List<Uri> mRegURIs;
+    private final Lock contextLock = new ReentrantLock();
 
     // listening
     private final Uri [] listenedURIs = {
@@ -172,9 +187,22 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             BluetoothDevice.ACTION_ACL_CONNECTED,
             BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED,
             BluetoothDevice.ACTION_ACL_DISCONNECTED,
+            BluetoothDevice.ACTION_ALIAS_CHANGED,
+            BluetoothDevice.ACTION_BOND_STATE_CHANGED,
+            BluetoothDevice.ACTION_CLASS_CHANGED,
+            BluetoothDevice.ACTION_NAME_CHANGED,
+            BluetoothDevice.ACTION_PAIRING_REQUEST,
+            BluetoothAdapter.ACTION_DISCOVERY_STARTED,
+            BluetoothAdapter.ACTION_DISCOVERY_FINISHED,
+            BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED,
+            BluetoothAdapter.ACTION_STATE_CHANGED,
+            BluetoothAdapter.ACTION_SCAN_MODE_CHANGED,
+            BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED,
             // WiFi related
             WifiManager.NETWORK_STATE_CHANGED_ACTION,
-            WifiManager.WIFI_STATE_CHANGED_ACTION
+            WifiManager.WIFI_STATE_CHANGED_ACTION,
+            WifiManager.SCAN_RESULTS_AVAILABLE_ACTION,
+            WifiManager.ACTION_WIFI_SCAN_AVAILABILITY_CHANGED
     };
 
     public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener, String SAVE_PATH) {
@@ -206,13 +234,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
          */
 
-        // clickTrigger = new ClickTrigger(context, Arrays.asList(Trigger.CollectorType.CompleteIMU, Trigger.CollectorType.Bluetooth));
         this.futureList = new ArrayList<>();
-
-        // scheduleCleanData();
-
-        mBroadcastReceiver = new CustomBroadcastReceiver();
-        mContentObserver = new CustomContentObserver(new Handler());
         mRegURIs = new ArrayList<>();
     }
 
@@ -251,6 +273,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
          */
 
+        if (dataDistributor != null) {
+            dataDistributor.start();
+        }
+
         for (BaseAction action: actions) {
             action.start();
         }
@@ -262,17 +288,19 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         if (collectorManager != null) {
             collectorManager.resume();
         }
-        /*
-        if (clickTrigger != null) {
-            clickTrigger.resume();
-        }
-         */
     }
 
     public void stop() {
-        try { // cwh: I don't know why this may cause problems
+        if (FileSaver.getInstance() != null) {
+            FileSaver.getInstance().close();
+        }
+        try {
             // unregister broadcast receiver
             mContext.unregisterReceiver(mBroadcastReceiver);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
             // unregister content observer
             mContext.getContentResolver().unregisterContentObserver(mContentObserver);
         } catch (Exception e) {
@@ -280,25 +308,18 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
         mRegURIs.clear();
 
-        /*
-        if (openSensor) {
-            for (BaseSensorManager sensorManager: sensorManagers) {
-                sensorManager.stop();
-            }
+        if (dataDistributor != null) {
+            dataDistributor.stop();
         }
-         */
+
         for (BaseAction action: actions) {
             action.stop();
         }
+
         for (BaseContext context: contexts) {
             context.stop();
         }
-        /*
-        if (clickTrigger != null) {
-            clickTrigger.pause();
-            clickTrigger.close();
-        }
-         */
+
         if (collectorManager != null) {
             if (dataDistributor != null) {
                 collectorManager.unregisterListener(dataDistributor);
@@ -306,11 +327,15 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             collectorManager.pause();
             collectorManager.close();
         }
+        if (uploader != null) {
+            uploader.stop();
+        }
         for (ScheduledFuture<?> future: futureList) {
             future.cancel(true);
         }
         futureList.clear();
         scheduledExecutorService.shutdownNow();
+        handlerThread.quit();
     }
 
     public void pause() {
@@ -320,17 +345,18 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         for (BaseContext context: contexts) {
             context.stop();
         }
+        if (dataDistributor != null) {
+            dataDistributor.stop();
+        }
         if (collectorManager != null) {
             collectorManager.pause();
         }
-        /*
-        if (clickTrigger != null) {
-            clickTrigger.pause();
-        }
-         */
     }
 
     public void resume() {
+        if (dataDistributor != null) {
+            dataDistributor.start();
+        }
         for (BaseAction action: actions) {
             action.start();
         }
@@ -343,40 +369,27 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         if (contextFuture != null && (contextFuture.isDone() || contextFuture.isCancelled())) {
             monitorContext();
         }
-        /*
-        if (clickTrigger != null) {
-            clickTrigger.resume();
-        }
-         */
         if (collectorManager != null) {
             collectorManager.resume();
         }
     }
 
-    private List<BaseAction> selectBySensorTypeAction(List<BaseAction> actions, SensorType sensorType) {
-        List<BaseAction> result = new ArrayList<>();
-        for (BaseAction action: actions) {
-            if (action.getConfig().getSensorType().contains(sensorType)) {
-                result.add(action);
-            }
-        }
-        return result;
-    }
-
-    private List<BaseContext> selectBySensorTypeContext(List<BaseContext> contexts, SensorType sensorType) {
-        List<BaseContext> result = new ArrayList<>();
-        for (BaseContext context: contexts) {
-            if (context.getConfig().getSensorType().contains(sensorType)) {
-                result.add(context);
-            }
-        }
-        return result;
-    }
-
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void initialize() {
+//        ServiceSettings.updatePrivacyShow(mContext.getApplicationContext(), true , true);
+//        ServiceSettings.updatePrivacyAgree(mContext.getApplicationContext(), true);
+
+        handlerThread = new HandlerThread("CallbackHandlerThread");
+        handlerThread.start();
+        handler = new Handler(handlerThread.getLooper());
+        Collector.setHandler(handler);
+        mBroadcastReceiver = new CustomBroadcastReceiver();
+        mContentObserver = new CustomContentObserver(handler);
+
         this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
+
+        FileSaver.initialize(scheduledExecutorService, futureList);
 
         this.collectorManager = new CollectorManager(mContext, Arrays.asList(
                 CollectorManager.CollectorType.IMU,
@@ -386,20 +399,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                 CollectorManager.CollectorType.Wifi,
                 CollectorManager.CollectorType.GPS,
                 CollectorManager.CollectorType.NonIMU
-        ), scheduledExecutorService, futureList);
+        ), scheduledExecutorService, futureList, requestListener);
 
-        this.clickTrigger = new ClickTrigger(mContext, collectorManager, scheduledExecutorService, futureList);
 
-        // cwh: do not use Arrays.asList() to assign to collectors,
-        // because it returns a fixed-size list backed by the specified array and we cannot perform add()
-        collectors = new ArrayList<>();
-        collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
-        collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger));
-
-        TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger)
-                .scheduleFixedRateUpload(CollectorManager.CollectorType.GPS, new TriggerConfig().setGPSRequestTime(3000), 10000, 0, "Timed_Loc_GPS")
-                .scheduleFixedRateUpload(CollectorManager.CollectorType.Location, new TriggerConfig(), 10000, 0, "Timed_Loc_GPS");
-        collectors.add(timedCollector);
 
         if (fromDex) {
             Gson gson = new Gson();
@@ -408,223 +410,298 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     ContextActionConfigBean.class
             );
 
-            for (ContextActionConfigBean.ContextConfigBean bean: config.getContext()) {
-                if (bean == null) {
-                    continue;
-                }
-                ContextConfig contextConfig = new ContextConfig();
-                contextConfig.setContext(bean.getBuiltInContext());
-                contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
-                for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
-                    contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
-                }
-                for (int i = 0; i < bean.getLongParamKey().size(); i++) {
-                    contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
-                }
-                for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
-                    contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
-                }
-                for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
-                    contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
-                }
-                switch (contextConfig.getContext()) {
-                    case "Proximity":
-                        ProximityContext proximityContext = new ProximityContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), scheduledExecutorService, futureList);
-                        contexts.add(proximityContext);
-                        break;
-                    case "Table":
-                        TableContext tableContext = new TableContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), scheduledExecutorService, futureList);
-                        contexts.add(tableContext);
-                        break;
-                    case "Informational":
-                        LogCollector informationLogCollector = collectorManager.newLogCollector("Informational", 8192);
-                        timedCollector.scheduleTimedLogUpload(informationLogCollector, 60000, 5000, "Informational");
-                        collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector));
-                        InformationalContext informationalContext = new InformationalContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener),informationLogCollector, scheduledExecutorService, futureList);
-                        contexts.add(informationalContext);
-                        break;
-                    case "Config":
-                        LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
-                        timedCollector.scheduleTimedLogUpload(configLogCollector, 60000, 5000, "Config");
-                        collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector));
-                        ConfigContext configContext = new ConfigContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), configLogCollector, scheduledExecutorService, futureList);
-                        contexts.add(configContext);
-                        break;
-                }
-            }
+            if (config != null) {
+                // firstly schedule timed behavior, because it may use log to record contexts and actions
 
-            for (ContextActionConfigBean.ActionConfigBean bean: config.getAction()) {
-                if (bean == null) {
-                    continue;
+                for (ContextActionConfigBean.ContextConfigBean bean: config.getContext()) {
+                    if (bean == null) {
+                        continue;
+                    }
+                    ContextConfig contextConfig = new ContextConfig();
+                    contextConfig.setContext(bean.getBuiltInContext());
+                    contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                    for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                        contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                    }
+                    for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                        contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                    }
+                    for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                        contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                    }
+                    for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                        contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                    }
+                    switch (contextConfig.getContext()) {
+                        case "Proximity":
+                            ProximityContext proximityContext = new ProximityContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), scheduledExecutorService, futureList);
+                            contexts.add(proximityContext);
+                            break;
+                        case "Table":
+                            TableContext tableContext = new TableContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), scheduledExecutorService, futureList);
+                            contexts.add(tableContext);
+                            break;
+                        default:
+                            break;
+                    }
                 }
-                ActionConfig actionConfig = new ActionConfig();
-                actionConfig.setAction(bean.getBuiltInAction());
-                actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
-                for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
-                    actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
-                }
-                for (int i = 0; i < bean.getLongParamKey().size(); i++) {
-                    actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
-                }
-                for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
-                    actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
-                }
-                for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
-                    actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
-                }
-                switch (actionConfig.getAction()) {
-                    case "TapTap":
-                        tapTapAction = new TapTapAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
-                        actions.add(tapTapAction);
-                        break;
-                    case "TopTap":
-                        TopTapAction topTapAction = new TopTapAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
-                        actions.add(topTapAction);
-                        break;
-                    case "Flip":
-                        LogCollector FliplogCollector = collectorManager.newLogCollector("Flip", 800);
-                        collectors.add(new FlipCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, FliplogCollector));
-                        FlipAction flipAction = new FlipAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList, FliplogCollector);
-                        actions.add(flipAction);
-                        break;
-                    case "Close":
-                        CloseAction closeAction = new CloseAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
-                        actions.add(closeAction);
-                        break;
-                    case "Pocket":
-                        PocketAction pocketAction = new PocketAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
-                        actions.add(pocketAction);
-                        break;
-                    case "Example":
-                        LogCollector logCollector = collectorManager.newLogCollector("Log0", 100);
-                        timedCollector.scheduleTimedLogUpload(logCollector, 5000, 0, "Example");
-                        collectors.add(new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector));
-                        ExampleAction exampleAction = new ExampleAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), logCollector, scheduledExecutorService, futureList);
-                        actions.add(exampleAction);
-                        break;
-                }
-            }
 
-            // register broadcast receiver
-            IntentFilter intentFilter = new IntentFilter();
-            if (config.getListenedSystemActions() != null) {
-                config.getListenedSystemActions().stream().filter(Objects::nonNull).forEach(intentFilter::addAction);
+                for (ContextActionConfigBean.ActionConfigBean bean: config.getAction()) {
+                    if (bean == null) {
+                        continue;
+                    }
+                    ActionConfig actionConfig = new ActionConfig();
+                    actionConfig.setAction(bean.getBuiltInAction());
+                    actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                    for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                        actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                    }
+                    for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                        actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                    }
+                    for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                        actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                    }
+                    for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                        actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                    }
+                    switch (actionConfig.getAction()) {
+                        case "TapTap":
+                            TapTapAction tapTapAction = new TapTapAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                            actions.add(tapTapAction);
+                            break;
+                        case "TopTap":
+                            TopTapAction topTapAction = new TopTapAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                            actions.add(topTapAction);
+                            break;
+                        case "Flip":
+                            LogCollector flipLogCollector = collectorManager.newLogCollector("Flip", 800);
+                            FlipAction flipAction = new FlipAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList, null);
+                            actions.add(flipAction);
+                            break;
+                        case "Close":
+                            CloseAction closeAction = new CloseAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList, null);
+                            actions.add(closeAction);
+                            break;
+                        case "Pocket":
+                            PocketAction pocketAction = new PocketAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                            actions.add(pocketAction);
+                            break;
+                        case "Motion":
+                            MotionAction motionAction = new MotionAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                            actions.add(motionAction);
+                            break;
+                        default:
+                            break;
+                    }
+                }
             }
-            if (!config.isOverrideSystemActions()) {
-                Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
-            }
-            mContext.registerReceiver(mBroadcastReceiver, intentFilter);
-            Log.e("OverrideSystemActions", Boolean.toString(config.isOverrideSystemActions()));
-            intentFilter.actionsIterator().forEachRemaining(item -> Log.e("Register broadcast", item));
-
-            // register content observer
-            if (config.getListenedSystemURIs() != null) {
-                config.getListenedSystemURIs().stream().filter(Objects::nonNull).map(Uri::parse).forEach(this::registerURI);
-            }
-            if (!config.isOverrideSystemURIs()) {
-                Arrays.stream(listenedURIs).forEach(this::registerURI);
-            }
-            Log.e("OverrideSystemURIs", Boolean.toString(config.isOverrideSystemURIs()));
-            mRegURIs.forEach(uri -> Log.e("Register URI", uri.toString()));
         }
 
-
-            /*
-            for (int i = 0; i < actionConfig.size(); i++) {
-                ActionConfig config = actionConfig.get(i);
-                switch (config.getAction()) {
-                    case "TapTap":
-                        tapTapAction = new TapTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
-                        actions.add(tapTapAction);
-                        break;
-                    case "TopTap":
-                        TopTapAction topTapAction = new TopTapAction(mContext, config, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
-                        actions.add(topTapAction);
-                        break;
-                    case "Flip":
-                        LogCollector FliplogCollector = collectorManager.newLogCollector("Flip", 800);
-                        collectors.add(new FlipCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, FliplogCollector));
-                        FlipAction flipAction = new FlipAction(mContext, config, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList, FliplogCollector);
-                        actions.add(flipAction);
-                        break;
-                    case "Close":
-                        CloseAction closeAction = new CloseAction(mContext, config, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
-                        actions.add(closeAction);
-                        break;
-                    case "Pocket":
-                        PocketAction pocketAction = new PocketAction(mContext, config, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
-                        actions.add(pocketAction);
-                        break;
-                    case "Example":
-                        LogCollector logCollector = collectorManager.newLogCollector("Log0", 100);
-                        timedCollector.scheduleTimedLogUpload(logCollector, 5000, 0, "Example");
-                        collectors.add(new ExampleCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, logCollector));
-                        ExampleAction exampleAction = new ExampleAction(mContext, config, requestListener, Arrays.asList(this, actionListener), logCollector, scheduledExecutorService, futureList);
-                        actions.add(exampleAction);
-                        break;
-                }
-            }
-            for (int i = 0; i < contextConfig.size(); i++) {
-                ContextConfig config = contextConfig.get(i);
-                switch (config.getContext()) {
-                    case "Proximity":
-                        ProximityContext proximityContext = new ProximityContext(mContext, config, requestListener, Arrays.asList(this, contextListener), scheduledExecutorService, futureList);
-                        contexts.add(proximityContext);
-                        break;
-                    case "Table":
-                        TableContext tableContext = new TableContext(mContext, config, requestListener, Arrays.asList(this, contextListener), scheduledExecutorService, futureList);
-                        contexts.add(tableContext);
-                        break;
-                    case "Informational":
-                        LogCollector informationLogCollector = collectorManager.newLogCollector("Informational", 8192);
-                        timedCollector.scheduleTimedLogUpload(informationLogCollector, 60000, 5000, "Informational");
-                        collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, informationLogCollector));
-                        InformationalContext informationalContext = new InformationalContext(mContext, config, requestListener, Arrays.asList(this, contextListener),informationLogCollector, scheduledExecutorService, futureList);
-                        contexts.add(informationalContext);
-                        break;
-                    case "Config":
-                        LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
-                        timedCollector.scheduleTimedLogUpload(configLogCollector, 60000, 5000, "Config");
-                        collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, configLogCollector));
-                        ConfigContext configContext = new ConfigContext(mContext, config, requestListener, Arrays.asList(this, contextListener), configLogCollector, scheduledExecutorService, futureList);
-                        contexts.add(configContext);
-                        break;
-                }
-            }
-
-             */
-        this.dataDistributor = new DataDistributor(actions, contexts);
+        this.dataDistributor = new DataDistributor(actions, contexts, contextLock);
         collectorManager.registerListener(dataDistributor);
+    }
+
+    private void setLogCollector(Class c, LogCollector logCollector) {
+        for (BaseContext context: contexts) {
+            if (c.isInstance(context)) {
+                context.setLogCollector(logCollector);
+            }
+        }
+
+        for (BaseAction action: actions) {
+            if (c.isInstance(action)) {
+                action.setLogCollector(logCollector);
+            }
+        }
+    }
+
+    public void startCollectors() {
+        try {
+            contextLock.lock();
+
+            uploader = new Uploader(mContext, scheduledExecutorService, futureList, requestListener, handler);
+            clickTrigger = new ClickTrigger(mContext, collectorManager, scheduledExecutorService, futureList);
+
+            Gson gson = new Gson();
+            ContextActionConfigBean config = gson.fromJson(
+                    FileUtils.getFileContent(SAVE_PATH + "config.json"),
+                    ContextActionConfigBean.class
+            );
+
+            // cwh: do not use Arrays.asList() to assign to collectors,
+            // because it returns a fixed-size list backed by the specified array and we cannot perform add()
+            collectors = new ArrayList<>();
+            TimedCollector timedCollector = new TimedCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader);
+            collectors.add(timedCollector);
+            collectors.add(new TapTapCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader));
+            collectors.add(new ConfigCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader));
 
 
-        // init sensor
-        /*
-        sensorManagers.add(new IMUSensorManager(mContext,
-                "IMUSensorManager",
-                selectBySensorTypeAction(actions, SensorType.IMU),
-                selectBySensorTypeContext(contexts, SensorType.IMU),
-                SensorManager.SENSOR_DELAY_FASTEST
-        ));
+            if (config != null) {
+                // firstly schedule timed behavior, because it may use log to record contexts and actions
+                if (config.getTimed() != null) {
+                    for (ContextActionConfigBean.TimedConfigBean bean : config.getTimed()) {
+                        if (bean == null) {
+                            continue;
+                        }
+                        if (bean.getName() == null) {
+                            continue;
+                        }
+                        if ("TriggerLog".equals(bean.getBuiltInSensor())) {
+                            // Trigger log records all trigger events
+                            LogCollector triggerLogCollector = collectorManager.newLogCollector("Trigger", 8192);
+                            clickTrigger.setTriggerLogCollector(triggerLogCollector);
+                            timedCollector.scheduleTimedLogUpload(triggerLogCollector, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                        } else if ("ContextActionLog".equals(bean.getBuiltInSensor())) {
+                            // ContextAction log records all contexts and actions
+                            this.contextActionLogCollector = collectorManager.newLogCollector("ContextAction", 8192);
+                            timedCollector.scheduleTimedLogUpload(contextActionLogCollector, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                        } else {
+                            CollectorManager.CollectorType type;
+                            try {
+                                type = CollectorManager.CollectorType.valueOf(bean.getBuiltInSensor());
+                            } catch (Exception e) {
+                                continue;
+                            }
+                            if (type != CollectorManager.CollectorType.Log) {
+                                TriggerConfig triggerConfig = bean.getTriggerConfig();
+                                if (triggerConfig == null) {
+                                    triggerConfig = new TriggerConfig();
+                                }
+                                if (bean.isFixedDelay()) {
+                                    timedCollector.scheduleFixedDelayUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                                } else {
+                                    timedCollector.scheduleFixedRateUpload(type, triggerConfig, bean.getPeriodOrDelay(), bean.getInitialDelay(), bean.getName());
+                                }
+                            }
+                        }
+                    }
+                }
 
-        sensorManagers.add(new ProximitySensorManager(mContext,
-                "ProximitySensorManager",
-                selectBySensorTypeAction(actions, SensorType.PROXIMITY),
-                selectBySensorTypeContext(contexts, SensorType.PROXIMITY),
-                SensorManager.SENSOR_DELAY_FASTEST
-        ));
+                if (config.getContext() != null) {
+                    for (ContextActionConfigBean.ContextConfigBean bean : config.getContext()) {
+                        if (bean == null) {
+                            continue;
+                        }
+                        if (bean.getBuiltInContext() == null) {
+                            continue;
+                        }
+                        ContextConfig contextConfig = new ContextConfig();
+                        contextConfig.setContext(bean.getBuiltInContext());
+                        contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                        for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                            contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                        }
+                        for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                            contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                        }
+                        for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                            contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                        }
+                        for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                            contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                        }
+                        Number initialDelay = contextConfig.getValue("intialDelay");
+                        Number period = contextConfig.getValue("period");
+                        String name = contextConfig.getString("name");
+                        switch (contextConfig.getContext()) {
+                            case "Informational":
+                                LogCollector informationLogCollector = collectorManager.newLogCollector("Informational", 8192);
+                                contexts.add(new InformationalContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), informationLogCollector, scheduledExecutorService, futureList));
+                                //                            setLogCollector(InformationalContext.class, informationLogCollector);
+                                collectors.add(new InformationalContextCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, informationLogCollector));
+                                timedCollector.scheduleTimedLogUpload(
+                                        informationLogCollector,
+                                        (period == null) ? 30 * 60000 : period.longValue(),
+                                        (initialDelay == null) ? 60000 : initialDelay.longValue(),
+                                        (name == null) ? "Informational" : name
+                                );
+                                break;
+                            case "Config":
+                                LogCollector configLogCollector = collectorManager.newLogCollector("Config", 8192);
+                                contexts.add(new ConfigContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), configLogCollector, scheduledExecutorService, futureList));
+                                //                            setLogCollector(ConfigContext.class, configLogCollector);
+                                timedCollector.scheduleTimedLogUpload(
+                                        configLogCollector,
+                                        (period == null) ? 30 * 60000 : period.longValue(),
+                                        (initialDelay == null) ? 5000 : initialDelay.longValue(),
+                                        (name == null) ? "Config" : name
+                                );
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
 
-        sensorManagers.add(new AccessibilityEventManager(mContext,
-                "AccessibilityEventManager",
-                selectBySensorTypeAction(actions, SensorType.ACCESSIBILITY),
-                selectBySensorTypeContext(contexts, SensorType.ACCESSIBILITY)
-        ));
+                if (config.getAction() != null) {
+                    for (ContextActionConfigBean.ActionConfigBean bean : config.getAction()) {
+                        if (bean == null) {
+                            continue;
+                        }
+                        if (bean.getBuiltInAction() == null) {
+                            continue;
+                        }
+                        ActionConfig actionConfig = new ActionConfig();
+                        actionConfig.setAction(bean.getBuiltInAction());
+                        actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                        for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                            actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                        }
+                        for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                            actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                        }
+                        for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                            actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                        }
+                        for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                            actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                        }
+                        switch (actionConfig.getAction()) {
+                            case "Flip":
+                                Log.e("upload:", "register Flip LogCollector");
+                                LogCollector flipLogCollector = collectorManager.newLogCollector("Flip", 800);
+                                collectors.add(new FlipCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, flipLogCollector));
+                                setLogCollector(FlipAction.class, flipLogCollector);
+                                break;
+                            case "Close":
+                                Log.e("upload:", "register Close LogCollector");
+                                LogCollector closeLogCollector = collectorManager.newLogCollector("Close", 800);
+                                collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, closeLogCollector));
+                                setLogCollector(CloseAction.class, closeLogCollector);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
 
-        sensorManagers.add(new BroadcastEventManager(mContext,
-                "BroadcastEventManager",
-                selectBySensorTypeAction(actions, SensorType.BROADCAST),
-                selectBySensorTypeContext(contexts, SensorType.BROADCAST)
-        ));
-         */
+                // register broadcast receiver
+                IntentFilter intentFilter = new IntentFilter();
+                if (config.getListenedSystemActions() != null) {
+                    config.getListenedSystemActions().stream().filter(Objects::nonNull).forEach(intentFilter::addAction);
+                }
+                if (!config.isOverrideSystemActions()) {
+                    Arrays.stream(listenedActions).filter(Objects::nonNull).forEach(intentFilter::addAction);
+                }
+                mContext.registerReceiver(mBroadcastReceiver, intentFilter, null, handler);
+                Log.e("OverrideSystemActions", Boolean.toString(config.isOverrideSystemActions()));
+                intentFilter.actionsIterator().forEachRemaining(item -> Log.e("Register broadcast", item));
+
+                // register content observer
+                if (config.getListenedSystemURIs() != null) {
+                    config.getListenedSystemURIs().stream().filter(Objects::nonNull).map(Uri::parse).forEach(this::registerURI);
+                }
+                if (!config.isOverrideSystemURIs()) {
+                    Arrays.stream(listenedURIs).forEach(this::registerURI);
+                }
+                Log.e("OverrideSystemURIs", Boolean.toString(config.isOverrideSystemURIs()));
+                mRegURIs.forEach(uri -> Log.e("Register URI", uri.toString()));
+            }
+        } finally {
+            contextLock.unlock();
+        }
     }
 
     private void monitorAction() {
@@ -654,33 +731,25 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onSensorChangedDex(SensorEvent event) {
-        int type = event.sensor.getType();
-        /*
-        for (BaseSensorManager sensorManager: sensorManagers) {
-            if (sensorManager.getSensorTypeList() != null && sensorManager.getSensorTypeList().contains(type)) {
-                sensorManager.onSensorChangedDex(event);
-            }
-        }
-         */
     }
 
     public void onAccessibilityEventDex(AccessibilityEvent event) {
-        for (BaseContext context: contexts) {
-            context.onAccessibilityEvent(event);
+        if (handler != null) {
+            final AccessibilityEvent event1 = AccessibilityEvent.obtain(event);
+            handler.post(() -> {
+                if (dataDistributor != null) {
+                    dataDistributor.onAccessibilityEvent(event1);
+                }
+                event1.recycle();
+            });
         }
-        /*
-        for (BaseSensorManager sensorManager: sensorManagers) {
-            sensorManager.onAccessibilityEventDex(event);
-        }
-         */
     }
 
     public void onKeyEventDex(KeyEvent event) {
         BroadcastEvent bc_event = new BroadcastEvent(
                 System.currentTimeMillis(),
-                "KeyEvent://"+event.getAction()+"/"+event.getKeyCode(),
-                "",
-                "KeyEvent"
+                "KeyEvent",
+                "KeyEvent://"+event.getAction()+"/"+event.getKeyCode()
         );
         bc_event.getExtras().putInt("action", event.getAction());
         bc_event.getExtras().putInt("code", event.getKeyCode());
@@ -691,86 +760,29 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onBroadcastEventDex(BroadcastEvent event) {
-        for (BaseContext context: contexts) {
-            context.onBroadcastEvent(event);
-        }
-    }
-
-    /*
-    private void scheduleCleanData() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH),3, 0, 0);
-        Date date = calendar.getTime();
-        if (date.before(new Date())) {
-            calendar.add(Calendar.DATE, 1);
-            date = calendar.getTime();
-        }
-
-        Timer timer= new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (clickTrigger != null) {
-                    clickTrigger.cleanData();
+        if (handler != null) {
+            handler.post(() -> {
+                if (dataDistributor != null) {
+                    dataDistributor.onBroadcastEvent(event);
                 }
-                Log.e("TapTapCollector", "triggered");
-            }
-        }, date, 24 * 60 * 60 * 1000);
-
-    }
-     */
-
-    /*
-    @Override
-    public void onActionRecognized(ActionResult action) {
-        if (action.getAction().equals("TapTapConfirmed")) {
-            markTimestamp = action.getTimestamp();
-            tapTapAction.onConfirmed();
-        }
-        else if (action.getAction().equals("TopTap")) {
-            markTimestamp = action.getTimestamp();
+            });
         }
     }
-     */
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAction(ActionResult action) {
+        assignIDAndRecord(action);
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
                 collector.onAction(action);
             }
         }
-            /*
-        if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap") || action.getAction().equals("Pocket")) {
-            if (clickTrigger != null) {
-                clickTrigger.trigger(Collections.singletonList(Trigger.CollectorType.CompleteIMU), new TriggerConfig());
-            }
-        }
-             */
-//        if (collectors != null) {
-//            for (BaseCollector collector: collectors) {
-//                collector.onAction(action);
-//            }
-//        }
     }
-
-    /*
-    @Override
-    public void onActionSave(ActionResult action) {
-        if (action.getAction().equals("TapTap") || action.getAction().equals("TopTap")) {
-            action.setTimestamp(markTimestamp);
-        }
-        if (collectors != null) {
-            for (BaseCollector collector : collectors) {
-                collector.onAction(action);
-            }
-        }
-    }
-     */
 
     @Override
     public void onContext(ContextResult context) {
+        assignIDAndRecord(context);
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
                 collector.onContext(context);
@@ -783,9 +795,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         public void onReceive(Context context, Intent intent) {
             BroadcastEvent event = new BroadcastEvent(
                     System.currentTimeMillis(),
-                    intent.getAction(),
-                    "",
-                    "BroadcastReceive"
+                    "BroadcastReceive",
+                    intent.getAction()
             );
             event.setExtras(intent.getExtras());
             onBroadcastEventDex(event);
@@ -806,20 +817,44 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         public void onChange(boolean selfChange, @Nullable Uri uri) {
             BroadcastEvent event = new BroadcastEvent(
                     System.currentTimeMillis(),
-                    (uri == null)? "uri_null" : uri.toString(),
-                    "",
-                    "ContentChange"
+                    "ContentChange",
+                    (uri == null)? "uri_null" : uri.toString()
             );
             onBroadcastEventDex(event);
         }
     }
 
-    void registerURI(Uri uri) {
+    private void registerURI(Uri uri) {
         if (uri != null) {
             if (!mRegURIs.contains(uri)) {
                 mContext.getContentResolver().registerContentObserver(uri, true, mContentObserver);
                 mRegURIs.add(uri);
             }
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private int incContextActionID() {
+        return mContextActionIDCounter.getAndIncrement();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void assignIDAndRecord(Result contextOrAction) {
+        int contextActionID = incContextActionID();
+        /*
+            Logging:
+                timestamp | contextActionID | contextOrAction | reason | extras
+
+         */
+        if (contextActionLogCollector != null) {
+            String line = contextOrAction.getTimestamp() + "\t" +
+                    contextActionID + "\t" +
+                    contextOrAction.getKey() + "\t" +
+                    contextOrAction.getReason() + "\t" +
+                    JSONUtils.bundleToJSON(contextOrAction.getExtras()).toString();
+            contextActionLogCollector.addLog(line);
+        }
+        // assign ID
+        contextOrAction.getExtras().putInt("contextActionID", contextActionID);
     }
 }

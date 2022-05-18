@@ -11,6 +11,7 @@ import android.provider.Settings;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorListener;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
@@ -27,6 +28,7 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
     private Sensor mPressure;
     private Sensor mLight;
     private Sensor mProximity;
+    private Sensor mStepCounter;
 
     public NonIMUCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
@@ -41,6 +43,12 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
         mPressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         mLight = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         mProximity = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        mStepCounter = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+
+        CollectorStatusHolder.getInstance().setStatus(Sensor.TYPE_PRESSURE, mPressure != null);
+        CollectorStatusHolder.getInstance().setStatus(Sensor.TYPE_LIGHT, mLight != null);
+        CollectorStatusHolder.getInstance().setStatus(Sensor.TYPE_PROXIMITY, mProximity != null);
+        CollectorStatusHolder.getInstance().setStatus(Sensor.TYPE_STEP_COUNTER , mStepCounter != null);
 
         this.resume();
     }
@@ -57,9 +65,10 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
 
     @Override
     public synchronized void resume() {
-        sensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(this, mLight, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL, handler);
+        sensorManager.registerListener(this, mLight, SensorManager.SENSOR_DELAY_NORMAL, handler);
+        sensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_NORMAL, handler);
+        sensorManager.registerListener(this, mStepCounter, SensorManager.SENSOR_DELAY_NORMAL, handler);
     }
 
     @Override
@@ -94,25 +103,40 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
     @Override
     public synchronized void onSensorChanged(SensorEvent event) {
         if (data != null) {
+            NonIMUData nonIMUData = new NonIMUData();
+            nonIMUData.setType(event.sensor.getType());
+            data.setType(event.sensor.getType());
             switch (event.sensor.getType()) {
                 case Sensor.TYPE_PRESSURE:
                     data.setAirPressure(event.values[0]);
                     data.setAirPressureTimestamp(event.timestamp);
+                    nonIMUData.setAirPressure(event.values[0]);
+                    nonIMUData.setAirPressureTimestamp(event.timestamp);
                     break;
                 case Sensor.TYPE_LIGHT:
                     data.setEnvironmentBrightness(event.values[0]);
                     data.setEnvironmentBrightnessTimestamp(event.timestamp);
+                    nonIMUData.setEnvironmentBrightness(event.values[0]);
+                    nonIMUData.setEnvironmentBrightnessTimestamp(event.timestamp);
                     break;
                 case Sensor.TYPE_PROXIMITY:
                     data.setProximity(event.values[0]);
                     data.setProximityTimestamp(event.timestamp);
+                    nonIMUData.setProximity(event.values[0]);
+                    nonIMUData.setProximityTimestamp(event.timestamp);
+                    break;
+                case Sensor.TYPE_STEP_COUNTER:
+                    data.setStepCounter(event.values[0]);
+                    data.setStepCounterTimestamp(event.timestamp);
+                    nonIMUData.setStepCounter(event.values[0]);
+                    nonIMUData.setStepCounterTimestamp(event.timestamp);
                     break;
                 default:
                     break;
             }
-        }
-        for (CollectorListener listener: listenerList) {
-            listener.onSensorEvent(data);
+            for (CollectorListener listener: listenerList) {
+                listener.onSensorEvent(nonIMUData);
+            }
         }
     }
 

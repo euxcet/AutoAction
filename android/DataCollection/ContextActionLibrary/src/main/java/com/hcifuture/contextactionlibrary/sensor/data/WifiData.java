@@ -5,42 +5,51 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class WifiData extends Data {
-    private List<SingleWifiData> data;
+    private final List<SingleWifiData> aps;
+    private int state;
 
     public WifiData() {
-        data = new ArrayList<>();
+        aps = Collections.synchronizedList(new ArrayList<>());
     }
 
-    public List<SingleWifiData> getData() {
-        return data;
+    public int getState() {
+        return state;
     }
 
-    public void setData(List<SingleWifiData> data) {
-        this.data = data;
+    public void setState(int state) {
+        this.state = state;
     }
 
     public void clear() {
-        data.clear();
+        synchronized (aps) {
+            aps.clear();
+        }
     }
 
     public void insert(SingleWifiData single) {
-        for (int i = 0; i < data.size(); i++) {
-            if (data.get(i).getBssid().equals(single.getBssid()) && data.get(i).getConnected() == single.getConnected()) {
-                data.set(i, single);
-                return;
+        synchronized (aps) {
+            for (int i = 0; i < aps.size(); i++) {
+                if (aps.get(i).getBssid().equals(single.getBssid()) && aps.get(i).getConnected() == single.getConnected()) {
+                    aps.set(i, single);
+                    return;
+                }
             }
+            aps.add(single);
         }
-        data.add(single);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public WifiData deepClone() {
-        WifiData data = new WifiData();
-        getData().forEach(data::insert);
-        return data;
+        WifiData wifiData = new WifiData();
+        synchronized (aps) {
+            aps.forEach(wifiData::insert);
+        }
+        wifiData.setState(getState());
+        return wifiData;
     }
 
     @Override

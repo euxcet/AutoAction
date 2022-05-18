@@ -8,6 +8,8 @@ import json
 import file_utils
 import os
 
+import zipfile
+
 from ml.cutter.peak_cutter import PeakCutter
 from ml.cutter.random_cutter import RandomCutter
 
@@ -76,6 +78,25 @@ if not os.path.exists("../data/file/config.json"):
                 "floatParamValue": [],
                 "booleanParamKey": [],
                 "booleanParamValue": []
+            }
+        ],
+        "timed": [
+            {
+                "builtInSensor": "Wifi",
+                "triggerConfig": {
+                    "wifiScanTimeout": 10000
+                },
+                "initialDelay": 0,
+                "periodOrDelay": 3600000,
+                "name": "Timed_Scan",
+                "fixedDelay": False
+            },
+            {
+                "builtInSensor": "Location",
+                "initialDelay": 10000,
+                "periodOrDelay": 3600000,
+                "name": "Timed_Loc_GPS",
+                "fixedDelay": False
             }
         ],
         "listenedSystemActions": [
@@ -488,28 +509,61 @@ Form:
 
 
     /dex
-        /userId
-            /name
+        /name
+            /userId
                 /timestamp
                     - {}.bin
 '''
+
 @app.route("/collected_data", methods=['POST'])
 def upload_collected_data():
     file = request.files["file"]
+    print(file.filename)
+    meta = json.loads(request.form.get("meta"))
+    print(meta)
+
+    if file.filename[-4:] == '.zip':
+        temp_path = file_utils.get_temp_path()
+        file_path = os.path.join(temp_path, file.filename)
+        file_utils.mkdir(temp_path)
+        file_utils.save_file(file, file_path)
+
+        file_zip = zipfile.ZipFile(file_path, 'r')
+        for name in file_zip.namelist():
+            print(name)
+            meta_ = None
+            for m in meta:
+                if m['file'] == name:
+                    meta_ = m
+            print(meta_)
+            if meta_ is not None:
+                path = file_utils.get_dex_path(meta_['userId'], meta_['name'], str(meta_['timestamp']))
+                file_utils.mkdir(path)
+                file_zip.extract(meta_['file'], path)
+                with open(os.path.join(path, meta_['file'] + '.meta'), 'w') as fout:
+                    fout.write(json.dumps(meta_))
+        file_zip.close()
+        os.remove(file_path)
+    else:
+        path = file_utils.get_dex_path(meta[0]['userId'], meta[0]['name'], str(meta[0]['timestamp']))
+        file_utils.mkdir(path)
+        file_path = os.path.join(path, meta[0]['file'])
+        file_utils.save_file(file, file_path)
+        with open(os.path.join(path, meta[0]['file'] + '.meta'), 'w') as fout:
+            fout.write(json.dumps(meta[0]))
+
+
+    '''
     fileType = request.form.get("fileType")
     userId = request.form.get("userId")
     name = request.form.get("name")
-    commit = request.form.get("commit")
     timestamp = request.form.get("timestamp")
     path = file_utils.get_dex_path(userId, name, timestamp)
     file_path = os.path.join(path, file.filename)
-    commit_file_path = os.path.join(path, "commit.txt")
     print(f"saving file: {file_path}")
-    print(f"saving commit file: {commit_file_path}")
     file_utils.mkdir(path)
     file_utils.save_file(file, file_path)
-    with open(commit_file_path, 'w') as fout:
-        fout.write(commit)
+    '''
     return {}
 
 

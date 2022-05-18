@@ -13,18 +13,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
-import android.util.Log;
+import android.os.Bundle;
 
 import androidx.annotation.RequiresApi;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.BluetoothData;
-import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleBluetoothData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
-
-import org.checkerframework.checker.units.qual.A;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -44,9 +41,24 @@ public class BluetoothCollector extends AsynchronousCollector {
         
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothManager bluetoothManager;
+    private BluetoothLeScanner bluetoothLeScanner;
     private ScanCallback leScanCallback;
 
     private final AtomicBoolean isCollecting;
+
+    /*
+      Error code:
+        0: No error
+        1: Cannot start Bluetooth discovery
+        2: Cannot get BluetoothLeScanner
+        3: Both 1 & 2
+        4: Cannot cancel Bluetooth discovery
+        5: Invalid Bluetooth scan time
+        6: Concurrent task of Bluetooth scanning
+        7: Unknown collecting exception
+        8: Unknown exception when stopping scan
+        9: Gson serialization error
+     */
 
     public BluetoothCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
@@ -54,71 +66,126 @@ public class BluetoothCollector extends AsynchronousCollector {
         isCollecting = new AtomicBoolean(false);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @SuppressLint("MissingPermission")
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
-        if (config.getBluetoothScanTime() <= 0) {
-            ft.completeExceptionally(new Exception("Invalid Bluetooth scan time: " + config.getBluetoothScanTime()));
-            return ft;
-        }
+        CollectorResult result = new CollectorResult();
 
-        if (!isCollecting.get()) {
-            isCollecting.set(true);
+        if (config.getBluetoothScanTime() <= 0) {
+            result.setErrorCode(5);
+            result.setErrorReason("Invalid Bluetooth scan time: " + config.getBluetoothScanTime());
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Invalid Bluetooth scan time: " + config.getBluetoothScanTime()));
+        } else if (isCollecting.compareAndSet(false, true)) {
             try {
+                notifyWake();
+                setBasicInfo();
                 data.clear();
 
                 // scan bonded (paired) devices
                 Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
                 if (pairedDevices.size() > 0) {
                     for (BluetoothDevice device: pairedDevices) {
-                        insert(device, (short)0, isConnected(device), null, null);
+                        insert(device, isConnected(device, false), null, null);
                     }
                 }
 
                 // scan connected BLE devices
                 List<BluetoothDevice> connectedDevices = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
                 for (BluetoothDevice device : connectedDevices) {
-                    insert(device, (short)0, isConnected(device), null, null);
+                    insert(device, isConnected(device, true), null, null);
                 }
 
+                int errorCode = 0;
+                String errorReason = "";
+
                 // start classic bluetooth scanning
-                bluetoothAdapter.startDiscovery();
+                if (!bluetoothAdapter.startDiscovery()) {
+                    bluetoothAdapter.cancelDiscovery();
+                    errorCode += 1;
+                    errorReason += "Cannot start Bluetooth discovery";
+                }
+
                 // start BLE scanning
-                BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
-                if (bluetoothLeScanner != null) {
+                bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+                if (bluetoothLeScanner == null) {
+                    errorCode += 2;
+                    errorReason += " | Cannot get BluetoothLeScanner";
+                } else {
                     bluetoothLeScanner.startScan(leScanCallback);
                 }
 
-                // Stops scanning after 10 seconds
-                futureList.add(scheduledExecutorService.schedule(() -> {
-                    try {
-                        if (bluetoothLeScanner != null) {
-                            bluetoothLeScanner.stopScan(leScanCallback);
+                if (errorCode != 0) {
+                    setCollectData(result);
+                    result.setErrorCode(errorCode);
+                    result.setErrorReason(errorReason);
+                    ft.complete(result);
+                    isCollecting.set(false);
+                } else {
+                    // Stops scanning after given time
+                    futureList.add(scheduledExecutorService.schedule(() -> {
+                        try {
+                            boolean success = stopScan();
+                            if (!success) {
+                                result.setErrorCode(4);
+                                result.setErrorReason("Cannot cancel Bluetooth discovery");
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            result.setErrorCode(8);
+                            result.setErrorReason(e.toString());
+                        } finally {
+                            try {
+                                setCollectData(result);
+                            } catch (Exception e) {
+                                result.setErrorCode(9);
+                                result.setErrorReason(e.toString());
+                            } finally {
+                                ft.complete(result);
+                                isCollecting.set(false);
+                            }
                         }
-                        bluetoothAdapter.cancelDiscovery();
-                        CollectorResult result = new CollectorResult();
-                        result.setData(data.deepClone());
-                        result.setDataString(gson.toJson(result.getData(), BluetoothData.class));
-                        ft.complete(result);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        ft.completeExceptionally(e);
-                    } finally {
-                        isCollecting.set(false);
-                    }
-                }, config.getBluetoothScanTime(), TimeUnit.MILLISECONDS));
+                    }, config.getBluetoothScanTime(), TimeUnit.MILLISECONDS));
+                }
             } catch (Exception e) {
                 e.printStackTrace();
+                stopScan();
+                result.setErrorCode(7);
+                result.setErrorReason(e.toString());
+//                ft.complete(result);
                 ft.completeExceptionally(e);
                 isCollecting.set(false);
             }
         } else {
-            ft.completeExceptionally(new Exception("Another task of Bluetooth scanning is taking place!"));
+            result.setErrorCode(6);
+            result.setErrorReason("Concurrent task of Bluetooth scanning");
+//            ft.complete(result);
+            ft.completeExceptionally(new Exception("Concurrent task of Bluetooth scanning"));
         }
 
         return ft;
+    }
+
+    @SuppressLint("MissingPermission")
+    private boolean stopScan() {
+        boolean ret = true;
+        if (bluetoothLeScanner != null) {
+            try {
+                bluetoothLeScanner.stopScan(leScanCallback);
+            } catch (Exception e) {
+                ret = false;
+            }
+        }
+        if (bluetoothAdapter != null) {
+            try {
+                ret = bluetoothAdapter.cancelDiscovery();
+            } catch (Exception e) {
+                ret = false;
+            }
+        }
+        return ret;
     }
 
     /*
@@ -130,12 +197,9 @@ public class BluetoothCollector extends AsynchronousCollector {
      */
 
     @SuppressLint("MissingPermission")
-    private synchronized void insert(BluetoothDevice device, short rssi, boolean linked, String scanResult, String intentExtra) {
-        data.insert(new SingleBluetoothData(device.getName(), device.getAddress(),
-                device.getBondState(), device.getType(),
-                device.getBluetoothClass().getDeviceClass(),
-                device.getBluetoothClass().getMajorDeviceClass(),
-                rssi, linked, scanResult, intentExtra));
+    private void insert(BluetoothDevice device, boolean linked, ScanResult scanResult, Bundle intentExtra) {
+        SingleBluetoothData singleBluetoothData = new SingleBluetoothData(device, linked, scanResult, intentExtra);
+        data.insert(singleBluetoothData);
     }
 
     @Override
@@ -151,13 +215,12 @@ public class BluetoothCollector extends AsynchronousCollector {
             public void onReceive(Context context, Intent intent) {
                 if (intent.getAction().equals(BluetoothDevice.ACTION_FOUND)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    short rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short) 0);
-                    insert(device, rssi, isConnected(device), null, intent.getExtras().toString());
+                    insert(device, isConnected(device, false), null, intent.getExtras());
                 }
             }
         };
 
-        mContext.registerReceiver(receiver, bluetoothFilter);
+        mContext.registerReceiver(receiver, bluetoothFilter, null, handler);
         isRegistered.set(true);
 
         // ref: https://developer.android.com/guide/topics/connectivity/bluetooth-le#find
@@ -165,20 +228,27 @@ public class BluetoothCollector extends AsynchronousCollector {
         leScanCallback = new ScanCallback() {
             @Override
             public void onScanResult (int callbackType, ScanResult result) {
-                BluetoothDevice device = result.getDevice();
-                int rssi = result.getRssi();
-                insert(device, (short) rssi, isConnected(device), result.toString(), null);
+                handler.post(() -> {
+                    BluetoothDevice device = result.getDevice();
+                    insert(device, isConnected(device, false), result, null);
+                });
             }
         };
     }
 
     // ref: https://stackoverflow.com/a/58882930/11854304
-    public static boolean isConnected(BluetoothDevice device) {
+    @SuppressLint("MissingPermission")
+    private boolean isConnected(BluetoothDevice device, boolean defaultValue) {
         try {
             Method m = device.getClass().getMethod("isConnected", (Class[]) null);
             return (boolean) m.invoke(device, (Object[]) null);
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+//            throw new IllegalStateException(e);
+            try {
+                return bluetoothManager.getConnectionState(device, BluetoothProfile.GATT) == BluetoothProfile.STATE_CONNECTED;
+            } catch (Exception e1) {
+                return defaultValue;
+            }
         }
     }
 
@@ -190,8 +260,10 @@ public class BluetoothCollector extends AsynchronousCollector {
     }
      */
 
+    @SuppressLint("MissingPermission")
     @Override
     public void close() {
+        stopScan();
         if (isRegistered.get() && receiver != null) {
             mContext.unregisterReceiver(receiver);
             isRegistered.set(false);
@@ -201,6 +273,7 @@ public class BluetoothCollector extends AsynchronousCollector {
 
     @Override
     public void pause() {
+        stopScan();
         if (isRegistered.get() && receiver != null) {
             mContext.unregisterReceiver(receiver);
             isRegistered.set(false);
@@ -210,7 +283,7 @@ public class BluetoothCollector extends AsynchronousCollector {
     @Override
     public void resume() {
         if (!isRegistered.get() && receiver != null && bluetoothFilter != null) {
-            mContext.registerReceiver(receiver, bluetoothFilter);
+            mContext.registerReceiver(receiver, bluetoothFilter, null, handler);
             isRegistered.set(true);
         }
     }
@@ -223,5 +296,33 @@ public class BluetoothCollector extends AsynchronousCollector {
     @Override
     public String getExt() {
         return ".json";
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void setCollectData(CollectorResult result) {
+        result.setData(data.deepClone());
+        result.setDataString(gson.toJson(result.getData(), BluetoothData.class));
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    @SuppressLint("MissingPermission")
+    private void setBasicInfo() {
+        if (bluetoothAdapter != null) {
+            data.setAddress(bluetoothAdapter.getAddress());
+            data.setLeMaximumAdvertisingDataLength(bluetoothAdapter.getLeMaximumAdvertisingDataLength());
+            data.setName(bluetoothAdapter.getName());
+            data.setProfileConnectionState_A2DP(bluetoothAdapter.getProfileConnectionState(BluetoothProfile.A2DP));
+            data.setProfileConnectionState_HEADSET(bluetoothAdapter.getProfileConnectionState(BluetoothProfile.HEADSET));
+            data.setScanMode(bluetoothAdapter.getScanMode());
+            data.setState(bluetoothAdapter.getState());
+            data.setDiscovering(bluetoothAdapter.isDiscovering());
+            data.setLe2MPhySupported(bluetoothAdapter.isLe2MPhySupported());
+            data.setLeCodedPhySupported(bluetoothAdapter.isLeCodedPhySupported());
+            data.setLeExtendedAdvertisingSupported(bluetoothAdapter.isLeExtendedAdvertisingSupported());
+            data.setLePeriodicAdvertisingSupported(bluetoothAdapter.isLePeriodicAdvertisingSupported());
+            data.setMultipleAdvertisementSupported(bluetoothAdapter.isMultipleAdvertisementSupported());
+            data.setOffloadedFilteringSupported(bluetoothAdapter.isOffloadedFilteringSupported());
+            data.setOffloadedScanBatchingSupported(bluetoothAdapter.isOffloadedScanBatchingSupported());
+        }
     }
 }

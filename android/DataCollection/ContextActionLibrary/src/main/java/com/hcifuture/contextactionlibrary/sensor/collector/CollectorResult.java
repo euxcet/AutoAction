@@ -1,5 +1,7 @@
 package com.hcifuture.contextactionlibrary.sensor.collector;
 
+import android.os.Bundle;
+
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 
 public class CollectorResult {
@@ -9,7 +11,11 @@ public class CollectorResult {
     private int logLength;
     private long startTimestamp;
     private long endTimestamp;
-    private CollectorManager.CollectorType type = CollectorManager.CollectorType.All;
+    private String name;
+    private CollectorManager.CollectorType type;
+    private int errorCode = 0;
+    private String errorReason;
+    private Bundle extras;
 
     public int getLogLength() {
         return logLength;
@@ -35,8 +41,27 @@ public class CollectorResult {
         return endTimestamp;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public CollectorManager.CollectorType getType() {
         return type;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public String getErrorReason() {
+        return errorReason;
+    }
+
+    public Bundle getExtras() {
+        if (extras == null) {
+            extras = new Bundle();
+        }
+        return extras;
     }
 
     public CollectorResult setLogLength(int logLength) {
@@ -69,8 +94,28 @@ public class CollectorResult {
         return this;
     }
 
+    public CollectorResult setName(String name) {
+        this.name = name;
+        return this;
+    }
+
     public CollectorResult setType(CollectorManager.CollectorType type) {
         this.type = type;
+        return this;
+    }
+
+    public CollectorResult setErrorCode(int errorCode) {
+        this.errorCode = errorCode;
+        return this;
+    }
+
+    public CollectorResult setErrorReason(String errorReason) {
+        this.errorReason = errorReason;
+        return this;
+    }
+
+    public CollectorResult setExtras(Bundle extras) {
+        this.extras = (extras == null)? new Bundle() : extras;
         return this;
     }
 }

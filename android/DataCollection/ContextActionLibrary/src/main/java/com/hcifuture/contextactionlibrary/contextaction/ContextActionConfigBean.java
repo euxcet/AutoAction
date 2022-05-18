@@ -31,6 +31,25 @@ Example:
 			"booleanParamValue": []
         }
     ],
+    "timed": [
+        {
+            "builtInSensor": "Wifi",
+            "triggerConfig": {
+                "wifiScanTimeout": 10000
+            },
+            "initialDelay": 0,
+            "periodOrDelay": 3600000,
+            "name": "Timed_Scan",
+            "fixedDelay": false
+        },
+        {
+            "builtInSensor": "Location",
+            "initialDelay": 10000,
+            "periodOrDelay": 3600000,
+            "name": "Timed_Loc_GPS",
+            "fixedDelay": false
+        }
+    ],
     "listenedSystemActions": [
         "android.intent.action.AIRPLANE_MODE",
         "android.intent.action.SCREEN_OFF",
@@ -46,6 +65,8 @@ Example:
 }
  */
 
+import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+
 import java.util.List;
 
 public class ContextActionConfigBean {
@@ -55,6 +76,7 @@ public class ContextActionConfigBean {
     private List<String> listenedSystemURIs;
     private boolean overrideSystemActions = false;
     private boolean overrideSystemURIs = false;
+    private List<TimedConfigBean> timed;
 
     public void setContext(List<ContextConfigBean> context) {
         this.context = context;
@@ -64,12 +86,20 @@ public class ContextActionConfigBean {
         this.action = action;
     }
 
+    public void setTimed(List<TimedConfigBean> timed) {
+        this.timed = timed;
+    }
+
     public List<ActionConfigBean> getAction() {
         return action;
     }
 
     public List<ContextConfigBean> getContext() {
         return context;
+    }
+
+    public List<TimedConfigBean> getTimed() {
+        return timed;
     }
 
     public List<String> getListenedSystemActions() {
@@ -271,6 +301,66 @@ public class ContextActionConfigBean {
 
         public void setSensorType(List<String> sensorType) {
             this.sensorType = sensorType;
+        }
+    }
+
+    public static class TimedConfigBean {
+        private String builtInSensor;
+        private TriggerConfig triggerConfig;
+        // time unit: millisecond
+        private long initialDelay = 0;
+        // default to 4 hours
+        private long periodOrDelay = 4 * 60 * 60 * 1000;
+        private String name;
+        // fixed delay or fixed rate
+        private boolean fixedDelay = false;
+
+        public String getBuiltInSensor() {
+            return builtInSensor;
+        }
+
+        public TriggerConfig getTriggerConfig() {
+            return triggerConfig;
+        }
+
+        public long getInitialDelay() {
+            return initialDelay;
+        }
+
+        public long getPeriodOrDelay() {
+            return periodOrDelay;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public boolean isFixedDelay() {
+            return fixedDelay;
+        }
+
+        public void setBuiltInSensor(String builtInSensor) {
+            this.builtInSensor = builtInSensor;
+        }
+
+        public void setTriggerConfig(TriggerConfig triggerConfig) {
+            this.triggerConfig = triggerConfig;
+        }
+
+        public void setInitialDelay(long initialDelay) {
+            this.initialDelay = initialDelay;
+        }
+
+        public void setPeriodOrDelay(long periodOrDelay) {
+            this.periodOrDelay = periodOrDelay;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public void setFixedDelay(boolean fixedDelay) {
+            this.fixedDelay = fixedDelay;
         }
     }
 }

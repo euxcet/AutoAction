@@ -4,10 +4,11 @@ public class TriggerConfig {
     private int imuHead = -1;
     private int imuTail = -1;
     private int audioLength = 5000;
-    private String audioFilename = "";
+    private String audioFilename;
     private int bluetoothScanTime = 10000;
-    private int wifiScanTime = 10000;
+    private int wifiScanTimeout = 10000;
     private int gpsRequestTime = 3000;
+    private int locationTimeout = 60000;
 
     public TriggerConfig() {
     }
@@ -47,12 +48,16 @@ public class TriggerConfig {
         return bluetoothScanTime;
     }
 
-    public int getWifiScanTime() {
-        return wifiScanTime;
+    public int getWifiScanTimeout() {
+        return wifiScanTimeout;
     }
 
     public String getAudioFilename() {
         return audioFilename;
+    }
+
+    public int getLocationTimeout() {
+        return locationTimeout;
     }
 
     public TriggerConfig setAudioLength(int audioLength) {
@@ -65,13 +70,17 @@ public class TriggerConfig {
         return this;
     }
 
-    public TriggerConfig setWifiScanTime(int wifiScanTime) {
-        this.wifiScanTime = wifiScanTime;
+    public TriggerConfig setWifiScanTimeout(int wifiScanTimeout) {
+        this.wifiScanTimeout = wifiScanTimeout;
         return this;
     }
 
     public TriggerConfig setAudioFilename(String audioFilename) {
         this.audioFilename = audioFilename;
         return this;
+    }
+
+    public void setLocationTimeout(int locationTimeout) {
+        this.locationTimeout = locationTimeout;
     }
 }

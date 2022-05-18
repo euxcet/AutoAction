@@ -7,6 +7,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.util.Log;
 
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder;
+import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.shared.communicate.config.ActionConfig;
@@ -17,6 +19,7 @@ import com.hcifuture.shared.communicate.result.ActionResult;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder.CollectorStatus;
 
 public class CloseAction extends BaseAction {
 
@@ -29,9 +32,14 @@ public class CloseAction extends BaseAction {
     long up_gyro_id; // 凑近嘴部的gyro的id
     long success_id; //成功时的id
     boolean success_flag;
+    float bright;
+    CollectorStatus proximity_flag,light_flag;
+    boolean send_flag; //假如没有传感器时，是否发送了日志
 
-    public CloseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
+    public CloseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, LogCollector CloseLogCollector) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
+        logCollector = CloseLogCollector;
+        reset();
     }
 
     //对变量进行初始化
@@ -43,12 +51,17 @@ public class CloseAction extends BaseAction {
         up_gyro_id = -1;
         success_id = -1;
         success_flag = false;
+        bright = -1;
     }
 
     @Override
     public synchronized void start() {
         isStarted = true;
+        proximity_flag = CollectorStatusHolder.getInstance().getStatus(Sensor.TYPE_PROXIMITY);
+        light_flag = CollectorStatusHolder.getInstance().getStatus(Sensor.TYPE_LIGHT);
+        send_flag = false;
         reset();
+
     }
 
     @Override
@@ -58,6 +71,9 @@ public class CloseAction extends BaseAction {
 
     @Override
     public void onIMUSensorEvent(SingleIMUData data) {
+        if(proximity_flag != CollectorStatus.READY){
+            return;
+        }
         int type = data.getType();
         switch (type) {
             case Sensor.TYPE_GYROSCOPE:
@@ -113,19 +129,48 @@ public class CloseAction extends BaseAction {
 
     @Override
     public void onNonIMUSensorEvent(NonIMUData data) {
-        dist = data.getProximity();
-        Log.i("proximity:","接近光距离为："+dist);
+        if(!send_flag) {
+            if (logCollector != null) {
+                logCollector.addLog("Proximity_sensor:" + proximity_flag);
+                logCollector.addLog("Light_sensor:" + light_flag);
+                for (ActionListener listener : actionListener) {
+                    listener.onAction(new ActionResult("CloseStart"));
+                }
+                send_flag = true;
+            }
+        }
+        if(proximity_flag != CollectorStatus.READY){
+            return;
+        }
+
+
+        if(data.getType()==Sensor.TYPE_PROXIMITY){
+            dist = data.getProximity();
+        }
+        if(data.getType()==Sensor.TYPE_LIGHT){
+            bright = data.getEnvironmentBrightness();
+        }
+        if(upright_gyro) {
+            if (logCollector != null) {
+                if(data.getType() == Sensor.TYPE_PROXIMITY)
+                    logCollector.addLog(data.getProximityTimestamp() + " " + dist + " " + bright);
+                else if(data.getType() == Sensor.TYPE_LIGHT) {
+                    logCollector.addLog(data.getEnvironmentBrightnessTimestamp() + " " + dist + " " + bright);
+                }
+            }
+        }
         if(dist == 0 ) {
             if (upright_gyro) {
                 success_id = System.currentTimeMillis();
                 Log.i("proximity:", "识别成功2----"+(success_id-register_time)+" "+success_id);
-            } else {
-                Log.i("proximity:", "gyro不满足条件");
             }
+//            else {
+//                Log.i("proximity:", "gyro不满足条件");
+//            }
         }
         if(dist==5) {
             success_id = -1;
-            if (System.currentTimeMillis() - register_time > 10000) {
+            if (System.currentTimeMillis() - register_time > 10000 && register_flag) {
                 //TODO: 取消传感器注册
 //                for (ActionListener listener : actionListener) {
 //                    listener.onAction(new ActionResult("STOP_PROXIMITY"));
