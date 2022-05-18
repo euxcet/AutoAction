@@ -118,13 +118,14 @@ public class AccessibilityNodeInfoRecordFromFile {
             if(nodeInfo==null)
                 continue;
             AccessibilityNodeInfoRecordFromFile record = new AccessibilityNodeInfoRecordFromFile(nodeInfo, null, 0,0);
-            if(nodeInfo.getWindow()!=null) {
-                record.windowTitle = nodeInfo.getWindow().getTitle();
-                record.windowType = nodeInfo.getWindow().getType();
-                record.windowLayer = nodeInfo.getWindow().getLayer();
+            AccessibilityWindowInfo windowInfo=nodeInfo.getWindow();
+            if(windowInfo!=null) {
+                record.windowTitle = windowInfo.getTitle();
+                record.windowType = windowInfo.getType();
+                record.windowLayer = windowInfo.getLayer();
             }
             record.activityName = activityName;
-            Log.e("RESULT", record.activityName + " " + record.windowTitle + " " + record.windowType);
+            Log.i("InformationalContext", record.activityName + " " + record.windowTitle + " " + record.windowType);
             roots.add(record);
         }
         roots_ =new ArrayList<>(roots);
