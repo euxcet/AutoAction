@@ -39,6 +39,7 @@ public class CloseAction extends BaseAction {
     public CloseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, LogCollector CloseLogCollector) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         logCollector = CloseLogCollector;
+        reset();
     }
 
     //对变量进行初始化
@@ -132,11 +133,9 @@ public class CloseAction extends BaseAction {
             if (logCollector != null) {
                 logCollector.addLog("Proximity_sensor:" + proximity_flag);
                 logCollector.addLog("Light_sensor:" + light_flag);
-                Log.e("proximity:","pro: "+proximity_flag+" light: "+light_flag);
                 for (ActionListener listener : actionListener) {
                     listener.onAction(new ActionResult("CloseStart"));
                 }
-                Log.e("proximity:","CloseStart");
                 send_flag = true;
             }
         }
@@ -153,7 +152,11 @@ public class CloseAction extends BaseAction {
         }
         if(upright_gyro) {
             if (logCollector != null) {
-                logCollector.addLog(System.currentTimeMillis() + " " + dist + " " + bright);
+                if(data.getType() == Sensor.TYPE_PROXIMITY)
+                    logCollector.addLog(data.getProximityTimestamp() + " " + dist + " " + bright);
+                else if(data.getType() == Sensor.TYPE_LIGHT) {
+                    logCollector.addLog(data.getEnvironmentBrightnessTimestamp() + " " + dist + " " + bright);
+                }
             }
         }
         if(dist == 0 ) {

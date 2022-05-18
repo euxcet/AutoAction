@@ -1,10 +1,15 @@
 package com.hcifuture.contextactionlibrary.sensor.uploader;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.Handler;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -17,6 +22,8 @@ import com.google.gson.ToNumberStrategy;
 import com.google.gson.reflect.TypeToken;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
+import com.hcifuture.shared.communicate.config.RequestConfig;
+import com.hcifuture.shared.communicate.listener.RequestListener;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -76,13 +83,16 @@ public class Uploader {
     private final List<ScheduledFuture<?>> mFutureList = new ArrayList<>();
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
+    private final AtomicBoolean isUploadingLocalFiles = new AtomicBoolean(false);
 
     private final String fileFolder;
     private final String zipFolder;
     private final AtomicInteger mZipIDCounter = new AtomicInteger(0);
-    private final String userId;
+    private final RequestListener requestListener;
 
-    private boolean lastWifiStatus = true;
+    private boolean lastWifiStatus = false;
+    private final BroadcastReceiver receiver;
+    private final Handler handler;
 
     enum UploaderStatus {
         OK,
@@ -92,18 +102,37 @@ public class Uploader {
 
     public Uploader(Context context,
                     ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList,
-                    String userId) {
+                    RequestListener requestListener, Handler handler) {
         this.mContext = context;
         this.scheduledExecutorService = scheduledExecutorService;
         this.futureList = futureList;
         this.fileFolder = mContext.getExternalMediaDirs()[0].getAbsolutePath() + "/Data/Click/";
         this.zipFolder = mContext.getExternalMediaDirs()[0].getAbsolutePath() + "/Data/Zip/";
-        this.userId = userId;
+        this.requestListener = requestListener;
+        this.handler = handler;
+        this.receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                if (info != null) {
+                    if (info.isConnected()) {
+                        if (!lastWifiStatus) {
+                            lastWifiStatus = true;
+                            Log.e(TAG, "broadcast receive: Wifi available now");
+                            addFuture(scheduledExecutorService.schedule(Uploader.this::uploadLocalFiles, 0, TimeUnit.MILLISECONDS));
+                        }
+                    } else {
+                        lastWifiStatus = false;
+                    }
+                }
+            }
+        };
         start();
     }
 
     private void start() {
         stop();
+        mContext.registerReceiver(receiver, new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION), null, handler);
         isRunning.set(true);
         addFuture(scheduledExecutorService.schedule(this::upload, 0, TimeUnit.MILLISECONDS));
         addFuture(scheduledExecutorService.schedule(this::compress, 0, TimeUnit.MILLISECONDS));
@@ -119,6 +148,12 @@ public class Uploader {
         isRunning.set(false);
         for (ScheduledFuture<?> future: mFutureList) {
             future.cancel(true);
+        }
+        try {
+            if (receiver != null) {
+                mContext.unregisterReceiver(receiver);
+            }
+        } catch (Exception ignored) {
         }
     }
 
@@ -194,7 +229,7 @@ public class Uploader {
                             1. must assign user ID to avoid naming conflicts on server
                             2. must assign unique ID to avoid naming conflicts on local device
                          */
-                        String zipName = userId + "_" + System.currentTimeMillis() + "_" + mZipIDCounter.getAndIncrement() + ".zip";
+                        String zipName = getUserId() + "_" + System.currentTimeMillis() + "_" + mZipIDCounter.getAndIncrement() + ".zip";
                         String metaName = zipName + ".meta";
                         File zipFile = new File(zipFolder + zipName);
                         File metaFile = new File(zipFolder + metaName);
@@ -264,7 +299,6 @@ public class Uploader {
                         }
                     }
                     if (!isUnderWifi()) {
-                        lastWifiStatus = false;
                         continue;
                     }
                     task = uploadQueue.poll();
@@ -275,38 +309,44 @@ public class Uploader {
                     lock.unlock();
                 }
 
-                if (!lastWifiStatus) {
-                    addFuture(scheduledExecutorService.schedule(this::uploadLocalFiles, 0, TimeUnit.MILLISECONDS));
-                    lastWifiStatus = true;
-                    Log.e(TAG, "upload: Wifi available now");
-                }
+//                if (!lastWifiStatus) {
+//                    addFuture(scheduledExecutorService.schedule(this::uploadLocalFiles, 0, TimeUnit.MILLISECONDS));
+//                    lastWifiStatus = true;
+//                    Log.e(TAG, "upload: Wifi available now");
+//                }
 
                 if (task != null) {
-                    NetworkUtils.uploadCollectedData(task, new Callback() {
-                        @Override
-                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                            if (task.getRemainingRetries() > 0) {
-                                task.setRemainingRetries(task.getRemainingRetries() - 1);
-                                task.setExpectedUploadTime(task.getExpectedUploadTime() + HOUR);
-                                if (pushTask(task) == UploaderStatus.QUEUE_IS_FULL) {
-                                    Log.e(TAG, task.getFile().getAbsolutePath()
-                                            + " could not be uploaded because the queue is full");
+                    try {
+                        if (task.getFile().exists()) {
+                            NetworkUtils.uploadCollectedData(task, new Callback() {
+                                @Override
+                                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                                    if (task.getRemainingRetries() > 0) {
+                                        task.setRemainingRetries(task.getRemainingRetries() - 1);
+                                        task.setExpectedUploadTime(task.getExpectedUploadTime() + HOUR);
+                                        if (pushTask(task) == UploaderStatus.QUEUE_IS_FULL) {
+                                            Log.e(TAG, task.getFile().getAbsolutePath()
+                                                    + " could not be uploaded because the queue is full");
+                                        }
+                                    } else {
+                                        Log.e(TAG, task.getFile().getAbsolutePath()
+                                                + " could not be uploaded because the maximum number of retries is reached");
+                                    }
                                 }
-                            } else {
-                                Log.e(TAG, task.getFile().getAbsolutePath()
-                                        + " could not be uploaded because the maximum number of retries is reached");
-                            }
-                        }
 
-                        @Override
-                        public void onResponse(@NonNull Call call, @NonNull Response response) {
-                            if (response.isSuccessful()) {
-                                Log.d(TAG, "Successfully uploaded " + task.getFile().getAbsolutePath());
-                                FileUtils.deleteFile(task.getFile(), "UPLOAD");
-                                FileUtils.deleteFile(task.getMetaFile(), "UPLOAD");
-                            }
+                                @Override
+                                public void onResponse(@NonNull Call call, @NonNull Response response) {
+                                    if (response.isSuccessful()) {
+                                        Log.d(TAG, "Successfully uploaded " + task.getFile().getAbsolutePath());
+                                        FileUtils.deleteFile(task.getFile(), "UPLOAD");
+                                        FileUtils.deleteFile(task.getMetaFile(), "UPLOAD");
+                                    }
+                                }
+                            });
                         }
-                    });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -362,12 +402,29 @@ public class Uploader {
     }
 
     private void uploadLocalFiles() {
-        long timestamp = System.currentTimeMillis() - 5 * MINUTE;
-        uploadDirectory(new File(this.fileFolder), timestamp, false);
-        uploadDirectory(new File(this.zipFolder), timestamp, true);
+        Log.e(TAG, "try to uploadLocalFiles");
+        if (isRunning.get()) {
+            if (isUploadingLocalFiles.compareAndSet(false, true)) {
+                try {
+                    Log.e(TAG, "uploadLocalFiles");
+                    long timestamp = System.currentTimeMillis() - 5 * MINUTE;
+                    uploadDirectory(new File(this.fileFolder), timestamp, false);
+                    uploadDirectory(new File(this.zipFolder), timestamp, true);
+                } finally {
+                    isUploadingLocalFiles.set(false);
+                }
+            }
+        }
     }
 
     public String getUserId() {
+        // get unique user ID
+        RequestConfig request = new RequestConfig();
+        request.putString("getDeviceId", "");
+        String userId = (String) requestListener.onRequest(request).getObject("getDeviceId");
+        if (userId == null || "Unknown".equals(userId)) {
+            userId = "Unknown_" + System.currentTimeMillis();
+        }
         return userId;
     }
 }

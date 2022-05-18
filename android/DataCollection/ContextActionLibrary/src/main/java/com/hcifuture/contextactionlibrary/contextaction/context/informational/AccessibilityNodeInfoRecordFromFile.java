@@ -125,7 +125,7 @@ public class AccessibilityNodeInfoRecordFromFile {
                 record.windowLayer = windowInfo.getLayer();
             }
             record.activityName = activityName;
-            Log.e("RESULT", record.activityName + " " + record.windowTitle + " " + record.windowType);
+            Log.i("InformationalContext", record.activityName + " " + record.windowTitle + " " + record.windowType);
             roots.add(record);
         }
         roots_ =new ArrayList<>(roots);
