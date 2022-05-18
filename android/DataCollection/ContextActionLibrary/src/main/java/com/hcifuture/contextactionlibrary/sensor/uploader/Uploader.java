@@ -22,6 +22,8 @@ import com.google.gson.ToNumberStrategy;
 import com.google.gson.reflect.TypeToken;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
+import com.hcifuture.shared.communicate.config.RequestConfig;
+import com.hcifuture.shared.communicate.listener.RequestListener;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -86,7 +88,7 @@ public class Uploader {
     private final String fileFolder;
     private final String zipFolder;
     private final AtomicInteger mZipIDCounter = new AtomicInteger(0);
-    private final String userId;
+    private final RequestListener requestListener;
 
     private boolean lastWifiStatus = false;
     private final BroadcastReceiver receiver;
@@ -100,13 +102,13 @@ public class Uploader {
 
     public Uploader(Context context,
                     ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList,
-                    String userId, Handler handler) {
+                    RequestListener requestListener, Handler handler) {
         this.mContext = context;
         this.scheduledExecutorService = scheduledExecutorService;
         this.futureList = futureList;
         this.fileFolder = mContext.getExternalMediaDirs()[0].getAbsolutePath() + "/Data/Click/";
         this.zipFolder = mContext.getExternalMediaDirs()[0].getAbsolutePath() + "/Data/Zip/";
-        this.userId = userId;
+        this.requestListener = requestListener;
         this.handler = handler;
         this.receiver = new BroadcastReceiver() {
             @Override
@@ -227,7 +229,7 @@ public class Uploader {
                             1. must assign user ID to avoid naming conflicts on server
                             2. must assign unique ID to avoid naming conflicts on local device
                          */
-                        String zipName = userId + "_" + System.currentTimeMillis() + "_" + mZipIDCounter.getAndIncrement() + ".zip";
+                        String zipName = getUserId() + "_" + System.currentTimeMillis() + "_" + mZipIDCounter.getAndIncrement() + ".zip";
                         String metaName = zipName + ".meta";
                         File zipFile = new File(zipFolder + zipName);
                         File metaFile = new File(zipFolder + metaName);
@@ -416,6 +418,13 @@ public class Uploader {
     }
 
     public String getUserId() {
+        // get unique user ID
+        RequestConfig request = new RequestConfig();
+        request.putString("getDeviceId", "");
+        String userId = (String) requestListener.onRequest(request).getObject("getDeviceId");
+        if (userId == null || "Unknown".equals(userId)) {
+            userId = "Unknown_" + System.currentTimeMillis();
+        }
         return userId;
     }
 }
