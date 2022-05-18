@@ -180,8 +180,6 @@ public class InformationalContext extends BaseContext {
                         lastTask = task;
                     }
                     lastPage = page;
-                    for(AccessibilityNodeInfo nodeInfo:nodeInfos)
-                        nodeInfo.recycle();
                 });
 //        },0,TimeUnit.MILLISECONDS));
     }
@@ -258,7 +256,6 @@ public class InformationalContext extends BaseContext {
                         text = "text:" + source.getText().toString();
                     if (source.getContentDescription() != null)
                         text += ",cd:" + source.getContentDescription().toString();
-                    source.recycle();
                 }
             }catch (Exception e)
             {
