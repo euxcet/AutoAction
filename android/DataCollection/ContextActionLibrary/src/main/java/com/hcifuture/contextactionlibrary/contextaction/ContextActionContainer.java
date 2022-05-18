@@ -519,15 +519,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     public void startCollectors() {
         try {
             contextLock.lock();
-            // get unique user ID
-            RequestConfig request = new RequestConfig();
-            request.putString("getDeviceId", "");
-            String userId = (String) requestListener.onRequest(request).getObject("getDeviceId");
-            if ("Unknown".equals(userId)) {
-                userId = "Unknown_" + System.currentTimeMillis();
-            }
 
-            uploader = new Uploader(mContext, scheduledExecutorService, futureList, userId, handler);
+            uploader = new Uploader(mContext, scheduledExecutorService, futureList, requestListener, handler);
             clickTrigger = new ClickTrigger(mContext, collectorManager, scheduledExecutorService, futureList);
 
             Gson gson = new Gson();
