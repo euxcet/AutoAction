@@ -40,6 +40,7 @@ public class FlipAction extends BaseAction {
     public FlipAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, LogCollector FlipLogCollector) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         logCollector = FlipLogCollector;
+        reset();
     }
 
     //对变量进行初始化
@@ -92,6 +93,9 @@ public class FlipAction extends BaseAction {
             }
         }
         else if(data.getType() == Sensor.TYPE_MAGNETIC_FIELD){
+            if(geomagnetic == null){
+                geomagnetic = new float[3];
+            }
             geomagnetic[0] = data.getValues().get(0);
             geomagnetic[1] = data.getValues().get(1);
             geomagnetic[2] = data.getValues().get(2);

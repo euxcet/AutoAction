@@ -39,6 +39,7 @@ public class CloseAction extends BaseAction {
     public CloseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, LogCollector CloseLogCollector) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         logCollector = CloseLogCollector;
+        reset();
     }
 
     //对变量进行初始化
