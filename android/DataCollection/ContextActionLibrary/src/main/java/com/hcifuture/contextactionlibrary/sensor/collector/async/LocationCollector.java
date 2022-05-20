@@ -9,6 +9,7 @@ import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorException;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.LocationData;
@@ -103,7 +104,7 @@ public class LocationCollector extends AsynchronousCollector {
                         }
                     }
                     synchronized (waitLock) {
-                        mCurrentFuture.completeExceptionally(aMapLocation != null ? new LocationException(aMapLocation.getErrorCode(), aMapLocation.getErrorInfo()) : new NullPointerException("receive null aMapLocation"));
+                        mCurrentFuture.completeExceptionally(aMapLocation != null ? new CollectorException(aMapLocation.getErrorCode(), aMapLocation.getErrorInfo()) : new NullPointerException("receive null aMapLocation"));
                         stopLocation();
                         waitLock.notifyAll();
                     }
