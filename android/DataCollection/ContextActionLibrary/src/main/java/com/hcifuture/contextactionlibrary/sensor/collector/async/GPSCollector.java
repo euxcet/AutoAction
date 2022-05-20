@@ -14,6 +14,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorException;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.GPSData;
@@ -106,10 +107,7 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
         CollectorResult result = new CollectorResult();
 
         if (config.getGPSRequestTime() <= 0) {
-            result.setErrorCode(4);
-            result.setErrorReason("Invalid GPS request time: " + config.getGPSRequestTime());
-//            ft.complete(result);
-            ft.completeExceptionally(new Exception("Invalid GPS request time: " + config.getGPSRequestTime()));
+            ft.completeExceptionally(new CollectorException(4, "Invalid GPS request time: " + config.getGPSRequestTime()));
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
                 setBasicInfo();
@@ -139,17 +137,11 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
             } catch (Exception e) {
                 e.printStackTrace();
                 unbindListener();
-                result.setErrorCode(5);
-                result.setErrorReason(e.toString());
-//                ft.complete(result);
-                ft.completeExceptionally(e);
+                ft.completeExceptionally(new CollectorException(5, e));
                 isCollecting.set(false);
             }
         } else {
-            result.setErrorCode(2);
-            result.setErrorReason("Concurrent task of GPS collecting");
-//            ft.complete(result);
-            ft.completeExceptionally(new Exception("Concurrent task of GPS collecting"));
+            ft.completeExceptionally(new CollectorException(2, "Concurrent task of GPS collecting"));
         }
 
         return ft;

@@ -1,11 +1,13 @@
 package com.hcifuture.contextactionlibrary.sensor.collector.async;
 
 import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaRecorder;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorException;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
@@ -14,7 +16,6 @@ import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AudioCollector extends AsynchronousCollector {
     private MediaRecorder mMediaRecorder;
     private final AtomicBoolean isCollecting;
+    private final AudioManager audioManager;
 
     /*
       Error code:
@@ -33,69 +35,19 @@ public class AudioCollector extends AsynchronousCollector {
         3: Concurrent task of audio recording
         4: Unknown audio recording exception
         5: Unknown exception when stopping recording
+        6: Mic not available
      */
 
     public AudioCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
         isCollecting = new AtomicBoolean(false);
+        audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
     }
 
     @Override
     public void initialize() {
 
     }
-
-    /*
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    @Override
-    public CompletableFuture<Void> collect(TriggerConfig config) {
-        CompletableFuture<Void> ft = new CompletableFuture<>();
-        if (config.getAudioLength() == 0) {
-            ft.complete(null);
-            return ft;
-        }
-        if (saveFile == null) {
-            ft.complete(null);
-            return ft;
-        }
-        if (!Objects.requireNonNull(saveFile.getParentFile()).exists()) {
-            saveFile.getParentFile().mkdirs();
-        }
-        if (!isRecording.get()) {
-            isRecording.set(true);
-            try {
-                mMediaRecorder = new MediaRecorder();
-                mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-                mMediaRecorder.setAudioChannels(2);
-                mMediaRecorder.setAudioSamplingRate(44100);
-                mMediaRecorder.setAudioEncodingBitRate(16 * 44100);
-                mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-                mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-                mMediaRecorder.setOutputFile(saveFile);
-                mMediaRecorder.prepare();
-                mMediaRecorder.start();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            scheduledExecutorService.schedule(() -> {
-                try {
-                    if (mMediaRecorder != null) {
-                        mMediaRecorder.stop();
-                        mMediaRecorder.release();
-                        mMediaRecorder = null;
-                    }
-                    isRecording.set(false);
-                    ft.complete(null);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }, config.getAudioLength(), TimeUnit.MILLISECONDS);
-        } else {
-            ft.complete(null);
-        }
-        return ft;
-    }
-     */
 
     @Override
     public void close() {
@@ -111,47 +63,45 @@ public class AudioCollector extends AsynchronousCollector {
         result.setSavePath(saveFile.getAbsolutePath());
 
         if (config.getAudioLength() <= 0) {
-            result.setErrorCode(1);
-            result.setErrorReason("Invalid audio length: " + config.getAudioLength());
-//            ft.complete(result);
-            ft.completeExceptionally(new Exception("Invalid audio length: " + config.getAudioLength()));
+            ft.completeExceptionally(new CollectorException(1, "Invalid audio length: " + config.getAudioLength()));
         } else if (config.getAudioFilename() == null) {
-            result.setErrorCode(2);
-            result.setErrorReason("Null audio filename");
-//            ft.complete(result);
-            ft.completeExceptionally(new Exception("Null audio filename"));
+            ft.completeExceptionally(new CollectorException(2, "Null audio filename"));
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
-                FileUtils.makeDir(saveFile.getParent());
-                startRecording(saveFile);
-                futureList.add(scheduledExecutorService.schedule(() -> {
-                    try {
-                        stopRecording();
-                        ft.complete(result);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        result.setErrorCode(5);
-                        result.setErrorReason(e.toString());
-                        ft.completeExceptionally(e);
-                    } finally {
-//                        ft.complete(result);
-                        isCollecting.set(false);
-                    }
-                }, config.getAudioLength(), TimeUnit.MILLISECONDS));
+                // check mic availability
+                // ref: https://stackoverflow.com/a/67458025/11854304
+//                MODE_NORMAL -> You good to go. Mic not in use
+//                MODE_RINGTONE -> Incoming call. The phone is ringing
+//                MODE_IN_CALL -> A phone call is in progress
+//                MODE_IN_COMMUNICATION -> The Mic is being used by another application
+                int micMode = audioManager.getMode();
+                if (micMode != AudioManager.MODE_NORMAL) {
+                    ft.completeExceptionally(new CollectorException(6, "Mic not available: " + micMode));
+                    isCollecting.set(false);
+                } else {
+                    FileUtils.makeDir(saveFile.getParent());
+                    startRecording(saveFile);
+                    futureList.add(scheduledExecutorService.schedule(() -> {
+                        try {
+                            stopRecording();
+                            ft.complete(result);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            ft.completeExceptionally(new CollectorException(5, e));
+                        } finally {
+//                            ft.complete(result);
+                            isCollecting.set(false);
+                        }
+                    }, config.getAudioLength(), TimeUnit.MILLISECONDS));
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 stopRecording();
-                result.setErrorCode(4);
-                result.setErrorReason(e.toString());
-//                ft.complete(result);
-                ft.completeExceptionally(e);
+                ft.completeExceptionally(new CollectorException(4, e));
                 isCollecting.set(false);
             }
         } else {
-            result.setErrorCode(3);
-            result.setErrorReason("Concurrent task of audio recording");
-//            ft.complete(result);
-            ft.completeExceptionally(new Exception("Concurrent task of audio recording"));
+            ft.completeExceptionally(new CollectorException(3, "Concurrent task of audio recording"));
         }
 
         return ft;
@@ -188,14 +138,6 @@ public class AudioCollector extends AsynchronousCollector {
             mMediaRecorder = null;
         }
     }
-
-    /*
-    @Override
-    public CompletableFuture<String> getDataString(TriggerConfig config) {
-        return null;
-    }
-
-     */
 
     @Override
     public void pause() {

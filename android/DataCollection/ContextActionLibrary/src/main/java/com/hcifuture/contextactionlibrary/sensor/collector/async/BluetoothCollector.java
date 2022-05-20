@@ -17,6 +17,7 @@ import android.os.Bundle;
 
 import androidx.annotation.RequiresApi;
 
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorException;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.BluetoothData;
@@ -74,10 +75,7 @@ public class BluetoothCollector extends AsynchronousCollector {
         CollectorResult result = new CollectorResult();
 
         if (config.getBluetoothScanTime() <= 0) {
-            result.setErrorCode(5);
-            result.setErrorReason("Invalid Bluetooth scan time: " + config.getBluetoothScanTime());
-//            ft.complete(result);
-            ft.completeExceptionally(new Exception("Invalid Bluetooth scan time: " + config.getBluetoothScanTime()));
+            ft.completeExceptionally(new CollectorException(5, "Invalid Bluetooth scan time: " + config.getBluetoothScanTime()));
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
                 notifyWake();
@@ -152,17 +150,11 @@ public class BluetoothCollector extends AsynchronousCollector {
             } catch (Exception e) {
                 e.printStackTrace();
                 stopScan();
-                result.setErrorCode(7);
-                result.setErrorReason(e.toString());
-//                ft.complete(result);
-                ft.completeExceptionally(e);
+                ft.completeExceptionally(new CollectorException(7, e));
                 isCollecting.set(false);
             }
         } else {
-            result.setErrorCode(6);
-            result.setErrorReason("Concurrent task of Bluetooth scanning");
-//            ft.complete(result);
-            ft.completeExceptionally(new Exception("Concurrent task of Bluetooth scanning"));
+            ft.completeExceptionally(new CollectorException(6, "Concurrent task of Bluetooth scanning"));
         }
 
         return ft;

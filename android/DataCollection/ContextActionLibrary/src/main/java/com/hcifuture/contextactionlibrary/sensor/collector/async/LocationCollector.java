@@ -9,6 +9,7 @@ import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorException;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.LocationData;
@@ -33,8 +34,11 @@ public class LocationCollector extends AsynchronousCollector {
     /*
       Error code:
         0: No error
-        1: Null LocationClient
-        2: Error in client.requestLocation()
+        1: Invalid location timeout
+        2: AMapLocation error
+        3: Null aMapLocation
+        4: Unknown collecting exception
+        5: Unknown exception when timeout
      */
 
     public LocationCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
@@ -47,7 +51,7 @@ public class LocationCollector extends AsynchronousCollector {
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
         if (config.getLocationTimeout() <= 0) {
             CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
-            ft.completeExceptionally(new Exception("Invalid location timeout: " + config.getLocationTimeout()));
+            ft.completeExceptionally(new CollectorException(1, "Invalid location timeout: " + config.getLocationTimeout()));
             return ft;
         }
 
@@ -103,7 +107,9 @@ public class LocationCollector extends AsynchronousCollector {
                         }
                     }
                     synchronized (waitLock) {
-                        mCurrentFuture.completeExceptionally(aMapLocation != null ? new LocationException(aMapLocation.getErrorCode(), aMapLocation.getErrorInfo()) : new NullPointerException("receive null aMapLocation"));
+                        mCurrentFuture.completeExceptionally(aMapLocation != null ?
+                                new CollectorException(2, aMapLocation.getErrorCode() + ": " + aMapLocation.getErrorInfo()) :
+                                new CollectorException(3, "Null aMapLocation"));
                         stopLocation();
                         waitLock.notifyAll();
                     }
@@ -113,7 +119,7 @@ public class LocationCollector extends AsynchronousCollector {
             } catch (Exception e) {
                 e.printStackTrace();
                 if (mCurrentFuture != null) {
-                    mCurrentFuture.completeExceptionally(e);
+                    mCurrentFuture.completeExceptionally(new CollectorException(4, e));
                 }
             }
             synchronized (waitLock) {
@@ -122,7 +128,7 @@ public class LocationCollector extends AsynchronousCollector {
                 } catch (Exception e) {
                     e.printStackTrace();
                     if (mCurrentFuture != null) {
-                        mCurrentFuture.completeExceptionally(e);
+                        mCurrentFuture.completeExceptionally(new CollectorException(5, e));
                         stopLocation();
                     }
                 }
