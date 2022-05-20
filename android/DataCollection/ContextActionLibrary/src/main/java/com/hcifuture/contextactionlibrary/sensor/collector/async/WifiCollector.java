@@ -12,6 +12,7 @@ import android.os.SystemClock;
 
 import androidx.annotation.RequiresApi;
 
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorException;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleWifiData;
@@ -120,10 +121,7 @@ public class WifiCollector extends AsynchronousCollector {
         CollectorResult result = new CollectorResult();
 
         if (config.getWifiScanTimeout() <= 0) {
-            result.setErrorCode(9);
-            result.setErrorReason("Invalid Wifi scan timeout: " + config.getWifiScanTimeout());
-//            ft.complete(result);
-            ft.completeExceptionally(new Exception("Invalid Wifi scan timeout: " + config.getWifiScanTimeout()));
+            ft.completeExceptionally(new CollectorException(9, "Invalid Wifi scan timeout: " + config.getWifiScanTimeout()));
         } else if (isCollecting.compareAndSet(false, true)) {
             try {
                 notifyWake();
@@ -184,18 +182,12 @@ public class WifiCollector extends AsynchronousCollector {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                result.setErrorCode(4);
-                result.setErrorReason(e.toString());
-//                ft.complete(result);
-                ft.completeExceptionally(e);
+                ft.completeExceptionally(new CollectorException(4, e));
                 isCollecting.set(false);
                 isScanning.set(false);
             }
         } else {
-            result.setErrorCode(3);
-            result.setErrorReason("Concurrent task of Wifi scanning");
-//            ft.complete(result);
-            ft.completeExceptionally(new Exception("Concurrent task of Wifi scanning"));
+            ft.completeExceptionally(new CollectorException(3, "Concurrent task of Wifi scanning"));
         }
 
         return ft;

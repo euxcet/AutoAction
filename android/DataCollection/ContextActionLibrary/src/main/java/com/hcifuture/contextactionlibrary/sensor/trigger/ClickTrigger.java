@@ -7,6 +7,7 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 import com.google.gson.Gson;
+import com.hcifuture.contextactionlibrary.sensor.collector.CollectorException;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
@@ -143,7 +144,7 @@ public class ClickTrigger extends Trigger {
                         + triggerID + "\t"
                         + collector.getType() + "\t"
                         + collectorName + "\t"
-                        + ((ex == null) ? 0 : 1) + "\t"
+                        + ((ex == null) ? 0 : ((ex instanceof CollectorException) ? ((CollectorException)ex).getCode() : 1)) + "\t"
                         + filename + "\t"
                         + gson.toJson(config) + "\t"
                         + ((ex == null) ? gson.toJson(JSONUtils.collectorResultToMap(v)) : ex.toString());
