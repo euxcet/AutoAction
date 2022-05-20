@@ -94,6 +94,8 @@ public class Uploader {
     private final BroadcastReceiver receiver;
     private final Handler handler;
 
+    private String mUserId = String.valueOf(System.currentTimeMillis());
+
     enum UploaderStatus {
         OK,
         QUEUE_IS_FULL,
@@ -423,7 +425,11 @@ public class Uploader {
         request.putString("getDeviceId", "");
         String userId = (String) requestListener.onRequest(request).getObject("getDeviceId");
         if (userId == null || "Unknown".equals(userId)) {
-            userId = "Unknown_" + System.currentTimeMillis();
+//            userId = "Unknown_" + System.currentTimeMillis();
+            // use last known user ID
+            userId = "Unknown_" + mUserId;
+        } else {
+            mUserId = userId;
         }
         return userId;
     }
