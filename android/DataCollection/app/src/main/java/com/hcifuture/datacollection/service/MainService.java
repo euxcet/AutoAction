@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.amap.api.services.core.ServiceSettings;
 import com.hcifuture.datacollection.contextaction.LoaderManager;
+import com.hcifuture.datacollection.inference.Inferencer;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
@@ -59,7 +60,6 @@ public class MainService extends AccessibilityService implements ContextListener
         this.mHandler = new Handler(Looper.getMainLooper());
         this.loaderManager = new LoaderManager(this, this, this);
         loaderManager.start();
-
         Log.e("Location", sHA1(getApplicationContext()));
     }
 

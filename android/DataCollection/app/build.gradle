@@ -36,6 +36,9 @@ android {
 
     buildTypes {
         debug {
+            ndk {
+                abiFilters 'armeabi-v7a'
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField("String", "SAVE_PATH", "\"/storage/emulated/0/PlaceData/\"")
@@ -48,9 +51,27 @@ android {
             buildConfigField("String", "WEB_SERVER", getProps("web.server"))
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
+    sourceSets {
+        main {
+            main {
+                jniLibs.srcDirs = ['libs']
+            }
+            assets {
+                srcDirs = ["src/main/assets"]
+            }
+        }
     }
 }
 

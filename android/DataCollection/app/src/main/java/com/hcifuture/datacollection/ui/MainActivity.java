@@ -19,6 +19,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.hcifuture.datacollection.R;
+import com.hcifuture.datacollection.inference.IMUSensorManager;
+import com.hcifuture.datacollection.inference.Inferencer;
 import com.hcifuture.datacollection.service.MainService;
 import com.hcifuture.datacollection.utils.GlobalVariable;
 import com.hcifuture.datacollection.utils.bean.TaskListBean;
@@ -66,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
 
     private Recorder recorder;
 
-
     // permission
     private static final int RC_PERMISSIONS = 0;
     private String[] permissions = new String[]{
@@ -81,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.ACTIVITY_RECOGNITION
     };
 
+    private Inferencer inferencer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,6 +123,15 @@ public class MainActivity extends AppCompatActivity {
         upgradeButton.setOnClickListener((v) -> {
             MainService.getInstance().upgrade();
         });
+
+        Button testButton = findViewById(R.id.testButton);
+        testButton.setOnClickListener((v) -> {
+            Intent intent = new Intent(MainActivity.this, TestModelActivity.class);
+            startActivity(intent);
+        });
+
+        inferencer = Inferencer.getInstance();
+        inferencer.start(this);
     }
 
     private void loadTaskListViaNetwork() {
@@ -147,19 +158,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadTaskListViaNetwork();
-        /*
-        IntentFilter filter = new IntentFilter();
-        filter.addAction("contextactionlibrary");
-        mContext.registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getExtras().getString("Action");
-                if (action.equals("TapTap")) {
-                    Toast.makeText(mContext, "TapTap", Toast.LENGTH_SHORT).show();
-                }
-            }
-        }, filter);
-         */
     }
 
     @Override

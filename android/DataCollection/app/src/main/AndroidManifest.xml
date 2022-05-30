@@ -20,9 +20,15 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false"/>
-    <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false"/>
-    <uses-feature android:name="android.hardware.sensor.stepdetector" android:required="false"/>
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.sensor.stepcounter"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.sensor.stepdetector"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -33,21 +39,28 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity
+            android:name=".ui.TestModelActivity"
+            android:exported="false" />
+        <activity
+            android:name=".visual.VisualizeTrainLogActivity"
+            android:exported="false" />
+
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="69357d253cabe081f5eca256eb64c41a"
-            />
+            android:value="69357d253cabe081f5eca256eb64c41a" />
+
         <activity
-            android:name="com.hcifuture.datacollection.visual.VisualizeRecordActivity"
+            android:name=".visual.VisualizeRecordActivity"
             android:exported="false" />
         <activity
-            android:name="com.hcifuture.datacollection.visual.RecordListActivity"
+            android:name=".visual.RecordListActivity"
             android:exported="false" />
         <activity
-            android:name="com.hcifuture.datacollection.ui.ModifySubtaskActivity"
+            android:name=".ui.ModifySubtaskActivity"
             android:exported="false" />
         <activity
-            android:name="com.hcifuture.datacollection.ui.ModifyTaskActivity"
+            android:name=".ui.ModifyTaskActivity"
             android:exported="false" />
 
         <service
@@ -65,25 +78,25 @@
         </service>
 
         <activity
-            android:name="com.hcifuture.datacollection.ui.NewTrainingProgramActivity"
+            android:name=".ui.NewTrainingProgramActivity"
             android:exported="false" />
         <activity
-            android:name="com.hcifuture.datacollection.ui.TrainActivity"
+            android:name=".ui.TrainActivity"
             android:exported="false" />
         <activity
-            android:name="com.hcifuture.datacollection.ui.AddSubtaskActivity"
+            android:name=".ui.AddSubtaskActivity"
             android:exported="false" />
         <activity
-            android:name="com.hcifuture.datacollection.ui.AddTaskActivity"
+            android:name=".ui.AddTaskActivity"
             android:exported="false" />
         <activity
-            android:name="com.hcifuture.datacollection.ui.ConfigSubtaskActivity"
+            android:name=".ui.ConfigSubtaskActivity"
             android:exported="false" />
         <activity
-            android:name="com.hcifuture.datacollection.ui.ConfigTaskActivity"
+            android:name=".ui.ConfigTaskActivity"
             android:exported="false" />
         <activity
-            android:name="com.hcifuture.datacollection.ui.MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

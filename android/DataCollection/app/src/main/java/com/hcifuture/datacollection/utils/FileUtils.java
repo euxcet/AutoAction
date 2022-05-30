@@ -190,7 +190,7 @@ public class FileUtils {
         StringBuffer buffer = new StringBuffer();
         BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new FileReader(new File(filename)));
+            reader = new BufferedReader(new FileReader(filename));
             String line = null;
             while ((line = reader.readLine()) != null) {
                 buffer.append(line);
@@ -207,6 +207,32 @@ public class FileUtils {
             }
         }
         return buffer.toString();
+    }
+
+    public static List<String> readLines(String filename) {
+        List<String> result = new ArrayList<>();
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(filename));
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                line = line.replaceAll("\\p{C}", "");
+                if (!line.isEmpty()) {
+                    result.add(line);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
     }
 
     public static String fileToMD5(String path) {

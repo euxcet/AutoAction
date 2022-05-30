@@ -27,6 +27,7 @@ public class NetworkUtils {
     private static final String TRAIN_URL = ROOT_URL + "/train";
     private static final String FILE_URL = ROOT_URL + "/file";
     private static final String MD5_URL = ROOT_URL + "/md5";
+    private static final String TRAIN_FILE_URL = ROOT_URL + "/train_file";
 
     private static Gson gson = new Gson();
     /*
@@ -172,6 +173,28 @@ public class NetworkUtils {
         OkGo.<String>get(MD5_URL)
                 .tag(context)
                 .params("filename", filename)
+                .execute(callback);
+    }
+
+    public static void downloadTrainLog(Context context, String trainId, FileCallback callback) {
+        OkGo.<File>get(TRAIN_FILE_URL)
+                .tag(context)
+                .params("trainId", trainId)
+                .params("fileType", "log")
+                .execute(callback);
+    }
+
+    public static void downloadTrainMNNModel(String trainId, FileCallback callback) {
+        OkGo.<File>get(TRAIN_FILE_URL)
+                .params("trainId", trainId)
+                .params("fileType", "mnn_model")
+                .execute(callback);
+    }
+
+    public static void downloadTrainLabel(String trainId, FileCallback callback) {
+        OkGo.<File>get(TRAIN_FILE_URL)
+                .params("trainId", trainId)
+                .params("fileType", "label")
                 .execute(callback);
     }
 }

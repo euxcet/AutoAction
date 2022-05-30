@@ -7,8 +7,7 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.hcifuture.datacollection.BuildConfig;
-import com.hcifuture.datacollection.contextaction.sensor.IMUSensorManager;
-import com.hcifuture.datacollection.contextaction.sensor.ProximitySensorManager;
+import com.hcifuture.datacollection.inference.IMUSensorManager;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -26,7 +25,6 @@ public class ContextActionLoader {
     private Object container;
 
     private IMUSensorManager imuSensorManager;
-    private ProximitySensorManager proximitySensorManager;
 
     private Method onAccessibilityEvent;
     private Method onKeyEvent;
@@ -115,19 +113,7 @@ public class ContextActionLoader {
     }
 
     private void startSensorManager(Object container, Method onSensorChanged) {
-        imuSensorManager = new IMUSensorManager(mContext,
-                SensorManager.SENSOR_DELAY_FASTEST,
-                "AlwaysOnSensorManager",
-                container,
-                onSensorChanged
-                );
-
-        proximitySensorManager = new ProximitySensorManager(mContext,
-                SensorManager.SENSOR_DELAY_FASTEST,
-                "ProximitySensorManager",
-                container,
-                onSensorChanged
-        );
+        imuSensorManager = new IMUSensorManager(mContext);
     }
 
     public void startDetection(ActionListener actionListener, ContextListener contextListener, RequestListener requestListener) {
@@ -140,7 +126,6 @@ public class ContextActionLoader {
             startContainer(container);
             startCollectors(container);
             imuSensorManager.start();
-            proximitySensorManager.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -150,9 +135,6 @@ public class ContextActionLoader {
         if (imuSensorManager != null) {
             imuSensorManager.start();
         }
-        if (proximitySensorManager != null) {
-            proximitySensorManager.start();
-        }
         if (container != null) {
             startContainer(container);
         }
@@ -161,9 +143,6 @@ public class ContextActionLoader {
     public void stopDetection() {
         if (imuSensorManager != null) {
             imuSensorManager.stop();
-        }
-        if (proximitySensorManager != null) {
-            proximitySensorManager.stop();
         }
         if (container != null) {
             stopContainer(container);
