@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -46,6 +47,7 @@ public class MotionAction extends BaseAction {
     @Override
     public void onNonIMUSensorEvent(NonIMUData data) {
         if (data.getType() == Sensor.TYPE_STEP_COUNTER) {
+            Heart.getInstance().newActionAliveEvent(getConfig().getAction(), data.getTimestamp());
             int curCount = (int)data.getStepCounter();
             if (!inited) {
                 inited = true;

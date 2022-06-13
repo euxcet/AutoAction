@@ -9,6 +9,7 @@ import android.view.accessibility.AccessibilityEvent;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -94,6 +95,7 @@ public class TableContext extends BaseContext {
 
     @Override
     public void onIMUSensorEvent(SingleIMUData data) {
+        Heart.getInstance().newContextAliveEvent(getConfig().getContext(), data.getTimestamp());
         switch (data.getType()) {
             case Sensor.TYPE_GYROSCOPE:
             case Sensor.TYPE_LINEAR_ACCELERATION:

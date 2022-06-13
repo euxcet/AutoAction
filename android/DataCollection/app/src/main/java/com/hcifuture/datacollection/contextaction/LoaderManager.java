@@ -4,6 +4,7 @@ import static android.content.Context.MODE_PRIVATE;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 
@@ -14,6 +15,7 @@ import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.RequestResult;
+import com.hcifuture.shared.communicate.status.Heartbeat;
 
 import java.io.File;
 import java.net.NetworkInterface;
@@ -244,6 +246,26 @@ public class LoaderManager {
         float[] data = new float[128 * 6];
         Arrays.fill(data, 0.1f);
         Log.e("result", ncnnInstance.actionDetect(data) + " ");
+         */
+
+        /*
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (loader != null) {
+                    Heartbeat heartbeat = loader.getHeartbeat();
+                    if (heartbeat != null) {
+                        Log.e("Heartbeat", heartbeat.getTimestamp() + " " + heartbeat.getFutureCount() + " " + heartbeat.getAliveFutureCount());
+                        Log.e("Heartbeat", heartbeat.getLastActionAliveTimestamp().toString());
+                        Log.e("Heartbeat", heartbeat.getLastContextAliveTimestamp().toString());
+                        Log.e("Heartbeat", heartbeat.getLastActionTriggerTimestamp().toString());
+                        Log.e("Heartbeat", heartbeat.getLastContextTriggerTimestamp().toString());
+                        Log.e("Heartbeat", heartbeat.getLastSensorGetTimestamp().toString());
+                        Log.e("Heartbeat", heartbeat.getLastCollectorAliveTimestamp().toString());
+                    }
+                }
+            }
+        }, 1000, 1000);
          */
     }
 

@@ -26,6 +26,11 @@ public class NonIMUData extends Data {
         stepCounterTimestamp = 0;
     }
 
+    public long getTimestamp() {
+        return Math.max(Math.max(Math.max(environmentBrightnessTimestamp, airPressureTimestamp),
+                        Math.max(screenBrightnessTimestamp, proximityTimestamp)), stepCounterTimestamp);
+    }
+
     public int getType() {
         return type;
     }

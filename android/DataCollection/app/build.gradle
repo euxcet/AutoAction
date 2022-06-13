@@ -89,7 +89,7 @@ dependencies {
 
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
-    api 'com.amap.api:3dmap:latest.integration'
+//    api 'com.amap.api:3dmap:latest.integration'
     api 'com.amap.api:location:latest.integration'
     api 'com.amap.api:search:latest.integration'
 }

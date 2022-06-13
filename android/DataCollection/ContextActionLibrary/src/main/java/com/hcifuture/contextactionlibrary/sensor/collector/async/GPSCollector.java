@@ -19,6 +19,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.GPSData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.status.Heart;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,6 +104,7 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
+        Heart.getInstance().newSensorGetEvent(getName(), System.currentTimeMillis());
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         CollectorResult result = new CollectorResult();
 

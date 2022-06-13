@@ -15,6 +15,7 @@ public class Result {
     public Result(String key, String reason) {
         setKey(key);
         setReason(reason);
+        setTimestamp(System.currentTimeMillis());
     }
 
     public void setKey(String key) {

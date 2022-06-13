@@ -14,6 +14,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.LocationData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.status.Heart;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -49,6 +50,7 @@ public class LocationCollector extends AsynchronousCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
+        Heart.getInstance().newSensorGetEvent(getName(), System.currentTimeMillis());
         if (config.getLocationTimeout() <= 0) {
             CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
             ft.completeExceptionally(new CollectorException(1, "Invalid location timeout: " + config.getLocationTimeout()));

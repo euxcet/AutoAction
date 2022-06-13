@@ -9,6 +9,7 @@ import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
@@ -42,6 +43,7 @@ public class ConfigCollector extends BaseCollector {
     public void onAction(ActionResult action) {
         long current_call = action.getTimestamp();
         String commit = "";
+        Heart.getInstance().newCollectorAliveEvent(getName(), action.getTimestamp());
 
         if (MotionAction.NEED_POSITION.equals(action.getAction())) {
             // called every 5 min at most
@@ -59,6 +61,7 @@ public class ConfigCollector extends BaseCollector {
     public void onContext(ContextResult context) {
         long current_call = context.getTimestamp();
         String commit = "";
+        Heart.getInstance().newCollectorAliveEvent(getName(), context.getTimestamp());
 
         if (ConfigContext.NEED_AUDIO.equals(context.getContext())) {
             last_audio = current_call;
@@ -80,5 +83,10 @@ public class ConfigCollector extends BaseCollector {
                 triggerAndUpload(CollectorManager.CollectorType.Wifi, triggerConfig, name, commit, context);
             }
         }
+    }
+
+    @Override
+    public String getName() {
+        return "ConfigCollector";
     }
 }

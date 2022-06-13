@@ -12,6 +12,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
@@ -41,6 +42,7 @@ public class FlipCollector extends BaseCollector{
     @Override
     public void onAction(ActionResult action) {
         if (action.getAction().equals("Flip")) {
+            Heart.getInstance().newCollectorAliveEvent(getName(), action.getTimestamp());
             FutureIMU = clickTrigger.trigger(Collections.singletonList(CollectorManager.CollectorType.IMU), new TriggerConfig());
             long time = System.currentTimeMillis();
             if (FutureIMU != null) {
@@ -75,5 +77,10 @@ public class FlipCollector extends BaseCollector{
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onContext(ContextResult context) {
+    }
+
+    @Override
+    public String getName() {
+        return "FlipCollector";
     }
 }

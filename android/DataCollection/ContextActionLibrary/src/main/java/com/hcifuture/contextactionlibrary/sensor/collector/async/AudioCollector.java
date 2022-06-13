@@ -11,6 +11,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.CollectorException;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 
 import java.io.File;
@@ -57,6 +58,7 @@ public class AudioCollector extends AsynchronousCollector {
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public CompletableFuture<CollectorResult> getData(TriggerConfig config) {
+        Heart.getInstance().newSensorGetEvent(getName(), System.currentTimeMillis());
         CompletableFuture<CollectorResult> ft = new CompletableFuture<>();
         CollectorResult result = new CollectorResult();
         File saveFile = new File(config.getAudioFilename());
