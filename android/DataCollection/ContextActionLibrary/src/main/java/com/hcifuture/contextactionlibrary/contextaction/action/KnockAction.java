@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -40,6 +41,7 @@ public class KnockAction extends BaseAction {
 
     @Override
     public void onIMUSensorEvent(SingleIMUData data) {
+        Heart.getInstance().newActionAliveEvent(getConfig().getAction(), data.getTimestamp());
         int type = data.getType();
         switch (type) {
             case Sensor.TYPE_GYROSCOPE:

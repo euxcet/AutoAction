@@ -56,6 +56,7 @@ public abstract class BaseCollector {
 
     public abstract void onContext(ContextResult context);
 
+    public abstract String getName();
 
     public String getUserID() {
         return uploader.getUserId();

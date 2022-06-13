@@ -12,6 +12,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
@@ -43,8 +44,9 @@ public class CloseCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAction(ActionResult action) {
+        long time = System.currentTimeMillis();
         if (action.getAction().equals("Close")) {
-            long time = System.currentTimeMillis();
+            Heart.getInstance().newCollectorAliveEvent(getName(), time);
             //先传log
             if (clickTrigger != null && scheduledExecutorService != null) {
                 try {
@@ -77,6 +79,7 @@ public class CloseCollector extends BaseCollector {
             }
         }
         if (action.getAction().equals("CloseStart")) {
+            Heart.getInstance().newCollectorAliveEvent(getName(), time);
             if (clickTrigger != null && scheduledExecutorService != null) {
                 try {
                     Log.e("upload","log_close_start:"+logCollector.getData().getDataString());
@@ -94,5 +97,10 @@ public class CloseCollector extends BaseCollector {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onContext(ContextResult context) {
+    }
+
+    @Override
+    public String getName() {
+        return "CloseCollector";
     }
 }

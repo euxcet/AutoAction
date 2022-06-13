@@ -125,4 +125,9 @@ public class TimedCollector extends BaseCollector {
     @Override
     public void onContext(ContextResult context) {
     }
+
+    @Override
+    public String getName() {
+        return "TimedCollector";
+    }
 }

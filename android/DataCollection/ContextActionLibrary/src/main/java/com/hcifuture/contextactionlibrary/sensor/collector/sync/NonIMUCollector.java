@@ -15,6 +15,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.status.Heart;
 
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -103,6 +104,7 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
     @Override
     public synchronized void onSensorChanged(SensorEvent event) {
         if (data != null) {
+            Heart.getInstance().newSensorGetEvent(getName(), event.timestamp);
             NonIMUData nonIMUData = new NonIMUData();
             nonIMUData.setType(event.sensor.getType());
             data.setType(event.sensor.getType());

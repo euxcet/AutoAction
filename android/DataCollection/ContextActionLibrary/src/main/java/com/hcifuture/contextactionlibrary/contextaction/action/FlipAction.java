@@ -13,6 +13,7 @@ import android.util.Log;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -81,6 +82,7 @@ public class FlipAction extends BaseAction {
 
     @Override
     public void onIMUSensorEvent(SingleIMUData data) {
+        Heart.getInstance().newActionAliveEvent(getConfig().getAction(), data.getTimestamp());
         if (data.getType() == Sensor.TYPE_ACCELEROMETER) {
             gravity[0] = data.getValues().get(0);
             gravity[1] = data.getValues().get(1);

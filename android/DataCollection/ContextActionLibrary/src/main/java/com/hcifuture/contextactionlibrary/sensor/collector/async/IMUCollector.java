@@ -17,6 +17,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder
 import com.hcifuture.contextactionlibrary.sensor.data.IMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.status.Heart;
 
 import java.util.Arrays;
 import java.util.List;
@@ -93,6 +94,7 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        Heart.getInstance().newSensorGetEvent(getName(), event.timestamp);
         if (data != null) {
             SingleIMUData newData = new SingleIMUData(
                     Arrays.asList(event.values[0], event.values[1], event.values[2]),

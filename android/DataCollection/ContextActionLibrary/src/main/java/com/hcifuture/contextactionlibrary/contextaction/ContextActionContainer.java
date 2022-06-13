@@ -50,6 +50,7 @@ import com.hcifuture.contextactionlibrary.contextaction.context.physical.TableCo
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.contextactionlibrary.utils.FileSaver;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.contextactionlibrary.utils.JSONUtils;
@@ -64,9 +65,11 @@ import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
 import com.hcifuture.shared.communicate.result.Result;
+import com.hcifuture.shared.communicate.status.Heartbeat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -234,7 +237,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
          */
 
-        this.futureList = new ArrayList<>();
+        this.futureList = Collections.synchronizedList(new ArrayList<>());
         mRegURIs = new ArrayList<>();
     }
 
@@ -330,8 +333,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         if (uploader != null) {
             uploader.stop();
         }
-        for (ScheduledFuture<?> future: futureList) {
-            future.cancel(true);
+        synchronized (futureList) {
+            for (ScheduledFuture<?> future : futureList) {
+                future.cancel(true);
+            }
         }
         futureList.clear();
         scheduledExecutorService.shutdownNow();
@@ -374,6 +379,18 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
     }
 
+    private void cleanFutureList() {
+        List<ScheduledFuture<?>> removed = new ArrayList<>();
+        synchronized (futureList) {
+            for (ScheduledFuture<?> future: futureList) {
+                if (future.isCancelled() || future.isDone()) {
+                    removed.add(future);
+                }
+            }
+        }
+        futureList.removeAll(removed);
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void initialize() {
 //        ServiceSettings.updatePrivacyShow(mContext.getApplicationContext(), true , true);
@@ -389,6 +406,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(32);
         ((ScheduledThreadPoolExecutor)scheduledExecutorService).setRemoveOnCancelPolicy(true);
 
+        this.futureList.add(scheduledExecutorService.scheduleAtFixedRate(this::cleanFutureList, 600000, 600000, TimeUnit.MILLISECONDS));
         FileSaver.initialize(scheduledExecutorService, futureList);
 
         this.collectorManager = new CollectorManager(mContext, Arrays.asList(
@@ -772,6 +790,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAction(ActionResult action) {
+        Heart.getInstance().newActionTriggerEvent(action.getAction(), action.getTimestamp());
         assignIDAndRecord(action);
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
@@ -782,6 +801,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     @Override
     public void onContext(ContextResult context) {
+        Heart.getInstance().newContextTriggerEvent(context.getContext(), context.getTimestamp());
         assignIDAndRecord(context);
         if (collectors != null) {
             for (BaseCollector collector: collectors) {
@@ -856,5 +876,21 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         }
         // assign ID
         contextOrAction.getExtras().putInt("contextActionID", contextActionID);
+    }
+
+    public Heartbeat getHeartbeat() {
+        int size = 0;
+        int alive = 0;
+        synchronized (futureList) {
+            size = futureList.size();
+            for (int i = 0; i < size; i++) {
+                if (!futureList.get(i).isCancelled() && !futureList.get(i).isDone()) {
+                    alive++;
+                }
+            }
+        }
+        Heart.getInstance().setFutureCount(size);
+        Heart.getInstance().setAliveFutureCount(alive);
+        return Heart.getInstance().beat();
     }
 }

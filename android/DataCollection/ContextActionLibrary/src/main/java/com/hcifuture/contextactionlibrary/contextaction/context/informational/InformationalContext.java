@@ -15,6 +15,7 @@ import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -207,6 +208,9 @@ public class InformationalContext extends BaseContext {
         // remove duplicated
         if(event.getEventTime()==lastEventTime)
             return;
+
+        Heart.getInstance().newContextAliveEvent(getConfig().getContext(), event.getEventTime());
+
         lastEventTime = event.getEventTime();
 
         String eventString =event.toString();

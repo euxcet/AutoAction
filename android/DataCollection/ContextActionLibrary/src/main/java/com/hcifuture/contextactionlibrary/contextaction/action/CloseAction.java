@@ -11,6 +11,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -74,6 +75,7 @@ public class CloseAction extends BaseAction {
         if(proximity_flag != CollectorStatus.READY){
             return;
         }
+        Heart.getInstance().newActionAliveEvent(getConfig().getAction(), data.getTimestamp());
         int type = data.getType();
         switch (type) {
             case Sensor.TYPE_GYROSCOPE:
@@ -143,6 +145,7 @@ public class CloseAction extends BaseAction {
             return;
         }
 
+        Heart.getInstance().newActionAliveEvent(getConfig().getAction(), data.getTimestamp());
 
         if(data.getType()==Sensor.TYPE_PROXIMITY){
             dist = data.getProximity();

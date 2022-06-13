@@ -7,6 +7,7 @@ import android.util.Log;
 import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.Lowpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.MyPeakDetector;
@@ -116,6 +117,7 @@ public class PocketAction extends BaseAction {
     public void onIMUSensorEvent(SingleIMUData data) {
         if (data.getType() != Sensor.TYPE_GYROSCOPE && data.getType() != Sensor.TYPE_LINEAR_ACCELERATION)
             return;
+        Heart.getInstance().newActionAliveEvent(getConfig().getAction(), data.getTimestamp());
         if (data.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             gotAcc = true;
             if (!gotGyro)

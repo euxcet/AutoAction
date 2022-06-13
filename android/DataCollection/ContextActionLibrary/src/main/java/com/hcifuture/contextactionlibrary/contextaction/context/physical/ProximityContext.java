@@ -7,6 +7,7 @@ import android.view.accessibility.AccessibilityEvent;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -55,6 +56,7 @@ public class ProximityContext extends BaseContext {
 
     @Override
     public void onNonIMUSensorEvent(NonIMUData data) {
+        Heart.getInstance().newContextAliveEvent(getConfig().getContext(), data.getTimestamp());
         float prox = data.getProximity();
         if ((int)prox < proxThreshold) {
             lastNearTime = data.getProximityTimestamp();

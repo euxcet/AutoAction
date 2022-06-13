@@ -8,6 +8,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.LogData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
+import com.hcifuture.contextactionlibrary.status.Heart;
 
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -60,6 +61,7 @@ public class LogCollector extends SynchronousCollector {
 
     @Override
     public CollectorResult getData(TriggerConfig config) {
+        Heart.getInstance().newSensorGetEvent(getName(), System.currentTimeMillis());
         CollectorResult result = new CollectorResult();
         result.setData(data.deepClone());
         result.setDataString(((LogData)result.getData()).getString());
@@ -67,7 +69,9 @@ public class LogCollector extends SynchronousCollector {
         return result;
     }
 
+    // TODO: remove this function
     public CollectorResult getData() {
+        Heart.getInstance().newSensorGetEvent(getName(), System.currentTimeMillis());
         CollectorResult result = new CollectorResult();
         result.setData(data.deepClone());
         result.setDataString(((LogData)result.getData()).getString());

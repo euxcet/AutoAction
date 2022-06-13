@@ -10,6 +10,7 @@ import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.Combine
 import com.hcifuture.contextactionlibrary.contextaction.action.tapfilter.HorizontalFilter;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass1C;
 import com.hcifuture.contextactionlibrary.utils.imu.Highpass3C;
 import com.hcifuture.contextactionlibrary.utils.imu.Lowpass1C;
@@ -141,6 +142,7 @@ public class TapTapAction extends BaseAction {
 
     @Override
     public void onIMUSensorEvent(SingleIMUData data) {
+        Heart.getInstance().newActionAliveEvent(getConfig().getAction(), data.getTimestamp());
         // just for horizontal / static cases' record && upload
         horizontalFilter.onSensorChanged(data);
         if (horizontalFilter.passWithDelay(data.getTimestamp()) == -1) {

@@ -13,6 +13,7 @@ import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
+import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ActionResult;
 import com.hcifuture.shared.communicate.result.ContextResult;
@@ -38,8 +39,10 @@ public class TapTapCollector extends BaseCollector {
     @Override
     public void onAction(ActionResult action) {
         if (action.getAction().equals(TapTapAction.ACTION) || action.getAction().equals(TopTapAction.ACTION) || action.getAction().equals(PocketAction.ACTION)) {
+            Heart.getInstance().newCollectorAliveEvent(getName(), action.getTimestamp());
             lastFuture = clickTrigger.trigger(Collections.singletonList(CollectorManager.CollectorType.IMU), new TriggerConfig());
         } else if (action.getAction().equals(TapTapAction.ACTION_UPLOAD) || action.getAction().equals(TopTapAction.ACTION_UPLOAD) || action.getAction().equals(PocketAction.ACTION_UPLOAD)) {
+            Heart.getInstance().newCollectorAliveEvent(getName(), action.getTimestamp());
             if (lastFuture != null) {
                 String name = action.getAction();
                 String commit = action.getAction() + ":" + action.getReason() + ":" + markTimestamp;
@@ -54,6 +57,7 @@ public class TapTapCollector extends BaseCollector {
                 }
             }
         } else if (action.getAction().equals(TopTapAction.ACTION_RECOGNIZED) || action.getAction().equals(PocketAction.ACTION_RECOGNIZED)) {
+            Heart.getInstance().newCollectorAliveEvent(getName(), action.getTimestamp());
 //            markTimestamp = action.getTimestamp();
             long[] tmp = action.getExtras().getLongArray("timestamp");
             markTimestamp = tmp[0] + ":" + tmp[1];
@@ -67,11 +71,17 @@ public class TapTapCollector extends BaseCollector {
             return;
         }
         if (clickTrigger != null) {
+            Heart.getInstance().newCollectorAliveEvent(getName(), context.getTimestamp());
             triggerAndUpload(CollectorManager.CollectorType.IMU,
                     new TriggerConfig().setImuHead(800).setImuTail(200),
                     context.getContext(),
                     context.getContext() + ":" + context.getTimestamp()
             );
         }
+    }
+
+    @Override
+    public String getName() {
+        return "TapTapCollector";
     }
 }

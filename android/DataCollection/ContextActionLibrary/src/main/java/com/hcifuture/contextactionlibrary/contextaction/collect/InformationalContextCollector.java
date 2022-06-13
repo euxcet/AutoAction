@@ -37,5 +37,10 @@ public class InformationalContextCollector extends BaseCollector {
 
     }
 
+    @Override
+    public String getName() {
+        return "InformationalContextCollector";
+    }
+
 
 }

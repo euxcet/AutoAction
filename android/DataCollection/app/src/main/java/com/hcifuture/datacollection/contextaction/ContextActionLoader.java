@@ -12,6 +12,7 @@ import com.hcifuture.datacollection.contextaction.sensor.ProximitySensorManager;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
+import com.hcifuture.shared.communicate.status.Heartbeat;
 
 import java.lang.reflect.Method;
 
@@ -51,6 +52,21 @@ public class ContextActionLoader {
                             actionListener, contextListener,
                             requestListener,
                             true, false, BuildConfig.SAVE_PATH);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private Heartbeat getContainerHeartbeat(Object container) {
+        try {
+            Method start = containerClass.getMethod("getHeartbeat");
+            Object heartbeat = start.invoke(container);
+            if (heartbeat == null) {
+                return null;
+            } else {
+                return (Heartbeat)heartbeat;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -188,6 +204,13 @@ public class ContextActionLoader {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public Heartbeat getHeartbeat() {
+        if (container != null) {
+            return getContainerHeartbeat(container);
+        }
+        return null;
     }
 }
 
