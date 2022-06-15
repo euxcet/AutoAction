@@ -752,6 +752,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onAccessibilityEventDex(AccessibilityEvent event) {
+        Heart.getInstance().newSensorGetEvent("Accessibility", System.currentTimeMillis());
         if (handler != null) {
             final AccessibilityEvent event1 = AccessibilityEvent.obtain(event);
             handler.post(() -> {
@@ -778,6 +779,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onBroadcastEventDex(BroadcastEvent event) {
+        Heart.getInstance().newSensorGetEvent("Broadcast", System.currentTimeMillis());
         if (handler != null) {
             handler.post(() -> {
                 if (dataDistributor != null) {
