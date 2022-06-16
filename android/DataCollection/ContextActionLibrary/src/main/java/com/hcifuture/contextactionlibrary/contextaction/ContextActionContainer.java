@@ -50,6 +50,7 @@ import com.hcifuture.contextactionlibrary.contextaction.context.physical.TableCo
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.sensor.uploader.Uploader;
+import com.hcifuture.contextactionlibrary.status.ExternalStatus;
 import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.contextactionlibrary.utils.FileSaver;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
@@ -749,6 +750,50 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             }
         }, 3000L, 1000L, TimeUnit.MILLISECONDS);
         futureList.add(contextFuture);
+    }
+
+    public boolean setNumberExternalStatusDex(String key, Number number) {
+        if (number instanceof Integer) {
+            ExternalStatus.getInstance().setIntegerStatus(key, (Integer)number);
+            return true;
+        } else if (number instanceof Long) {
+            ExternalStatus.getInstance().setLongStatus(key, (Long)number);
+            return true;
+        } else if (number instanceof Float) {
+            ExternalStatus.getInstance().setFloatStatus(key, (Float)number);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean setBooleanExternalStatusDex(String key, Boolean value) {
+        ExternalStatus.getInstance().setBooleanStatus(key, value);
+        return true;
+    }
+
+    public boolean setStringExternalStatusDex(String key, String value) {
+        ExternalStatus.getInstance().setStringStatus(key, value);
+        return true;
+    }
+
+    public Integer getIntegerExternalStatusDex(String key) {
+        return ExternalStatus.getInstance().getIntegerStatus(key);
+    }
+
+    public Long getLongExternalStatusDex(String key) {
+        return ExternalStatus.getInstance().getLongStatus(key);
+    }
+
+    public Float getFloatExternalStatusDex(String key) {
+        return ExternalStatus.getInstance().getFloatStatus(key);
+    }
+
+    public Boolean getBooleanExternalStatusDex(String key) {
+        return ExternalStatus.getInstance().getBooleanStatus(key);
+    }
+
+    public String getStringExternalStatusDex(String key) {
+        return ExternalStatus.getInstance().getStringStatus(key);
     }
 
     public void onSensorChangedDex(SensorEvent event) {

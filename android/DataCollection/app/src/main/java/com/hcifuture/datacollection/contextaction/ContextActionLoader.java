@@ -58,21 +58,6 @@ public class ContextActionLoader {
         return null;
     }
 
-    private Heartbeat getContainerHeartbeat(Object container) {
-        try {
-            Method start = containerClass.getMethod("getHeartbeat");
-            Object heartbeat = start.invoke(container);
-            if (heartbeat == null) {
-                return null;
-            } else {
-                return (Heartbeat)heartbeat;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     private void startContainer(Object container) {
         try {
             Method start = containerClass.getMethod("start");
@@ -208,7 +193,138 @@ public class ContextActionLoader {
 
     public Heartbeat getHeartbeat() {
         if (container != null) {
-            return getContainerHeartbeat(container);
+            try {
+                Method method = containerClass.getMethod("getHeartbeat");
+                Object heartbeat = method.invoke(container);
+                if (heartbeat == null) {
+                    return null;
+                } else {
+                    return (Heartbeat)heartbeat;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+        return null;
+    }
+
+    public boolean setNumberExternalStatus(String key, Number value) {
+        if (container != null) {
+            try {
+                Method method = containerClass.getMethod("setNumberExternalStatusDex",
+                        String.class, Number.class);
+                Object result = method.invoke(container, key, value);
+                return (Boolean)result;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+        return false;
+    }
+
+    public boolean setBooleanExternalStatus(String key, Boolean value) {
+        if (container != null) {
+            try {
+                Method method = containerClass.getMethod("setBooleanExternalStatusDex",
+                        String.class, Boolean.class);
+                Object result = method.invoke(container, key, value);
+                return (Boolean)result;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+        return false;
+    }
+
+    public boolean setStringExternalStatus(String key, String value) {
+        if (container != null) {
+            try {
+                Method method = containerClass.getMethod("setStringExternalStatusDex",
+                        String.class, String.class);
+                Object result = method.invoke(container, key, value);
+                return (Boolean)result;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+        return false;
+    }
+
+    public Integer getIntegerExternalStatus(String key) {
+        if (container != null) {
+            try {
+                Method method = containerClass.getMethod("getIntegerExternalStatusDex",
+                        String.class);
+                Object result = method.invoke(container, key);
+                return (Integer)result;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+        return null;
+    }
+
+    public Long getLongExternalStatus(String key) {
+        if (container != null) {
+            try {
+                Method method = containerClass.getMethod("getLongExternalStatusDex",
+                        String.class);
+                Object result = method.invoke(container, key);
+                return (Long)result;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+        return null;
+    }
+
+    public Float getFloatExternalStatus(String key) {
+        if (container != null) {
+            try {
+                Method method = containerClass.getMethod("getFloatExternalStatusDex",
+                        String.class);
+                Object result = method.invoke(container, key);
+                return (Float)result;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+        return null;
+    }
+
+    public Boolean getBooleanExternalStatus(String key) {
+        if (container != null) {
+            try {
+                Method method = containerClass.getMethod("getBooleanExternalStatusDex",
+                        String.class);
+                Object result = method.invoke(container, key);
+                return (Boolean)result;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+        return null;
+    }
+
+    public String getStringExternalStatus(String key) {
+        if (container != null) {
+            try {
+                Method method = containerClass.getMethod("getStringExternalStatusDex",
+                        String.class);
+                Object result = method.invoke(container, key);
+                return (String)result;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
         }
         return null;
     }
