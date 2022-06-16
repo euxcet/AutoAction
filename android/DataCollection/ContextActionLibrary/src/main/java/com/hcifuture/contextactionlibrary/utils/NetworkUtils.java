@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.sensor.uploader.UploadTask;
 
 import java.io.File;
+import java.util.Objects;
 
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -20,8 +21,8 @@ import okhttp3.RequestBody;
 
 public class NetworkUtils {
     private static final String TAG = "NetworkUtils";
-    private static final String ROOT_URL = BuildConfig.WEB_SERVER;
-    private static final String COLLECTED_DATA_URL = ROOT_URL + "/collected_data";
+    private static String ROOT_URL = "";
+    private static String COLLECTED_DATA_URL = ROOT_URL + "/collected_data";
 
     private static final Gson gson = new Gson();
     private static final OkHttpClient client = new OkHttpClient();
@@ -30,6 +31,11 @@ public class NetworkUtils {
     public static final String MIME_TYPE_MP3 = "audio/mpeg";
     public static final String MIME_TYPE_TXT = "text/plain";
     public static final String MIME_TYPE_ZIP = "application/zip";
+
+    public static void setRootUrl(String url) {
+        ROOT_URL = url;
+        COLLECTED_DATA_URL = ROOT_URL + "/collected_data";
+    }
 
     /*
         fileType:
@@ -78,6 +84,9 @@ public class NetworkUtils {
      */
 
     public static void uploadCollectedData(UploadTask task, Callback callback) {
+        if (Objects.equals(ROOT_URL, "")) {
+            return;
+        }
         String extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(task.getFile()).toString());
 //        String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
         String mime;
