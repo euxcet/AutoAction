@@ -233,6 +233,13 @@ public class LoaderManager {
         RequestListener requestListener = this::handleRequest;
 
         loader.startDetection(actionListener, contextListener, requestListener);
+
+//        loader.setBooleanExternalStatus("testboolean", true);
+//        loader.setNumberExternalStatus("testInt", 2);
+//        Log.e("TEST", loader.getBooleanExternalStatus("testboolean") + " " + loader.getIntegerExternalStatus("testInt"));
+//        loader.setBooleanExternalStatus("testboolean", false);
+//        loader.setNumberExternalStatus("testInt", 3);
+//        Log.e("TEST", loader.getBooleanExternalStatus("testboolean") + " " + loader.getIntegerExternalStatus("testInt"));
         /*
         NcnnInstance.init(mService,
                 BuildConfig.SAVE_PATH + "best.param",
