@@ -47,11 +47,11 @@ public class ContextActionLoader {
             return containerClass.getDeclaredConstructor(Context.class,
                     ActionListener.class, ContextListener.class,
                     RequestListener.class,
-                    boolean.class, boolean.class, String.class)
+                    boolean.class, boolean.class, String.class, String.class)
                     .newInstance(mContext,
                             actionListener, contextListener,
                             requestListener,
-                            true, false, BuildConfig.SAVE_PATH);
+                            true, false, BuildConfig.SAVE_PATH, BuildConfig.WEB_SERVER);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -54,6 +54,7 @@ import com.hcifuture.contextactionlibrary.status.Heart;
 import com.hcifuture.contextactionlibrary.utils.FileSaver;
 import com.hcifuture.contextactionlibrary.utils.FileUtils;
 import com.hcifuture.contextactionlibrary.utils.JSONUtils;
+import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
@@ -208,13 +209,15 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             WifiManager.ACTION_WIFI_SCAN_AVAILABILITY_CHANGED
     };
 
-    public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener, String SAVE_PATH) {
+    public ContextActionContainer(Context context, List<BaseAction> actions, List<BaseContext> contexts, RequestListener requestListener,
+                                  String SAVE_PATH, String SERVER_URL) {
         this.mContext = context;
         this.actions = actions;
         this.contexts = contexts;
         this.actionFuture = null;
         this.contextFuture = null;
         ContextActionContainer.SAVE_PATH = SAVE_PATH;
+        NetworkUtils.setRootUrl(SERVER_URL);
         /*
         this.executor = new ThreadPoolExecutor(1,
                 1,
@@ -244,8 +247,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     public ContextActionContainer(Context context,
                                   ActionListener actionListener, ContextListener contextListener,
                                   RequestListener requestListener,
-                                  boolean fromDex, boolean openSensor, String SAVE_PATH) {
-        this(context, new ArrayList<>(), new ArrayList<>(), requestListener, SAVE_PATH);
+                                  boolean fromDex, boolean openSensor, String SAVE_PATH, String SERVER_URL) {
+        this(context, new ArrayList<>(), new ArrayList<>(), requestListener, SAVE_PATH, SERVER_URL);
         // this.actionConfig = actionConfig;
         this.actionListener = actionListener;
         // this.contextConfig = contextConfig;
@@ -752,6 +755,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onAccessibilityEventDex(AccessibilityEvent event) {
+        Heart.getInstance().newSensorGetEvent("Accessibility", System.currentTimeMillis());
         if (handler != null) {
             final AccessibilityEvent event1 = AccessibilityEvent.obtain(event);
             handler.post(() -> {
@@ -778,6 +782,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     }
 
     public void onBroadcastEventDex(BroadcastEvent event) {
+        Heart.getInstance().newSensorGetEvent("Broadcast", System.currentTimeMillis());
         if (handler != null) {
             handler.post(() -> {
                 if (dataDistributor != null) {
