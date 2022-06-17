@@ -8,6 +8,7 @@ import static java.lang.StrictMath.abs;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
@@ -208,6 +209,11 @@ public class FlipAction extends BaseAction {
 
     @Override
     public void onNonIMUSensorEvent(NonIMUData data) {
+
+    }
+
+    @Override
+    public void onExternalEvent(Bundle bundle) {
 
     }
 

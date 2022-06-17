@@ -3,6 +3,7 @@ package com.hcifuture.contextactionlibrary.contextaction.context.informational;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -306,6 +307,11 @@ public class InformationalContext extends BaseContext {
             onScreenState(true);
         else if(action.equals(Intent.ACTION_SCREEN_OFF))
             onScreenState(false);
+    }
+
+    @Override
+    public void onExternalEvent(Bundle bundle) {
+
     }
 
     @Override

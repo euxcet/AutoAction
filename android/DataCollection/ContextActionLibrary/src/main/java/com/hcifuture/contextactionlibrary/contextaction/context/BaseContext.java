@@ -1,6 +1,7 @@
 package com.hcifuture.contextactionlibrary.contextaction.context;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
@@ -58,6 +59,7 @@ public abstract class BaseContext {
 
     public abstract void onAccessibilityEvent(AccessibilityEvent event);
     public abstract void onBroadcastEvent(BroadcastEvent event);
+    public abstract void onExternalEvent(Bundle bundle);
 
     public abstract void getContext();
 

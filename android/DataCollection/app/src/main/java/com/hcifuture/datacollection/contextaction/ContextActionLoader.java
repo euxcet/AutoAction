@@ -3,6 +3,7 @@ package com.hcifuture.datacollection.contextaction;
 import android.content.Context;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
+import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 
@@ -168,6 +169,17 @@ public class ContextActionLoader {
         }
         if (container != null) {
             stopContainer(container);
+        }
+    }
+
+    public void onExternalEvent(Bundle bundle) {
+        try {
+            if (container != null) {
+                Method method = containerClass.getMethod("onExternalEventDex", Bundle.class);
+                method.invoke(container, bundle);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

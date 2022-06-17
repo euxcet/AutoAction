@@ -2,6 +2,7 @@ package com.hcifuture.contextactionlibrary.contextaction.action;
 
 import android.content.Context;
 import android.hardware.Sensor;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
@@ -144,6 +145,11 @@ public class PocketAction extends BaseAction {
 
     @Override
     public void onNonIMUSensorEvent(NonIMUData data) {
+
+    }
+
+    @Override
+    public void onExternalEvent(Bundle bundle) {
 
     }
 
