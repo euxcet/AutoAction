@@ -2,6 +2,7 @@ package com.hcifuture.contextactionlibrary.contextaction.action;
 
 import android.content.Context;
 import android.hardware.Sensor;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
@@ -72,6 +73,11 @@ public class MotionAction extends BaseAction {
                 lastCount = curCount;
             }
         }
+    }
+
+    @Override
+    public void onExternalEvent(Bundle bundle) {
+
     }
 
     @Override

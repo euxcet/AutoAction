@@ -5,6 +5,7 @@ import static java.lang.StrictMath.abs;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder;
@@ -184,6 +185,11 @@ public class CloseAction extends BaseAction {
                 register_flag = false;
             }
         }
+    }
+
+    @Override
+    public void onExternalEvent(Bundle bundle) {
+
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.hcifuture.contextactionlibrary.contextaction.action;
 
 import android.content.Context;
 import android.hardware.Sensor;
+import android.os.Bundle;
 
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
@@ -77,6 +78,11 @@ public class KnockAction extends BaseAction {
 
     @Override
     public void onNonIMUSensorEvent(NonIMUData data) {
+
+    }
+
+    @Override
+    public void onExternalEvent(Bundle bundle) {
 
     }
 

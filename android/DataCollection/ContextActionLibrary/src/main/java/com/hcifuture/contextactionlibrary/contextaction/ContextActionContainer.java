@@ -11,6 +11,7 @@ import android.hardware.SensorEvent;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.provider.Settings;
@@ -794,6 +795,16 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     public String getStringExternalStatusDex(String key) {
         return ExternalStatus.getInstance().getStringStatus(key);
+    }
+
+    public void onExternalEventDex(Bundle bundle) {
+        if (handler != null) {
+            handler.post(() -> {
+                if (dataDistributor != null) {
+                    dataDistributor.onExternalEvent(bundle);
+                }
+            });
+        }
     }
 
     public void onSensorChangedDex(SensorEvent event) {

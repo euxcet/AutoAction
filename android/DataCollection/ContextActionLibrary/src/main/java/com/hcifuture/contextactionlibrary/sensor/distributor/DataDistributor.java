@@ -1,5 +1,6 @@
 package com.hcifuture.contextactionlibrary.sensor.distributor;
 
+import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
@@ -35,6 +36,22 @@ public class DataDistributor implements CollectorListener {
 
     public void stop() {
         isRunning.set(false);
+    }
+
+    public void onExternalEvent(Bundle bundle) {
+        if (isRunning.get()) {
+            try {
+                contextLock.lock();
+                for (BaseAction action : actions) {
+                    action.onExternalEvent(bundle);
+                }
+                for (BaseContext context : contexts) {
+                    context.onExternalEvent(bundle);
+                }
+            } finally {
+                contextLock.unlock();
+            }
+        }
     }
 
     public void onBroadcastEvent(BroadcastEvent event) {

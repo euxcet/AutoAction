@@ -1,6 +1,7 @@
 package com.hcifuture.contextactionlibrary.contextaction.context.physical;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 
@@ -74,6 +75,11 @@ public class ProximityContext extends BaseContext {
 
     @Override
     public void onBroadcastEvent(BroadcastEvent event) {
+
+    }
+
+    @Override
+    public void onExternalEvent(Bundle bundle) {
 
     }
 

@@ -2,6 +2,7 @@ package com.hcifuture.contextactionlibrary.contextaction.action;
 
 import android.content.Context;
 import android.hardware.SensorEvent;
+import android.os.Bundle;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.data.Data;
@@ -54,6 +55,7 @@ public abstract class BaseAction {
     // public abstract void onProximitySensorChanged(SensorEvent event);
     public abstract void onIMUSensorEvent(SingleIMUData data);
     public abstract void onNonIMUSensorEvent(NonIMUData data);
+    public abstract void onExternalEvent(Bundle bundle);
 
     public abstract void getAction();
 

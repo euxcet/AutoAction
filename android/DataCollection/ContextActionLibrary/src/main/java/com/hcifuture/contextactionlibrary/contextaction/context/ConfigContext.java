@@ -261,6 +261,11 @@ public class ConfigContext extends BaseContext {
         }
     }
 
+    @Override
+    public void onExternalEvent(Bundle bundle) {
+
+    }
+
     private int incLogID() {
         return mLogID.getAndIncrement();
     }
