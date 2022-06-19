@@ -89,6 +89,9 @@ public class TapTapAction extends BaseAction {
 
     private ThreadPoolExecutor threadPoolExecutor;
 
+    // save positive samples in guide
+    private boolean inGuide = false;
+
     public TapTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         init();
@@ -107,6 +110,7 @@ public class TapTapAction extends BaseAction {
         highpassKey.setPara(0.2F);
         peakDetectorPositive.setMinNoiseTolerate(0.05f);
         peakDetectorPositive.setWindowSize(64);
+        inGuide = false;
     }
 
     private void reset() {
@@ -120,6 +124,7 @@ public class TapTapAction extends BaseAction {
         ysGyro.clear();
         zsGyro.clear();
         lastTimestamp = 0L;
+        inGuide = false;
     }
 
     @Override
@@ -169,6 +174,11 @@ public class TapTapAction extends BaseAction {
             if (actionListener != null) {
                 for (ActionListener listener: actionListener) {
                     listener.onAction(new ActionResult(ACTION));
+                    if (inGuide) {
+                        ActionResult actionResult = new ActionResult(ACTION_UPLOAD);
+                        actionResult.setReason("Positive");
+                        listener.onAction(actionResult);
+                    }
                 }
             }
             existTaptapSignal = false;
@@ -223,6 +233,14 @@ public class TapTapAction extends BaseAction {
 
     @Override
     public void onExternalEvent(Bundle bundle) {
+        switch (bundle.getString("type")) {
+            case "TapTapGuideStart":
+                inGuide = true;
+                break;
+            case "TapTapGuideStop":
+                inGuide = false;
+                break;
+        }
     }
 
     private void processAccAndKeySignal() {
