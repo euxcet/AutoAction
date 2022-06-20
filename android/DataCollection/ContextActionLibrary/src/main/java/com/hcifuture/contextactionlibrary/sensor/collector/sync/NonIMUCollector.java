@@ -5,14 +5,12 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Handler;
 import android.provider.Settings;
 
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorListener;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder;
-import com.hcifuture.contextactionlibrary.sensor.data.Data;
 import com.hcifuture.contextactionlibrary.sensor.data.NonIMUData;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
 import com.hcifuture.contextactionlibrary.status.Heart;
@@ -67,8 +65,8 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
     @Override
     public synchronized void resume() {
         sensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL, handler);
-        sensorManager.registerListener(this, mLight, SensorManager.SENSOR_DELAY_NORMAL, handler);
-        sensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_NORMAL, handler);
+//        sensorManager.registerListener(this, mLight, SensorManager.SENSOR_DELAY_NORMAL, handler);
+//        sensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_NORMAL, handler);
         sensorManager.registerListener(this, mStepCounter, SensorManager.SENSOR_DELAY_NORMAL, handler);
     }
 
@@ -145,5 +143,36 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
+    }
+
+    private boolean isLightyOn = false;
+    private boolean isProximityOn = false;
+
+    public synchronized void openLightSensor() {
+        if (isLightyOn)
+            return;
+        isLightyOn = true;
+        sensorManager.registerListener(this, mLight, SensorManager.SENSOR_DELAY_NORMAL, handler);
+    }
+
+    public synchronized void closeLightSensor() {
+        if (!isLightyOn)
+            return;
+        isLightyOn = false;
+        sensorManager.unregisterListener(this, mLight);
+    }
+
+    public synchronized void openProxSensor() {
+        if (isProximityOn)
+            return;
+        isProximityOn = true;
+        sensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_NORMAL, handler);
+    }
+
+    public synchronized void closeProxSensor() {
+        if (!isProximityOn)
+            return;
+        isProximityOn = false;
+        sensorManager.unregisterListener(this, mProximity);
     }
 }

@@ -36,6 +36,7 @@ import com.hcifuture.contextactionlibrary.contextaction.context.informational.In
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
+import com.hcifuture.contextactionlibrary.sensor.collector.sync.NonIMUCollector;
 import com.hcifuture.contextactionlibrary.sensor.distributor.DataDistributor;
 import com.hcifuture.contextactionlibrary.sensor.trigger.ClickTrigger;
 import com.hcifuture.contextactionlibrary.contextaction.action.BaseAction;
@@ -47,6 +48,7 @@ import com.hcifuture.contextactionlibrary.contextaction.action.TopTapAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.BaseCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.BaseContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.physical.ProximityContext;
+import com.hcifuture.contextactionlibrary.contextaction.context.physical.InPocketContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.physical.TableContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.trigger.TriggerConfig;
@@ -463,6 +465,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         case "Table":
                             TableContext tableContext = new TableContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), scheduledExecutorService, futureList);
                             contexts.add(tableContext);
+                            break;
+                        case "InPocket":
+                            InPocketContext inPocketContext = new InPocketContext(mContext, contextConfig, requestListener, Arrays.asList(this, contextListener), (NonIMUCollector) collectorManager.getCollector(CollectorManager.CollectorType.NonIMU), scheduledExecutorService, futureList);
+                            contexts.add(inPocketContext);
                             break;
                         default:
                             break;
