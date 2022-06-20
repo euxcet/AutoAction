@@ -78,6 +78,9 @@ public class TopTapAction extends BaseAction {
 
     private ThreadPoolExecutor threadPoolExecutor;
 
+    // save positive samples in guide
+    private boolean inGuide = false;
+
     public TopTapAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         init();
@@ -96,6 +99,7 @@ public class TopTapAction extends BaseAction {
         peakDetectorPositive.setWindowSize(40);
         peakDetectorNegative.setMinNoiseTolerate(0.05f);
         peakDetectorNegative.setWindowSize(40);
+        inGuide = false;
     }
 
     private void reset() {
@@ -109,6 +113,7 @@ public class TopTapAction extends BaseAction {
         ysGyro.clear();
         zsGyro.clear();
         lastTimestamp = 0L;
+        inGuide = false;
     }
 
     @Override
@@ -178,7 +183,14 @@ public class TopTapAction extends BaseAction {
 
     @Override
     public void onExternalEvent(Bundle bundle) {
-
+        switch (bundle.getString("type")) {
+            case "TopTapGuideStart":
+                inGuide = true;
+                break;
+            case "TopTapGuideStop":
+                inGuide = false;
+                break;
+        }
     }
 
     private void processAccAndKeySignal(float x, float y, float z, long t, long samplingInterval) {
@@ -369,11 +381,16 @@ public class TopTapAction extends BaseAction {
             if (count2 == 2) {
                 if (actionListener != null) {
                     for (ActionListener listener : actionListener) {
-                        ActionResult actionResult = new ActionResult(ACTION_RECOGNIZED);
-                        actionResult.getExtras().putLongArray("timestamp", new long[]{getFirstTopTapTimestamp(), getSecondTopTapTimestamp()});
-                        listener.onAction(actionResult);
-                        actionResult.setAction(ACTION);
-                        listener.onAction(actionResult);
+                        ActionResult actionResult1 = new ActionResult(ACTION_RECOGNIZED);
+                        actionResult1.getExtras().putLongArray("timestamp", new long[]{getFirstTopTapTimestamp(), getSecondTopTapTimestamp()});
+                        listener.onAction(actionResult1);
+                        ActionResult actionResult2 = new ActionResult(ACTION);
+                        listener.onAction(actionResult2);
+                        if (inGuide) {
+                            ActionResult actionResult3 = new ActionResult(ACTION_UPLOAD);
+                            actionResult3.setReason("Positive");
+                            listener.onAction(actionResult3);
+                        }
                     }
                     horizontalFilter.updateCondition();
                 }
