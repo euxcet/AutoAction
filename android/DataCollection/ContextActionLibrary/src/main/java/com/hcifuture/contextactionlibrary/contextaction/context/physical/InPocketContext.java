@@ -126,7 +126,6 @@ public class InPocketContext extends BaseContext {
                                 listener.onContext(new ContextResult("InPocket"));
                             }
                         }
-                        Log.e(TAG, "===方向满足===");
                         nonIMUCollector.openLightSensor();
                     }
                 }
@@ -151,7 +150,6 @@ public class InPocketContext extends BaseContext {
                                     listener.onContext(new ContextResult("OutOfPocket"));
                                 }
                             }
-                            Log.e(TAG, "不满足");
                             nonIMUCollector.closeLightSensor();
                             nonIMUCollector.closeProxSensor();
                         }
@@ -205,16 +203,16 @@ public class InPocketContext extends BaseContext {
 
     @Override
     public void getContext() {
-        if (!isStarted) {
-            return;
-        }
-        if (contextListener != null) {
-            for (ContextListener listener: contextListener) {
-                if (oriOk)
-                    listener.onContext(new ContextResult("InPocket"));
-                else
-                    listener.onContext(new ContextResult("OutOfPocket"));
-            }
-        }
+//        if (!isStarted) {
+//            return;
+//        }
+//        if (contextListener != null) {
+//            for (ContextListener listener: contextListener) {
+//                if (oriOk)
+//                    listener.onContext(new ContextResult("InPocket"));
+//                else
+//                    listener.onContext(new ContextResult("OutOfPocket"));
+//            }
+//        }
     }
 }
