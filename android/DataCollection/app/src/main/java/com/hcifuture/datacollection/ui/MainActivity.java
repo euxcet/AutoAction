@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -44,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
     // ui
     private EditText mUserText;
     private Button mBtnStart;
-    private Button mBtnStop;
+    private Button mBtnCancel;
     private TextView mTaskDescription;
     private TextView mTaskCounter;
 
@@ -56,10 +57,12 @@ public class MainActivity extends AppCompatActivity {
 
     // task
     private TaskListBean mTaskList;  // queried from the backend
-    private String[] mTaskName;
-    private String[] mSubtaskName;
+    private String[] mTaskNames;
+    private String[] mSubtaskNames;
     private int mCurrentTaskId = 0;
     private int mCurrentSubtaskId = 0;
+    private int mCurrentTic = 0;    // tic showed in task counter
+    private int mTotalTics = 0;      // mCurrentTic / mTotalTic
 
     private boolean mIsVideo;
 
@@ -109,6 +112,8 @@ public class MainActivity extends AppCompatActivity {
             public void onFinish() {
                 mVibrator.vibrate(VibrationEffect.createOneShot(600, 128));
                 enableButtons(false);
+                mCurrentTic = 0;
+                updateTaskCounter();
             }
         });
 
@@ -195,52 +200,61 @@ public class MainActivity extends AppCompatActivity {
      * Called in loadTaskListViaNetwork().
      */
     private void initView() {
+        // user text
         mUserText = findViewById(R.id.user_text);
         mUserText.setText(R.string.default_user);
+
+        // init views
         mTaskDescription = findViewById(R.id.task_description);
         mTaskCounter = findViewById(R.id.task_counter);
-
-        // Spinner
         mTaskSpinner = findViewById(R.id.task_spinner);
         mSubtaskSpinner = findViewById(R.id.subtask_spinner);
 
         // choose tasks and subtasks
-        mTaskName = mTaskList.getTaskName();
-        mTaskAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, mTaskName);
+        mTaskNames = mTaskList.getTaskNames();
+        mTaskAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, mTaskNames);
         mTaskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mTaskSpinner.setAdapter(mTaskAdapter);
         mTaskSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 mCurrentTaskId = position;
-                mSubtaskName = mTaskList.getTask().get(mCurrentTaskId).getSubtaskName();
-                mSubtaskAdapter = new ArrayAdapter<>(mContext, android.R.layout.simple_spinner_item, mSubtaskName);
+                mSubtaskNames = mTaskList.getTasks().get(mCurrentTaskId).getSubtaskNames();
+                mSubtaskAdapter = new ArrayAdapter<>(mContext, android.R.layout.simple_spinner_item, mSubtaskNames);
                 mSubtaskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 mSubtaskSpinner.setAdapter(mSubtaskAdapter);
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        if (mTaskName.length == 0) {
-            mSubtaskName = new String[0];
+        if (mTaskNames.length == 0) {
+            mSubtaskNames = new String[0];
         }
         else {
-            mSubtaskName = mTaskList.getTask().get(mCurrentTaskId).getSubtaskName();
+            mSubtaskNames = mTaskList.getTasks().get(mCurrentTaskId).getSubtaskNames();
         }
-        mSubtaskAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, mSubtaskName);
+        mSubtaskAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, mSubtaskNames);
         mSubtaskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSubtaskSpinner.setAdapter(mSubtaskAdapter);
         mSubtaskSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                mRecorder.cancel();
+                enableButtons(false);
                 mCurrentSubtaskId = position;
-                mTaskDescription.setText(mSubtaskName[mCurrentSubtaskId]);
-                mIsVideo = mTaskList.getTask().get(mCurrentTaskId).getSubtask()
-                        .get(mCurrentSubtaskId).isVideo() |
-                        mTaskList.getTask().get(mCurrentTaskId).isAudio();
+                // set task description with the subtask name
+                mTaskDescription.setText(mSubtaskNames[mCurrentSubtaskId]);
+                // init the task counter when subtask selected
+                TaskListBean.Task currentTask = mTaskList.getTasks().get(mCurrentTaskId);
+                TaskListBean.Task.Subtask currentSubtask = currentTask
+                        .getSubtasks().get(mCurrentSubtaskId);
+                mCurrentTic = 0;
+                mTotalTics = currentSubtask.getTimes();
+                updateTaskCounter();
+                // modified, only depend on whether the subtask is video
+                mIsVideo = currentSubtask.isVideo();
                 mCameraSwitch.setChecked(mIsVideo);
             }
 
@@ -257,7 +271,7 @@ public class MainActivity extends AppCompatActivity {
         mCameraSwitch.setEnabled(false); // disabled
 
         mBtnStart = findViewById(R.id.btn_start);
-        mBtnStop = findViewById(R.id.btn_restart);
+        mBtnCancel = findViewById(R.id.btn_cancel);
 
         Button configButton = findViewById(R.id.btn_config);
         Button trainButton = findViewById(R.id.btn_train);
@@ -275,9 +289,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // click the stop button to end recording
-        mBtnStop.setOnClickListener(view -> {
-            mRecorder.interrupt();
+        mBtnCancel.setOnClickListener(view -> {
             enableButtons(false);
+            mRecorder.cancel();
+            mCurrentTic = 0;
+            updateTaskCounter();
         });
 
         // goto config task activity
@@ -309,7 +325,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void enableButtons(boolean isRecording) {
         mBtnStart.setEnabled(!isRecording);
-        mBtnStop.setEnabled(isRecording);
+        mBtnCancel.setEnabled(isRecording);
     }
 
     /**
@@ -321,5 +337,10 @@ public class MainActivity extends AppCompatActivity {
         if (mVibrator != null) {
             mVibrator.cancel();
         }
+    }
+
+    private void updateTaskCounter() {
+        if (mTaskCounter == null) return;
+        mTaskCounter.setText(mCurrentTic + " / " + mTotalTics);
     }
 }

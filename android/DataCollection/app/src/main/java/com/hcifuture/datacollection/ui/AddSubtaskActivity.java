@@ -74,7 +74,7 @@ public class AddSubtaskActivity extends AppCompatActivity {
                         videoCheckbox.isChecked(),
                         audioCheckbox.isChecked()
                 );
-                taskList.getTask().get(task_id).addSubtask(newSubtask);
+                taskList.getTasks().get(task_id).addSubtask(newSubtask);
 
                 NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
                     @Override

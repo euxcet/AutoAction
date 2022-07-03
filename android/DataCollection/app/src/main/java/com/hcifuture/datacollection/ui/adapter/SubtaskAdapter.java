@@ -3,7 +3,6 @@ package com.hcifuture.datacollection.ui.adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,7 +35,7 @@ public class SubtaskAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return taskList.getTask().get(task_id).getSubtask().size();
+        return taskList.getTasks().get(task_id).getSubtasks().size();
     }
 
     @Override
@@ -53,8 +52,8 @@ public class SubtaskAdapter extends BaseAdapter {
     public View getView(int i, View view, ViewGroup viewGroup) {
         view = inflater.inflate(R.layout.fragment_task, null);
 
-        List<TaskListBean.Task.Subtask> subtasks = taskList.getTask().get(task_id).getSubtask();
-        TaskListBean.Task.Subtask subtask = taskList.getTask().get(task_id).getSubtask().get(i);
+        List<TaskListBean.Task.Subtask> subtasks = taskList.getTasks().get(task_id).getSubtasks();
+        TaskListBean.Task.Subtask subtask = taskList.getTasks().get(task_id).getSubtasks().get(i);
 
         TextView taskId = view.findViewById(R.id.taskId);
         TextView taskName = view.findViewById(R.id.taskName);

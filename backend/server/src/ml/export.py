@@ -14,10 +14,10 @@ def export_csv(tasklistId, taskIds, trainId, timestamp):
     }
     tasklist = file_utils.load_taskList_info(tasklistId)
     records = []
-    for task in tasklist['task']:
+    for task in tasklist['tasks']:
         taskId = task['id']
         if taskId in taskIds:
-            for subtask in task['subtask']:
+            for subtask in task['subtasks']:
                 subtaskId = subtask['id']
                 recordlist = file_utils.load_recordlist(tasklistId, taskId, subtaskId)
                 for recordId in recordlist:

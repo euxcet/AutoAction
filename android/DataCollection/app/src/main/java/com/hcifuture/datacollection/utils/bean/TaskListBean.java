@@ -20,12 +20,13 @@ import java.util.List;
 /**
  * Stores the meta data of a task list.
  * TaskList -> List(Task) -> List(List(Subtask))
+ * CAUTION: this file would be converted to json, be careful for modifying variable names!
  */
 public class TaskListBean implements Serializable {
     private String id;
     private String date;
     private String description;
-    private List<Task> task;
+    private List<Task> tasks;
 
     public enum FILE_TYPE {
         SENSOR,
@@ -78,19 +79,19 @@ public class TaskListBean implements Serializable {
         FileUtils.writeStringToFile(new Gson().toJson(taskList), new File(BuildConfig.SAVE_PATH + "tasklist.json"));
     }
 
-    public String[] getTaskName() {
-        List<Task> tasks = getTask();
+    public String[] getTaskNames() {
+        List<Task> tasks = getTasks();
         int size = tasks.size();
-        String[] taskName = new String[size];
+        String[] taskNames = new String[size];
         for(int i = 0; i < size; i++) {
             Task t = tasks.get(i);
-            taskName[i] = t.getId() + ". " + t.getName();
+            taskNames[i] = t.getId() + ". " + t.getName();
         }
-        return taskName;
+        return taskNames;
     }
 
     public String getTaskNameById(String taskId) {
-        List<Task> tasks = getTask();
+        List<Task> tasks = getTasks();
         for(int i = 0; i < tasks.size(); i++) {
             Task t = tasks.get(i);
             if (t.getId().equals(taskId)) {
@@ -101,7 +102,7 @@ public class TaskListBean implements Serializable {
     }
 
     public Task getTaskById(String taskId) {
-        List<Task> tasks = getTask();
+        List<Task> tasks = getTasks();
         for(int i = 0; i < tasks.size(); i++) {
             Task t = tasks.get(i);
             if (t.getId().equals(taskId)) {
@@ -111,43 +112,18 @@ public class TaskListBean implements Serializable {
         return null;
     }
 
-    /*
-    private void updateSubtask() {
-        for(Task task: getTask()) {
-            for(Task.Subtask subtask: task.getSubtask()) {
-                if (subtask.getTimes() == 0) {
-                    subtask.setTimes(task.getTimes());
-                }
-                if (subtask.getDuration() == 0) {
-                    subtask.setDuration(task.getDuration());
-                }
-                subtask.setAudio(subtask.isAudio() | task.isAudio());
-                subtask.setVideo(subtask.isVideo() | task.isVideo());
-            }
-        }
-    }
-     */
-
     public void addTask(Task newTask) {
-        task.add(newTask);
+        tasks.add(newTask);
     }
-
-    /*
-    public void resetId() {
-        for (int i = 0; i < task.size(); i++) {
-            task.get(i).id = i + 1;
-        }
-    }
-     */
 
     public static class Task implements Serializable {
         private String id;
         private String name;
-        private int times;
-        private int duration;
-        private boolean audio;
-        public boolean video;
-        public List<Subtask> subtask;
+        private int times;      // should be deleted
+        private int duration;   // should be deleted
+        private boolean audio;  // should be deleted
+        public boolean video;   // should be deleted
+        public List<Subtask> subtasks;
 
         public Task(String id, String name, int times, int duration, boolean audio, boolean video) {
             this.id = id;
@@ -156,33 +132,25 @@ public class TaskListBean implements Serializable {
             this.duration = duration;
             this.audio = audio;
             this.video = video;
-            this.subtask = new ArrayList<>();
+            this.subtasks = new ArrayList<>();
         }
 
         public void addSubtask(Subtask newSubtask) {
-            subtask.add(newSubtask);
+            subtasks.add(newSubtask);
         }
 
-        /*
-        public void resetId() {
-            for(int i = 0; i < subtask.size(); i++) {
-                subtask.get(i).id = i + 1;
-            }
-        }
-         */
-
-        public String[] getSubtaskName() {
-            int size = getSubtask().size();
-            String[] taskName = new String[size];
+        public String[] getSubtaskNames() {
+            int size = getSubtasks().size();
+            String[] subtaskNames = new String[size];
             for(int i = 0; i < size; i++) {
-                Subtask t = getSubtask().get(i);
-                taskName[i] = t.getId() + ". " + t.getName();
+                Subtask t = getSubtasks().get(i);
+                subtaskNames[i] = t.getId() + ". " + t.getName();
             }
-            return taskName;
+            return subtaskNames;
         }
 
         public String getSubtaskNameById(String subtaskId) {
-            List<Subtask> subtasks = getSubtask();
+            List<Subtask> subtasks = getSubtasks();
             for(int i = 0; i < subtasks.size(); i++) {
                 Subtask t = subtasks.get(i);
                 if (t.getId().equals(subtaskId)) {
@@ -278,8 +246,8 @@ public class TaskListBean implements Serializable {
             return times;
         }
 
-        public List<Subtask> getSubtask() {
-            return subtask;
+        public List<Subtask> getSubtasks() {
+            return subtasks;
         }
 
         public String getName() {
@@ -302,8 +270,8 @@ public class TaskListBean implements Serializable {
             this.name = name;
         }
 
-        public void setSubtask(List<Subtask> subtask) {
-            this.subtask = subtask;
+        public void setSubtasks(List<Subtask> subtasks) {
+            this.subtasks = subtasks;
         }
 
         public void setTimes(int times) {
@@ -315,8 +283,8 @@ public class TaskListBean implements Serializable {
         }
     }
 
-    public List<Task> getTask() {
-        return task;
+    public List<Task> getTasks() {
+        return tasks;
     }
 
     public String getId() {
@@ -335,8 +303,8 @@ public class TaskListBean implements Serializable {
         this.id = id;
     }
 
-    public void setTask(List<Task> task) {
-        this.task = task;
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
     }
 
     public void setDate(String date) {
@@ -345,9 +313,5 @@ public class TaskListBean implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public void setTasks(List<Task> tasks) {
-        this.task = tasks;
     }
 }

@@ -68,7 +68,7 @@ public class ModifyTaskActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Response<String> response) {
                 taskList = new Gson().fromJson(response.body(), TaskListBean.class);
-                TaskListBean.Task task = taskList.getTask().get(task_id);
+                TaskListBean.Task task = taskList.getTasks().get(task_id);
                 nameEditText.setText(task.getName());
                 timesEditText.setText(String.valueOf(task.getTimes()));
                 durationEditText.setText(String.valueOf(task.getDuration()));
@@ -79,7 +79,7 @@ public class ModifyTaskActivity extends AppCompatActivity {
     }
 
     private void modifyTask() {
-        TaskListBean.Task task = taskList.getTask().get(task_id);
+        TaskListBean.Task task = taskList.getTasks().get(task_id);
         task.setName(nameEditText.getText().toString());
         task.setTimes(Integer.parseInt(timesEditText.getText().toString()));
         task.setDuration(Integer.parseInt(durationEditText.getText().toString()));

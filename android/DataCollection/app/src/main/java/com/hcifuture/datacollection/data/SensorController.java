@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.util.Log;
 
 import com.hcifuture.datacollection.utils.bean.TaskListBean;
 import com.hcifuture.datacollection.utils.FileUtils;
@@ -24,19 +25,19 @@ import java.util.List;
  */
 public class SensorController {
     // sensor
-    private SensorManager sensorManager;
-    // SensorManager.SENSOR_DELAY_FASTEST = 0, which is only an enum value
-    private int samplingPeriod = SensorManager.SENSOR_DELAY_FASTEST;  // fastest
-    private Sensor gyroSensor;
-    private Sensor linearSensor;
-    private Sensor accSensor;
-    private Sensor magSensor;
+    private SensorManager mSensorManager;
+    private int mSamplingMode = SensorManager.SENSOR_DELAY_FASTEST;  // fastest
+    private Sensor mGyroSensor;
+    private Sensor mLinearSensor;
+    private Sensor mAccSensor;
+    private Sensor mMagSensor;
     private Context mContext;
-    private List<SensorInfo> sensorData = new ArrayList<>();
-    private long lastTimestamp;
+    private List<SensorInfo> mSensorData = new ArrayList<>();
+    private long mLastTimestamp;
 
-    private File sensorFile;
-    private File sensorBinFile;
+    private File mSensorFile;
+    private File mSensorBinFile;
+    private SensorEventListener mListener;
 
     /**
      * Constructor.
@@ -47,58 +48,84 @@ public class SensorController {
     public SensorController(Context context) {
         this.mContext = context;
 
-        sensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
+        mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
 
-        gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        linearSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        magSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        mGyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        mLinearSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        mAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mMagSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+        mListener = new SensorEventListener() {
+            /**
+             * Save data in one sampling.
+             * Q: Why save all four sensor data to only one sensor data array ???
+             * @param event the SensorEvent passed to the listener
+             */
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+                mSensorData.add(new SensorInfo(
+                        event.sensor.getType(),
+                        event.values[0],
+                        event.values[1],
+                        event.values[2],
+                        event.timestamp
+                ));
+                mLastTimestamp = event.timestamp;
+            }
+            /**
+             * Not implemented yet.
+             * @param sensor
+             * @param i
+             */
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int i) {}
+        };
 
         if (!isSensorSupport()) {
-            // Toast.makeText(mContext, "传感器缺失", Toast.LENGTH_LONG).show();
+            Log.w("SensorController", "Sensor missing!");
         }
     }
 
     /**
-     * Register the SensorEventListener listener to all sensors.
-     */
-    public void resume() {
-        if (sensorManager != null) {
-            sensorManager.registerListener(listener, gyroSensor, samplingPeriod);
-            sensorManager.registerListener(listener, linearSensor, samplingPeriod);
-            sensorManager.registerListener(listener, accSensor, samplingPeriod);
-            sensorManager.registerListener(listener, magSensor, samplingPeriod);
-        }
-    }
-
-    /**
-     * Unregister the listener.
-     */
-    public void pause() {
-        if (sensorManager != null) {
-            sensorManager.unregisterListener(listener);
-        }
-    }
-
-    /**
+     * Called when the user want to start recording IMU data.
      * Init the sensorFile and sensorBinFile and call resume() to register the listener
      * @param file the sensorFile
      * @param binFile the sensorBinFile
      */
     public void start(File file, File binFile) {
-        sensorFile = file;
-        sensorBinFile = binFile;
-        sensorData.clear();
-        resume();
+        mSensorFile = file;
+        mSensorBinFile = binFile;
+        mSensorData.clear();
+        if (mSensorManager != null) {
+            mSensorManager.registerListener(mListener, mGyroSensor, mSamplingMode);
+            mSensorManager.registerListener(mListener, mLinearSensor, mSamplingMode);
+            mSensorManager.registerListener(mListener, mAccSensor, mSamplingMode);
+            mSensorManager.registerListener(mListener, mMagSensor, mSamplingMode);
+        }
     }
 
     /**
+     * Called when the user want to cancel an ongoing subtask.
+     * Cancel recording the data by unregister the listener.
+     */
+    public void cancel() {
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(mListener);
+        }
+        mSensorData.clear();
+    }
+
+    /**
+     * Called when a whole subtask is recorded.
      * Unregister the listener and write all data to files.
      */
     public void stop() {
-        pause();
-        FileUtils.writeStringToFile(new Gson().toJson(sensorData), sensorFile);
-        FileUtils.writeIMUDataToFile(sensorData, sensorBinFile);
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(mListener);
+        }
+        FileUtils.writeStringToFile(new Gson().toJson(mSensorData), mSensorFile);
+        FileUtils.writeIMUDataToFile(mSensorData, mSensorBinFile);
+        mSensorData.clear();
     }
 
     /**
@@ -106,38 +133,12 @@ public class SensorController {
      * @return boolean
      */
     public boolean isSensorSupport() {
-        return gyroSensor != null && linearSensor != null && accSensor != null && magSensor != null;
+        return mGyroSensor != null && mLinearSensor != null &&
+                mAccSensor != null && mMagSensor != null;
     }
 
-    // this is a private member!
-    private SensorEventListener listener = new SensorEventListener() {
-        /**
-         * Save data in one sampling.
-         * Q: Why save all four sensor data to only one sensor data array ???
-         * @param event the SensorEvent passed to the listener
-         */
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            sensorData.add(new SensorInfo(
-                    event.sensor.getType(),
-                    event.values[0],
-                    event.values[1],
-                    event.values[2],
-                    event.timestamp
-            ));
-            lastTimestamp = event.timestamp;
-        }
-        /**
-         * Not implemented yet.
-         * @param sensor
-         * @param i
-         */
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int i) { }
-    };
-
     public long getLastTimestamp() {
-        return lastTimestamp;
+        return mLastTimestamp;
     }
 
     /**
@@ -148,17 +149,22 @@ public class SensorController {
      * @param recordId
      * @param timestamp
      */
-    public void upload(String taskListId, String taskId, String subtaskId, String recordId, long timestamp) {
-        if (sensorFile != null) {
-            NetworkUtils.uploadRecordFile(mContext, sensorFile, TaskListBean.FILE_TYPE.SENSOR.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
+    public void upload(String taskListId, String taskId, String subtaskId,
+                       String recordId, long timestamp) {
+        if (mSensorFile != null) {
+            NetworkUtils.uploadRecordFile(mContext, mSensorFile,
+                    TaskListBean.FILE_TYPE.SENSOR.ordinal(), taskListId, taskId, subtaskId,
+                    recordId, timestamp, new StringCallback() {
                 @Override
                 public void onSuccess(Response<String> response) {
                 }
             });
         }
 
-        if (sensorBinFile != null) {
-            NetworkUtils.uploadRecordFile(mContext, sensorBinFile, TaskListBean.FILE_TYPE.SENSOR_BIN.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
+        if (mSensorBinFile != null) {
+            NetworkUtils.uploadRecordFile(mContext, mSensorBinFile,
+                    TaskListBean.FILE_TYPE.SENSOR_BIN.ordinal(), taskListId, taskId,
+                    subtaskId, recordId, timestamp, new StringCallback() {
                 @Override
                 public void onSuccess(Response<String> response) {
                 }

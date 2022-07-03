@@ -30,6 +30,13 @@ public class TimestampController {
         data.clear();
     }
 
+    /**
+     * Cancel the ongoing subtask as if it has never been started.
+     */
+    public void cancel() {
+        data.clear();
+    }
+
     public void stop() {
         FileUtils.writeStringToFile(new Gson().toJson(data), this.saveFile);
     }

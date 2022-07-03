@@ -290,14 +290,14 @@ def update_taskList():
     file_utils.save_json(taskList, taskList_info_timestamp_path)
 
     print('taskList id:', taskListId)
-    for task in taskList['task']:
+    for task in taskList['tasks']:
         taskId = task['id']
         print('task id:', taskId)
         task_path = file_utils.get_task_path(taskListId, taskId)
         task_info_path = file_utils.get_task_info_path(taskListId, taskId)
         file_utils.mkdir(task_path)
         file_utils.save_json(task, task_info_path)
-        for subtask in task['subtask']:
+        for subtask in task['subtasks']:
             subtaskId = subtask['id']
             subtask_path = file_utils.get_subtask_path(taskListId, taskId, subtaskId)
             subtask_info_path = file_utils.get_subtask_info_path(taskListId, taskId, subtaskId)
@@ -329,11 +329,11 @@ def get_record_list():
 
     taskList = file_utils.load_taskList_info(taskListId, 0)
     records = []
-    for task in taskList['task']:
+    for task in taskList['tasks']:
         c_taskId = task['id']
         if taskId is not None and taskId != "0" and c_taskId != task:
             continue
-        for subtask in task['subtask']:
+        for subtask in task['subtasks']:
             c_subtaskId = subtask['id']
             if subtaskId is not None and subtaskId != "0" and c_subtaskId != subtaskId:
                 continue

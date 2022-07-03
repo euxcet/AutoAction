@@ -1,11 +1,8 @@
 package com.hcifuture.datacollection.ui.adapter;
 
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +31,7 @@ public class TaskAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return taskList.getTask().size();
+        return taskList.getTasks().size();
     }
 
     @Override
@@ -58,7 +55,7 @@ public class TaskAdapter extends BaseAdapter {
         TextView taskAudio = view.findViewById(R.id.taskAudio);
         Button deleteButton = view.findViewById(R.id.deleteItemButton);
 
-        TaskListBean.Task task = taskList.getTask().get(i);
+        TaskListBean.Task task = taskList.getTasks().get(i);
         taskName.setText(task.getName());
         taskId.setText("  编号:            " + task.getId());
         taskTimes.setText("  录制次数:     " + task.getTimes());
@@ -73,9 +70,9 @@ public class TaskAdapter extends BaseAdapter {
             dialog.setPositiveButton("Yes",
                     (dialogInterface, i1) -> {
                         String id = task.getId();
-                        for(int j = 0; j < taskList.getTask().size(); j++) {
-                            if (taskList.getTask().get(j).getId().equals(id)) {
-                                taskList.getTask().remove(j);
+                        for(int j = 0; j < taskList.getTasks().size(); j++) {
+                            if (taskList.getTasks().get(j).getId().equals(id)) {
+                                taskList.getTasks().remove(j);
                             }
                         }
                         NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {

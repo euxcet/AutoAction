@@ -76,7 +76,7 @@ public class ConfigSubtaskActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Response<String> response) {
                 taskList = new Gson().fromJson(response.body(), TaskListBean.class);
-                taskNameView.setText("Task name: " + taskList.getTask().get(task_id).getName());
+                taskNameView.setText("Task name: " + taskList.getTasks().get(task_id).getName());
                 subtaskAdapter = new SubtaskAdapter(mContext, taskList, task_id);
                 subtaskListView.setAdapter(subtaskAdapter);
             }

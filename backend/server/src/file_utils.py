@@ -80,7 +80,12 @@ def load_json(path):
 def load_taskList_info(taskListId, timestamp = None):
     taskList_info_path = get_taskList_info_path(taskListId, timestamp)
     if not os.path.exists(taskList_info_path):
-        taskList_info = {"date": "2022.03.14", "description": "Description", "id": taskListId, "task": []}
+        taskList_info = {
+            'date': '2022.07.03',
+            'description': 'Task list for pilot study.',
+            'id': taskListId,
+            'tasks': []
+        }
         save_json(taskList_info, taskList_info_path)
         return taskList_info
     with open(taskList_info_path, 'r') as f:

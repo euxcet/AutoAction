@@ -14,7 +14,7 @@
     <string name="subtask_hint">子任务：</string>
     <string name="video_switch_label">录制视频：</string>
     <string name="btn_start">开始</string>
-    <string name="btn_restart">重做</string>
+    <string name="btn_cancel">取消</string>
     <!-- configuration layout -->
     <string name="btn_config">Config</string>
     <string name="btn_visual">Visual</string>

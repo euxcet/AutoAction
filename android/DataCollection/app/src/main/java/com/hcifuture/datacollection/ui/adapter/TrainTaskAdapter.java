@@ -21,12 +21,12 @@ public class TrainTaskAdapter extends BaseAdapter {
         this.mContext = context;
         this.taskList = taskList;
         this.inflater = LayoutInflater.from(context);
-        this.selected = new boolean[taskList.getTask().size()];
+        this.selected = new boolean[taskList.getTasks().size()];
     }
 
     @Override
     public int getCount() {
-        return taskList.getTask().size();
+        return taskList.getTasks().size();
     }
 
     @Override
@@ -53,7 +53,7 @@ public class TrainTaskAdapter extends BaseAdapter {
         TextView taskVideo = view.findViewById(R.id.taskVideoTrain);
         TextView taskAudio = view.findViewById(R.id.taskAudioTrain);
 
-        TaskListBean.Task task = taskList.getTask().get(i);
+        TaskListBean.Task task = taskList.getTasks().get(i);
         taskName.setText(task.getName());
         taskId.setText("  编号:            " + task.getId());
         taskTimes.setText("  录制次数:     " + task.getTimes());

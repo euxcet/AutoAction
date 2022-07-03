@@ -70,7 +70,7 @@ public class ModifySubtaskActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Response<String> response) {
                 taskList = new Gson().fromJson(response.body(), TaskListBean.class);
-                TaskListBean.Task.Subtask subtask = taskList.getTask().get(task_id).getSubtask().get(subtask_id);
+                TaskListBean.Task.Subtask subtask = taskList.getTasks().get(task_id).getSubtasks().get(subtask_id);
                 nameEditText.setText(subtask.getName());
                 timesEditText.setText(String.valueOf(subtask.getTimes()));
                 durationEditText.setText(String.valueOf(subtask.getDuration()));
@@ -81,7 +81,7 @@ public class ModifySubtaskActivity extends AppCompatActivity {
     }
 
     private void modifyTask() {
-        TaskListBean.Task.Subtask subtask = taskList.getTask().get(task_id).getSubtask().get(subtask_id);
+        TaskListBean.Task.Subtask subtask = taskList.getTasks().get(task_id).getSubtasks().get(subtask_id);
         subtask.setName(nameEditText.getText().toString());
         subtask.setTimes(Integer.parseInt(timesEditText.getText().toString()));
         subtask.setDuration(Integer.parseInt(durationEditText.getText().toString()));

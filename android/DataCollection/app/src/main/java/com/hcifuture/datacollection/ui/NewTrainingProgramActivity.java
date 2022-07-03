@@ -49,12 +49,12 @@ public class NewTrainingProgramActivity extends AppCompatActivity {
                 trainTaskAdapter.getSelected();
                 StringBuilder taskIdList = new StringBuilder();
                 boolean[] selected = trainTaskAdapter.getSelected();
-                for (int i = 0; i < taskList.getTask().size(); i++) {
+                for (int i = 0; i < taskList.getTasks().size(); i++) {
                     if (selected[i]) {
                         if (taskIdList.toString().equals("")) {
-                            taskIdList.append(taskList.getTask().get(i).getId());
+                            taskIdList.append(taskList.getTasks().get(i).getId());
                         } else {
-                            taskIdList.append(",").append(taskList.getTask().get(i).getId());
+                            taskIdList.append(",").append(taskList.getTasks().get(i).getId());
                         }
                     }
                 }
