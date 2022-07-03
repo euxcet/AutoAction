@@ -37,7 +37,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class CameraController {
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
-    private PreviewView previewView;
+    private PreviewView cameraPreview;
     private Recorder recorder;
     private Recording recording;
     private Preview preview;
@@ -53,7 +53,7 @@ public class CameraController {
     }
 
     public void initialize(boolean open) {
-        previewView = mActivity.findViewById(R.id.previewView);
+        cameraPreview = mActivity.findViewById(R.id.camera_preview);
         cameraProviderFuture = ProcessCameraProvider.getInstance(mActivity);
         cameraProviderFuture.addListener(() -> {
             try {
@@ -62,7 +62,7 @@ public class CameraController {
                 cameraSelector = new CameraSelector.Builder()
                         .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                         .build();
-                preview.setSurfaceProvider(previewView.getSurfaceProvider());
+                preview.setSurfaceProvider(cameraPreview.getSurfaceProvider());
                 QualitySelector qualitySelector = QualitySelector.fromOrderedList(Arrays.asList(
                         Quality.SD
                 ), FallbackStrategy.lowerQualityOrHigherThan(Quality.SD));
@@ -71,7 +71,7 @@ public class CameraController {
                 if (open) {
                     Camera camera = mCameraProvider.bindToLifecycle((LifecycleOwner) mActivity,
                             cameraSelector, preview, videoCapture);
-                    previewView.setVisibility(View.VISIBLE);
+                    cameraPreview.setVisibility(View.VISIBLE);
                 }
             } catch (ExecutionException | InterruptedException ignored) {
             }
@@ -88,8 +88,8 @@ public class CameraController {
         if (mCameraProvider != null) {
             mCameraProvider.unbindAll();
         }
-        if (previewView != null) {
-            previewView.setVisibility(View.INVISIBLE);
+        if (cameraPreview != null) {
+            cameraPreview.setVisibility(View.INVISIBLE);
         }
         mCameraProvider = null;
     }

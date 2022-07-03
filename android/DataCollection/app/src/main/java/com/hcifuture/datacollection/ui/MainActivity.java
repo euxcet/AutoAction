@@ -19,7 +19,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.hcifuture.datacollection.R;
-import com.hcifuture.datacollection.inference.IMUSensorManager;
 import com.hcifuture.datacollection.inference.Inferencer;
 import com.hcifuture.datacollection.service.MainService;
 import com.hcifuture.datacollection.utils.GlobalVariable;
@@ -40,37 +39,37 @@ public class MainActivity extends AppCompatActivity {
 
     private Context mContext;
     private AppCompatActivity mActivity;
-    private Vibrator vibrator;
+    private Vibrator mVibrator;
 
     // ui
-    private EditText user;
-    private Button startButton;
-    private Button stopButton;
-    private TextView description;
-    private TextView counter;
+    private EditText mUserText;
+    private Button mBtnStart;
+    private Button mBtnStop;
+    private TextView mTaskDescription;
+    private TextView mTaskCounter;
 
-    private Spinner taskSpinner;
-    private ArrayAdapter<String> taskAdapter;
+    private Spinner mTaskSpinner;
+    private ArrayAdapter<String> mTaskAdapter;
 
-    private Spinner subtaskSpinner;
-    private ArrayAdapter<String> subtaskAdapter;
+    private Spinner mSubtaskSpinner;
+    private ArrayAdapter<String> mSubtaskAdapter;
 
     // task
-    private TaskListBean taskList;  // queried from the backend
-    private String[] taskName;
-    private String[] subtaskName;
-    private int curTaskId = 0;
-    private int curSubtaskId = 0;
+    private TaskListBean mTaskList;  // queried from the backend
+    private String[] mTaskName;
+    private String[] mSubtaskName;
+    private int mCurrentTaskId = 0;
+    private int mCurrentSubtaskId = 0;
 
-    private boolean isVideo;
+    private boolean mIsVideo;
 
-    private CheckBox cameraSwitch;
+    private CheckBox mCameraSwitch;
 
-    private Recorder recorder;
+    private Recorder mRecorder;
 
     // permission
     private static final int RC_PERMISSIONS = 0;
-    private String[] permissions = new String[]{
+    private String[] mPermissions = new String[]{
             Manifest.permission.INTERNET,
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.CAMERA,
@@ -82,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.ACTIVITY_RECOGNITION
     };
 
-    private Inferencer inferencer;
+    private Inferencer mInferencer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,44 +95,44 @@ public class MainActivity extends AppCompatActivity {
         mActivity = this;
 
         // vibrate to indicate data collection progress
-        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        vibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
+        mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        mVibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
 
-        recorder = new Recorder(this, new Recorder.RecorderListener() {
+        mRecorder = new Recorder(this, new Recorder.RecorderListener() {
             @Override
             public void onTick(int tickCount, int times) {
-                counter.setText(tickCount + " / " + times);
-                vibrator.vibrate(VibrationEffect.createOneShot(200, 128));
+                mTaskCounter.setText(tickCount + " / " + times);
+                mVibrator.vibrate(VibrationEffect.createOneShot(200, 128));
             }
 
             @Override
             public void onFinish() {
-                vibrator.vibrate(VibrationEffect.createOneShot(600, 128));
+                mVibrator.vibrate(VibrationEffect.createOneShot(600, 128));
                 enableButtons(false);
             }
         });
 
         // jump to accessibility settings
-        Button accessibilityButton = findViewById(R.id.accessibilityButton);
+        Button accessibilityButton = findViewById(R.id.btn_access);
         accessibilityButton.setOnClickListener((v) -> {
             Intent settingIntent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
             startActivity(settingIntent);
         });
 
-        Button upgradeButton = findViewById(R.id.upgradeButton);
+        Button upgradeButton = findViewById(R.id.btn_upgrade);
         upgradeButton.setOnClickListener((v) -> {
             MainService.getInstance().upgrade();
         });
 
         // goto test activity.
-        Button testButton = findViewById(R.id.testButton);
+        Button testButton = findViewById(R.id.btn_test);
         testButton.setOnClickListener((v) -> {
             Intent intent = new Intent(MainActivity.this, TestModelActivity.class);
             startActivity(intent);
         });
 
-        inferencer = Inferencer.getInstance();
-        inferencer.start(this);
+        mInferencer = Inferencer.getInstance();
+        mInferencer.start(this);
     }
 
     /**
@@ -150,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
                     NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
                         @Override
                         public void onSuccess(Response<String> response) {
-                            taskList = new Gson().fromJson(response.body(), TaskListBean.class);
+                            mTaskList = new Gson().fromJson(response.body(), TaskListBean.class);
                             initView();
                         }
                     });
@@ -177,12 +176,12 @@ public class MainActivity extends AppCompatActivity {
      */
     @AfterPermissionGranted(RC_PERMISSIONS)
     private void requestPermissions() {
-        if (EasyPermissions.hasPermissions(this, permissions)) {
+        if (EasyPermissions.hasPermissions(this, mPermissions)) {
             // have permissions
         } else {
             // no permissions, request dynamically
             EasyPermissions.requestPermissions(
-                    new PermissionRequest.Builder(this, RC_PERMISSIONS, permissions)
+                    new PermissionRequest.Builder(this, RC_PERMISSIONS, mPermissions)
                             .setRationale(R.string.rationale)
                             .setPositiveButtonText(R.string.rationale_ask_ok)
                             .setNegativeButtonText(R.string.rationale_ask_cancel)
@@ -196,28 +195,28 @@ public class MainActivity extends AppCompatActivity {
      * Called in loadTaskListViaNetwork().
      */
     private void initView() {
-        user = findViewById(R.id.user);
-        user.setText("SomeUser");
-        description = findViewById(R.id.description);
-        counter = findViewById(R.id.counter);
+        mUserText = findViewById(R.id.user_text);
+        mUserText.setText(R.string.default_user);
+        mTaskDescription = findViewById(R.id.task_description);
+        mTaskCounter = findViewById(R.id.task_counter);
 
         // Spinner
-        taskSpinner = findViewById(R.id.task_spinner);
-        subtaskSpinner = findViewById(R.id.subtask_spinner);
+        mTaskSpinner = findViewById(R.id.task_spinner);
+        mSubtaskSpinner = findViewById(R.id.subtask_spinner);
 
         // choose tasks and subtasks
-        taskName = taskList.getTaskName();
-        taskAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, taskName);
-        taskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        taskSpinner.setAdapter(taskAdapter);
-        taskSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        mTaskName = mTaskList.getTaskName();
+        mTaskAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, mTaskName);
+        mTaskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mTaskSpinner.setAdapter(mTaskAdapter);
+        mTaskSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                curTaskId = position;
-                subtaskName = taskList.getTask().get(curTaskId).getSubtaskName();
-                subtaskAdapter = new ArrayAdapter<>(mContext, android.R.layout.simple_spinner_item, subtaskName);
-                subtaskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                subtaskSpinner.setAdapter(subtaskAdapter);
+                mCurrentTaskId = position;
+                mSubtaskName = mTaskList.getTask().get(mCurrentTaskId).getSubtaskName();
+                mSubtaskAdapter = new ArrayAdapter<>(mContext, android.R.layout.simple_spinner_item, mSubtaskName);
+                mSubtaskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                mSubtaskSpinner.setAdapter(mSubtaskAdapter);
             }
 
             @Override
@@ -225,23 +224,24 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if (taskName.length == 0) {
-            subtaskName = new String[0];
+        if (mTaskName.length == 0) {
+            mSubtaskName = new String[0];
         }
         else {
-            subtaskName = taskList.getTask().get(curTaskId).getSubtaskName();
+            mSubtaskName = mTaskList.getTask().get(mCurrentTaskId).getSubtaskName();
         }
-        subtaskAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, subtaskName);
-        subtaskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        subtaskSpinner.setAdapter(subtaskAdapter);
-        subtaskSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        mSubtaskAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, mSubtaskName);
+        mSubtaskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSubtaskSpinner.setAdapter(mSubtaskAdapter);
+        mSubtaskSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                curSubtaskId = position;
-                description.setText(subtaskName[curSubtaskId]);
-                isVideo = taskList.getTask().get(curTaskId).getSubtask().get(curSubtaskId).isVideo() |
-                          taskList.getTask().get(curTaskId).isAudio();
-                cameraSwitch.setChecked(isVideo);
+                mCurrentSubtaskId = position;
+                mTaskDescription.setText(mSubtaskName[mCurrentSubtaskId]);
+                mIsVideo = mTaskList.getTask().get(mCurrentTaskId).getSubtask()
+                        .get(mCurrentSubtaskId).isVideo() |
+                        mTaskList.getTask().get(mCurrentTaskId).isAudio();
+                mCameraSwitch.setChecked(mIsVideo);
             }
 
             @Override
@@ -250,33 +250,33 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // whether to record the video
-        cameraSwitch = findViewById(R.id.video_switch);
-        cameraSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
-            recorder.setCamera(b);
+        mCameraSwitch = findViewById(R.id.video_switch);
+        mCameraSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
+            mRecorder.setCamera(b);
         });
-        cameraSwitch.setEnabled(false); // disabled
+        mCameraSwitch.setEnabled(false); // disabled
 
-        startButton = findViewById(R.id.start);
-        stopButton = findViewById(R.id.stop);
+        mBtnStart = findViewById(R.id.btn_start);
+        mBtnStop = findViewById(R.id.btn_restart);
 
-        Button configButton = findViewById(R.id.configButton);
-        Button trainButton = findViewById(R.id.trainButton);
-        Button visualButton = findViewById(R.id.visualButton);
+        Button configButton = findViewById(R.id.btn_config);
+        Button trainButton = findViewById(R.id.btn_train);
+        Button visualButton = findViewById(R.id.btn_visual);
 
         // click the start button to start recorder
-        startButton.setOnClickListener(view -> {
+        mBtnStart.setOnClickListener(view -> {
             enableButtons(true);
-            recorder.start(
-                    user.getText().toString(),
-                    curTaskId,
-                    curSubtaskId,
-                    taskList
+            mRecorder.start(
+                    mUserText.getText().toString(),
+                    mCurrentTaskId,
+                    mCurrentSubtaskId,
+                    mTaskList
             );
         });
 
         // click the stop button to end recording
-        stopButton.setOnClickListener(view -> {
-            recorder.interrupt();
+        mBtnStop.setOnClickListener(view -> {
+            mRecorder.interrupt();
             enableButtons(false);
         });
 
@@ -308,8 +308,8 @@ public class MainActivity extends AppCompatActivity {
      * @param isRecording Whether the current task is ongoing.
      */
     private void enableButtons(boolean isRecording) {
-        startButton.setEnabled(!isRecording);
-        stopButton.setEnabled(isRecording);
+        mBtnStart.setEnabled(!isRecording);
+        mBtnStop.setEnabled(isRecording);
     }
 
     /**
@@ -318,8 +318,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (vibrator != null) {
-            vibrator.cancel();
+        if (mVibrator != null) {
+            mVibrator.cancel();
         }
     }
 }

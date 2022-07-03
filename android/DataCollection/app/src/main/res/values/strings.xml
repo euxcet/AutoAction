@@ -6,4 +6,21 @@
     <string name="accessibility_service_description">Description</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!-- String constants -->
+    <string name="default_user">Default User</string>
+    <string name='text_placeholder'>Text placeholder</string>
+    <string name="user_hint">用户名：</string>
+    <string name="task_hint">任务：</string>
+    <string name="subtask_hint">子任务：</string>
+    <string name="video_switch_label">录制视频：</string>
+    <string name="btn_start">开始</string>
+    <string name="btn_restart">重做</string>
+    <!-- configuration layout -->
+    <string name="btn_config">Config</string>
+    <string name="btn_visual">Visual</string>
+    <string name="btn_train">Train</string>
+    <string name="btn_test">Test</string>
+    <string name="btn_upgrade">Upgrade</string>
+    <string name="btn_access">Accessibility</string>
+
 </resources>
