@@ -13,6 +13,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The controller for managing timestamp data.
+ */
 public class TimestampController {
     private Context mContext;
     private List<Long> data = new ArrayList<>();

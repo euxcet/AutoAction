@@ -10,6 +10,9 @@ import com.github.mikephil.charting.data.LineDataSet;
 
 import java.util.ArrayList;
 
+/**
+ * Show line chart for visualization.
+ */
 public class ChartUtils {
     public static LineDataSet createLineDataSet(LineChart chart, ArrayList<Entry> values, DataSetConfig config) {
         LineDataSet lineDataSet = new LineDataSet(values, config.label);

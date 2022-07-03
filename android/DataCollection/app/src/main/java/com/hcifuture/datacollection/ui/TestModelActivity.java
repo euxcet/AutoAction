@@ -9,6 +9,10 @@ import com.hcifuture.datacollection.R;
 import com.hcifuture.datacollection.inference.IMUSensorManager;
 import com.hcifuture.datacollection.inference.Inferencer;
 
+/**
+ * The activity to test a model.
+ * Jumped from MainActivity.
+ */
 public class TestModelActivity extends AppCompatActivity {
 
     private IMUSensorManager imuSensorManager;

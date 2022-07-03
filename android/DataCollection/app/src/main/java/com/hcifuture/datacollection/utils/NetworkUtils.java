@@ -11,6 +11,9 @@ import com.lzy.okgo.callback.StringCallback;
 
 import java.io.File;
 
+/**
+ * Defines some interface constants and data request methods to interact with the backend.
+ */
 public class NetworkUtils {
     private static final String TAG = "NetworkUtils";
     private static final String ROOT_URL = BuildConfig.WEB_SERVER;
@@ -47,7 +50,7 @@ public class NetworkUtils {
                 .tag(context)
                 .execute(callback);
     }
-
+    
     public static void getTaskListHistory(Context context, String taskListId, StringCallback callback) {
         OkGo.<String>get(TASKLIST_HISTORY_URL)
                 .tag(context)

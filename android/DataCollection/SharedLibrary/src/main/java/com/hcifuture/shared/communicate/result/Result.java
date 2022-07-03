@@ -2,6 +2,11 @@ package com.hcifuture.shared.communicate.result;
 
 import android.os.Bundle;
 
+/**
+ * The base class of results.
+ * Stores the result key and its reason.
+ * Q: What is it used for ???
+ */
 public class Result {
     private String key;
     private String reason;

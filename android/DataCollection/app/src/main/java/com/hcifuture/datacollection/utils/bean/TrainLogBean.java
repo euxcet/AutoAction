@@ -1,5 +1,8 @@
 package com.hcifuture.datacollection.utils.bean;
 
+/**
+ * Stores some logs in a training process.
+ */
 public class TrainLogBean {
     private int epoch;
     private float loss;

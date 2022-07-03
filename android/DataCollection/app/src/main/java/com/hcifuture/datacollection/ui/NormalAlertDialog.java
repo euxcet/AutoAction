@@ -4,6 +4,9 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 
+/**
+ * Stores some information used in an alert dialog.
+ */
 public class NormalAlertDialog {
     private Context mContext;
     private AlertDialog.Builder builder;

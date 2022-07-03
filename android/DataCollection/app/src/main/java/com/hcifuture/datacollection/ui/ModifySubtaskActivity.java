@@ -16,6 +16,10 @@ import com.google.gson.Gson;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
+/**
+ * The activity to modify the setting of a subtask.
+ * Jumped from the subtask in SubtaskAdapter.
+ */
 public class ModifySubtaskActivity extends AppCompatActivity {
     private Context mContext;
     private AppCompatActivity mActivity;

@@ -14,6 +14,7 @@ DATA_TEMP_ROOT  = os.path.join(DATA_ROOT, "temp")
 
 md5 = dict()
 
+# a series functions to get some file path
 def get_temp_path():
     return DATA_TEMP_ROOT
 
@@ -127,6 +128,8 @@ def save_file(file, file_path):
     file.save(file_path)
 
 def calc_file_md5(file_name):
+    ''' Calc md5 use the file data, and return the md5 digest.
+    '''
     m = hashlib.md5()
     with open(file_name, 'rb') as f:
         while True:
@@ -137,14 +140,17 @@ def calc_file_md5(file_name):
     return m.hexdigest()
 
 def update_md5():
+    ''' Update the md5 mapping of all files in "../data/file/".
+    '''
     global md5
     for filename in os.listdir(DATA_FILE_ROOT):
         md5[filename] = calc_file_md5(os.path.join(DATA_FILE_ROOT, filename))
 
 def get_md5(filename):
+    ''' Return the file md5 digest.
+        If file does not exist, return ""
+    '''
     global md5
     if filename in md5:
         return md5[filename]
     return ""
-
-    

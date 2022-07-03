@@ -1,5 +1,8 @@
 package com.hcifuture.shared.communicate.result;
 
+/**
+ * Stores the context result.
+ */
 public class ContextResult extends Result {
     public ContextResult(String context) {
         super(context);

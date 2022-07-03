@@ -17,6 +17,10 @@ import com.google.gson.Gson;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
+/**
+ * The activity to configure task settings.
+ * Jumped from MainActivity.
+ */
 public class ConfigTaskActivity extends AppCompatActivity {
     private ListView taskListView;
 
@@ -32,10 +36,12 @@ public class ConfigTaskActivity extends AppCompatActivity {
 
         mContext = this;
 
+        // return to main activity
         Button backButton = findViewById(R.id.taskBackButton);
         backButton.setOnClickListener((v) -> this.finish());
 
         Button addTaskButton = findViewById(R.id.addTaskButton);
+        // goto add task activity
         addTaskButton.setOnClickListener((v) -> {
             Intent intent = new Intent(ConfigTaskActivity.this, AddTaskActivity.class);
             startActivity(intent);
@@ -51,7 +57,8 @@ public class ConfigTaskActivity extends AppCompatActivity {
     }
 
     private void loadTaskListViaNetwork() {
-        NetworkUtils.getTaskList(mContext, GlobalVariable.getInstance().getString("taskListId"), 0, new StringCallback() {
+        NetworkUtils.getTaskList(mContext, GlobalVariable.getInstance()
+                .getString("taskListId"), 0, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
                 taskList = new Gson().fromJson(response.body(), TaskListBean.class);

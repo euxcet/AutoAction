@@ -2,6 +2,10 @@ package com.hcifuture.shared.communicate.config;
 
 import java.util.HashMap;
 
+/**
+ * The base class of config information.
+ * Stores some value in different types.
+ */
 public class Config {
     private final HashMap<String, String> stringConfig = new HashMap<>();
     private final HashMap<String, Boolean> booleanConfig = new HashMap<>();

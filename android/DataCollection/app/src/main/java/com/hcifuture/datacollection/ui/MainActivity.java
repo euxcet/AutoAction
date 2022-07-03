@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayAdapter<String> subtaskAdapter;
 
     // task
-    private TaskListBean taskList;
+    private TaskListBean taskList;  // queried from the backend
     private String[] taskName;
     private String[] subtaskName;
     private int curTaskId = 0;
@@ -89,13 +89,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // ask for permissions
         requestPermissions();
 
         mContext = this;
         mActivity = this;
 
+        // vibrate to indicate data collection progress
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-
         vibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
 
         recorder = new Recorder(this, new Recorder.RecorderListener() {
@@ -124,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
             MainService.getInstance().upgrade();
         });
 
+        // goto test activity.
         Button testButton = findViewById(R.id.testButton);
         testButton.setOnClickListener((v) -> {
             Intent intent = new Intent(MainActivity.this, TestModelActivity.class);
@@ -134,6 +136,9 @@ public class MainActivity extends AppCompatActivity {
         inferencer.start(this);
     }
 
+    /**
+     * Called in onResume().
+     */
     private void loadTaskListViaNetwork() {
         NetworkUtils.getAllTaskList(this, new StringCallback() {
             @Override
@@ -167,6 +172,9 @@ public class MainActivity extends AppCompatActivity {
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
     }
 
+    /**
+     * Pop up dialog windows to ask users for system permissions.
+     */
     @AfterPermissionGranted(RC_PERMISSIONS)
     private void requestPermissions() {
         if (EasyPermissions.hasPermissions(this, permissions)) {
@@ -183,10 +191,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    /**
+     * Init the status of all UI components in main activity.
+     * Called in loadTaskListViaNetwork().
+     */
     private void initView() {
         user = findViewById(R.id.user);
-        user.setText("a");
+        user.setText("SomeUser");
         description = findViewById(R.id.description);
         counter = findViewById(R.id.counter);
 
@@ -194,6 +205,7 @@ public class MainActivity extends AppCompatActivity {
         taskSpinner = findViewById(R.id.task_spinner);
         subtaskSpinner = findViewById(R.id.subtask_spinner);
 
+        // choose tasks and subtasks
         taskName = taskList.getTaskName();
         taskAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, taskName);
         taskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -237,11 +249,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // whether to record the video
         cameraSwitch = findViewById(R.id.video_switch);
         cameraSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
             recorder.setCamera(b);
         });
-        cameraSwitch.setEnabled(false);
+        cameraSwitch.setEnabled(false); // disabled
 
         startButton = findViewById(R.id.start);
         stopButton = findViewById(R.id.stop);
@@ -250,6 +263,7 @@ public class MainActivity extends AppCompatActivity {
         Button trainButton = findViewById(R.id.trainButton);
         Button visualButton = findViewById(R.id.visualButton);
 
+        // click the start button to start recorder
         startButton.setOnClickListener(view -> {
             enableButtons(true);
             recorder.start(
@@ -260,34 +274,47 @@ public class MainActivity extends AppCompatActivity {
             );
         });
 
+        // click the stop button to end recording
         stopButton.setOnClickListener(view -> {
             recorder.interrupt();
             enableButtons(false);
         });
 
+        // goto config task activity
         configButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, ConfigTaskActivity.class);
             startActivity(intent);
         });
 
+        // goto train activity
         trainButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, TrainActivity.class);
             startActivity(intent);
         });
 
+        // goto record list activity
         visualButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, RecordListActivity.class);
             startActivity(intent);
         });
 
+        // set the default status of the start and end buttons
         enableButtons(false);
     }
 
+    /**
+     * Set the availability of the start and stop buttons.
+     * Ensures the status of these two buttons are opposite.
+     * @param isRecording Whether the current task is ongoing.
+     */
     private void enableButtons(boolean isRecording) {
         startButton.setEnabled(!isRecording);
         stopButton.setEnabled(isRecording);
     }
 
+    /**
+     * Cancel the vibrator.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();

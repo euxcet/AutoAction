@@ -17,6 +17,10 @@ import com.google.gson.Gson;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
+/**
+ * The activity to add a subtask.
+ * Jumped from ConfigSubtaskActivity.
+ */
 public class AddSubtaskActivity extends AppCompatActivity {
     private Context mContext;
     private AppCompatActivity mActivity;

@@ -18,6 +18,10 @@ import com.google.gson.Gson;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
+/**
+ * The activity used to configure subtasks.
+ * Jumped from the task in TaskAdapter.
+ */
 public class ConfigSubtaskActivity extends AppCompatActivity {
     private Context mContext;
     private ListView subtaskListView;

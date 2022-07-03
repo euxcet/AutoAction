@@ -17,6 +17,10 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Stores the meta data of a task list.
+ * TaskList -> List(Task) -> List(List(Subtask))
+ */
 public class TaskListBean implements Serializable {
     private String id;
     private String date;

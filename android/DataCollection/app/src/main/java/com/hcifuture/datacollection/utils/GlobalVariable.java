@@ -2,6 +2,9 @@ package com.hcifuture.datacollection.utils;
 
 import java.util.HashMap;
 
+/**
+ * Map strings to strings globally.
+ */
 public class GlobalVariable {
     private static GlobalVariable instance = new GlobalVariable();
     private HashMap<String, String> stringHashMap;

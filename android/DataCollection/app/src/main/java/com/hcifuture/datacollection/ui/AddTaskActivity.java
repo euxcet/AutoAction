@@ -18,6 +18,10 @@ import com.google.gson.Gson;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
+/**
+ * The activity used for adding a new task by users.
+ * Jumped from ConfigTaskActivity.
+ */
 public class AddTaskActivity extends AppCompatActivity {
     private AppCompatActivity mActivity;
     private Context mContext;

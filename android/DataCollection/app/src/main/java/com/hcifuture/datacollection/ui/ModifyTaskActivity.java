@@ -16,6 +16,10 @@ import com.google.gson.Gson;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
+/**
+ * The activity used to modify task settings.
+ * Jumped from ConfigSubtaskActivity.
+ */
 public class ModifyTaskActivity extends AppCompatActivity {
     private Context mContext;
     private AppCompatActivity mActivity;

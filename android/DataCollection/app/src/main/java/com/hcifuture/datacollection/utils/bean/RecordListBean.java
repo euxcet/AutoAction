@@ -2,6 +2,10 @@ package com.hcifuture.datacollection.utils.bean;
 
 import java.util.List;
 
+/**
+ * Stores meta data in a list of records.
+ * Implemented a series setters ana getters.
+ */
 public class RecordListBean {
     private List<RecordBean> recordList;
 

@@ -29,6 +29,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Deal with file IO operations.
+ */
 public class FileUtils {
 
     public static void makeDir(String directory) {

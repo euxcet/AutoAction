@@ -16,16 +16,23 @@ from ml.cutter.random_cutter import RandomCutter
 from train_process import TrainProcess
 
 app = Flask(__name__)
+# CORS: A Flask extension for handling Cross Origin Resource Sharing
+# (CORS), making cross-origin AJAX possible.
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
+# multi-thread saver
 saver = ThreadPoolExecutor(max_workers=1)
 saver_future_list = []
 
+# multi-thread trainer
 trainer = ThreadPoolExecutor(max_workers=1)
 train_processes = []
 
+# Why this file name ???
 file_utils.mkdir("../data/record/TL13r912je")
+
+# set the default configuration by hard coding
 if not os.path.exists("../data/file/config.json"):
     config = {
         "context": [
@@ -210,6 +217,8 @@ Respone:
 @app.route("/all_taskList", methods=["GET"])
 @cross_origin()
 def get_all_taskList():
+    ''' Get all tasklist names in ../data/record/ starting with "TL"
+    '''
     response = []
     for dir in os.listdir(file_utils.DATA_RECORD_ROOT):
         if dir.startswith("TL"):
@@ -228,6 +237,8 @@ Respone:
 @app.route("/taskList_history", methods=["GET"])
 @cross_origin()
 def get_taskList_history():
+    ''' Not called from the frontend currently.
+    '''
     taskListId = request.args.get("taskListId")
 
     taskList_path = file_utils.get_taskList_path(taskListId)
@@ -250,9 +261,11 @@ Respone:
 @app.route("/taskList", methods=["GET"])
 @cross_origin()
 def get_taskList():
+    ''' Get the task list TLxxx.json file under "..data/record/TLxxx/"
+    '''
     taskListId = request.args.get("taskListId")
     timestamp = request.args.get("timestamp")
-    print(taskListId, timestamp)
+    print(f'taskListId: {taskListId}, timestamp: {timestamp}')
     return file_utils.load_taskList_info(taskListId, timestamp)
 
 
@@ -472,6 +485,8 @@ Upload files after posting to record.
 '''
 @app.route("/record_file", methods=["POST"])
 def upload_record_file():
+    print('Post record_file called.')
+    
     file = request.files["file"]
     fileType = request.form.get("fileType")
     taskListId = request.form.get("taskListId")
@@ -760,8 +775,6 @@ Form:
 def update_md5():
     file_utils.update_md5()
     return {}
-        
-
 
 if __name__ == '__main__':
     update_md5()

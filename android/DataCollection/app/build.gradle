@@ -66,7 +66,8 @@ android {
     sourceSets {
         main {
             main {
-                jniLibs.srcDirs = ['libs']
+// canceled by CaveSpiderLZJ to avoid build errors
+//                jniLibs.srcDirs = ['libs']
             }
             assets {
                 srcDirs = ["src/main/assets"]
@@ -76,31 +77,31 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.3.2'
+    implementation 'androidx.core:core-ktx:1.8.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.2'
-    implementation 'com.google.android.material:material:1.4.0'
+    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.6.1'
     implementation project(path: ':SharedLibrary')
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test:runner:1.3.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     implementation 'com.lzy.net:okgo:3.0.4'
     implementation 'pub.devrel:easypermissions:2.0.1'
     api 'com.google.code.gson:gson:2.8.9'
 
     // CameraX core library using the camera2 implementation
-    def camerax_version = "1.1.0-alpha12"
+    def camerax_version = "1.2.0-alpha02"
     // The following line is optional, as the core library is included indirectly by camera-camera2
     implementation "androidx.camera:camera-core:${camerax_version}"
     implementation "androidx.camera:camera-camera2:${camerax_version}"
     // If you want to additionally use the CameraX Lifecycle library
     implementation "androidx.camera:camera-lifecycle:${camerax_version}"
     // If you want to additionally use the CameraX VideoCapture library
-    implementation "androidx.camera:camera-video:1.1.0-alpha12"
+    implementation "androidx.camera:camera-video:${camerax_version}"
     // If you want to additionally use the CameraX View class
-    implementation "androidx.camera:camera-view:1.0.0-alpha32"
+    implementation "androidx.camera:camera-view:${camerax_version}"
     // If you want to additionally use the CameraX Extensions library
 
     implementation('org.tensorflow:tensorflow-lite:0.0.0-nightly') { changing = true }
@@ -110,7 +111,7 @@ dependencies {
 
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
-    api 'com.amap.api:3dmap:latest.integration'
+//    api 'com.amap.api:3dmap:latest.integration'
     api 'com.amap.api:location:latest.integration'
     api 'com.amap.api:search:latest.integration'
 }

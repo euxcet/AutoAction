@@ -1,5 +1,8 @@
 package com.hcifuture.shared.communicate.result;
 
+/**
+ * Stores the action result.
+ */
 public class ActionResult extends Result {
     public ActionResult(String action) {
         super(action);

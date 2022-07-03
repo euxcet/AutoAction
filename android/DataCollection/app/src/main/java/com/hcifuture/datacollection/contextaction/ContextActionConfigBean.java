@@ -48,6 +48,9 @@ Example:
 
 import java.util.List;
 
+/**
+ * Stores the information of some configurations but is never used.
+ */
 public class ContextActionConfigBean {
     private List<ContextConfigBean> context;
     private List<ActionConfigBean> action;

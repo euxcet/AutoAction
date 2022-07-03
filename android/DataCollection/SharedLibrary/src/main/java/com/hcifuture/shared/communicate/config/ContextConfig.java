@@ -4,6 +4,9 @@ import com.hcifuture.shared.communicate.SensorType;
 
 import java.util.List;
 
+/**
+ * Stores the essential info in a kind of context.
+ */
 public class ContextConfig extends Config {
     private String context;
     private List<SensorType> sensorType;

@@ -2,6 +2,9 @@ package com.hcifuture.shared.communicate.result;
 
 import java.util.HashMap;
 
+/**
+ * Stores the request result.
+ */
 public class RequestResult {
     private final HashMap<String, Boolean> booleanResult = new HashMap<>();
     private final HashMap<String, Integer> integerResult = new HashMap<>();

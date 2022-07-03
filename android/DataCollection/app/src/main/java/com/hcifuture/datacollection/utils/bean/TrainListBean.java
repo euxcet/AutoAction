@@ -2,6 +2,9 @@ package com.hcifuture.datacollection.utils.bean;
 
 import java.util.List;
 
+/**
+ * Stores the meta data of trains.
+ */
 public class TrainListBean {
     private List<TrainBean> trainList;
 

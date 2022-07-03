@@ -1,5 +1,15 @@
 package com.hcifuture.shared.communicate;
 
+/**
+ * Enum for Sensor types.
+ * IMU: IMU signals.
+ * AUDIO: MIC signals.
+ * VIDEO: Camera signals.
+ * LOCATION: GPS signals.
+ * PROXIMITY: ???
+ * ACCESSIBILITY: ???
+ * BROADCAST: ???
+ */
 public enum SensorType {
     IMU,
     AUDIO,

@@ -3,10 +3,15 @@ package com.hcifuture.datacollection.data;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A sensor data unit, recording the idx, x, y, z, and timestamp data.
+ * Q: Why organized in scalar units ??? Is this inefficient ???
+ */
 public class SensorInfo {
     private List<Float> data;
     private long time;
 
+    // idx is actually the sensor type!
     public SensorInfo(float idx, float x, float y, float z, long time) {
         data = new ArrayList<>();
         data.add(idx);
@@ -16,6 +21,7 @@ public class SensorInfo {
         this.time = time;
     }
 
+    // never used
     public SensorInfo(float idx, float x, float y, float z, float cos, float acc, long time) {
         data = new ArrayList<>();
         data.add(idx);

@@ -32,6 +32,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * The controller for managing the camera data.
+ */
 public class CameraController {
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     private PreviewView previewView;

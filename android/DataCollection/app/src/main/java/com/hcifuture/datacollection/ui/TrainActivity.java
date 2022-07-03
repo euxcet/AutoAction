@@ -16,6 +16,10 @@ import com.google.gson.Gson;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
+/**
+ * The activity to train a new program.
+ * Jumped from MainActivity.
+ */
 public class TrainActivity extends AppCompatActivity {
     private static final String TAG = "TrainActivity";
     private Context mContext;

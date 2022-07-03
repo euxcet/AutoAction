@@ -4,6 +4,9 @@ import com.hcifuture.shared.communicate.SensorType;
 
 import java.util.List;
 
+/**
+ * Stores the essential info in an action.
+ */
 public class ActionConfig extends Config {
     private String action;
     private List<SensorType> sensorType;

@@ -2,6 +2,9 @@ package com.hcifuture.datacollection.utils;
 
 import java.util.Random;
 
+/**
+ * Generate random IDs for task list, task, subtask, record, and train files.
+ */
 public class RandomUtils {
     private static final String ID_ALLOWED_CHARACTERS = "0123456789qwertyuiopasdfghjklzxcvbnm";
 

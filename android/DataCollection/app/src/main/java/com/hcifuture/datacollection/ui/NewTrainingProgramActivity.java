@@ -18,6 +18,10 @@ import com.google.gson.Gson;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 
+/**
+ * The activity used for selecting a program in training.
+ * Jumped from TrainActivity.
+ */
 public class NewTrainingProgramActivity extends AppCompatActivity {
     private Context mContext;
     private AppCompatActivity mActivity;

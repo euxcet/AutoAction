@@ -18,6 +18,9 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * A very important class for managing sensors, used in MainActivity.
+ */
 public class Recorder {
 
     private Context mContext;
@@ -28,6 +31,8 @@ public class Recorder {
     private TimestampController timestampController;
 
     // file
+    // each of the following file will be passed to the start() function
+    // of the corresponding sensor controller and used in it
     private File sensorFile;
     private File sensorBinFile;
     private File cameraFile;
@@ -38,6 +43,7 @@ public class Recorder {
     private TaskListBean.Task task;
     private TaskListBean.Task.Subtask subtask;
     private CountDownTimer timer;
+    // interface for onTick() and onFinish()
     private RecorderListener listener;
 
     private String recordId;
@@ -56,6 +62,7 @@ public class Recorder {
         FileUtils.makeDir(BuildConfig.SAVE_PATH);
     }
 
+    // open or close the camera
     public void setCamera(boolean b) {
         if (b) {
             cameraController.openCamera();
