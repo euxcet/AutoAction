@@ -485,8 +485,6 @@ Upload files after posting to record.
 '''
 @app.route("/record_file", methods=["POST"])
 def upload_record_file():
-    print('Post record_file called.')
-    
     file = request.files["file"]
     fileType = request.form.get("fileType")
     taskListId = request.form.get("taskListId")
@@ -494,13 +492,9 @@ def upload_record_file():
     subtaskId = request.form.get("subtaskId")
     recordId = request.form.get("recordId")
     timestamp = request.form.get("timestamp")
-
     record_path = file_utils.get_record_path(taskListId, taskId, subtaskId, recordId)
-    print("Filename", file.filename)
-
+    
     if file and file_utils.allowed_file(file.filename):
-        filename = ""
-        print("type: ", fileType)
         prefix, ext = get_filetype_prefix(fileType), get_filetype_ext(fileType)
         filename = prefix + str(timestamp) + ext
         file_path = os.path.join(record_path, filename)

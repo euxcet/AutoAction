@@ -114,7 +114,9 @@ def allowed_file(filename):
     return os.path.splitext(filename)[-1] in ['.json', '.mp4', '.bin', '.csv', '.param', '.dex', '.jar']
 
 def save_record_file(file, file_path):
-    file.save(file_path)
+    f = open(file_path, 'wb')
+    file.save(f)
+    f.close()
     '''
     try:
         record_path = "/".join(file_path.split('/')[:-1])

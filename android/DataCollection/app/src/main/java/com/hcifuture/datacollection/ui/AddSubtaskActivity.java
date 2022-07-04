@@ -71,8 +71,8 @@ public class AddSubtaskActivity extends AppCompatActivity {
                         nameEditText.getText().toString(),
                         Integer.parseInt(timesEditText.getText().toString()),
                         Integer.parseInt(durationEditText.getText().toString()),
-                        videoCheckbox.isChecked(),
-                        audioCheckbox.isChecked()
+                        audioCheckbox.isChecked(),
+                        videoCheckbox.isChecked()
                 );
                 taskList.getTasks().get(task_id).addSubtask(newSubtask);
 

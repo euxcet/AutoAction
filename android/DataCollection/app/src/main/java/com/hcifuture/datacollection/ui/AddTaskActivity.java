@@ -73,8 +73,8 @@ public class AddTaskActivity extends AppCompatActivity {
                                     nameEditText.getText().toString(),
                                     Integer.parseInt(timesEditText.getText().toString()),
                                     Integer.parseInt(durationEditText.getText().toString()),
-                                    videoCheckbox.isChecked(),
-                                    audioCheckbox.isChecked());
+                                    audioCheckbox.isChecked(),
+                                    videoCheckbox.isChecked());
                             taskList.addTask(newTask);
                             // TaskList.saveToLocalFile(taskList);
 

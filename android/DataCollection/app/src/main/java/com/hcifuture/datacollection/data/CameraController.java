@@ -2,6 +2,7 @@ package com.hcifuture.datacollection.data;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.util.Log;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -53,6 +54,7 @@ public class CameraController {
     }
 
     public void initialize(boolean open) {
+        Log.d("CameraController.initialize()", "Camera init called.");
         cameraPreview = mActivity.findViewById(R.id.camera_preview);
         cameraProviderFuture = ProcessCameraProvider.getInstance(mActivity);
         cameraProviderFuture.addListener(() -> {
@@ -74,6 +76,7 @@ public class CameraController {
                     cameraPreview.setVisibility(View.VISIBLE);
                 }
             } catch (ExecutionException | InterruptedException ignored) {
+                Log.d("CameraController.initialize()", "Camera init failed!");
             }
         }, ContextCompat.getMainExecutor(mActivity));
     }
@@ -97,7 +100,7 @@ public class CameraController {
     public void start(File videoFile) {
         if (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             this.saveFile = videoFile;
-            recording = recorder.prepareRecording(mActivity, new FileOutputOptions.Builder(videoFile).build())
+            recording = recorder.prepareRecording(mActivity, new FileOutputOptions.Builder(saveFile).build())
                     .withAudioEnabled()
                     .start(ContextCompat.getMainExecutor(mActivity), videoRecordEvent -> {});
         }
@@ -115,6 +118,12 @@ public class CameraController {
             NetworkUtils.uploadRecordFile(mActivity, saveFile, TaskListBean.FILE_TYPE.VIDEO.ordinal(), taskListId, taskId, subtaskId, recordId, timestamp, new StringCallback() {
                 @Override
                 public void onSuccess(Response<String> response) {
+                    Log.d("CameraController.upload() onSuccess()", response.body());
+                }
+
+                @Override
+                public void onError(Response<String> response) {
+                    Log.d("CameraController.upload() onError()", response.toString());
                 }
             });
         }

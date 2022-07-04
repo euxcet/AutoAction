@@ -103,7 +103,7 @@ public class Recorder {
             }
         };
 
-        // modified: cancel Handler().postDelayed()
+        // canceled Handler().postDelayed(() -> {...});
         sensorController.start(sensorFile, sensorBinFile);
         if (subtask.isVideo()) cameraController.start(cameraFile);
         // TODO: add microphone
@@ -143,13 +143,14 @@ public class Recorder {
             }
         });
 
-        // modified: cancel Handler().postDelayed()
-        long timestamp = System.currentTimeMillis();
-        sensorController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
-        if (subtask.isVideo())
-            cameraController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
-        // TODO: add microphone
-        timestampController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
+        new Handler().postDelayed(() -> {
+            long timestamp = System.currentTimeMillis();
+            sensorController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
+            if (subtask.isVideo())
+                cameraController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
+            // TODO: add microphone
+            timestampController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
+        }, 2000);
     }
 
     public void createFile(String name, int taskId, int subtaskId) {

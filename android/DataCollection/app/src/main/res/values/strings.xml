@@ -7,7 +7,7 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <!-- String constants -->
-    <string name="default_user">Default User</string>
+    <string name="default_user">DefaultUser</string>
     <string name='text_placeholder'>Text placeholder</string>
     <string name="user_hint">用户名：</string>
     <string name="task_hint">任务：</string>
