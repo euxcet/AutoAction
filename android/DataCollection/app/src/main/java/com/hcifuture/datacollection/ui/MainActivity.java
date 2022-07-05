@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -65,8 +64,10 @@ public class MainActivity extends AppCompatActivity {
     private int mTotalTics = 0;      // mCurrentTic / mTotalTic
 
     private boolean mIsVideo;
+    private boolean mIsAudio;
 
-    private CheckBox mCameraSwitch;
+    private CheckBox mVideoSwitch;
+    private CheckBox mAudioSwitch;
 
     private Recorder mRecorder;
 
@@ -253,9 +254,11 @@ public class MainActivity extends AppCompatActivity {
                 mCurrentTic = 0;
                 mTotalTics = currentSubtask.getTimes();
                 updateTaskCounter();
-                // modified, only depend on whether the subtask is video
+                // modified, only depend on the subtask
                 mIsVideo = currentSubtask.isVideo();
-                mCameraSwitch.setChecked(mIsVideo);
+                mVideoSwitch.setChecked(mIsVideo);
+                mIsAudio = currentSubtask.isAudio();
+                mAudioSwitch.setChecked(mIsAudio);
             }
 
             @Override
@@ -263,13 +266,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // whether to record the video
-        mCameraSwitch = findViewById(R.id.video_switch);
-        mCameraSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
+        // video switch
+        mVideoSwitch = findViewById(R.id.video_switch);
+        mVideoSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
             mRecorder.setCamera(b);
         });
-        mCameraSwitch.setEnabled(false); // disabled
+        mVideoSwitch.setEnabled(false); // disabled
 
+        // audio switch
+        mAudioSwitch = findViewById(R.id.audio_switch);
+        mAudioSwitch.setEnabled(false); // disabled
+
+        // btn start and cancel
         mBtnStart = findViewById(R.id.btn_start);
         mBtnCancel = findViewById(R.id.btn_cancel);
 

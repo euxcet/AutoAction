@@ -24,16 +24,16 @@ public class ModifySubtaskActivity extends AppCompatActivity {
     private Context mContext;
     private AppCompatActivity mActivity;
 
-    private TaskListBean taskList;
+    private TaskListBean mTaskList;
 
-    private EditText nameEditText;
-    private EditText timesEditText;
-    private EditText durationEditText;
-    private CheckBox videoCheckbox;
-    private CheckBox audioCheckbox;
+    private EditText mEditTextName;
+    private EditText mEditTextTimes;
+    private EditText mEditTextDuration;
+    private CheckBox mCheckboxVideo;
+    private CheckBox mCheckboxAudio;
 
-    private int task_id;
-    private int subtask_id;
+    private int mTaskId;
+    private int mSubtaskId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,20 +43,20 @@ public class ModifySubtaskActivity extends AppCompatActivity {
         this.mActivity = this;
 
         Bundle bundle = getIntent().getExtras();
-        task_id = bundle.getInt("task_id");
-        subtask_id = bundle.getInt("subtask_id");
+        mTaskId = bundle.getInt("task_id");
+        mSubtaskId = bundle.getInt("subtask_id");
 
-        nameEditText = findViewById(R.id.addSubtaskNameEdit);
-        timesEditText = findViewById(R.id.addSubtaskTimesEdit);
-        durationEditText = findViewById(R.id.addSubtaskDurationEdit);
-        videoCheckbox = findViewById(R.id.addSubtaskVideoCheckbox);
-        audioCheckbox = findViewById(R.id.addSubtaskAudioCheckbox);
+        mEditTextName = findViewById(R.id.modify_subtask_edit_text_name);
+        mEditTextTimes = findViewById(R.id.modify_subtask_edit_text_times);
+        mEditTextDuration = findViewById(R.id.modify_subtask_edit_text_duration);
+        mCheckboxVideo = findViewById(R.id.modify_subtask_video_switch);
+        mCheckboxAudio = findViewById(R.id.modify_subtask_audio_switch);
 
-        Button confirmButton = findViewById(R.id.addSubtaskConfirmButton);
-        Button cancelButton = findViewById(R.id.addSubtaskCancelButton);
+        Button btnModify = findViewById(R.id.modify_subtask_btn_modify);
+        Button btnCancel = findViewById(R.id.modify_subtask_btn_cancel);
 
-        cancelButton.setOnClickListener((v) -> this.finish());
-        confirmButton.setOnClickListener((v) -> modifyTask());
+        btnModify.setOnClickListener((v) -> modifyTask());
+        btnCancel.setOnClickListener((v) -> this.finish());
     }
 
     @Override
@@ -69,26 +69,26 @@ public class ModifySubtaskActivity extends AppCompatActivity {
         NetworkUtils.getTaskList(mContext, GlobalVariable.getInstance().getString("taskListId"), 0, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                taskList = new Gson().fromJson(response.body(), TaskListBean.class);
-                TaskListBean.Task.Subtask subtask = taskList.getTasks().get(task_id).getSubtasks().get(subtask_id);
-                nameEditText.setText(subtask.getName());
-                timesEditText.setText(String.valueOf(subtask.getTimes()));
-                durationEditText.setText(String.valueOf(subtask.getDuration()));
-                videoCheckbox.setChecked(subtask.isVideo());
-                audioCheckbox.setChecked(subtask.isAudio());
+                mTaskList = new Gson().fromJson(response.body(), TaskListBean.class);
+                TaskListBean.Task.Subtask subtask = mTaskList.getTasks().get(mTaskId).getSubtasks().get(mSubtaskId);
+                mEditTextName.setText(subtask.getName());
+                mEditTextTimes.setText(String.valueOf(subtask.getTimes()));
+                mEditTextDuration.setText(String.valueOf(subtask.getDuration()));
+                mCheckboxVideo.setChecked(subtask.isVideo());
+                mCheckboxAudio.setChecked(subtask.isAudio());
             }
         });
     }
 
     private void modifyTask() {
-        TaskListBean.Task.Subtask subtask = taskList.getTasks().get(task_id).getSubtasks().get(subtask_id);
-        subtask.setName(nameEditText.getText().toString());
-        subtask.setTimes(Integer.parseInt(timesEditText.getText().toString()));
-        subtask.setDuration(Integer.parseInt(durationEditText.getText().toString()));
-        subtask.setVideo(videoCheckbox.isChecked());
-        subtask.setAudio(audioCheckbox.isChecked());
+        TaskListBean.Task.Subtask subtask = mTaskList.getTasks().get(mTaskId).getSubtasks().get(mSubtaskId);
+        subtask.setName(mEditTextName.getText().toString());
+        subtask.setTimes(Integer.parseInt(mEditTextTimes.getText().toString()));
+        subtask.setDuration(Integer.parseInt(mEditTextDuration.getText().toString()));
+        subtask.setVideo(mCheckboxVideo.isChecked());
+        subtask.setAudio(mCheckboxAudio.isChecked());
 
-        NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
+        NetworkUtils.updateTaskList(mContext, mTaskList, 0, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
                 mActivity.finish();

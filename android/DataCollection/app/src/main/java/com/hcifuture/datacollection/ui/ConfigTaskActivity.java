@@ -22,10 +22,10 @@ import com.lzy.okgo.model.Response;
  * Jumped from MainActivity.
  */
 public class ConfigTaskActivity extends AppCompatActivity {
-    private ListView taskListView;
+    private ListView mTaskListView;
 
-    private TaskListBean taskList;
-    private TaskAdapter taskAdapter;
+    private TaskListBean mTaskList;
+    private TaskAdapter mTaskAdapter;
 
     private Context mContext;
 
@@ -37,17 +37,17 @@ public class ConfigTaskActivity extends AppCompatActivity {
         mContext = this;
 
         // return to main activity
-        Button backButton = findViewById(R.id.taskBackButton);
+        Button backButton = findViewById(R.id.config_task_btn_back);
         backButton.setOnClickListener((v) -> this.finish());
 
-        Button addTaskButton = findViewById(R.id.addTaskButton);
+        Button addTaskButton = findViewById(R.id.config_task_btn_add_task);
         // goto add task activity
         addTaskButton.setOnClickListener((v) -> {
             Intent intent = new Intent(ConfigTaskActivity.this, AddTaskActivity.class);
             startActivity(intent);
         });
 
-        taskListView = findViewById(R.id.trainListView);
+        mTaskListView = findViewById(R.id.config_task_list_view);
     }
 
     @Override
@@ -61,9 +61,9 @@ public class ConfigTaskActivity extends AppCompatActivity {
                 .getString("taskListId"), 0, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                taskList = new Gson().fromJson(response.body(), TaskListBean.class);
-                taskAdapter = new TaskAdapter(mContext, taskList);
-                taskListView.setAdapter(taskAdapter);
+                mTaskList = new Gson().fromJson(response.body(), TaskListBean.class);
+                mTaskAdapter = new TaskAdapter(mContext, mTaskList);
+                mTaskListView.setAdapter(mTaskAdapter);
             }
         });
     }

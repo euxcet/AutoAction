@@ -25,13 +25,13 @@ public class AddSubtaskActivity extends AppCompatActivity {
     private Context mContext;
     private AppCompatActivity mActivity;
 
-    private TaskListBean taskList;
+    private TaskListBean mTaskList;
 
-    private EditText nameEditText;
-    private EditText timesEditText;
-    private EditText durationEditText;
-    private CheckBox videoCheckbox;
-    private CheckBox audioCheckbox;
+    private EditText mEditTextName;
+    private EditText mEditTextTimes;
+    private EditText mEditTextDuration;
+    private CheckBox mCheckboxVideo;
+    private CheckBox mCheckboxAudio;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,42 +41,38 @@ public class AddSubtaskActivity extends AppCompatActivity {
         mContext = this;
         mActivity = this;
 
-        nameEditText = findViewById(R.id.addSubtaskNameEdit);
-        timesEditText = findViewById(R.id.addSubtaskTimesEdit);
-        durationEditText = findViewById(R.id.addSubtaskDurationEdit);
-        videoCheckbox = findViewById(R.id.addSubtaskVideoCheckbox);
-        audioCheckbox = findViewById(R.id.addSubtaskAudioCheckbox);
+        mEditTextName = findViewById(R.id.add_subtask_edit_text_name);
+        mEditTextTimes = findViewById(R.id.add_subtask_edit_text_times);
+        mEditTextDuration = findViewById(R.id.add_subtask_edit_text_duration);
+        mCheckboxVideo = findViewById(R.id.add_subtask_video_switch);
+        mCheckboxAudio = findViewById(R.id.add_subtask_audio_switch);
 
-        Button confirmButton = findViewById(R.id.addSubtaskConfirmButton);
+        Button btnAdd = findViewById(R.id.add_subtask_btn_add);
+        Button btnCancel = findViewById(R.id.add_subtask_btn_cancel);
 
-        Button cancelButton = findViewById(R.id.addSubtaskCancelButton);
-        cancelButton.setOnClickListener((v) -> this.finish());
-
+        btnCancel.setOnClickListener((v) -> this.finish());
         Bundle bundle = getIntent().getExtras();
         int task_id = bundle.getInt("task_id");
-
-        confirmButton.setOnClickListener((v) -> {
-            addNewSubtask(task_id);
-        });
+        btnAdd.setOnClickListener((v) -> {addNewSubtask(task_id);});
     }
 
     private void addNewSubtask(int task_id) {
         NetworkUtils.getTaskList(mContext, GlobalVariable.getInstance().getString("taskListId"), 0, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                taskList = new Gson().fromJson(response.body(), TaskListBean.class);
+                mTaskList = new Gson().fromJson(response.body(), TaskListBean.class);
 
                 TaskListBean.Task.Subtask newSubtask = new TaskListBean.Task.Subtask(
                         RandomUtils.generateRandomSubtaskId(),
-                        nameEditText.getText().toString(),
-                        Integer.parseInt(timesEditText.getText().toString()),
-                        Integer.parseInt(durationEditText.getText().toString()),
-                        audioCheckbox.isChecked(),
-                        videoCheckbox.isChecked()
+                        mEditTextName.getText().toString(),
+                        Integer.parseInt(mEditTextTimes.getText().toString()),
+                        Integer.parseInt(mEditTextDuration.getText().toString()),
+                        mCheckboxAudio.isChecked(),
+                        mCheckboxVideo.isChecked()
                 );
-                taskList.getTasks().get(task_id).addSubtask(newSubtask);
+                mTaskList.getTasks().get(task_id).addSubtask(newSubtask);
 
-                NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
+                NetworkUtils.updateTaskList(mContext, mTaskList, 0, new StringCallback() {
                     @Override
                     public void onSuccess(Response<String> response) {
                         mActivity.finish();

@@ -24,11 +24,11 @@ import com.lzy.okgo.model.Response;
  */
 public class ConfigSubtaskActivity extends AppCompatActivity {
     private Context mContext;
-    private ListView subtaskListView;
-    private TaskListBean taskList;
-    private SubtaskAdapter subtaskAdapter;
-    private TextView taskNameView;
-    private int task_id;
+    private ListView mSubtaskListView;
+    private TaskListBean mTaskList;
+    private SubtaskAdapter mSubtaskAdapter;
+    private TextView mTaskNameView;
+    private int mTaskId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,33 +36,33 @@ public class ConfigSubtaskActivity extends AppCompatActivity {
         setContentView(R.layout.activity_config_subtask);
         mContext = this;
 
-        Button backButton = findViewById(R.id.subtaskBackButton);
+        Button backButton = findViewById(R.id.config_subtask_btn_back);
         backButton.setOnClickListener((v) -> this.finish());
 
-        subtaskListView = findViewById(R.id.subtaskListView);
+        mSubtaskListView = findViewById(R.id.config_subtask_list_view);
 
         Bundle bundle = getIntent().getExtras();
-        task_id = bundle.getInt("task_id");
+        mTaskId = bundle.getInt("task_id");
 
-        Button addButton = findViewById(R.id.addSubtaskButton);
+        Button addButton = findViewById(R.id.config_subtask_btn_add_subtask);
         addButton.setOnClickListener((v) -> {
             Bundle addBundle = new Bundle();
-            addBundle.putInt("task_id", task_id);
+            addBundle.putInt("task_id", mTaskId);
             Intent intent = new Intent(ConfigSubtaskActivity.this, AddSubtaskActivity.class);
             intent.putExtras(addBundle);
             startActivity(intent);
         });
 
-        Button configButton = findViewById(R.id.configTaskButton);
+        Button configButton = findViewById(R.id.config_subtask_btn_config_task);
         configButton.setOnClickListener((v) -> {
             Bundle configBundle = new Bundle();
-            configBundle.putInt("task_id", task_id);
+            configBundle.putInt("task_id", mTaskId);
             Intent intent = new Intent(ConfigSubtaskActivity.this, ModifyTaskActivity.class);
             intent.putExtras(configBundle);
             startActivity(intent);
         });
 
-        taskNameView = findViewById(R.id.taskNameView);
+        mTaskNameView = findViewById(R.id.config_subtask_title);
     }
 
     @Override
@@ -75,10 +75,10 @@ public class ConfigSubtaskActivity extends AppCompatActivity {
         NetworkUtils.getTaskList(mContext, GlobalVariable.getInstance().getString("taskListId"), 0, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                taskList = new Gson().fromJson(response.body(), TaskListBean.class);
-                taskNameView.setText("Task name: " + taskList.getTasks().get(task_id).getName());
-                subtaskAdapter = new SubtaskAdapter(mContext, taskList, task_id);
-                subtaskListView.setAdapter(subtaskAdapter);
+                mTaskList = new Gson().fromJson(response.body(), TaskListBean.class);
+                mTaskNameView.setText("Task: " + mTaskList.getTasks().get(mTaskId).getName());
+                mSubtaskAdapter = new SubtaskAdapter(mContext, mTaskList, mTaskId);
+                mSubtaskListView.setAdapter(mSubtaskAdapter);
             }
         });
     }

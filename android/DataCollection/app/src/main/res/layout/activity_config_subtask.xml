@@ -7,65 +7,59 @@
     tools:context=".ui.ConfigSubtaskActivity">
 
     <TextView
-        android:id="@+id/taskNameView"
+        android:id="@+id/config_subtask_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="7dp"
-        android:layout_marginTop="22dp"
-        android:textSize="24sp"
+        android:layout_margin="@dimen/title_margin_vertical"
+        android:text="@string/text_placeholder"
+        android:textSize="@dimen/title_text_size"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/editTextTextPersonName"
-        android:layout_width="150dp"
-        android:layout_height="47dp"
-        android:layout_marginStart="7dp"
-        android:layout_marginTop="30dp"
-        android:ems="10"
-        android:text="Subtask list"
-        android:textSize="22sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/taskNameView" />
-
-    <Button
-        android:id="@+id/subtaskBackButton"
-        android:layout_width="100dp"
-        android:layout_height="60dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="84dp"
-        android:text="Back"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <Button
-        android:id="@+id/addSubtaskButton"
-        android:layout_width="200dp"
-        android:layout_height="60dp"
-        android:layout_marginEnd="190dp"
-        android:layout_marginBottom="84dp"
-        android:text="Add Subtask"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <Button
-        android:id="@+id/configTaskButton"
-        android:layout_width="200dp"
-        android:layout_height="59dp"
-        android:layout_marginEnd="190dp"
-        android:layout_marginBottom="16dp"
-        android:text="Config Task"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/config_subtask_list_view"/>
 
     <ListView
-        android:id="@+id/subtaskListView"
-        android:layout_width="392dp"
-        android:layout_height="400dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="28dp"
+        android:id="@+id/config_subtask_list_view"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/single_list_view_height"
+        android:layout_marginHorizontal="@dimen/single_list_view_margin_horizontal"
+        app:layout_constraintTop_toBottomOf="@id/config_subtask_title"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextTextPersonName" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/config_subtask_btn_config_task"/>
 
+    <Button
+        android:id="@+id/config_subtask_btn_config_task"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="@dimen/config_btn_margin_vertical"
+        android:text="@string/config_subtask_btn_config_task"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toBottomOf="@id/config_subtask_list_view"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/config_subtask_btn_add_subtask"/>
+
+    <Button
+        android:id="@+id/config_subtask_btn_add_subtask"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/config_subtask_btn_add_subtask"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toBottomOf="@id/config_subtask_btn_config_task"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/config_subtask_btn_back"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <Button
+        android:id="@+id/config_subtask_btn_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/config_task_btn_back"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toTopOf="@id/config_subtask_btn_add_subtask"
+        app:layout_constraintStart_toEndOf="@id/config_subtask_btn_add_subtask"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/config_subtask_btn_add_subtask"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

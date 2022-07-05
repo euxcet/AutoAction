@@ -6,21 +6,46 @@
     <string name="accessibility_service_description">Description</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <!-- String constants -->
+    <!-- main activity -->
     <string name="default_user">DefaultUser</string>
     <string name='text_placeholder'>Text placeholder</string>
     <string name="user_hint">用户名：</string>
     <string name="task_hint">任务：</string>
     <string name="subtask_hint">子任务：</string>
     <string name="video_switch_label">录制视频：</string>
+    <string name="audio_switch_label">录制音频：</string>
     <string name="btn_start">开始</string>
     <string name="btn_cancel">取消</string>
-    <!-- configuration layout -->
     <string name="btn_config">Config</string>
     <string name="btn_visual">Visual</string>
     <string name="btn_train">Train</string>
     <string name="btn_test">Test</string>
     <string name="btn_upgrade">Upgrade</string>
     <string name="btn_access">Accessibility</string>
+    <!-- config task activity -->
+    <string name="config_task_title">Task List</string>
+    <string name="config_task_btn_add_task">Add Task</string>
+    <string name="config_task_btn_back">Back</string>
+    <!-- config subtask activity -->
+    <string name="config_subtask_btn_config_task">Config Task</string>
+    <string name="config_subtask_btn_add_subtask">Add SubTask</string>
+    <string name="config_subtask_btn_back">Back</string>
+    <!-- add/modify task/subtask -->
+    <string name="add_task_title">Add Task</string>
+    <string name="add_subtask_title">Add Subtask</string>
+    <string name="modify_task_title">Modify Task</string>
+    <string name="modify_subtask_title">Modify Subtask</string>
+    <string name="task_name_label">名称</string>
+    <string name="default_task_name">DefaultTask</string>
+    <string name="default_subtask_name">DefaultSubtask</string>
+    <string name="task_times_label">录制次数</string>
+    <string name="default_task_times">30</string>
+    <string name="task_duration_label">单次时长(ms)</string>
+    <string name="default_task_duration">3000</string>
+    <string name="task_video_switch_label">是否开启摄像头</string>
+    <string name="task_audio_switch_label">是否开启麦克风</string>
+    <string name="btn_add_task">Add</string>
+    <string name="btn_modify_task">Modify</string>
+    <string name="btn_cancel_task">Cancel</string>
 
 </resources>

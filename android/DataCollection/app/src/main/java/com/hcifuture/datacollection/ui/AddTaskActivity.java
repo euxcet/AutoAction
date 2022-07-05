@@ -26,13 +26,13 @@ public class AddTaskActivity extends AppCompatActivity {
     private AppCompatActivity mActivity;
     private Context mContext;
 
-    private TaskListBean taskList;
+    private TaskListBean mTaskList;
 
-    private EditText nameEditText;
-    private EditText timesEditText;
-    private EditText durationEditText;
-    private CheckBox videoCheckbox;
-    private CheckBox audioCheckbox;
+    private EditText mEditTextName;
+    private EditText mEditTextTimes;
+    private EditText mEditTextDuration;
+    private CheckBox mCheckboxVideo;
+    private CheckBox mCheckboxAudio;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,17 +42,17 @@ public class AddTaskActivity extends AppCompatActivity {
         mActivity = this;
         mContext = this;
 
-        nameEditText = findViewById(R.id.addTaskNameEdit);
-        timesEditText = findViewById(R.id.addTaskTimesEdit);
-        durationEditText = findViewById(R.id.addTaskDurationEdit);
-        videoCheckbox = findViewById(R.id.addTaskVideoCheckbox);
-        audioCheckbox = findViewById(R.id.addTaskAudioCheckbox);
+        mEditTextName = findViewById(R.id.add_task_edit_text_name);
+        mEditTextTimes = findViewById(R.id.add_task_edit_text_times);
+        mEditTextDuration = findViewById(R.id.add_task_edit_text_duration);
+        mCheckboxVideo = findViewById(R.id.add_task_video_switch);
+        mCheckboxAudio = findViewById(R.id.audio_switch);
 
-        Button confirmButton = findViewById(R.id.addTaskConfirmButton);
-        Button cancelButton = findViewById(R.id.addTaskCancelButton);
+        Button btnAdd = findViewById(R.id.add_task_btn_add);
+        Button btnCancel = findViewById(R.id.add_task_btn_cancel);
 
-        cancelButton.setOnClickListener((v) -> this.finish());
-        confirmButton.setOnClickListener((v) -> addNewTask());
+        btnAdd.setOnClickListener((v) -> addNewTask());
+        btnCancel.setOnClickListener((v) -> this.finish());
     }
 
     private void addNewTask() {
@@ -65,20 +65,20 @@ public class AddTaskActivity extends AppCompatActivity {
                     NetworkUtils.getTaskList(mContext, GlobalVariable.getInstance().getString("taskListId"), 0, new StringCallback() {
                         @Override
                         public void onSuccess(Response<String> response) {
-                            taskList = new Gson().fromJson(response.body(), TaskListBean.class);
+                            mTaskList = new Gson().fromJson(response.body(), TaskListBean.class);
 
                             // taskList = TaskList.parseFromLocalFile();
                             TaskListBean.Task newTask = new TaskListBean.Task(
                                     RandomUtils.generateRandomTaskId(),
-                                    nameEditText.getText().toString(),
-                                    Integer.parseInt(timesEditText.getText().toString()),
-                                    Integer.parseInt(durationEditText.getText().toString()),
-                                    audioCheckbox.isChecked(),
-                                    videoCheckbox.isChecked());
-                            taskList.addTask(newTask);
+                                    mEditTextName.getText().toString(),
+                                    Integer.parseInt(mEditTextTimes.getText().toString()),
+                                    Integer.parseInt(mEditTextDuration.getText().toString()),
+                                    mCheckboxAudio.isChecked(),
+                                    mCheckboxVideo.isChecked());
+                            mTaskList.addTask(newTask);
                             // TaskList.saveToLocalFile(taskList);
 
-                            NetworkUtils.updateTaskList(mContext, taskList, 0, new StringCallback() {
+                            NetworkUtils.updateTaskList(mContext, mTaskList, 0, new StringCallback() {
                                 @Override
                                 public void onSuccess(Response<String> response) {
                                     mActivity.finish();

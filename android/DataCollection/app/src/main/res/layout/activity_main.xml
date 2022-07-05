@@ -100,13 +100,38 @@
 
                 <CheckBox
                     android:id="@+id/video_switch"
-                    android:layout_width="@dimen/task_info_width"
+                    android:layout_width="@dimen/task_info_switch_width"
                     android:layout_height="wrap_content"
                     android:layout_marginVertical="@dimen/task_info_margin_vertical"
                     android:textSize="@dimen/default_text_size"
                     android:checked="false"
                     app:layout_constraintTop_toTopOf="@id/video_switch_label"
                     app:layout_constraintStart_toEndOf="@id/video_switch_label"
+                    app:layout_constraintEnd_toStartOf="@id/audio_switch_label"
+                    app:layout_constraintBottom_toBottomOf="@id/video_switch_label">
+                </CheckBox>
+
+                <TextView
+                    android:id="@+id/audio_switch_label"
+                    android:layout_width="@dimen/task_info_label_width"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="@dimen/task_info_margin_vertical"
+                    android:text="@string/audio_switch_label"
+                    android:textSize="@dimen/default_text_size"
+                    app:layout_constraintTop_toTopOf="@id/video_switch_label"
+                    app:layout_constraintStart_toEndOf="@id/video_switch"
+                    app:layout_constraintEnd_toStartOf="@id/audio_switch"
+                    app:layout_constraintBottom_toBottomOf="@id/video_switch_label"/>
+
+                <CheckBox
+                    android:id="@+id/audio_switch"
+                    android:layout_width="@dimen/task_info_switch_width"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="@dimen/task_info_margin_vertical"
+                    android:textSize="@dimen/default_text_size"
+                    android:checked="false"
+                    app:layout_constraintTop_toTopOf="@id/video_switch_label"
+                    app:layout_constraintStart_toEndOf="@id/audio_switch_label"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintBottom_toBottomOf="@id/video_switch_label">
                 </CheckBox>

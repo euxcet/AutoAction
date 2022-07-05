@@ -1,153 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto"
-xmlns:tools="http://schemas.android.com/tools"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-tools:context=".ui.AddSubtaskActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.ModifySubtaskActivity">
 
-<TextView
-    android:id="@+id/addSubtaskTimesLabel"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="60dp"
-    android:layout_marginTop="55dp"
-    android:text="录制次数"
-    android:textSize="18sp"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/addSubtaskNameLabel" />
+    <TextView
+        android:id="@+id/modify_subtask_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="@dimen/title_margin_vertical"
+        android:text="@string/modify_subtask_title"
+        android:textSize="@dimen/title_text_size"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/modify_subtask_label_name"/>
 
-<TextView
-    android:id="@+id/addSubtaskAudioLabel"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="60dp"
-    android:layout_marginTop="55dp"
-    android:text="是否开启麦克风"
-    android:textSize="18sp"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/addSubtaskVideoLabel" />
+    <TextView
+        android:id="@+id/modify_subtask_label_name"
+        android:layout_width="@dimen/add_task_label_width"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/add_task_margin_horizontal"
+        android:text="@string/task_name_label"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toBottomOf="@id/modify_subtask_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/modify_subtask_edit_text_name"
+        app:layout_constraintBottom_toTopOf="@id/modify_subtask_label_times"/>
 
-<TextView
-    android:id="@+id/addSubtaskNameLabel"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="60dp"
-    android:layout_marginTop="160dp"
-    android:text="名称"
-    android:textSize="18sp"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent" />
+    <EditText
+        android:id="@+id/modify_subtask_edit_text_name"
+        android:layout_width="@dimen/add_task_info_width"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/add_task_margin_horizontal"
+        android:text="@string/default_subtask_name"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toTopOf="@id/modify_subtask_label_name"
+        app:layout_constraintStart_toEndOf="@id/modify_subtask_label_name"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/modify_subtask_label_name"/>
 
-<TextView
-    android:id="@+id/addSubtaskVideoLabel"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="60dp"
-    android:layout_marginTop="55dp"
-    android:text="是否开启摄像头"
-    android:textSize="18sp"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/addSubtaskDurationLabel" />
+    <TextView
+        android:id="@+id/modify_subtask_label_times"
+        android:layout_width="@dimen/add_task_label_width"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/add_task_margin_horizontal"
+        android:text="@string/task_times_label"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toBottomOf="@id/modify_subtask_label_name"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/modify_subtask_edit_text_times"
+        app:layout_constraintBottom_toTopOf="@id/modify_subtask_label_duration"/>
 
-<TextView
-    android:id="@+id/addSubtaskDurationLabel"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="60dp"
-    android:layout_marginTop="55dp"
-    android:text="单次时长(ms)"
-    android:textSize="18sp"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/addSubtaskTimesLabel" />
+    <EditText
+        android:id="@+id/modify_subtask_edit_text_times"
+        android:layout_width="@dimen/add_task_info_width"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/add_task_margin_horizontal"
+        android:digits="0123456789"
+        android:inputType="number"
+        android:text="@string/default_task_times"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toTopOf="@id/modify_subtask_label_times"
+        app:layout_constraintStart_toEndOf="@id/modify_subtask_label_times"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/modify_subtask_label_times"/>
 
-<TextView
-    android:id="@+id/addSubtaskTitle"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="45dp"
-    android:layout_marginTop="64dp"
-    android:text="Modify Subtask"
-    android:textSize="28sp"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent" />
+    <TextView
+        android:id="@+id/modify_subtask_label_duration"
+        android:layout_width="@dimen/add_task_label_width"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/add_task_margin_horizontal"
+        android:text="@string/task_duration_label"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toBottomOf="@id/modify_subtask_label_times"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/modify_subtask_edit_text_duration"
+        app:layout_constraintBottom_toTopOf="@id/modify_subtask_label_video_switch"/>
 
-<EditText
-    android:id="@+id/addSubtaskNameEdit"
-    android:layout_width="150dp"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="153dp"
-    android:layout_marginEnd="40dp"
-    android:text="Name"
-    android:textSize="18sp"
-    app:layout_constraintBaseline_toBaselineOf="@id/addSubtaskNameLabel"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toTopOf="parent" />
+    <EditText
+        android:id="@+id/modify_subtask_edit_text_duration"
+        android:layout_width="@dimen/add_task_info_width"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/add_task_margin_horizontal"
+        android:digits="0123456789"
+        android:inputType="number"
+        android:text="@string/default_task_duration"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toTopOf="@id/modify_subtask_label_duration"
+        app:layout_constraintStart_toEndOf="@id/modify_subtask_label_duration"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/modify_subtask_label_duration"/>
 
-<EditText
-    android:id="@+id/addSubtaskTimesEdit"
-    android:layout_width="150dp"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="20dp"
-    android:layout_marginEnd="40dp"
-    android:digits="0123456789"
-    android:inputType="number"
-    android:text="0"
-    android:textSize="18sp"
-    app:layout_constraintBaseline_toBaselineOf="@id/addSubtaskTimesLabel"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/addSubtaskNameEdit" />
+    <TextView
+        android:id="@+id/modify_subtask_label_video_switch"
+        android:layout_width="@dimen/add_task_label_width"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/add_task_margin_horizontal"
+        android:text="@string/task_video_switch_label"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toBottomOf="@id/modify_subtask_label_duration"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/modify_subtask_video_switch"
+        app:layout_constraintBottom_toTopOf="@id/modify_subtask_label_audio_switch"/>
 
-<EditText
-    android:id="@+id/addSubtaskDurationEdit"
-    android:layout_width="150dp"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="60dp"
-    android:layout_marginEnd="40dp"
-    android:digits="0123456789"
-    android:inputType="number"
-    android:text="0"
-    android:textSize="18sp"
-    app:layout_constraintBaseline_toBaselineOf="@id/addSubtaskDurationLabel"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/addSubtaskTimesEdit" />
+    <CheckBox
+        android:id="@+id/modify_subtask_video_switch"
+        android:layout_width="@dimen/add_task_info_width"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/add_task_margin_horizontal"
+        app:layout_constraintTop_toTopOf="@id/modify_subtask_label_video_switch"
+        app:layout_constraintStart_toEndOf="@id/modify_subtask_label_video_switch"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/modify_subtask_label_video_switch"/>
 
-<CheckBox
-    android:id="@+id/addSubtaskVideoCheckbox"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="44dp"
-    android:layout_marginEnd="112dp"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/addSubtaskDurationEdit" />
+    <TextView
+        android:id="@+id/modify_subtask_label_audio_switch"
+        android:layout_width="@dimen/add_task_label_width"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/add_task_margin_horizontal"
+        android:text="@string/task_audio_switch_label"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toBottomOf="@id/modify_subtask_label_video_switch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/modify_subtask_audio_switch"
+        app:layout_constraintBottom_toTopOf="@id/modify_subtask_btn_modify"/>
 
-<CheckBox
-    android:id="@+id/addSubtaskAudioCheckbox"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="44dp"
-    android:layout_marginEnd="112dp"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/addSubtaskVideoCheckbox" />
+    <CheckBox
+        android:id="@+id/modify_subtask_audio_switch"
+        android:layout_width="@dimen/add_task_info_width"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/add_task_margin_horizontal"
+        app:layout_constraintTop_toTopOf="@id/modify_subtask_label_audio_switch"
+        app:layout_constraintStart_toEndOf="@id/modify_subtask_label_audio_switch"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/modify_subtask_label_audio_switch"/>
 
-<Button
-    android:id="@+id/addSubtaskConfirmButton"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="100dp"
-    android:layout_marginBottom="84dp"
-    android:text="Modify"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintStart_toStartOf="parent" />
+    <Button
+        android:id="@+id/modify_subtask_btn_modify"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="@dimen/title_margin_vertical"
+        android:text="@string/btn_modify_task"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toBottomOf="@id/modify_subtask_label_audio_switch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/modify_subtask_btn_cancel"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
-<Button
-    android:id="@+id/addSubtaskCancelButton"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="232dp"
-    android:layout_marginBottom="84dp"
-    android:text="Cancel"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintStart_toStartOf="parent" />
+    <Button
+        android:id="@+id/modify_subtask_btn_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="@dimen/title_margin_vertical"
+        android:text="@string/btn_cancel_task"
+        android:textSize="@dimen/default_text_size"
+        app:layout_constraintTop_toTopOf="@id/modify_subtask_btn_modify"
+        app:layout_constraintStart_toEndOf="@id/modify_subtask_btn_modify"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/modify_subtask_btn_modify"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
