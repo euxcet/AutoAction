@@ -2,6 +2,7 @@ package com.hcifuture.datacollection.data;
 
 import android.content.Context;
 import android.media.MediaRecorder;
+import android.util.Log;
 
 import com.hcifuture.datacollection.utils.bean.TaskListBean;
 import com.hcifuture.datacollection.utils.NetworkUtils;
@@ -24,7 +25,7 @@ public class MicrophoneController {
     }
 
     public void start(File audioFile) {
-        this.saveFile = audioFile;
+        saveFile = audioFile;
         try {
             mMediaRecorder = new MediaRecorder();
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
@@ -33,11 +34,16 @@ public class MicrophoneController {
             mMediaRecorder.setAudioEncodingBitRate(16 * 44100);
             mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-            mMediaRecorder.setOutputFile(audioFile);
+            mMediaRecorder.setOutputFile(saveFile);
             mMediaRecorder.prepare();
+            mMediaRecorder.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void cancel() {
+        stop();
     }
 
     public void stop() {
@@ -45,11 +51,6 @@ public class MicrophoneController {
             mMediaRecorder.stop();
             mMediaRecorder.release();
             mMediaRecorder = null;
-            /*
-            MediaScannerConnection.scanFile(mContext,
-                    new String[] {file.getAbsolutePath(), audioFile.getAbsolutePath()},
-                    null, null);
-             */
         }
     }
 
@@ -61,6 +62,11 @@ public class MicrophoneController {
                     recordId, timestamp, new StringCallback() {
                 @Override
                 public void onSuccess(Response<String> response) {
+                    Log.d("MicrophoneController.upload() onSuccess()", response.toString());
+                }
+                @Override
+                public void onError(Response<String> response) {
+                    Log.w("MicrophoneController.upload() onError()", response.toString());
                 }
             });
         }

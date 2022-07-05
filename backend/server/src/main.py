@@ -1,6 +1,3 @@
-from hashlib import new
-from re import sub
-from time import time
 from flask import Flask, request, send_file
 from flask_cors import CORS, cross_origin
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -28,9 +25,6 @@ saver_future_list = []
 # multi-thread trainer
 trainer = ThreadPoolExecutor(max_workers=1)
 train_processes = []
-
-# Why this file name ???
-file_utils.mkdir("../data/record/TL13r912je")
 
 # set the default configuration by hard coding
 if not os.path.exists("../data/file/config.json"):
@@ -206,7 +200,6 @@ Data structure:
                     - {}.bin
 '''
 
-
 # taskList related
 '''
 Name: get_all_taskList
@@ -264,7 +257,7 @@ def get_taskList():
     ''' Get the task list TLxxx.json file under "..data/record/TLxxx/"
     '''
     taskListId = request.args.get("taskListId")
-    timestamp = request.args.get("timestamp")
+    timestamp = request.args.get("timestamp") 
     print(f'taskListId: {taskListId}, timestamp: {timestamp}')
     return file_utils.load_taskList_info(taskListId, timestamp)
 
@@ -771,5 +764,6 @@ def update_md5():
     return {}
 
 if __name__ == '__main__':
+    file_utils.create_default_task_list()
     update_md5()
     app.run(port=6125, host="0.0.0.0")

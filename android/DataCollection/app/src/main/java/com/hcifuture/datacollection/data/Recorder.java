@@ -106,7 +106,7 @@ public class Recorder {
         // canceled Handler().postDelayed(() -> {...});
         sensorController.start(sensorFile, sensorBinFile);
         if (subtask.isVideo()) cameraController.start(cameraFile);
-        // TODO: add microphone
+        if (subtask.isAudio()) microphoneController.start(microphoneFile);
         timestampController.start(timestampFile);
         timer.start();
     }
@@ -118,29 +118,22 @@ public class Recorder {
     public void cancel() {
         if (timer != null) timer.cancel();
         sensorController.cancel();
-        if (subtask != null && subtask.isVideo()) {
-            // TODO: unify the api
-            cameraController.stop();
-        }
-        // TODO: add microphone interface
-        timestampController.stop();
+        if (subtask != null && subtask.isVideo()) cameraController.cancel();
+        if (subtask != null && subtask.isAudio()) microphoneController.cancel();
+        timestampController.cancel();
     }
 
     private void stop() {
         if (timer != null) timer.cancel();
         sensorController.stop();
-        if (subtask.isVideo()) {
-            cameraController.stop();
-        }
-        // TODO: add microphone
+        if (subtask.isVideo()) cameraController.stop();
+        if (subtask.isAudio()) microphoneController.stop();
         timestampController.stop();
 
-        NetworkUtils.addRecord(mContext, taskList.getId(), task.getId(), subtask.getId(), recordId, System.currentTimeMillis(), new StringCallback() {
+        NetworkUtils.addRecord(mContext, taskList.getId(), task.getId(), subtask.getId(),
+                recordId, System.currentTimeMillis(), new StringCallback() {
             @Override
-            public void onSuccess(Response<String> response) {
-                // TODO: on success callback
-
-            }
+            public void onSuccess(Response<String> response) {}
         });
 
         new Handler().postDelayed(() -> {
@@ -148,7 +141,8 @@ public class Recorder {
             sensorController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
             if (subtask.isVideo())
                 cameraController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
-            // TODO: add microphone
+            if (subtask.isAudio())
+                microphoneController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
             timestampController.upload(taskList.getId(), task.getId(), subtask.getId(), recordId, timestamp);
         }, 2000);
     }
@@ -159,8 +153,8 @@ public class Recorder {
         sensorFile = new File(BuildConfig.SAVE_PATH, "Sensor_" + suffix + ".json");
         if (subtask.isVideo())
             cameraFile = new File(BuildConfig.SAVE_PATH, "Camera_" + suffix + ".mp4");
-        // TODO: create microphone .mp4 file
-
+        if (subtask.isAudio())
+            microphoneFile = new File(BuildConfig.SAVE_PATH, "Microphone_" + suffix + ".mp4");
         sensorBinFile = new File(BuildConfig.SAVE_PATH, "SensorBin_" + suffix + ".bin");
     }
 

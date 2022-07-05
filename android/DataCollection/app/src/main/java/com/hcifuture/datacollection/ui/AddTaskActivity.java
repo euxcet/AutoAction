@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -46,7 +47,7 @@ public class AddTaskActivity extends AppCompatActivity {
         mEditTextTimes = findViewById(R.id.add_task_edit_text_times);
         mEditTextDuration = findViewById(R.id.add_task_edit_text_duration);
         mCheckboxVideo = findViewById(R.id.add_task_video_switch);
-        mCheckboxAudio = findViewById(R.id.audio_switch);
+        mCheckboxAudio = findViewById(R.id.add_task_audio_switch);
 
         Button btnAdd = findViewById(R.id.add_task_btn_add);
         Button btnCancel = findViewById(R.id.add_task_btn_cancel);
@@ -56,6 +57,7 @@ public class AddTaskActivity extends AppCompatActivity {
     }
 
     private void addNewTask() {
+        Log.d("AddTaskActivity.addNewTask()", "addNewTask() called");
         NetworkUtils.getAllTaskList(mContext, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {

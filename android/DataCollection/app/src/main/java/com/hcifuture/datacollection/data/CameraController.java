@@ -100,10 +100,14 @@ public class CameraController {
     public void start(File videoFile) {
         if (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             this.saveFile = videoFile;
+            // modified: no audio
             recording = recorder.prepareRecording(mActivity, new FileOutputOptions.Builder(saveFile).build())
-                    .withAudioEnabled()
                     .start(ContextCompat.getMainExecutor(mActivity), videoRecordEvent -> {});
         }
+    }
+
+    public void cancel() {
+        stop();
     }
 
     public void stop() {

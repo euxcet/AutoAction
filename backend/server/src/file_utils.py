@@ -80,6 +80,7 @@ def load_json(path):
 def load_taskList_info(taskListId, timestamp = None):
     taskList_info_path = get_taskList_info_path(taskListId, timestamp)
     if not os.path.exists(taskList_info_path):
+        print(f'task list info path: {taskList_info_path}')
         taskList_info = {
             'date': '2022.07.03',
             'description': 'Task list for pilot study.',
@@ -161,3 +162,9 @@ def get_md5(filename):
     if filename in md5:
         return md5[filename]
     return ""
+
+def create_default_task_list():
+    src = f'../data/record/Default/TL13r912je/'
+    dst = f'../data/record/TL13r912je/'
+    if os.path.exists(src) and not os.path.exists(dst):
+        shutil.copytree(src, dst)
