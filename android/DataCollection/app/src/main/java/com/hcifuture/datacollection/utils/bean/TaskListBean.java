@@ -29,11 +29,11 @@ public class TaskListBean implements Serializable {
     private List<Task> tasks;
 
     public enum FILE_TYPE {
-        SENSOR,
-        TIMESTAMP,
-        AUDIO,
-        VIDEO,
-        SENSOR_BIN
+        TIMESTAMP,  // 0
+        MOTION,     // 1
+        LIGHT,      // 2
+        AUDIO,      // 3
+        VIDEO,      // 4
     }
 
     @Deprecated

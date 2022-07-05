@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.hcifuture.datacollection.BuildConfig;
+import com.hcifuture.datacollection.data.SensorData1D;
+import com.hcifuture.datacollection.data.SensorData3D;
 import com.hcifuture.datacollection.data.SensorInfo;
 import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.callback.StringCallback;
@@ -66,16 +68,65 @@ public class FileUtils {
         }
     }
 
-    public static void writeIMUDataToFile(List<SensorInfo> data, File saveFile) {
+    public static void writeIMUDataToFile(List<SensorData3D> accData, List<SensorData3D> magData,
+            List<SensorData3D> gyroData, List<SensorData3D> linearAccData, File saveFile) {
         makeFile(saveFile);
         try {
             FileOutputStream fos = new FileOutputStream(saveFile);
             DataOutputStream dos = new DataOutputStream(fos);
-            for (SensorInfo info: data) {
-                for (Float value: info.getData()) {
-                    dos.writeFloat(value);
-                }
-                dos.writeDouble((double)info.getTime());
+            int size;
+            // write accelerometer data
+            size = accData.size();
+            dos.writeInt(size);
+            for (SensorData3D unit: accData) {
+                float[] values = unit.v;
+                dos.writeFloat(values[0]); dos.writeFloat(values[1]); dos.writeFloat(values[2]);
+                dos.writeLong(unit.t);
+            }
+            // write magnetic field data
+            size = magData.size();
+            dos.writeInt(size);
+            for (SensorData3D unit: magData) {
+                float[] values = unit.v;
+                dos.writeFloat(values[0]); dos.writeFloat(values[1]); dos.writeFloat(values[2]);
+                dos.writeLong(unit.t);
+            }
+            // write gyroscope data
+            size = gyroData.size();
+            dos.writeInt(size);
+            for (SensorData3D unit: gyroData) {
+                float[] values = unit.v;
+                dos.writeFloat(values[0]); dos.writeFloat(values[1]); dos.writeFloat(values[2]);
+                dos.writeLong(unit.t);
+            }
+            // write linear accelerometer data
+            size = linearAccData.size();
+            dos.writeInt(size);
+            for (SensorData3D unit: linearAccData) {
+                float[] values = unit.v;
+                dos.writeFloat(values[0]); dos.writeFloat(values[1]); dos.writeFloat(values[2]);
+                dos.writeLong(unit.t);
+            }
+            dos.flush();
+            dos.close();
+            fos.flush();
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeLightSensorDataToFile(List<SensorData1D> data, File saveFile) {
+        makeFile(saveFile);
+        try {
+            FileOutputStream fos = new FileOutputStream(saveFile);
+            DataOutputStream dos = new DataOutputStream(fos);
+            int size = data.size();
+            Log.d("writeLightSensorDataToFile", "data size: " + size);
+            dos.writeInt(size);
+            for (SensorData1D unit: data) {
+                dos.writeFloat(unit.v);
+                dos.writeLong(unit.t);
             }
             dos.flush();
             dos.close();

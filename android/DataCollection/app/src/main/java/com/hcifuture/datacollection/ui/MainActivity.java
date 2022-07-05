@@ -130,6 +130,9 @@ public class MainActivity extends AppCompatActivity {
             MainService.getInstance().upgrade();
         });
 
+        // TODO: disable upgrade button if do not use the context library
+        upgradeButton.setEnabled(false);
+
         // goto test activity.
         Button testButton = findViewById(R.id.btn_test);
         testButton.setOnClickListener((v) -> {
@@ -284,6 +287,9 @@ public class MainActivity extends AppCompatActivity {
         Button configButton = findViewById(R.id.btn_config);
         Button trainButton = findViewById(R.id.btn_train);
         Button visualButton = findViewById(R.id.btn_visual);
+
+        // TODO: disable visual btn before implementing visualization
+        visualButton.setEnabled(false);
 
         // click the start button to start recorder
         mBtnStart.setOnClickListener(view -> {

@@ -60,16 +60,17 @@ public class VisualizeRecordActivity extends AppCompatActivity {
     private void loadRecordViaNetwork() {
         /*
         - fileType
-            - 0 sensor json
-            - 1 timestamp json
-            - 2 audio mp4
-            - 3 video mp4
-            - 4 sensor bin
+            - 0 timestamp json
+            - 1 motion bin
+            - 2 light bin
+            - 3 audio mp4
+            - 4 video mp4
         */
         // IMU
-        File imuFile = new File(BuildConfig.SAVE_PATH, getTempFileName(recordId, TaskListBean.FILE_TYPE.SENSOR_BIN.ordinal()));
+        // TODO: this function is deprecated
+        File imuFile = new File(BuildConfig.SAVE_PATH, getTempFileName(recordId, TaskListBean.FILE_TYPE.MOTION.ordinal()));
         if (!imuFile.exists()) {
-            NetworkUtils.downloadRecordFile(mContext, taskListId, taskId, subtaskId, recordId, TaskListBean.FILE_TYPE.SENSOR_BIN.ordinal(), new FileCallback() {
+            NetworkUtils.downloadRecordFile(mContext, taskListId, taskId, subtaskId, recordId, TaskListBean.FILE_TYPE.MOTION.ordinal(), new FileCallback() {
                 @Override
                 public void onSuccess(Response<File> response) {
                     File file = response.body();
@@ -123,6 +124,7 @@ public class VisualizeRecordActivity extends AppCompatActivity {
         }
 
         long minTimestamp = Long.MAX_VALUE;
+        // TODO: do not use these data to visualize
         for (SensorInfo info: data) {
             if (info.getTime() < minTimestamp) {
                 minTimestamp = info.getTime();

@@ -399,29 +399,19 @@ def delete_record():
     return {}
 
 def get_filetype_prefix(fileType):
-    if fileType == "0": # sensor
-        return "Sensor_"
-    elif fileType == "1": # sensor
-        return "Timestamp_"
-    elif fileType == "2": # audio
-        return "Audio_"
-    elif fileType == "3": # video
-        return "Video_"
-    elif fileType == "4": # sensor bin
-        return "SensorBin_"
+    if fileType == '0': return 'Timestamp_'
+    elif fileType == '1': return 'Motion_'
+    elif fileType == '2': return 'Light_'
+    elif fileType == '3': return 'Audio_'
+    elif fileType == '4': return 'Video_'
 
 def get_filetype_ext(fileType):
-    if fileType == "0": # sensor
-        return ".json"
-    elif fileType == "1": # sensor
-        return ".json"
-    elif fileType == "2": # audio
-        return ".mp4"
-    elif fileType == "3": # video
-        return ".mp4"
-    elif fileType == "4": # sensor bin
-        return ".bin"
-
+    if fileType == '0': return '.json'
+    elif fileType == '1': return '.bin'
+    elif fileType == '2': return '.bin'
+    elif fileType == '3': return '.mp4'
+    elif fileType == '4': return '.mp4'
+    
 '''
 Name: download_record_file
 Method: Post
@@ -432,12 +422,11 @@ Form:
     - subtaskId
     - recordId
     - fileType
-        - 0 sensor json
-        - 1 timestamp json
-        - 2 audio mp4
-        - 3 video mp4
-        - 4 sensor bin
-
+        - 0 timestamp json
+        - 1 motion bin
+        - 2 light bin
+        - 3 audio mp4
+        - 4 video mp4
 '''
 @app.route("/record_file", methods=['GET'])
 def download_record():

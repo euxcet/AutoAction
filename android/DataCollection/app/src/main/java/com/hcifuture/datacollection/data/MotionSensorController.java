@@ -23,20 +23,26 @@ import java.util.List;
  * accelerometer and magnetic field sensor.
  * Save the sensor data to files and the backend.
  */
-public class SensorController {
+public class MotionSensorController {
     // sensor
     private SensorManager mSensorManager;
     private int mSamplingMode = SensorManager.SENSOR_DELAY_FASTEST;  // fastest
-    private Sensor mGyroSensor;
-    private Sensor mLinearSensor;
+
     private Sensor mAccSensor;
     private Sensor mMagSensor;
+    private Sensor mGyroSensor;
+    private Sensor mLinearAccSensor;
+
     private Context mContext;
-    private List<SensorInfo> mSensorData = new ArrayList<>();
+
+    private List<SensorData3D> mAccData = new ArrayList<>();
+    private List<SensorData3D> mMagData = new ArrayList<>();
+    private List<SensorData3D> mGyroData = new ArrayList<>();
+    private List<SensorData3D> mLinearAccData = new ArrayList<>();
+
     private long mLastTimestamp;
 
     private File mSensorFile;
-    private File mSensorBinFile;
     private SensorEventListener mListener;
 
     /**
@@ -45,15 +51,15 @@ public class SensorController {
      * successfully gotten.
      * @param context the current application context.
      */
-    public SensorController(Context context) {
+    public MotionSensorController(Context context) {
         this.mContext = context;
 
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
 
-        mGyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mLinearSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         mAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMagSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        mGyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        mLinearAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
         mListener = new SensorEventListener() {
             /**
@@ -63,13 +69,18 @@ public class SensorController {
              */
             @Override
             public void onSensorChanged(SensorEvent event) {
-                mSensorData.add(new SensorInfo(
-                        event.sensor.getType(),
-                        event.values[0],
-                        event.values[1],
-                        event.values[2],
-                        event.timestamp
-                ));
+                int type = event.sensor.getType();
+                float[] values = event.values;
+                long timestamp = event.timestamp;
+                if (type == Sensor.TYPE_ACCELEROMETER) {
+                    mAccData.add(new SensorData3D(values, timestamp));
+                } else if (type == Sensor.TYPE_MAGNETIC_FIELD) {
+                    mMagData.add(new SensorData3D(values, timestamp));
+                } else if (type == Sensor.TYPE_GYROSCOPE) {
+                    mGyroData.add(new SensorData3D(values, timestamp));
+                } else if (type == Sensor.TYPE_LINEAR_ACCELERATION) {
+                    mLinearAccData.add(new SensorData3D(values, timestamp));
+                }
                 mLastTimestamp = event.timestamp;
             }
             /**
@@ -89,18 +100,20 @@ public class SensorController {
     /**
      * Called when the user want to start recording IMU data.
      * Init the sensorFile and sensorBinFile and call resume() to register the listener
-     * @param file the sensorFile
-     * @param binFile the sensorBinFile
+     * @param file The motion sensor file.
      */
-    public void start(File file, File binFile) {
+    public void start(File file) {
         mSensorFile = file;
-        mSensorBinFile = binFile;
-        mSensorData.clear();
+        mAccData.clear();
+        mMagData.clear();
+        mGyroData.clear();
+        mLinearAccData.clear();
+
         if (mSensorManager != null) {
-            mSensorManager.registerListener(mListener, mGyroSensor, mSamplingMode);
-            mSensorManager.registerListener(mListener, mLinearSensor, mSamplingMode);
             mSensorManager.registerListener(mListener, mAccSensor, mSamplingMode);
             mSensorManager.registerListener(mListener, mMagSensor, mSamplingMode);
+            mSensorManager.registerListener(mListener, mGyroSensor, mSamplingMode);
+            mSensorManager.registerListener(mListener, mLinearAccSensor, mSamplingMode);
         }
     }
 
@@ -112,7 +125,10 @@ public class SensorController {
         if (mSensorManager != null) {
             mSensorManager.unregisterListener(mListener);
         }
-        mSensorData.clear();
+        mAccData.clear();
+        mMagData.clear();
+        mGyroData.clear();
+        mLinearAccData.clear();
     }
 
     /**
@@ -123,9 +139,11 @@ public class SensorController {
         if (mSensorManager != null) {
             mSensorManager.unregisterListener(mListener);
         }
-        FileUtils.writeStringToFile(new Gson().toJson(mSensorData), mSensorFile);
-        FileUtils.writeIMUDataToFile(mSensorData, mSensorBinFile);
-        mSensorData.clear();
+        FileUtils.writeIMUDataToFile(mAccData, mMagData, mGyroData, mLinearAccData, mSensorFile);
+        mAccData.clear();
+        mMagData.clear();
+        mGyroData.clear();
+        mLinearAccData.clear();
     }
 
     /**
@@ -133,7 +151,7 @@ public class SensorController {
      * @return boolean
      */
     public boolean isSensorSupport() {
-        return mGyroSensor != null && mLinearSensor != null &&
+        return mGyroSensor != null && mLinearAccSensor != null &&
                 mAccSensor != null && mMagSensor != null;
     }
 
@@ -153,21 +171,10 @@ public class SensorController {
                        String recordId, long timestamp) {
         if (mSensorFile != null) {
             NetworkUtils.uploadRecordFile(mContext, mSensorFile,
-                    TaskListBean.FILE_TYPE.SENSOR.ordinal(), taskListId, taskId, subtaskId,
-                    recordId, timestamp, new StringCallback() {
-                @Override
-                public void onSuccess(Response<String> response) {
-                }
-            });
-        }
-
-        if (mSensorBinFile != null) {
-            NetworkUtils.uploadRecordFile(mContext, mSensorBinFile,
-                    TaskListBean.FILE_TYPE.SENSOR_BIN.ordinal(), taskListId, taskId,
+                    TaskListBean.FILE_TYPE.MOTION.ordinal(), taskListId, taskId,
                     subtaskId, recordId, timestamp, new StringCallback() {
                 @Override
-                public void onSuccess(Response<String> response) {
-                }
+                public void onSuccess(Response<String> response) { }
             });
         }
     }
