@@ -18,4 +18,8 @@
     <dimen name="add_task_label_width">120dp</dimen>
     <dimen name="add_task_info_width">160dp</dimen>
     <dimen name="add_task_margin_horizontal">20dp</dimen>
+    <!-- visualization -->
+    <dimen name="visual_chart_height">250dp</dimen>
+    <dimen name="visual_chart_margin_vertical">10dp</dimen>
+    <dimen name="visual_chart_margin_horizontal">10dp</dimen>
 </resources>

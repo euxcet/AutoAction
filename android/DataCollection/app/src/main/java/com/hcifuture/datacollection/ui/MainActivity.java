@@ -119,23 +119,22 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // jump to accessibility settings
-        Button accessibilityButton = findViewById(R.id.btn_access);
-        accessibilityButton.setOnClickListener((v) -> {
+        Button btnAccess = findViewById(R.id.btn_access);
+        btnAccess.setOnClickListener((v) -> {
             Intent settingIntent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
             startActivity(settingIntent);
         });
 
-        Button upgradeButton = findViewById(R.id.btn_upgrade);
-        upgradeButton.setOnClickListener((v) -> {
+        Button btnUpgrade = findViewById(R.id.btn_upgrade);
+        btnUpgrade.setOnClickListener((v) -> {
             MainService.getInstance().upgrade();
         });
-
         // TODO: disable upgrade button if do not use the context library
-        upgradeButton.setEnabled(false);
+        btnUpgrade.setEnabled(false);
 
-        // goto test activity.
-        Button testButton = findViewById(R.id.btn_test);
-        testButton.setOnClickListener((v) -> {
+        // goto test activity
+        Button btnTest = findViewById(R.id.btn_test);
+        btnTest.setOnClickListener((v) -> {
             Intent intent = new Intent(MainActivity.this, TestModelActivity.class);
             startActivity(intent);
         });
@@ -284,12 +283,9 @@ public class MainActivity extends AppCompatActivity {
         mBtnStart = findViewById(R.id.btn_start);
         mBtnCancel = findViewById(R.id.btn_cancel);
 
-        Button configButton = findViewById(R.id.btn_config);
-        Button trainButton = findViewById(R.id.btn_train);
-        Button visualButton = findViewById(R.id.btn_visual);
-
-        // TODO: disable visual btn before implementing visualization
-        visualButton.setEnabled(false);
+        Button btnConfig = findViewById(R.id.btn_config);
+        Button btnTrain = findViewById(R.id.btn_train);
+        Button btnVisual = findViewById(R.id.btn_visual);
 
         // click the start button to start recorder
         mBtnStart.setOnClickListener(view -> {
@@ -311,19 +307,19 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // goto config task activity
-        configButton.setOnClickListener(view -> {
+        btnConfig.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, ConfigTaskActivity.class);
             startActivity(intent);
         });
 
         // goto train activity
-        trainButton.setOnClickListener(view -> {
+        btnTrain.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, TrainActivity.class);
             startActivity(intent);
         });
 
         // goto record list activity
-        visualButton.setOnClickListener(view -> {
+        btnVisual.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, RecordListActivity.class);
             startActivity(intent);
         });

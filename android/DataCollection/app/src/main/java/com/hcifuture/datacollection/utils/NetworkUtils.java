@@ -96,7 +96,8 @@ public class NetworkUtils {
                 .execute(callback);
     }
 
-    public static void deleteRecord(Context context, String taskListId, String taskId, String subtaskId, String recordId, StringCallback callback) {
+    public static void deleteRecord(Context context, String taskListId, String taskId,
+            String subtaskId, String recordId, StringCallback callback) {
         OkGo.<String>delete(RECORD_URL)
                 .tag(context)
                 .params("taskListId", taskListId)
@@ -107,7 +108,8 @@ public class NetworkUtils {
                 .execute(callback);
     }
 
-    public static void uploadRecordFile(Context context, File file, int fileType, String taskListId, String taskId, String subtaskId, String recordId, long timestamp, StringCallback callback) {
+    public static void uploadRecordFile(Context context, File file, int fileType, String taskListId,
+            String taskId, String subtaskId, String recordId, long timestamp, StringCallback callback) {
         OkGo.<String>post(RECORD_FILE_URL)
                 .tag(context)
                 .params("file", file)
@@ -121,7 +123,8 @@ public class NetworkUtils {
                 .execute(callback);
     }
 
-    public static void downloadRecordFile(Context context, String taskListId, String taskId, String subtaskId, String recordId, int fileType, FileCallback callback) {
+    public static void downloadRecordFile(Context context, String taskListId, String taskId,
+            String subtaskId, String recordId, int fileType, FileCallback callback) {
         OkGo.<File>get(RECORD_FILE_URL)
                 .tag(context)
                 .params("taskListId", taskListId)

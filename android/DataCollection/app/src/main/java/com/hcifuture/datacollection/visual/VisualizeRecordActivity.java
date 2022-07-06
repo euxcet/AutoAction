@@ -6,12 +6,12 @@ import android.content.Context;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.os.Bundle;
-import android.util.Log;
 
 import com.hcifuture.datacollection.BuildConfig;
 import com.hcifuture.datacollection.R;
 import com.hcifuture.datacollection.data.SensorInfo;
 import com.hcifuture.datacollection.utils.ChartUtils;
+import com.hcifuture.datacollection.utils.ColorUtils;
 import com.hcifuture.datacollection.utils.FileUtils;
 import com.hcifuture.datacollection.utils.NetworkUtils;
 import com.hcifuture.datacollection.utils.bean.TaskListBean;
@@ -23,32 +23,33 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.model.Response;
 
+import org.checkerframework.checker.units.qual.A;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class VisualizeRecordActivity extends AppCompatActivity {
     private Context mContext;
 
-    private String taskListId;
-    private String taskId;
-    private String subtaskId;
-    private String recordId;
+    private String mTaskListId;
+    private String mTaskId;
+    private String mSubtaskId;
+    private String mRecordId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_visualize_record);
-
         this.mContext = this;
 
         Bundle bundle = getIntent().getExtras();
-        this.taskListId = bundle.getString("taskListId");
-        this.taskId = bundle.getString("taskId");
-        this.subtaskId = bundle.getString("subtaskId");
-        this.recordId = bundle.getString("recordId");
-
+        this.mTaskListId = bundle.getString("taskListId");
+        this.mTaskId = bundle.getString("taskId");
+        this.mSubtaskId = bundle.getString("subtaskId");
+        this.mRecordId = bundle.getString("recordId");
     }
 
     @Override
@@ -58,106 +59,163 @@ public class VisualizeRecordActivity extends AppCompatActivity {
     }
 
     private void loadRecordViaNetwork() {
-        /*
-        - fileType
-            - 0 timestamp json
-            - 1 motion bin
-            - 2 light bin
-            - 3 audio mp4
-            - 4 video mp4
-        */
-        // IMU
-        // TODO: this function is deprecated
-        File imuFile = new File(BuildConfig.SAVE_PATH, getTempFileName(recordId, TaskListBean.FILE_TYPE.MOTION.ordinal()));
-        if (!imuFile.exists()) {
-            NetworkUtils.downloadRecordFile(mContext, taskListId, taskId, subtaskId, recordId, TaskListBean.FILE_TYPE.MOTION.ordinal(), new FileCallback() {
+        // TODO: only visualized IMU data currently
+        File motionFile = new File(BuildConfig.SAVE_PATH, getTmpFileName(mRecordId, TaskListBean.FILE_TYPE.MOTION.ordinal()));
+        File lightFile = new File(BuildConfig.SAVE_PATH, getTmpFileName(mRecordId, TaskListBean.FILE_TYPE.LIGHT.ordinal()));
+        if (!motionFile.exists()) {
+            NetworkUtils.downloadRecordFile(mContext, mTaskListId, mTaskId, mSubtaskId, mRecordId,
+                    TaskListBean.FILE_TYPE.MOTION.ordinal(), new FileCallback() {
                 @Override
                 public void onSuccess(Response<File> response) {
                     File file = response.body();
-                    FileUtils.copy(file, imuFile);
-                    visualizeIMU(imuFile);
+                    FileUtils.copy(file, motionFile);
+                    visualizeMotionData(motionFile);
                 }
             });
-        } else {
-            visualizeIMU(imuFile);
-        }
+        } else visualizeMotionData(motionFile);
+        if (!lightFile.exists()) {
+            NetworkUtils.downloadRecordFile(mContext, mTaskListId, mTaskId, mSubtaskId, mRecordId,
+                    TaskListBean.FILE_TYPE.LIGHT.ordinal(), new FileCallback() {
+                        @Override
+                        public void onSuccess(Response<File> response) {
+                            File file = response.body();
+                            FileUtils.copy(file, lightFile);
+                            visualizeLightData(lightFile);
+                        }
+                    });
+        } else visualizeLightData(lightFile);
     }
 
-    private String getTempFileName(String recordId, int fileType) {
+    /**
+     * FileType:
+     * - 0 timestamp json
+     * - 1 motion bin
+     * - 2 light bin
+     * - 3 audio mp4
+     * - 4 video mp4
+     */
+    private String getTmpFileName(String recordId, int fileType) {
         if (fileType == 0) {
-            return "TEMP_SENSOR_" + recordId + ".json";
+            return "TMP_TIMESTAMP_" + recordId + ".json";
         } else if (fileType == 1) {
-            return "TEMP_TIMESTAMP_" + recordId + ".json";
+            return "TMP_MOTION_" + recordId + ".bin";
         } else if (fileType == 2) {
-            return "TEMP_AUDIO_" + recordId + ".mp4";
+            return "TMP_LIGHT" + recordId + ".bin";
         } else if (fileType == 3) {
-            return "TEMP_VIDEO_" + recordId + ".mp4";
+            return "TMP_AUDIO" + recordId + ".mp4";
         } else if (fileType == 4) {
-            return "TEMP_SENSOR_BIN_" + recordId + ".bin";
+            return "TMP_VIDEO" + recordId + ".mp4";
         }
-        return "TEMP_UNKNOWN_" + recordId;
+        return "TMP_UNKNOWN_" + recordId;
     }
 
-    private void visualizeIMU(File file) {
-        List<SensorInfo> data = FileUtils.loadIMUBinData(file);
+    /**
+     * Visualize motion data from data file acquired from backend.
+     * @param file The motion .bin file from backend.
+     */
+    private void visualizeMotionData(File file) {
+        Map<String, Map<String, List<Double>>> motionData = FileUtils.loadMotionData(file);
 
-        LineChart linearChart = findViewById(R.id.linearChart);
-        visualizeSensor(linearChart, data, Sensor.TYPE_LINEAR_ACCELERATION, "LINEAR");
+        LineChart accChart = findViewById(R.id.visual_acc_chart);
+        visualizeSensorData3D(accChart, motionData.get("acc_data"), "Acc");
 
-        LineChart gyroChart = findViewById(R.id.gyroChart);
-        visualizeSensor(gyroChart, data, Sensor.TYPE_GYROSCOPE, "GYROSCOPE");
+        LineChart magChart = findViewById(R.id.visual_mag_chart);
+        visualizeSensorData3D(magChart, motionData.get("mag_data"), "Mag");
 
-        LineChart accChart = findViewById(R.id.accChart);
-        visualizeSensor(accChart, data, Sensor.TYPE_ACCELEROMETER, "ACCELERATOR");
+        LineChart gyroChart = findViewById(R.id.visual_gyro_chart);
+        visualizeSensorData3D(gyroChart, motionData.get("gyro_data"), "Gyro");
+
+        LineChart linearAccChart = findViewById(R.id.visual_linear_acc_chart);
+        visualizeSensorData3D(linearAccChart, motionData.get("linear_acc_data"), "LinearAcc");
     }
 
-    private void visualizeSensor(LineChart chart, List<SensorInfo> data, int sensorType, String labelPrefix) {
-        ArrayList<ArrayList<Entry>> valuesList = new ArrayList<>();
-        List<DataSetConfig> configList = Arrays.asList(
-                new DataSetConfig(labelPrefix + "_X", Color.RED),
-                new DataSetConfig(labelPrefix + "_Y", Color.GREEN),
-                new DataSetConfig(labelPrefix + "_Z", Color.BLUE)
-        );
+    /**
+     * Visualize light data from data file acquired from backend.
+     * @param file The motion .bin file from backend.
+     */
+    private void visualizeLightData(File file) {
+        Map<String, List<Double>> lightData = FileUtils.loadLightData(file);
 
-        for (int i = 0; i < configList.size(); i++) {
-            valuesList.add(new ArrayList<>());
-        }
+        LineChart lightChart = findViewById(R.id.visual_light_chart);
+        visualizeSensorData1D(lightChart, lightData, "light");
+    }
 
-        long minTimestamp = Long.MAX_VALUE;
-        // TODO: do not use these data to visualize
-        for (SensorInfo info: data) {
-            if (info.getTime() < minTimestamp) {
-                minTimestamp = info.getTime();
-            }
-        }
-
-        for (SensorInfo info: data) {
-            List<Float> d = info.getData();
-            int idx = d.get(0).intValue();
-            float timestampDelta = (info.getTime() - minTimestamp) / 1000000000.0f;
-            if (idx == sensorType) {
-                valuesList.get(0).add(new Entry(timestampDelta, d.get(1))); // LINEAR_X
-                valuesList.get(1).add(new Entry(timestampDelta, d.get(2))); // LINEAR_Y
-                valuesList.get(2).add(new Entry(timestampDelta, d.get(3))); // LINEAR_Z
-            }
+    /**
+     * Visualize a sequence of 1D sensor data on to the line chart.
+     * @param chart The line chart variable.
+     * @param data  The 1D sensor data, with the following structure:
+     *              {"v": [...], "t": [...]}, both lists have the same length.
+     * @param label Sensor type label.
+     */
+    private void visualizeSensorData1D(LineChart chart, Map<String, List<Double>> data, String label) {
+        ArrayList<Entry> entries = new ArrayList<>();
+        List<Double> v = data.get("v"); List<Double> t = data.get("t");
+        DataSetConfig config = new DataSetConfig(label, ColorUtils.GREEN);
+        double base = t.get(0);
+        int size = t.size();
+        for (int i = 0; i < size; i++) {
+            entries.add(new Entry((float) ((t.get(i)-base) / 1e9), (float) (double) v.get(i)));
         }
 
         if (chart.getData() != null && chart.getData().getDataSetCount() > 0) {
-            for (int i = 0; i < valuesList.size(); i++) {
-                LineDataSet lineDataSet = (LineDataSet) chart.getData().getDataSetByIndex(i);
-                lineDataSet.setValues(valuesList.get(i));
-                lineDataSet.notifyDataSetChanged();
-            }
+            LineDataSet lineDataSet = (LineDataSet) chart.getData().getDataSetByIndex(0);
+            lineDataSet.setValues(entries); lineDataSet.notifyDataSetChanged();
             chart.getData().notifyDataChanged();
             chart.notifyDataSetChanged();
         } else {
             ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-            for(int i = 0; i < valuesList.size(); i++) {
-                LineDataSet dataSet = ChartUtils.createLineDataSet(chart, valuesList.get(i), configList.get(i));
-                dataSets.add(dataSet);
-            }
+            LineDataSet dataSet = ChartUtils.createLineDataSet(chart, entries, config);
+            dataSets.add(dataSet);
             chart.setData(new LineData(dataSets));
+            chart.getData().notifyDataChanged();
+            chart.notifyDataSetChanged();
         }
     }
 
+    /**
+     * Visualize a sequence of 3D sensor data on to the line chart.
+     * @param chart The line chart variable.
+     * @param data  The 3D sensor data, with the following structure:
+     *              {"x": [...], "y": [...], "z": [...], "t": [...]}, all lists have the same length.
+     * @param label Sensor type label.
+     */
+    private void visualizeSensorData3D(LineChart chart, Map<String, List<Double>> data, String label) {
+        ArrayList<Entry> xEntries = new ArrayList<>();
+        ArrayList<Entry> yEntries = new ArrayList<>();
+        ArrayList<Entry> zEntries = new ArrayList<>();
+        List<Double> x = data.get("x"); List<Double> y = data.get("y");
+        List<Double> z = data.get("z"); List<Double> t = data.get("t");
+        DataSetConfig xConfig = new DataSetConfig(label + "_X", ColorUtils.RED);
+        DataSetConfig yConfig = new DataSetConfig(label + "_Y", ColorUtils.GREEN);
+        DataSetConfig zConfig = new DataSetConfig(label + "_Z", ColorUtils.BLUE);
+        double base = t.get(0);
+        int size = t.size();
+        for (int i = 0; i < size; i++) {
+            xEntries.add(new Entry((float) ((t.get(i)-base) / 1e9), (float) (double) x.get(i)));
+            yEntries.add(new Entry((float) ((t.get(i)-base) / 1e9), (float) (double) y.get(i)));
+            zEntries.add(new Entry((float) ((t.get(i)-base) / 1e9), (float) (double) z.get(i)));
+        }
+
+        if (chart.getData() != null && chart.getData().getDataSetCount() > 0) {
+            LineDataSet xLineDataSet = (LineDataSet) chart.getData().getDataSetByIndex(0);
+            xLineDataSet.setValues(xEntries); xLineDataSet.notifyDataSetChanged();
+            LineDataSet yLineDataSet = (LineDataSet) chart.getData().getDataSetByIndex(1);
+            yLineDataSet.setValues(yEntries); yLineDataSet.notifyDataSetChanged();
+            LineDataSet zLineDataSet = (LineDataSet) chart.getData().getDataSetByIndex(2);
+            zLineDataSet.setValues(zEntries); zLineDataSet.notifyDataSetChanged();
+            chart.getData().notifyDataChanged();
+            chart.notifyDataSetChanged();
+        } else {
+            ArrayList<ILineDataSet> dataSets = new ArrayList<>();
+            LineDataSet xDataSet = ChartUtils.createLineDataSet(chart, xEntries, xConfig);
+            dataSets.add(xDataSet);
+            LineDataSet yDataSet = ChartUtils.createLineDataSet(chart, yEntries, yConfig);
+            dataSets.add(yDataSet);
+            LineDataSet zDataSet = ChartUtils.createLineDataSet(chart, zEntries, zConfig);
+            dataSets.add(zDataSet);
+            chart.setData(new LineData(dataSets));
+            chart.getData().notifyDataChanged();
+            chart.notifyDataSetChanged();
+        }
+    }
 }

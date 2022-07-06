@@ -28,7 +28,9 @@ import java.io.OutputStreamWriter;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -159,19 +161,70 @@ public class FileUtils {
         }
     }
 
-    public static List<SensorInfo> loadIMUBinData(File file) {
-        List<SensorInfo> data = new ArrayList<>();
+    /**
+     * Parse the motion data .bin file to the following data structure:
+     * {
+     *     'acc_data': {'x': [...], 'y': [...], 'z': [...], 't': [...]},
+     *     'mag_data': {'x': [...], 'y': [...], 'z': [...], 't': [...]},
+     *     'gyro_data': {'x': [...], 'y': [...], 'z': [...], 't': [...]},
+     *     'linear_acc_data': {'x': [...], 'y': [...], 'z': [...], 't': [...]},
+     * }
+     * @param file The The motion .bin file acquired from backend,
+     *             with the following data structure:
+     *             [acc_size(float), [x(float), y(float), z(float), t(long)](acc_size),
+     *              mag_size(float), [x(float), y(float), z(float), t(long)](mag_size),
+     *              gyro_size(float), [x(float), y(float), z(float), t(long)](gyro_size),
+     *              linear_acc_size(float), [x(float), y(float), z(float), t(long)](linear_acc_size)]
+     * @return
+     */
+    public static Map<String, Map<String, List<Double>>> loadMotionData(File file) {
+        Map<String, Map<String, List<Double>>> data = new HashMap<>();
         try {
             InputStream fis = new FileInputStream(file);
             DataInputStream dis = new DataInputStream(fis);
-            while (dis.available() > 0) {
-                float idx = dis.readFloat();
-                float x = dis.readFloat();
-                float y = dis.readFloat();
-                float z = dis.readFloat();
-                long timestamp = (long)dis.readDouble();
-                data.add(new SensorInfo(idx, x, y, z, timestamp));
+            String[] dataLabels = {"acc_data", "mag_data", "gyro_data", "linear_acc_data"};
+            for (String dataLabel: dataLabels) {
+                int size = dis.readInt();
+                List<Double> x = new ArrayList<>(); List<Double> y = new ArrayList<>();
+                List<Double> z = new ArrayList<>(); List<Double> t = new ArrayList<>();
+                for (int i = 0; i < size; i++) {
+                    x.add((double)dis.readFloat()); y.add((double)dis.readFloat());
+                    z.add((double)dis.readFloat()); t.add((double)dis.readLong());
+                }
+                Map<String, List<Double>> subData = new HashMap<>();
+                subData.put("x", x); subData.put("y", y);
+                subData.put("z", z); subData.put("t", t);
+                data.put(dataLabel, subData);
             }
+            dis.close();
+            fis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return data;
+    }
+
+    /**
+     * Parse the light data .bin file to the following data structure:*
+     * {'v': [...], 't': [...]}
+     * @param file The The light .bin file acquired from backend,
+     *             with the following data structure:
+     *             [size(float), [v(float), t(long)](size)]
+     * @return
+     */
+    public static Map<String, List<Double>> loadLightData(File file) {
+        Map<String, List<Double>> data = new HashMap<>();
+        try {
+            InputStream fis = new FileInputStream(file);
+            DataInputStream dis = new DataInputStream(fis);
+            int size = dis.readInt();
+            List<Double> v = new ArrayList<>(); List<Double> t = new ArrayList<>();
+            for (int i = 0; i < size; i++) {
+                v.add((double)dis.readFloat()); t.add((double)dis.readLong());
+            }
+            data.put("v", v); data.put("t", t);
+            dis.close();
+            fis.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -20,17 +20,17 @@ import com.lzy.okgo.model.Response;
 public class RecordListActivity extends AppCompatActivity {
     private Context mContext;
 
-    private RecordListBean recordList;
-    private RecordAdapter recordAdapter;
-    private ListView recordListView;
-    private TaskListBean taskList;
+    private RecordListBean mRecordList;
+    private RecordAdapter mRecordAdapter;
+    private ListView mRecordListView;
+    private TaskListBean mTaskList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record_list);
         this.mContext = this;
-        this.recordListView = findViewById(R.id.recordListView);
+        this.mRecordListView = findViewById(R.id.recordListView);
         Button backButton = findViewById(R.id.backButton);
         backButton.setOnClickListener((v) -> this.finish());
     }
@@ -46,13 +46,13 @@ public class RecordListActivity extends AppCompatActivity {
         NetworkUtils.getTaskList(mContext, taskListId, 0, new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {
-                taskList = new Gson().fromJson(response.body(), TaskListBean.class);
+                mTaskList = new Gson().fromJson(response.body(), TaskListBean.class);
                 NetworkUtils.getRecordList(mContext, taskListId, "0", "0", new StringCallback() {
                     @Override
                     public void onSuccess(Response<String> response) {
-                        recordList = new Gson().fromJson(response.body(), RecordListBean.class);
-                        recordAdapter = new RecordAdapter(mContext, taskList, recordList);
-                        recordListView.setAdapter(recordAdapter);
+                        mRecordList = new Gson().fromJson(response.body(), RecordListBean.class);
+                        mRecordAdapter = new RecordAdapter(mContext, mTaskList, mRecordList);
+                        mRecordListView.setAdapter(mRecordAdapter);
                     }
                 });
             }
