@@ -22,6 +22,7 @@ import com.hcifuture.contextactionlibrary.sensor.data.SingleIMUData;
 import com.hcifuture.contextactionlibrary.utils.JSONUtils;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
+import com.hcifuture.shared.communicate.config.RequestConfig;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
 import com.hcifuture.shared.communicate.result.ContextResult;
@@ -244,6 +245,11 @@ public class ConfigContext extends BaseContext {
                     case KeyEvent.KEYCODE_VOLUME_UP:
                         notifyContext(NEED_AUDIO, timestamp, logID, "key event: " + KeyEvent.keyCodeToString(keycode));
                         notifyContext(NEED_SCAN, timestamp, logID, "key event: " + KeyEvent.keyCodeToString(keycode));
+                        if (requestListener != null) {
+                            RequestConfig requestConfig = new RequestConfig();
+                            requestConfig.putValue("needVolumeOverlay", true);
+                            requestListener.onRequest(requestConfig);
+                        }
                 }
             }
 
