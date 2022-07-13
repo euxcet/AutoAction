@@ -51,6 +51,7 @@ public class NewTrainingProgramActivity extends AppCompatActivity {
                 boolean[] selected = trainTaskAdapter.getSelected();
                 for (int i = 0; i < taskList.getTasks().size(); i++) {
                     if (selected[i]) {
+                        // taskIdList is a string of selected taskIds, separated by ","
                         if (taskIdList.toString().equals("")) {
                             taskIdList.append(taskList.getTasks().get(i).getId());
                         } else {

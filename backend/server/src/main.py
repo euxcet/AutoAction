@@ -653,14 +653,14 @@ Form:
 @app.route("/train", methods=["POST"])
 def start_train():
     global train_processes
-    trainId = request.form.get("trainId")
-    trainName = request.form.get("trainName")
-    taskListId = request.form.get("taskListId")
-    taskIdList = request.form.get("taskIdList").strip().split(',')
-    timestamp = int(request.form.get("timestamp"))
-    train_path = file_utils.get_train_path(trainId)
+    trainId = request.form.get("trainId") # 'XTxxxxxxxx'
+    trainName = request.form.get("trainName") # 'SomeName'
+    taskListId = request.form.get("taskListId") # 'TLxxxxxxxx'
+    taskIdList = request.form.get("taskIdList").strip().split(',') # ['TKxxxxxxxx', ...]
+    timestamp = int(request.form.get("timestamp")) # int
+    train_path = file_utils.get_train_path(trainId) # '../data/train/XTxxxxxxxx'
     file_utils.mkdir(train_path)
-    train_info_path = file_utils.get_train_info_path(trainId)
+    train_info_path = file_utils.get_train_info_path(trainId) # '..data/train/XTxxxxxxxx/XTxxxxxxxx.json'
 
     train_info = {
         'name': trainName,

@@ -1,3 +1,4 @@
+# note file: this file is not used in training process
 import matplotlib.pyplot as plt
 import os
 from ml.record import Record
