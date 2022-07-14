@@ -289,13 +289,16 @@ public class MainActivity extends AppCompatActivity {
 
         // click the start button to start recorder
         mBtnStart.setOnClickListener(view -> {
-            enableButtons(true);
-            mRecorder.start(
-                    mUserText.getText().toString(),
-                    mCurrentTaskId,
-                    mCurrentSubtaskId,
-                    mTaskList
-            );
+            if (mCurrentTaskId < mTaskList.getTasks().size() &&
+                mCurrentSubtaskId < mTaskList.getTasks().get(mCurrentTaskId).getSubtasks().size()) {
+                enableButtons(true);
+                mRecorder.start(
+                        mUserText.getText().toString(),
+                        mCurrentTaskId,
+                        mCurrentSubtaskId,
+                        mTaskList
+                );
+            }
         });
 
         // click the stop button to end recording

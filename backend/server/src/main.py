@@ -5,13 +5,6 @@ import json
 import file_utils
 import os
 
-import zipfile
-
-from ml.cutter.peak_cutter import PeakCutter
-from ml.cutter.random_cutter import RandomCutter
-
-from train_process import TrainProcess
-
 app = Flask(__name__)
 # CORS: A Flask extension for handling Cross Origin Resource Sharing
 # (CORS), making cross-origin AJAX possible.
@@ -29,9 +22,6 @@ from route.route_dex import *
 saver = ThreadPoolExecutor(max_workers=1)
 saver_future_list = []
 
-# multi-thread trainer
-trainer = ThreadPoolExecutor(max_workers=1)
-train_processes = []
 
 '''
 Data structure:
@@ -58,6 +48,5 @@ Data structure:
 
 if __name__ == '__main__':
     file_utils.create_default_files()
-    file_utils.create_default_task_list()
     update_md5()
     app.run(port=6125, host="0.0.0.0")

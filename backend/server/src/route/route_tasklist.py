@@ -1,6 +1,10 @@
 from flask import Flask, request, send_file
 from __main__ import app
 
+import file_utils
+import os
+import json
+
 '''
 Name: get_all_taskList
 Method: Get
@@ -9,7 +13,7 @@ Respone:
 '''
 @app.route("/all_taskList", methods=["GET"])
 def get_all_taskList():
-    ''' Get all tasklist names in ../data/record/ starting with "TL"
+    ''' Get all tasklist names in DATA_RECORD_ROOT starting with "TL"
     '''
     response = []
     for dir in os.listdir(file_utils.DATA_RECORD_ROOT):
@@ -51,7 +55,7 @@ Respone:
 '''
 @app.route("/taskList", methods=["GET"])
 def get_taskList():
-    ''' Get the task list TLxxx.json file under "..data/record/TLxxx/"
+    ''' Get the task list TLxxx.json file under "DATA_RECORD_ROOT/TLxxx/"
     '''
     taskListId = request.args.get("taskListId")
     timestamp = request.args.get("timestamp") 
