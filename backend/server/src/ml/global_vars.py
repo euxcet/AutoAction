@@ -16,4 +16,4 @@ class GlobalVars:
     #   and pytorch 1.13.0(nightly)+, currently is available but has bugs.
     DEVICE = None
     # training batch size
-    BATCH_SIZE = 20
+    BATCH_SIZE = 32

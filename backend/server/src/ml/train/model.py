@@ -3,13 +3,13 @@ from torch import device, nn
 
 class LSTMClassifier(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, layer_dim, output_dim, device=None):
+    def __init__(self, input_dim, hidden_dim, layer_dim, fc_dim, output_dim, device=None):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.layer_dim = layer_dim
-        self.lstm0 = nn.LSTM(input_dim, hidden_dim, layer_dim, batch_first=True, dropout=0.2)
-        self.fc0 = nn.Linear(hidden_dim, 32)
-        self.fc1 = nn.Linear(32, output_dim)
+        self.lstm0 = nn.LSTM(input_dim, hidden_dim, layer_dim, batch_first=True) # delete dropout
+        self.fc0 = nn.Linear(hidden_dim, fc_dim)
+        self.fc1 = nn.Linear(fc_dim, output_dim)
         self.batch_size = None
         self.hidden = None
         self.device = device

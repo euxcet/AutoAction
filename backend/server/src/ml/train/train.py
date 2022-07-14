@@ -47,6 +47,7 @@ def train_model(trainId:str, timestamp:int, config:dict):
         CONFIG_SEQUENCE_DIM = config['sequence_dim']
         CONFIG_LAYER_DIM = config['layer_dim']
         CONFIG_HIDDEN_DIM = config['hidden_dim']
+        CONFIG_FC_DIM = config['fc_dim']
         CONFIG_OUTPUT_DIM = config['output_dim']
         CONFIG_LR = config['lr']
         CONFIG_EPOCH = config['epoch']
@@ -70,7 +71,8 @@ def train_model(trainId:str, timestamp:int, config:dict):
     # create train and val data loader
     train_loader, val_loader = create_train_val_loader(X_TRAIN_PATH, Y_TRAIN_PATH)
     
-    model = LSTMClassifier(CONFIG_CHANNEL_DIM, CONFIG_HIDDEN_DIM, CONFIG_LAYER_DIM, CONFIG_OUTPUT_DIM, device=device)
+    model = LSTMClassifier(CONFIG_CHANNEL_DIM, CONFIG_HIDDEN_DIM, CONFIG_LAYER_DIM,
+        CONFIG_FC_DIM, CONFIG_OUTPUT_DIM, device=device)
     if device is not None:
         model = model.to(device)
     optimizer = torch.optim.RMSprop(model.parameters(), lr=CONFIG_LR)
@@ -106,4 +108,4 @@ def train_model(trainId:str, timestamp:int, config:dict):
             # export_pth(model, OUT_PATH_PTH)
             # export_pt(model, OUT_PATH_PT, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
             # export_onnx(model, OUT_PATH_ONNX, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
-            print(f'Epoch {epoch} best model accuracy: {best_acc:.3f}')
+            print(f'Epoch: {epoch}, best model accuracy: {best_acc:.3f}')
