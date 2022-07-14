@@ -5,6 +5,8 @@ import hashlib
 from time import time
 from ml.record import Record
 
+DEFAULT_TASKLIST_ID = "TL13r912je"
+DEFAULT_ROOT = os.path.join("..", "assets", "default")
 DATA_ROOT = os.path.join("..", "data")
 DATA_RECORD_ROOT = os.path.join(DATA_ROOT, "record")
 DATA_TRAIN_ROOT = os.path.join(DATA_ROOT, "train")
@@ -148,9 +150,12 @@ def calc_file_md5(file_name):
     return m.hexdigest()
 
 def update_md5():
-    ''' Update the md5 mapping of all files in "../data/file/".
+    ''' Update the md5 mapping of all files in DATA_FILE_ROOT.
     '''
     global md5
+    if not os.path.exists(DATA_FILE_ROOT):
+        print(DATA_FILE_ROOT + 'does not exist.')
+        return
     for filename in os.listdir(DATA_FILE_ROOT):
         md5[filename] = calc_file_md5(os.path.join(DATA_FILE_ROOT, filename))
 
@@ -163,8 +168,14 @@ def get_md5(filename):
         return md5[filename]
     return ""
 
-def create_default_task_list():
-    src = f'../data/record/Default/TL13r912je/'
-    dst = f'../data/record/TL13r912je/'
-    if os.path.exists(src) and not os.path.exists(dst):
-        shutil.copytree(src, dst)
+def create_default_files():
+    mkdir(DATA_RECORD_ROOT)
+    mkdir(DATA_TRAIN_ROOT)
+    mkdir(DATA_FILE_ROOT)
+    mkdir(DATA_DEX_ROOT)
+    mkdir(DATA_TEMP_ROOT)
+    shutil.copyfile(os.path.join(DEFAULT_ROOT, "config.json"), os.path.join(DATA_FILE_ROOT, "config.json"))
+    default_tasklist_src = os.path.join(DEFAULT_ROOT, DEFAULT_TASKLIST_ID)
+    default_tasklist_dst = os.path.join(DATA_RECORD_ROOT, DEFAULT_TASKLIST_ID)
+    if os.path.exists(default_tasklist_src) and not os.path.exists(default_tasklist_dst):
+        shutil.copytree(default_tasklist_src, default_tasklist_dst)
