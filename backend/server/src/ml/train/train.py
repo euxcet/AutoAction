@@ -10,6 +10,7 @@ from ml.train.model import LSTMClassifier
 from ml.train.dataset import create_train_val_loader
 from ml.train.metric import calc_metric
 from ml.train.export import export_pt, export_onnx, export_pth
+from ml.global_vars import GlobalVars
 
 class CyclicLR(_LRScheduler):
     def __init__(self, optimizer, schedule, last_epoch=-1):
@@ -46,16 +47,23 @@ def train_model(trainId:str, timestamp:int, config:dict):
         CONFIG_SEQUENCE_DIM = config['sequence_dim']
         CONFIG_LAYER_DIM = config['layer_dim']
         CONFIG_HIDDEN_DIM = config['hidden_dim']
+        CONFIG_FC_DIM = config['fc_dim']
         CONFIG_OUTPUT_DIM = config['output_dim']
         CONFIG_LR = config['lr']
         CONFIG_EPOCH = config['epoch']
-        CONFIG_USE_CUDA = config['use_cuda']
     except KeyError:
         return
-
-    # config device
-    if CONFIG_USE_CUDA:
-        torch.cuda.set_device(0)
+    
+    device:str = GlobalVars.DEVICE
+    if device == 'cuda' and torch.cuda.is_available():
+        print(f'### Training device: cuda.')
+        device = torch.device('cuda')
+    elif device == 'mps' and torch.backends.mps.is_available():
+        print(f'### Training device: mps.')
+        device = torch.device('mps')
+    else:
+        print(f'### Training device: cpu.')
+        device = None
         
     # reset random seed
     np.random.seed(0)
@@ -63,9 +71,10 @@ def train_model(trainId:str, timestamp:int, config:dict):
     # create train and val data loader
     train_loader, val_loader = create_train_val_loader(X_TRAIN_PATH, Y_TRAIN_PATH)
     
-    model = LSTMClassifier(CONFIG_CHANNEL_DIM, CONFIG_HIDDEN_DIM, CONFIG_LAYER_DIM, CONFIG_OUTPUT_DIM, use_cuda=CONFIG_USE_CUDA)
-    if CONFIG_USE_CUDA:
-        model = model.cuda()
+    model = LSTMClassifier(CONFIG_CHANNEL_DIM, CONFIG_HIDDEN_DIM, CONFIG_LAYER_DIM,
+        CONFIG_FC_DIM, CONFIG_OUTPUT_DIM, device=device)
+    if device is not None:
+        model = model.to(device)
     optimizer = torch.optim.RMSprop(model.parameters(), lr=CONFIG_LR)
     scheduler = CyclicLR(optimizer, cosine(t_max=len(train_loader) * 2, eta_min=CONFIG_LR/100))
     criterion = nn.CrossEntropyLoss()
@@ -76,9 +85,9 @@ def train_model(trainId:str, timestamp:int, config:dict):
     for epoch in range(0, CONFIG_EPOCH):
         for x_batch, y_batch in train_loader:
             model.train()
-            if CONFIG_USE_CUDA:
-                x_batch = x_batch.cuda()
-                y_batch = y_batch.cuda()
+            if device is not None:
+                x_batch = x_batch.to(device)
+                y_batch = y_batch.to(device)
             optimizer.zero_grad()
             out = model(x_batch)
             loss = criterion(out, y_batch)
@@ -87,16 +96,16 @@ def train_model(trainId:str, timestamp:int, config:dict):
             scheduler.step()
         model.eval()
         
-        train_acc = calc_metric(model, train_loader, CONFIG_USE_CUDA)
-        val_acc = calc_metric(model, val_loader, CONFIG_USE_CUDA)
+        train_acc = calc_metric(model, train_loader, device=device)
+        val_acc = calc_metric(model, val_loader, device=device)
 
         if epoch % 1 == 0:
-            print(f'Epoch: {epoch:3d}, loss: {loss.item():.3f},' \
+            print(f'Epoch: {epoch}, loss: {loss.item():.3f},' \
                 f'train_acc: {train_acc:.3f}, val_acc: {val_acc:.3f}')
 
         if val_acc > best_acc:
             best_acc = val_acc
-            export_pth(model, OUT_PATH_PTH)
-            export_pt(model, OUT_PATH_PT, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, CONFIG_USE_CUDA)
-            export_onnx(model, OUT_PATH_ONNX, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, CONFIG_USE_CUDA)
-            print(f'Epoch {epoch} best model saved with accuracy: {best_acc:2.2%}')
+            # export_pth(model, OUT_PATH_PTH)
+            # export_pt(model, OUT_PATH_PT, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
+            # export_onnx(model, OUT_PATH_ONNX, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
+            print(f'Epoch: {epoch}, best model accuracy: {best_acc:.3f}')

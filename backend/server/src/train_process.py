@@ -42,11 +42,11 @@ class TrainProcess(Process):
             'channel_dim': len(motion_sensors) * 3,
             'sequence_dim': GlobalVars.WINDOW_LENGTH,
             'layer_dim': 1,
-            'hidden_dim': 400,
-            'output_dim': 2,
+            'hidden_dim': 100,
+            'fc_dim': 40,
+            'output_dim': 10,
             'lr': 1e-3,
-            'epoch': 10,
-            'use_cuda': False,
+            'epoch': 100,
         }
         
         # start training
@@ -60,12 +60,25 @@ class TrainProcess(Process):
 
 if __name__ == '__main__':
     # use this code section to debug the training process
-    train_info_path = '../data/train/XT12345678/XT12345678.json'
+    train_info_path = '../data/train/XT9me9xq7y/XT9me9xq7y.json'
     taskListId = 'TL13r912je'
-    taskIdList = ["TK51dc9xrh", "TKu0l0pg2n"]
-    trainId = "XT12345678"
+    taskIdList = [
+        "TKvx8v7k8l",
+        "TK54yquyug",
+        "TK7js7kr6d",
+        "TKh01oe3tq",
+        "TKtdracwmi",
+        "TKskodn7oh",
+        "TK5codafpv",
+        "TKw1r2377b",
+        "TKj0838qla",
+        "TK4h424fht"
+    ]
+    trainId = 'XT9me9xq7y'
     timestamp = 142857142857
     
     new_process = TrainProcess(train_info_path, taskListId, taskIdList, trainId, timestamp)
     new_process.start()
     new_process.join()
+
+    

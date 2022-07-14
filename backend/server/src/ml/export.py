@@ -9,10 +9,10 @@ from ml.global_vars import GlobalVars
 def export_csv(tasklistId, taskIds, trainId, timestamp):
     dataset = Dataset()
     cutter_dict = {
-        'peak': [PeakCutter('acc', forward=80,
+        'peak': [PeakCutter('linear_acc', forward=80,
             length=GlobalVars.WINDOW_LENGTH, noise=20)],
         'random': [RandomCutter(), RandomCutter()],
-        'peakrandom': [RandomCutter(), PeakCutter('acc', forward=80,
+        'peakrandom': [RandomCutter(), PeakCutter('linear_acc', forward=80,
             length=GlobalVars.WINDOW_LENGTH, noise=20)]
     }
     tasklist = file_utils.load_taskList_info(tasklistId)

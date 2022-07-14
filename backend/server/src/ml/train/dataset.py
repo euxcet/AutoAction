@@ -117,7 +117,7 @@ def create_train_val_loader(X_TRAIN_PATH, Y_TRAIN_PATH):
     print('Preparing datasets')
     train_ds, val_ds, le = create_datasets(x_train, y_train['group_name'], drop_cols=ID_COLS)
 
-    batch_size = 8
+    batch_size = GlobalVars.BATCH_SIZE
     print(f'Creating data loaders with batch size: {batch_size}')
     train_loader, val_loader = create_loaders(train_ds, val_ds, batch_size, jobs=cpu_count())
 
