@@ -1,9 +1,9 @@
 import torch
-from torch import nn
+from torch import device, nn
 
 class LSTMClassifier(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, layer_dim, output_dim, use_cuda=True):
+    def __init__(self, input_dim, hidden_dim, layer_dim, output_dim, device=None):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.layer_dim = layer_dim
@@ -12,7 +12,7 @@ class LSTMClassifier(nn.Module):
         self.fc1 = nn.Linear(32, output_dim)
         self.batch_size = None
         self.hidden = None
-        self.use_cuda = use_cuda
+        self.device = device
 
 
     def forward(self, x):
@@ -26,6 +26,6 @@ class LSTMClassifier(nn.Module):
     def init_hidden(self, x):
         h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim)
         c0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim)
-        if self.use_cuda:
-            return [t.cuda() for t in (h0, c0)]
+        if self.device is not None:
+            return [t.to(self.device) for t in (h0, c0)]
         return [t for t in (h0, c0)]
