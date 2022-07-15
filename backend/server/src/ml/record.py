@@ -1,4 +1,5 @@
 import os
+import json
 import struct
 import random
 import matplotlib.pyplot as plt
@@ -10,13 +11,13 @@ Record is parsed from the continuous collected data which may includes several a
 Use this class to parse record data from files.
 '''
 class Record:
-    def __init__(self, filename, timestamp_filename, record_id,
+    def __init__(self, motion_path, timestamp_path, record_id,
             group_id:int=0, group_name:str='', description:str='',
             cutter=None, cut_data:bool=True):
         ''' Init some parameters.
         '''
-        self.filename = filename    # xxx/Motion_xxx.bin
-        self.timestamp_filename = timestamp_filename    # xxx/Timestamp_xxx.bin
+        self.motion_path = motion_path  # xxx/Motion_xxx.bin
+        self.timestamp_path = timestamp_path    # xxx/Timestamp_xxx.bin
         self.record_id = record_id
         self.group_id = group_id
         self.group_name = group_name
@@ -26,25 +27,26 @@ class Record:
         # data
         self.data_labels = ('acc', 'mag', 'gyro', 'linear_acc')
         self.data = None
+        self.timestamps = None
         self.cut_data = None
 
-        self.load_from_file(filename)   # DONE
+        # self.data, self.timestamps
+        self.load_from_file(motion_path, timestamp_path)
         if cut_data:
-            self.align_data_frequency() # DONE
-            self.cut()                  # DONE
+            self.align_data()
+            self.cut()
 
 
     def cut(self):
         ''' Use self.cutter to cut the data.
         '''
-        with open(self.timestamp_filename) as fin:
-            timestamp = list(map(int, fin.readline().strip()[1:-1].split(',')))
-            self.cut_data = self.cutter.cut(self.data, timestamp)
+        self.cut_data = self.cutter.cut(self.data, self.timestamps)
 
 
-    def align_data_frequency(self):
+    def align_data(self):
         ''' If the data frequency of all sensors do not match,
             downsample them to align with the lowest frequency.
+            Also make sure all sensor data have the same length after aligning.
         '''
         
         data, data_labels = self.data, self.data_labels
@@ -79,6 +81,16 @@ class Record:
         data_freq = {label: calc_freq(data_t[label]) for label in data_labels}
         for label, freq in data_freq.items():
             print(f'{label} resampled frequency: {freq:.3f} Hz')
+            
+        # align to the same length
+        min_len = np.min([len(data_t[label]) for label in data_labels])
+        for label, sensor_data in data.items():
+            if len(data_t[label]) <= min_len: continue
+            sensor_data['x'] = sensor_data['x'][:min_len]
+            sensor_data['y'] = sensor_data['y'][:min_len]
+            sensor_data['z'] = sensor_data['z'][:min_len]
+            sensor_data['t'] = sensor_data['t'][:min_len]
+            data[label] = sensor_data
         
         self.data = data
         
@@ -116,22 +128,26 @@ class Record:
                 'z': src['z'][idxs], 't': src['t'][idxs]}
 
 
-    def load_from_file(self, filename:str):
-        ''' Parse sensor data from 'xxx/Motion_xxx.bin' file.
-            Store in self.data.
+    def load_from_file(self, motion_path:str, timestamp_path:str):
+        ''' Parse motion data from motion_path file, and store in self.data.
+            Parse timestamps from timestamp_path file, and store in self.timestamps
         args:
-            filename: str, like 'xxx/Motion_xxx.bin'.
+            motion_path: str, like 'xxx/Motion_xxx.bin'.
+            timestamp_path: str, like 'xxx/Timestamp_xxx.json'
         attrs:
             self.data: like {'acc': {'x':[...], 'y':[...], 'z':[...], 't':[...]},
                 'mag': {'x':[...], 'y':[...], 'z':[...], 't':[...]},
                 'gyro': {'x':[...], 'y':[...], 'z':[...], 't':[...]},
                 'linear_acc': {'x':[...], 'y':[...], 'z':[...], 't':[...]},}
+            self.timestamps: like [int, int, ...]
         '''
-        assert(filename.endswith('.bin'))
-        print(f'Load motion data from file: {filename}')
+        assert(motion_path.endswith('.bin'))
+        assert(timestamp_path.endswith('.json'))
+        print(f'Load motion data from file: {motion_path}')
+        print(f'Load timestamps from file: {timestamp_path}')
         
         data = {}
-        with open(filename, 'rb') as f:
+        with open(motion_path, 'rb') as f:
             for data_label in ('acc', 'mag', 'gyro', 'linear_acc'):
                 size, = struct.unpack('>i', f.read(4))
                 xs, ys, zs, ts = [], [], [], []
@@ -141,21 +157,11 @@ class Record:
                 data[data_label] = {'x': np.array(xs, dtype=float), 'y': np.array(ys, dtype=float),
                                     'z': np.array(zs, dtype=float), 't': np.array(ts, dtype=int)}
         self.data = data
-        
+        self.timestamps = json.load(open(timestamp_path, 'r'))
+                
         print(f'Accelerometer (Number of samples): {len(data["acc"]["t"])}')
         print(f'Magnetic field (Number of samples): {len(data["mag"]["t"])}')
         print(f'Gyroscope (Number of samples): {len(data["gyro"]["t"])}')
         print(f'Linear (Number of samples): {len(data["linear_acc"]["t"])}')
-
-
-    def export_csv(self):
-        ''' This function seems not to be used anywhere ...
-        '''
-        with open("output/X_train.csv", 'w') as fout:
-            fout.write("row_id,series_id,measurement_number,angular_velocity_X,angular_velocity_Y,angular_velocity_Z,linear_acceleration_X,linear_acceleration_Y,linear_acceleration_Z\n")
-            for row_id in range(len(self.ex_acc)):
-                for series_id in range(len(self.ex_acc[row_id])):
-                    acc = self.ex_acc[row_id][series_id]
-                    gyro = self.ex_gyro[row_id][series_id]
-                    fout.write("%d_%d,%d,%d,%f,%f,%f,%f,%f,%f\n" % (row_id, series_id, row_id, series_id, acc[0], acc[1], acc[2], gyro[0], gyro[1], gyro[2]))
+        
     

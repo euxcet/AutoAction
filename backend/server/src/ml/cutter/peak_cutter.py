@@ -72,7 +72,7 @@ class PeakCutter():
             res.append((offset+peak_start, offset+peak_start+length))
             start = i
             bound_idx += 1
-        end = len(data_t)
+        end = len(data_t) - offset
         peak_idx = start + np.argmax(norm[start+offset:end+offset])
         peak_start = min(end - length, peak_idx - forward + randint(-noise, noise+1))
         peak_start = max(0, peak_start)

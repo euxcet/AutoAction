@@ -1,12 +1,15 @@
 # this file is used for debugging
+import os
 import numpy as np
 from matplotlib import pyplot as plt
 
+import file_utils
 from ml.record import Record
 from ml.cutter.peak_cutter import PeakCutter
 
 
-def plot_data(data, sensors=('acc',), idx_range=None, title=None):
+def plot_data(data:dict, sensors:tuple=('acc',), idx_range:tuple=None,
+        title:str=None, timestamps:list=None):
     for i, sensor in enumerate(sensors):
         plt.subplot(len(sensors), 1, i+1)
         sensor_data = data[sensor]
@@ -20,11 +23,15 @@ def plot_data(data, sensors=('acc',), idx_range=None, title=None):
         z = sensor_data['z'][start:end]
         t = sensor_data['t'][start:end]
         norm = np.sqrt(np.square(x) + np.square(y) + np.square(z))
-        plt.plot(t, x)
-        plt.plot(t, y)
-        plt.plot(t, z)
+        plt.plot(t, x); plt.plot(t, y); plt.plot(t, z); plt.plot(t, norm)
+        
+        if timestamps:
+            xyz = np.concatenate([x, y, z])
+            min_val, max_val = np.min(xyz), np.max(norm)
+            for t in timestamps:
+                plt.plot([t,t], [min_val,max_val], '--', color='black')
+    
         plt.ylabel(sensor)
-        plt.plot(t, norm)
         plt.legend(['x', 'y', 'z', 'norm'], loc='lower right')
         
     if title: plt.suptitle(title)
@@ -32,9 +39,25 @@ def plot_data(data, sensors=('acc',), idx_range=None, title=None):
 
 
 if __name__ == '__main__':
-    filename = '../data/record/TL13r912je/TKu0l0pg2n/STyww0isly/RD9d2p417j/Motion_1657461221050.bin'
-    timestamp_filename = '../data/record/TL13r912je/TKu0l0pg2n/STyww0isly/RD9d2p417j/Timestamp_1657461221050.json'
-    cutter = PeakCutter('acc', 100, 300, 10)
-    record = Record(filename, timestamp_filename, record_id='', cutter=cutter)
+    task_list_id = 'TL13r912je' # default task list
+    task_id = 'TKh01oe3tq' # Task-3
+    subtask_id = 'STkwmtabqe'
+    record_id = 'RD39l3hjqv'
+    record_path = file_utils.get_record_path(task_list_id, task_id, subtask_id, record_id)
+    print(record_path)
+    motion_path, timestamp_path = None, None
+    for filename in os.listdir(record_path):
+        if filename.startswith('Motion'):
+            motion_path = os.path.join(record_path, filename)
+        if filename.startswith('Timestamp'):
+            timestamp_path = os.path.join(record_path, filename)
+            
+    # timestamps
+    
+    cutter = PeakCutter('linear_acc', 80, 200, 20)
+    record = Record(motion_path, timestamp_path, record_id,
+        group_id=0, group_name='Task-0', cutter=cutter, cut_data=True)
     data = record.data
-    plot_data(data, sensors=('acc', 'linear_acc', 'gyro'), idx_range=(0.5, 0.55), title='Shaking')
+
+    timestamps = record.timestamps
+    plot_data(data, sensors=('acc', 'linear_acc', 'gyro'), timestamps=timestamps)
