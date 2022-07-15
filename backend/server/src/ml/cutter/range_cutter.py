@@ -9,7 +9,7 @@ class RangeCutter():
     def cut(self, data, cut_range):
         ''' Cut all data in sensors_data with the range in cut_range.
         args:
-            sensors_data: like {'x':[...], 'y':[...], 'z':[...], 't':[...]}
+            data: like {'x':[...], 'y':[...], 'z':[...], 't':[...]}
             cut_range: like [(start:int, end:int), ...]
         return:
             Sensors data after cutting.
