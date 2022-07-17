@@ -11,7 +11,8 @@ from ml.cutter.peak_cutter import PeakCutter
 def plot_data(data:dict, sensors:tuple=('acc',), idx_range:tuple=None,
         title:str=None, timestamps:list=None):
     for i, sensor in enumerate(sensors):
-        plt.subplot(len(sensors), 1, i+1)
+        # plot the signals in time domain
+        plt.subplot(len(sensors), 2, i+i+1)
         sensor_data = data[sensor]
         if idx_range is None:
             idx_range = (0, 1)
@@ -33,6 +34,15 @@ def plot_data(data:dict, sensors:tuple=('acc',), idx_range:tuple=None,
     
         plt.ylabel(sensor)
         plt.legend(['x', 'y', 'z', 'norm'], loc='lower right')
+        
+        # plot the signals in frequency domain
+        plt.subplot(len(sensors), 2, i+i+2)
+        fft_x = np.fft.fft(x)
+        fft_y = np.fft.fft(y)
+        fft_z = np.fft.fft(z)
+        len_half = len(fft_x) // 2
+        plt.plot(np.abs(fft_x[:len_half])); plt.plot(np.abs(fft_y[:len_half]))
+        plt.plot(np.abs(fft_z[:len_half]))
         
     if title: plt.suptitle(title)
     plt.show()
