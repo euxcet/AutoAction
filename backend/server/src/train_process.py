@@ -38,8 +38,11 @@ class TrainProcess(Process):
 
         # config hyperparameters
         motion_sensors = GlobalVars.MOTION_SENSORS
+        channel_dim = len(motion_sensors) * 3
+        if GlobalVars.FILTER_EN:
+            channel_dim *= 4
         config = {
-            'channel_dim': len(motion_sensors) * 3,
+            'channel_dim': channel_dim,
             'sequence_dim': GlobalVars.WINDOW_LENGTH,
             'layer_dim': 1,
             'hidden_dim': 100,

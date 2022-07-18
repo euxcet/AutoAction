@@ -17,3 +17,10 @@ class GlobalVars:
     DEVICE = None
     # training batch size
     BATCH_SIZE = 32
+    # filter parameters
+    FILTER_EN = True
+    FILTER_TW = 1
+    FILTER_WINDOW = 'hamming'
+    FILTER_FC_PEAK = 0.5 # used for the low-pass filter in peak detection
+    FILTER_FC_LOW = 6.0
+    FILTER_FC_HIGH = 12.0
