@@ -33,8 +33,6 @@ def train_model(trainId:str, timestamp:int, config:dict):
     ROOT = file_utils.get_train_path(trainId)
     X_TRAIN_PATH = os.path.join(ROOT, 'X_train.csv')    # train_data
     Y_TRAIN_PATH = os.path.join(ROOT, 'Y_train.csv')    # train_labels
-    X_VAL_PATH = os.path.join(ROOT, 'X_val.csv')        # val_data
-    Y_VAL_PATH = os.path.join(ROOT, 'Y_val.csv')        # val_labels
     X_TEST_PATH = os.path.join(ROOT, 'X_test.csv')      # test_data
     Y_TEST_PATH = os.path.join(ROOT, 'Y_test.csv')      # test_labels
     OUT_PATH_PTH = os.path.join(ROOT, 'best.pth')

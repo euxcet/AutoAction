@@ -88,54 +88,46 @@ class Dataset:
             
             
     
-    def split(self, train_ratio=0.6, val_ratio=0.1):
-        ''' Randomly split self.data and self.labels into train, validation, test sets,
-            with ratios specified by train_ratio and val_ratio.
+    def split(self, train_prop=0.7):
+        ''' Randomly split self.data and self.labels into train and test sets,
+            with train proportion specified by train_prop.
         args:
-            train_ratio: the ratio of training samples, in (0, 1), default=0.6
-            val_ratio: the ratio of validation samples, in (0, 1), default=0.6
+            train_prop: the proportion of training samples, in (0, 1), default=0.7
         note:
             1. Call this function after inserting records.
-            2. Calc test_ratio = 1.0 - train_ratio - val_ratio, make sure
-                (train_ratio + val_ratio) < 1.0 .
+            2. Calc test_prop = 1.0 - train_prop, make sure train_prop < 1.0 .
         return:
-            (train_data, val_data, test_data, train_labels, val_labels, test_labels)
+            (train_data, test_data, train_labels, test_labels)
             All data have the same structure as self.data.
             All labels have the same structure as self.labels. 
         '''
         # sanity checks on test_ratio and val_ratio
-        assert(0.0 < train_ratio and train_ratio < 1.0)
-        assert(0.0 < val_ratio and val_ratio < 1.0)
-        assert(train_ratio + val_ratio < 1.0)
+        assert(0.0 < train_prop and train_prop < 1.0)
         
         # init the data structures
         all_data, all_labels = self.data, self.labels
-        train_data, val_data, test_data = dict(), dict(), dict()
-        train_labels, val_labels, test_labels = dict(), dict(), dict()
+        train_data, test_data = dict(), dict()
+        train_labels, test_labels = dict(), dict()
         
         for key, data in all_data.items():
-            # first randomly determine train, val, test indices
-            # split data into: [ train_data | val_data | test_data ]
+            # first randomly determine train and test indices
+            # split data into: [ train_data | test_data ]
             # data.shape: (sample times, time domain length, channels of all sensors)
             labels = np.array(all_labels[key], dtype=str)
             cnt = data.shape[0]
             idxs = np.arange(cnt)
             np.random.shuffle(idxs)
-            train_end = int(train_ratio * cnt)
-            val_end = train_end + int(val_ratio * cnt)
+            train_end = int(train_prop * cnt)
             train_idxs = idxs[0:train_end]
-            val_idxs = idxs[train_end:val_end]
-            test_idxs = idxs[val_end:]
+            test_idxs = idxs[train_end:]
             
             # split data and labels by train, val, test idxs
             train_data[key] = data[train_idxs]
-            val_data[key] = data[val_idxs]
             test_data[key] = data[test_idxs]
             train_labels[key] = labels[train_idxs]
-            val_labels[key] = labels[val_idxs]
             test_labels[key] = labels[test_idxs]
         
-        return (train_data, val_data, test_data, train_labels, val_labels, test_labels)
+        return (train_data, test_data, train_labels, test_labels)
 
 
     def export_X_csv(self, dir, data, file_name):
@@ -206,11 +198,9 @@ class Dataset:
         except: pass
         
         print(f'### Spliting data ...')
-        train_data, val_data, test_data, train_labels, val_labels, test_labels = self.split()
+        train_data, test_data, train_labels, test_labels = self.split()
 
         self.export_X_csv(dir, train_data, 'X_train.csv')
         self.export_Y_csv(dir, train_labels, 'Y_train.csv')
-        self.export_X_csv(dir, val_data, 'X_val.csv')
-        self.export_Y_csv(dir, val_labels, 'Y_val.csv')
         self.export_X_csv(dir, test_data, 'X_test.csv')
         self.export_Y_csv(dir, test_labels, 'Y_test.csv')

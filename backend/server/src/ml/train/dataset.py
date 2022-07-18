@@ -1,3 +1,5 @@
+from pyexpat.errors import XML_ERROR_TAG_MISMATCH
+from matplotlib.pyplot import fill_between
 import torch
 import numpy as np
 import pandas as pd
@@ -7,6 +9,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from sklearn.model_selection import train_test_split
 
 from ml.global_vars import GlobalVars
+from ml.filter import Filter
 
 
 def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.2, drop_cols=None, time_dim_first=False):
@@ -25,7 +28,7 @@ def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.2, drop_cols=None, 
     le = LabelEncoder()
     y_enc = le.fit_transform(y) # encoded labels
     # reconstructed data, shape = (samples, length, channels)
-    X_grouped:np.ndarray = create_grouped_array(X, drop_cols=drop_cols)
+    X_grouped:np.ndarray = create_grouped_array(X, drop_cols=drop_cols, filter=GlobalVars.FILTER_EN)
 
     if time_dim_first:
         # shape = (samples, channels, length)
@@ -42,17 +45,41 @@ def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.2, drop_cols=None, 
     return train_ds, val_ds, le
 
 
-def create_grouped_array(data:pd.DataFrame, group_col='sample_id', drop_cols=None):
+def create_grouped_array(data:pd.DataFrame, group_col='sample_id', drop_cols=None, filter:bool=False):
     ''' Reconstruct data by grouping data by group_col.
     args:
         data: pd.DataFrame, [sample_id, measure_id, acc_x, ...]
         group_col: use which column to group data
         drop_cols: drop id columns, which are not sensor data
+        filter: bool, whether divide data frequencies using filters.
     return:
         np.ndarray, shape = (sample times, time domain length, channels of all sensors)
     '''
-    X_grouped = np.row_stack([group.drop(columns=drop_cols).values[None]
-        for _, group in data.groupby(group_col)])
+    
+    if filter == False:
+        X_grouped = np.row_stack([group.drop(columns=drop_cols).values[None]
+            for _, group in data.groupby(group_col)])
+    else:
+        # TODO: calc frequencies
+        filters = [Filter(mode='low-pass', fs=100, tw=GlobalVars.FILTER_TW,
+                fc_low=GlobalVars.FILTER_FC_LOW, window_type=GlobalVars.FILTER_WINDOW),
+            Filter(mode='band-pass', fs=100, tw=GlobalVars.FILTER_TW, fc_low=GlobalVars.FILTER_FC_LOW,
+                fc_high=GlobalVars.FILTER_FC_HIGH, window_type=GlobalVars.FILTER_WINDOW),
+            Filter(mode='high-pass', fs=100, tw=GlobalVars.FILTER_TW, fc_high=GlobalVars.FILTER_FC_HIGH,
+                window_type=GlobalVars.FILTER_WINDOW)]
+        X_grouped = []
+        for _, group in data.groupby(group_col):
+            group = group.drop(columns=drop_cols).values[None]
+            filtered = []
+            for i in range(group.shape[2]):
+                values = group[0,:,i]
+                filtered.append(values)
+                for filter in filters:
+                    filtered.append(filter.filter(values))
+            filtered = np.array(filtered).transpose()
+            filtered = filtered[np.newaxis,:,:]
+            X_grouped.append(filtered)
+        X_grouped = np.row_stack(X_grouped)
     return X_grouped
 
 

@@ -1,7 +1,9 @@
+from ast import Global
 import numpy as np
 from matplotlib import pyplot as plt
 from ml.cutter.range_cutter import RangeCutter
 from ml.filter import Filter
+from ml.global_vars import GlobalVars
 
 class PeakCutter():
     ''' Cut by amplitude peaks.
@@ -56,7 +58,8 @@ class PeakCutter():
         value_keys.remove('t')  # ['x', 'y', 'z']
         norm = np.sum(np.vstack([np.square(data[key]) for key in value_keys]), axis=0)
         # low-pass filter
-        low_pass = Filter(mode='low-pass', fs=freq, tw=1, fc_low=0.5, window_type='hamming')
+        low_pass = Filter(mode='low-pass', fs=freq, tw=GlobalVars.FILTER_TW,
+            fc_low=GlobalVars.FILTER_FC_PEAK, window_type=GlobalVars.FILTER_WINDOW)
         norm_filtered = low_pass.filter(norm)
         
         offset = 0
