@@ -1,11 +1,12 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from ml.cutter.range_cutter import RangeCutter
+from ml.filter import Filter
 
 class PeakCutter():
     ''' Cut by amplitude peaks.
     '''
-    def __init__(self, anchor:str, forward=80, length=128, noise=10):
+    def __init__(self, anchor:str, forward=100, length=200, noise=20):
         ''' Init the cutter with some basic parameters.
         '''
         self.anchor = anchor # anchor = 'acc'
@@ -50,10 +51,13 @@ class PeakCutter():
         randint = np.random.randint
         bound = timestamp + [timestamp[-1] + 1e20]
         data_t = data['t']
+        freq = 1e9 * (len(data_t)-1) / (data_t[-1] - data_t[0])
         value_keys = list(data.keys())
-        value_keys.remove('t')
-        
+        value_keys.remove('t')  # ['x', 'y', 'z']
         norm = np.sum(np.vstack([np.square(data[key]) for key in value_keys]), axis=0)
+        # low-pass filter
+        low_pass = Filter(mode='low-pass', fs=freq, tw=1, fc_low=0.5, window_type='hamming')
+        norm_filtered = low_pass.filter(norm)
         
         offset = 0
         while data_t[offset] < bound[0]:
@@ -65,7 +69,7 @@ class PeakCutter():
         for i, t in enumerate(data_t[offset:]):
             if t < bound[bound_idx]: continue
             end = i
-            peak_idx = start + np.argmax(norm[start+offset:end+offset])
+            peak_idx = start + np.argmax(norm_filtered[start+offset:end+offset])
             # note: first min then max, the order matters!
             peak_start = min(end - length, peak_idx - forward + randint(-noise, noise+1))
             peak_start = max(0, peak_start)
@@ -73,7 +77,7 @@ class PeakCutter():
             start = i
             bound_idx += 1
         end = len(data_t) - offset
-        peak_idx = start + np.argmax(norm[start+offset:end+offset])
+        peak_idx = start + np.argmax(norm_filtered[start+offset:end+offset])
         peak_start = min(end - length, peak_idx - forward + randint(-noise, noise+1))
         peak_start = max(0, peak_start)
         res.append((offset+peak_start, offset+peak_start+length))
