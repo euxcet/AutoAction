@@ -48,6 +48,7 @@ def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.2, drop_cols=None, 
         X_grouped = np.row_stack([X_grouped, np.row_stack(data_augmented)])
         y_augmented:pd.Series = pd.concat(y_augmented)
         y = y_augmented.reset_index(drop=True)
+        y_enc = le.fit_transform(y) # update y encoder
     
     # frequency division
     if GlobalVars.FILTER_EN:
