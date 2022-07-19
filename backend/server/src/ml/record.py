@@ -54,9 +54,6 @@ class Record:
         calc_freq = lambda t: (1e9 * (len(t)-1) / (t[-1]-t[0]))
         data_freq = {label: calc_freq(data_t[label]) for label in data_labels}
         
-        for label, freq in data_freq.items():
-            print(f'{label} frequency: {freq:.3f} Hz')
-            
         freqs = list(data_freq.values())
         min_freq, max_freq = np.min(freqs), np.max(freqs)
         thres = 1.1
@@ -73,15 +70,16 @@ class Record:
         for label in data:
             if data_freq[label] / min_freq > thres:
                 # downsampling
-                print(f'Downsample {label} to {min_freq_label}')
                 data[label] = self.down_sample(data[label], data[min_freq_label])
             
         # after resampling
         data_t = {label: data[label]['t'] for label in data_labels}
         data_freq = {label: calc_freq(data_t[label]) for label in data_labels}
+        print(f'### resampled frequencies: ', end='')
         for label, freq in data_freq.items():
-            print(f'{label} resampled frequency: {freq:.3f} Hz')
-            
+            print(f'{freq:.1f} ', end='')
+        print('Hz')
+                    
         # align to the same length
         min_len = np.min([len(data_t[label]) for label in data_labels])
         for label, sensor_data in data.items():
@@ -143,8 +141,6 @@ class Record:
         '''
         assert(motion_path.endswith('.bin'))
         assert(timestamp_path.endswith('.json'))
-        print(f'Load motion data from file: {motion_path}')
-        print(f'Load timestamps from file: {timestamp_path}')
         
         data = {}
         with open(motion_path, 'rb') as f:
@@ -158,10 +154,4 @@ class Record:
                                     'z': np.array(zs, dtype=float), 't': np.array(ts, dtype=int)}
         self.data = data
         self.timestamps = json.load(open(timestamp_path, 'r'))
-                
-        print(f'Accelerometer (Number of samples): {len(data["acc"]["t"])}')
-        print(f'Magnetic field (Number of samples): {len(data["mag"]["t"])}')
-        print(f'Gyroscope (Number of samples): {len(data["gyro"]["t"])}')
-        print(f'Linear (Number of samples): {len(data["linear_acc"]["t"])}')
-        
     

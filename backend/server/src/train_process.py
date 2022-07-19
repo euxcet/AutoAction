@@ -68,14 +68,14 @@ if __name__ == '__main__':
     taskIdList = [
         "TKvx8v7k8l",
         "TK54yquyug",
-        "TK7js7kr6d",
-        "TKh01oe3tq",
-        "TKtdracwmi",
-        "TKskodn7oh",
-        "TK5codafpv",
-        "TKw1r2377b",
-        "TKj0838qla",
-        "TK4h424fht"
+        # "TK7js7kr6d",
+        # "TKh01oe3tq",
+        # "TKtdracwmi",
+        # "TKskodn7oh",
+        # "TK5codafpv",
+        # "TKw1r2377b",
+        # "TKj0838qla",
+        # "TK4h424fht"
     ]
     trainId = 'XT9me9xq7y'
     timestamp = 142857142857
