@@ -138,7 +138,6 @@ class Dataset:
                 with the same structure as self.data
             file_name: .csv file name to be saved
         '''
-        print(f'### Exporting {file_name} ...')
         motion_sensors = GlobalVars.MOTION_SENSORS
         # column labels in the .csv file (the first row)
         # sample_id is the index of an complete action sample in data (the first dimension in data)
@@ -173,7 +172,6 @@ class Dataset:
                 with the same structure as self.labels
             file_name: .csv file name to be saved
         '''
-        print(f'### Exporting {file_name} ...')
         group_name = self.group_name
         col_labels = ['sample_id', 'group_id', 'group_name', 'record_id']
         with open(os.path.join(dir, file_name), 'w') as fout:
@@ -197,7 +195,6 @@ class Dataset:
         try: os.makedirs(dir)
         except: pass
         
-        print(f'### Spliting data ...')
         train_data, test_data, train_labels, test_labels = self.split()
 
         self.export_X_csv(dir, train_data, 'X_train.csv')

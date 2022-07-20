@@ -24,3 +24,5 @@ class GlobalVars:
     FILTER_FC_PEAK = 0.5 # used for the low-pass filter in peak detection
     FILTER_FC_LOW = 6.0
     FILTER_FC_HIGH = 12.0
+    # data augmentation
+    AUGMENT_EN = True
