@@ -88,7 +88,7 @@ class Dataset:
             
             
     
-    def split(self, train_prop=0.7):
+    def split(self, train_prop=0.8):
         ''' Randomly split self.data and self.labels into train and test sets,
             with train proportion specified by train_prop.
         args:

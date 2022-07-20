@@ -14,7 +14,7 @@ class GlobalVars:
     # first check if the device is available, if not, use cpu
     # Note: 'mps' is the apple sillicon GPU backend, which requires macOS Monterey 12.3+
     #   and pytorch 1.13.0(nightly)+, currently is available but has bugs.
-    DEVICE = None
+    DEVICE = 'cuda'
     # training batch size
     BATCH_SIZE = 32
     # filter parameters
