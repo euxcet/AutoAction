@@ -34,7 +34,7 @@ def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.2, drop_cols=None, 
     # data augmentation
     if GlobalVars.AUGMENT_EN:
         gain = 1
-        strategies = ('scale', 'zoom', 'freq mix')
+        strategies = ('scale', 'zoom', 'time warp')
         data_augmented = []
         y_augmented = []
         # enumerate the unique values in y, at the same time maintain the order
