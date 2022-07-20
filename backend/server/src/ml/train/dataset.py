@@ -13,14 +13,13 @@ from ml.global_vars import GlobalVars
 from ml.filter import Filter
 
 
-def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.25, drop_cols=None, time_dim_first=False):
+def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.25, drop_cols=None):
     ''' Create train and validation datasets, by spliting X into two parts.
     args:
         X: pd.DataFrame, data read from .csv files
         y: pd.Series, labels
         test_size: float, in (0.0, 1.0), the proportion of test data
         drop_cols: drop id columns in X, which are not sensor data
-        time_dim_first: wether to transpose the data time dimension
     return:
         tuple: (train dataset, val dataset, label encoder).
         All datasets contain data and labels.
@@ -31,35 +30,33 @@ def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.25, drop_cols=None,
     # reconstructed data, shape = (samples, length, channels)
     X_grouped:np.ndarray = create_grouped_array(X, drop_cols=drop_cols)
         
-    # data augmentation
+    # four np.ndarray
+    X_train, X_val, y_train, y_val = train_test_split(X_grouped, y_enc, test_size=test_size)
+    
+    # augment training data
     if GlobalVars.AUGMENT_EN:
         gain = 1
         strategies = ('scale', 'zoom', 'time warp', 'freq mix')
-        data_augmented = []
+        X_augmented = []
         y_augmented = []
-        # enumerate the unique values in y, at the same time maintain the order
-        for group_name in sorted(set(y), key=list(y.values).index):
-            # get the indexs corresponding to the group_name
-            group_idxs = list(y[y==group_name].index)
-            data_augmented.extend([X_grouped[group_idxs], data_aug.augment(
-                X_grouped[group_idxs], gain=gain, strategies=strategies)])
-            ys = y[y==group_name]
-            y_augmented.append(pd.concat([ys] * gain * (2**len(strategies))))
-        X_grouped = np.row_stack(data_augmented)
-        y_augmented:pd.Series = pd.concat(y_augmented)
-        y = y_augmented.reset_index(drop=True)
-        y_enc = le.fit_transform(y) # update y encoder
+        for label in set(y_train):
+            mask = (y_train == label)
+            X_augmented.extend([X_train[mask], data_aug.augment(
+                X_train[mask], gain=gain, strategies=strategies)])
+            y_augmented.append(np.concatenate([y_train[mask]] * gain * (2**len(strategies))))
+        X_train = np.row_stack(X_augmented)
+        y_train = np.concatenate(y_augmented)
+        # shuffle X_train and y_train
+        idxs = np.arange(len(y_train))
+        np.random.shuffle(idxs)
+        X_train = X_train[idxs]
+        y_train = y_train[idxs]
     
     # frequency division
     if GlobalVars.FILTER_EN:
-        X_grouped = divide_frequency(X_grouped)
-
-    if time_dim_first:
-        # shape = (samples, channels, length)
-        X_grouped = X_grouped.transpose(0, 2, 1)
+        X_train = divide_frequency(X_train)
+        X_val = divide_frequency(X_val)
     
-    # four np.ndarray
-    X_train, X_val, y_train, y_val = train_test_split(X_grouped, y_enc, test_size=test_size)
     # four torch.Tensor
     X_train, X_val = [torch.tensor(arr, dtype=torch.float32) for arr in (X_train, X_val)]
     y_train, y_val = [torch.tensor(arr, dtype=torch.long) for arr in (y_train, y_val)]

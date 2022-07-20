@@ -64,7 +64,7 @@ def train_model(trainId:str, timestamp:int, config:dict):
         device = None
         
     # reset random seed
-    np.random.seed(0)
+    # np.random.seed(0)
 
     # create train and val data loader
     train_loader, val_loader = create_train_val_loader(X_TRAIN_PATH, Y_TRAIN_PATH)
