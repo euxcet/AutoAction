@@ -44,12 +44,12 @@ class TrainProcess(Process):
         config = {
             'channel_dim': channel_dim,
             'sequence_dim': GlobalVars.WINDOW_LENGTH,
-            'layer_dim': 1,
+            'layer_dim': 2,
             'hidden_dim': 160,
             'fc_dim': 40,
             'output_dim': 10,
-            'lr': 1e-3,
-            'epoch': 20,
+            'lr': 5e-4,
+            'epoch': 50,
         }
         
         # start training

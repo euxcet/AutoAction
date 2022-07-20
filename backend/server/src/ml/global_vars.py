@@ -16,7 +16,7 @@ class GlobalVars:
     #   and pytorch 1.13.0(nightly)+, currently is available but has bugs.
     DEVICE = 'cuda'
     # training batch size
-    BATCH_SIZE = 32
+    BATCH_SIZE = 128
     # filter parameters
     FILTER_EN = True
     FILTER_TW = 1

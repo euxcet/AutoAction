@@ -165,12 +165,12 @@ def augment(data:np.ndarray, gain:int=1, strategies:tuple=('scale', 'zoom', 'tim
             current_gain = 1
             if first: current_gain = gain; first = False
             if strategy == 'scale':
-                current_data = scale(data, gain=current_gain)
+                current_data = scale(current_data, gain=current_gain)
             elif strategy == 'zoom':
-                current_data = zoom(data, gain=current_gain)
+                current_data = zoom(current_data, gain=current_gain)
             elif strategy == 'time warp':
-                current_data = time_warp(data, gain=current_gain)
-            else: current_data = freq_mix(data, gain=current_gain)
+                current_data = time_warp(current_data, gain=current_gain)
+            else: current_data = freq_mix(current_data, gain=current_gain)
         res.append(current_data)
     return np.row_stack(res)
 
