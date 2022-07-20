@@ -73,7 +73,8 @@ def train_model(trainId:str, timestamp:int, config:dict):
         CONFIG_FC_DIM, CONFIG_OUTPUT_DIM, device=device)
     if device is not None:
         model = model.to(device)
-    optimizer = torch.optim.RMSprop(model.parameters(), lr=CONFIG_LR)
+    # optimizer = torch.optim.RMSprop(model.parameters(), lr=CONFIG_LR)
+    optimizer = torch.optim.Adam(model.parameters(), lr=CONFIG_LR)
     scheduler = CyclicLR(optimizer, cosine(t_max=len(train_loader) * 2, eta_min=CONFIG_LR/100))
     criterion = nn.CrossEntropyLoss()
 
@@ -98,7 +99,7 @@ def train_model(trainId:str, timestamp:int, config:dict):
         val_acc = calc_metric(model, val_loader, device=device)
 
         if epoch % 1 == 0:
-            print(f'Epoch: {epoch}, loss: {loss.item():.3f},' \
+            print(f'Epoch: {epoch}, loss: {loss.item():.3f}, ' \
                 f'train_acc: {train_acc:.3f}, val_acc: {val_acc:.3f}')
 
         if val_acc > best_acc:

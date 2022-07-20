@@ -43,7 +43,7 @@ def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.25, drop_cols=None)
             mask = (y_train == label)
             X_augmented.extend([X_train[mask], data_aug.augment(
                 X_train[mask], gain=gain, strategies=strategies)])
-            y_augmented.append(np.concatenate([y_train[mask]] * gain * (2**len(strategies))))
+            y_augmented.append(np.concatenate([y_train[mask]] * (1 + gain * (2**len(strategies)-1))))
         X_train = np.row_stack(X_augmented)
         y_train = np.concatenate(y_augmented)
         # shuffle X_train and y_train
@@ -51,6 +51,7 @@ def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.25, drop_cols=None)
         np.random.shuffle(idxs)
         X_train = X_train[idxs]
         y_train = y_train[idxs]
+
     
     # frequency division
     if GlobalVars.FILTER_EN:
