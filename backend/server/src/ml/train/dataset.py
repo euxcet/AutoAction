@@ -13,7 +13,7 @@ from ml.global_vars import GlobalVars
 from ml.filter import Filter
 
 
-def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.2, drop_cols=None, time_dim_first=False):
+def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.25, drop_cols=None, time_dim_first=False):
     ''' Create train and validation datasets, by spliting X into two parts.
     args:
         X: pd.DataFrame, data read from .csv files
@@ -34,18 +34,18 @@ def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.2, drop_cols=None, 
     # data augmentation
     if GlobalVars.AUGMENT_EN:
         gain = 1
-        strategies = ('scale', 'zoom', 'time warp')
+        strategies = ('scale', 'zoom', 'time warp', 'freq mix')
         data_augmented = []
         y_augmented = []
         # enumerate the unique values in y, at the same time maintain the order
         for group_name in sorted(set(y), key=list(y.values).index):
             # get the indexs corresponding to the group_name
             group_idxs = list(y[y==group_name].index)
-            data_augmented.append(data_aug.augment(X_grouped[group_idxs],
-                gain=gain, strategies=strategies))
+            data_augmented.extend([X_grouped[group_idxs], data_aug.augment(
+                X_grouped[group_idxs], gain=gain, strategies=strategies)])
             ys = y[y==group_name]
             y_augmented.append(pd.concat([ys] * gain * (2**len(strategies))))
-        X_grouped = np.row_stack([X_grouped, np.row_stack(data_augmented)])
+        X_grouped = np.row_stack(data_augmented)
         y_augmented:pd.Series = pd.concat(y_augmented)
         y = y_augmented.reset_index(drop=True)
         y_enc = le.fit_transform(y) # update y encoder

@@ -50,7 +50,7 @@ def scale(data:np.ndarray, gain:int=1, s_mean:float=1.0, s_std:float=0.2,
     return np.row_stack(res)
 
 
-def zoom(data:np.ndarray, gain:int=1, r1:float=0.9, r2:float=1.1):
+def zoom(data:np.ndarray, gain:int=1, r1:float=0.9, r2:float=1.0):
     ''' Zoom the data with respect to center position in time domain.
         Zooming factor z ~ U(r[0], r[1]), z > 1.0 means faster action.
         If z > 1.0, using 0.0 as padding.
