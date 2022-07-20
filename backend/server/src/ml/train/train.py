@@ -39,19 +39,6 @@ def train_model(trainId:str, timestamp:int, config:dict):
     OUT_PATH_PT = os.path.join(ROOT, 'best.pt')
     OUT_PATH_ONNX = os.path.join(ROOT, 'best.onnx')
 
-    # parse hyperparameters
-    try:
-        CONFIG_CHANNEL_DIM = config['channel_dim']
-        CONFIG_SEQUENCE_DIM = config['sequence_dim']
-        CONFIG_LAYER_DIM = config['layer_dim']
-        CONFIG_HIDDEN_DIM = config['hidden_dim']
-        CONFIG_FC_DIM = config['fc_dim']
-        CONFIG_OUTPUT_DIM = config['output_dim']
-        CONFIG_LR = config['lr']
-        CONFIG_EPOCH = config['epoch']
-    except KeyError:
-        return
-    
     device:str = GlobalVars.DEVICE
     if device == 'cuda' and torch.cuda.is_available():
         print(f'### Training device: cuda.')
@@ -62,6 +49,35 @@ def train_model(trainId:str, timestamp:int, config:dict):
     else:
         print(f'### Training device: cpu.')
         device = None
+
+    # parse generic hyperparameters 
+    try:
+        CONFIG_CHANNEL_DIM = config['channel_dim']
+        CONFIG_SEQUENCE_DIM = config['sequence_dim']
+        CONFIG_OUTPUT_DIM = config['output_dim']
+        CONFIG_LR = config['lr']
+        CONFIG_EPOCH = config['epoch']
+    except KeyError:
+        return
+
+    # create the network
+    backbone = GlobalVars.NETWORK_BACKBONE
+    if backbone == 'lstm'
+        # parse hyperparameters for lstm
+        try:
+            CONFIG_LAYER_DIM = config['lstm_layer_dim']
+            CONFIG_HIDDEN_DIM = config['lstm_hidden_dim']
+            CONFIG_FC_DIM = config['lstm_fc_dim']
+        except KeyError:
+            return
+        model = LSTMClassifier(CONFIG_CHANNEL_DIM, CONFIG_HIDDEN_DIM, CONFIG_LAYER_DIM,
+            CONFIG_FC_DIM, CONFIG_OUTPUT_DIM, device=device)
+    elif backbone == 'cnn':
+        # parse hyperparameters for cnn
+        model = CNNClassifier(CONFIG_CHANNEL_DIM, CONFIG_SEQUENCE_DIM, CONFIG_OUTPUT_DIM, device=device)
+
+    if device is not None:
+        model = model.to(device)
         
     # reset random seed
     np.random.seed(0)
@@ -69,10 +85,6 @@ def train_model(trainId:str, timestamp:int, config:dict):
     # create train and val data loader
     train_loader, val_loader = create_train_val_loader(X_TRAIN_PATH, Y_TRAIN_PATH)
     
-    model = LSTMClassifier(CONFIG_CHANNEL_DIM, CONFIG_HIDDEN_DIM, CONFIG_LAYER_DIM,
-        CONFIG_FC_DIM, CONFIG_OUTPUT_DIM, device=device)
-    if device is not None:
-        model = model.to(device)
     optimizer = torch.optim.RMSprop(model.parameters(), lr=CONFIG_LR)
     scheduler = CyclicLR(optimizer, cosine(t_max=len(train_loader) * 2, eta_min=CONFIG_LR/100))
     criterion = nn.CrossEntropyLoss()
