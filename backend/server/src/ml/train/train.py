@@ -2,11 +2,12 @@ import os
 import numpy as np
 import torch
 from torch import nn
+from torch.nn import functional as F
 from torch.optim.lr_scheduler import _LRScheduler
 from matplotlib import pyplot as plt
 
 import file_utils
-from ml.train.model import LSTMClassifier
+from ml.train.model import LSTMClassifier, CNNClassifier
 from ml.train.dataset import create_train_val_loader
 from ml.train.metric import calc_metric
 from ml.train.export import export_pt, export_onnx, export_pth
@@ -39,19 +40,6 @@ def train_model(trainId:str, timestamp:int, config:dict):
     OUT_PATH_PT = os.path.join(ROOT, 'best.pt')
     OUT_PATH_ONNX = os.path.join(ROOT, 'best.onnx')
 
-    # parse hyperparameters
-    try:
-        CONFIG_CHANNEL_DIM = config['channel_dim']
-        CONFIG_SEQUENCE_DIM = config['sequence_dim']
-        CONFIG_LAYER_DIM = config['layer_dim']
-        CONFIG_HIDDEN_DIM = config['hidden_dim']
-        CONFIG_FC_DIM = config['fc_dim']
-        CONFIG_OUTPUT_DIM = config['output_dim']
-        CONFIG_LR = config['lr']
-        CONFIG_EPOCH = config['epoch']
-    except KeyError:
-        return
-    
     device:str = GlobalVars.DEVICE
     if device == 'cuda' and torch.cuda.is_available():
         print(f'### Training device: cuda.')
@@ -62,6 +50,35 @@ def train_model(trainId:str, timestamp:int, config:dict):
     else:
         print(f'### Training device: cpu.')
         device = None
+
+    # parse generic hyperparameters 
+    try:
+        CONFIG_CHANNEL_DIM = config['channel_dim']
+        CONFIG_SEQUENCE_DIM = config['sequence_dim']
+        CONFIG_OUTPUT_DIM = config['output_dim']
+        CONFIG_LR = config['lr']
+        CONFIG_EPOCH = config['epoch']
+    except KeyError:
+        return
+
+    # create the network
+    backbone = GlobalVars.NETWORK_BACKBONE
+    if backbone == 'lstm':
+        # parse hyperparameters for lstm
+        try:
+            CONFIG_LAYER_DIM = config['lstm_layer_dim']
+            CONFIG_HIDDEN_DIM = config['lstm_hidden_dim']
+            CONFIG_FC_DIM = config['lstm_fc_dim']
+        except KeyError:
+            return
+        model = LSTMClassifier(CONFIG_CHANNEL_DIM, CONFIG_HIDDEN_DIM, CONFIG_LAYER_DIM,
+            CONFIG_FC_DIM, CONFIG_OUTPUT_DIM, device=device)
+    elif backbone == 'cnn':
+        # parse hyperparameters for cnn
+        model = CNNClassifier()
+
+    if device is not None:
+        model = model.to(device)
         
     # reset random seed
     # np.random.seed(0)
@@ -73,17 +90,17 @@ def train_model(trainId:str, timestamp:int, config:dict):
         CONFIG_FC_DIM, CONFIG_OUTPUT_DIM, device=device)
     if device is not None:
         model = model.to(device)
-    # optimizer = torch.optim.RMSprop(model.parameters(), lr=CONFIG_LR)
+#optimizer = torch.optim.RMSprop(model.parameters(), lr=CONFIG_LR)
     optimizer = torch.optim.Adam(model.parameters(), lr=CONFIG_LR)
-    scheduler = CyclicLR(optimizer, cosine(t_max=len(train_loader) * 2, eta_min=CONFIG_LR/100))
+#scheduler = CyclicLR(optimizer, cosine(t_max=len(train_loader) * 2, eta_min=CONFIG_LR/100))
     criterion = nn.CrossEntropyLoss()
 
     best_acc = 0.0
 
     print('Start training')
     for epoch in range(0, CONFIG_EPOCH):
+        model.train()
         for x_batch, y_batch in train_loader:
-            model.train()
             if device is not None:
                 x_batch = x_batch.to(device)
                 y_batch = y_batch.to(device)
@@ -92,9 +109,9 @@ def train_model(trainId:str, timestamp:int, config:dict):
             loss = criterion(out, y_batch)
             loss.backward()
             optimizer.step()
-            scheduler.step()
-        model.eval()
+
         
+        model.eval()
         train_acc = calc_metric(model, train_loader, device=device)
         val_acc = calc_metric(model, val_loader, device=device)
 
@@ -107,4 +124,4 @@ def train_model(trainId:str, timestamp:int, config:dict):
             # export_pth(model, OUT_PATH_PTH)
             # export_pt(model, OUT_PATH_PT, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
             # export_onnx(model, OUT_PATH_ONNX, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
-            print(f'Epoch: {epoch}, best model accuracy: {best_acc:.3f}')
+            print(f'\tbest model accuracy: {best_acc:.3f}')

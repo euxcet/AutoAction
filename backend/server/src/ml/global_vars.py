@@ -6,6 +6,8 @@ class GlobalVars:
             gyro, linear_acc four types, but only part of them will be used to
             train models.
     '''
+    # backbone of the network: in {'lstm', 'cnn'}
+    NETWORK_BACKBONE = 'lstm'
     # sensor types used in training
     MOTION_SENSORS = ('acc', 'linear_acc', 'gyro')
     # cut window length in time domain

@@ -16,6 +16,16 @@ DATA_TEMP_ROOT  = os.path.join(DATA_ROOT, "temp")
 
 md5 = dict()
 
+def set_data_root(root):
+    global DATA_ROOT, DATA_RECORD_ROOT, DATA_TRAIN_ROOT
+    global DATA_FILE_ROOT, DATA_DEX_ROOT, DATA_TEMP_ROOT
+    DATA_ROOT = root
+    DATA_RECORD_ROOT = os.path.join(DATA_ROOT, "record")
+    DATA_TRAIN_ROOT = os.path.join(DATA_ROOT, "train")
+    DATA_FILE_ROOT = os.path.join(DATA_ROOT, "file")
+    DATA_DEX_ROOT = os.path.join(DATA_ROOT, "dex")
+    DATA_TEMP_ROOT  = os.path.join(DATA_ROOT, "temp")
+
 # a series functions to get some file path
 def get_temp_path():
     return DATA_TEMP_ROOT

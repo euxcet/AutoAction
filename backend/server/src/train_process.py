@@ -1,11 +1,12 @@
 import time
 import file_utils
+import argparse
+import os
 from multiprocessing import Process
 
 from ml.export import export_csv
 from ml.train.train import train_model
 from ml.global_vars import GlobalVars
-
 
 class TrainProcess(Process):
     def __init__(self, train_info_path, taskListId, taskIdList, trainId, timestamp):
@@ -41,15 +42,16 @@ class TrainProcess(Process):
         channel_dim = len(motion_sensors) * 3
         if GlobalVars.FILTER_EN:
             channel_dim *= 4
+        print(motion_sensors, channel_dim)
         config = {
             'channel_dim': channel_dim,
             'sequence_dim': GlobalVars.WINDOW_LENGTH,
-            'layer_dim': 2,
-            'hidden_dim': 160,
-            'fc_dim': 40,
-            'output_dim': 10,
+            'output_dim': len(self.taskIdList),
             'lr': 5e-4,
             'epoch': 50,
+            'lstm_layer_dim': 1,
+            'lstm_hidden_dim': 100,
+            'lstm_fc_dim': 40,
         }
         
         # start training
@@ -62,8 +64,13 @@ class TrainProcess(Process):
         
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_root', type=str, default = '../data', help='Root directory of raw data.')
+    args = parser.parse_args()
+    file_utils.set_data_root(args.data_root)
+
     # use this code section to debug the training process
-    train_info_path = '../data/train/XT9me9xq7y/XT9me9xq7y.json'
+    train_info_path = os.path.join(file_utils.DATA_TRAIN_ROOT, 'XT9me9xq7y', 'XT9me9xq7y.json')
     taskListId = 'TL13r912je'
     taskIdList = [
         "TKvx8v7k8l",

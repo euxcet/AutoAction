@@ -13,11 +13,14 @@ def calc_accuracy(model, loader, device=None):
     correct, total = 0, 0
     for x_val, y_val in loader:
         # x_val.size(): [batch_size, length, channels]
-        # v_val.size(): [batch_size]
+        # y_val.size(): [batch_size]
+
         if device is not None: x_val, y_val = [t.to(device) for t in (x_val, y_val)]
         else: x_val, y_val = [t for t in (x_val, y_val)]
         out = model(x_val) # forward prediction
         preds = F.log_softmax(out, dim=1).argmax(dim=1) # predicted
+#print('Test:', preds, y_val)
+
         total += y_val.size(0) # total times: batch_size
         correct += (preds == y_val).sum().item() # correct times
     return float(correct) / float(total) # accuracy

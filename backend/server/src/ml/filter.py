@@ -92,7 +92,9 @@ class Filter:
             np.ndaray, the filtered signals, with the same length as input.
         '''
         res = np.convolve(input, self.h, mode='same')
-        if (len_res:=len(res)) > (len_input:=len(input)):
+        len_res = len(res)
+        len_input = len(input)
+        if len_res > len_input:
             idx = (len_res - len_input) // 2
             res = res[idx:idx+len_input]
         return res
