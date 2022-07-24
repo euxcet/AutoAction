@@ -1,6 +1,7 @@
 from flask import Flask, request, send_file
 from flask_cors import CORS, cross_origin
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import argparse
 import json
 import file_utils
 import os
@@ -45,6 +46,10 @@ Data structure:
 '''
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_root', type=str, default = '../data', help='Root directory of raw data.')
+    args = parser.parse_args()
+    file_utils.set_data_root(args.data_root)
     file_utils.create_default_files()
     update_md5()
     app.run(port=6125, host="0.0.0.0")

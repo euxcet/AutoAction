@@ -7,7 +7,7 @@ class GlobalVars:
             train models.
     '''
     # backbone of the network: in {'lstm', 'cnn'}
-    NETWORK_BACKBONE = 'cnn'
+    NETWORK_BACKBONE = 'lstm'
     # sensor types used in training
     MOTION_SENSORS = ('acc', 'linear_acc', 'gyro')
     # cut window length in time domain

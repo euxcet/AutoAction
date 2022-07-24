@@ -42,12 +42,13 @@ class TrainProcess(Process):
         channel_dim = len(motion_sensors) * 3
         if GlobalVars.FILTER_EN:
             channel_dim *= 4
+        print(motion_sensors, channel_dim)
         config = {
             'channel_dim': channel_dim,
             'sequence_dim': GlobalVars.WINDOW_LENGTH,
             'output_dim': len(self.taskIdList),
             'lr': 1e-3,
-            'epoch': 100,
+            'epoch': 1000,
             'lstm_layer_dim': 1,
             'lstm_hidden_dim': 100,
             'lstm_fc_dim': 40,

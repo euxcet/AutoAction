@@ -2,11 +2,12 @@ import os
 import numpy as np
 import torch
 from torch import nn
+from torch.nn import functional as F
 from torch.optim.lr_scheduler import _LRScheduler
 from matplotlib import pyplot as plt
 
 import file_utils
-from ml.train.model import LSTMClassifier
+from ml.train.model import LSTMClassifier, CNNClassifier
 from ml.train.dataset import create_train_val_loader
 from ml.train.metric import calc_metric
 from ml.train.export import export_pt, export_onnx, export_pth
@@ -62,7 +63,7 @@ def train_model(trainId:str, timestamp:int, config:dict):
 
     # create the network
     backbone = GlobalVars.NETWORK_BACKBONE
-    if backbone == 'lstm'
+    if backbone == 'lstm':
         # parse hyperparameters for lstm
         try:
             CONFIG_LAYER_DIM = config['lstm_layer_dim']
@@ -74,7 +75,7 @@ def train_model(trainId:str, timestamp:int, config:dict):
             CONFIG_FC_DIM, CONFIG_OUTPUT_DIM, device=device)
     elif backbone == 'cnn':
         # parse hyperparameters for cnn
-        model = CNNClassifier(CONFIG_CHANNEL_DIM, CONFIG_SEQUENCE_DIM, CONFIG_OUTPUT_DIM, device=device)
+        model = CNNClassifier()
 
     if device is not None:
         model = model.to(device)
@@ -85,27 +86,33 @@ def train_model(trainId:str, timestamp:int, config:dict):
     # create train and val data loader
     train_loader, val_loader = create_train_val_loader(X_TRAIN_PATH, Y_TRAIN_PATH)
     
-    optimizer = torch.optim.RMSprop(model.parameters(), lr=CONFIG_LR)
-    scheduler = CyclicLR(optimizer, cosine(t_max=len(train_loader) * 2, eta_min=CONFIG_LR/100))
+#optimizer = torch.optim.RMSprop(model.parameters(), lr=CONFIG_LR)
+    optimizer = torch.optim.Adam(model.parameters(), lr=CONFIG_LR)
+#scheduler = CyclicLR(optimizer, cosine(t_max=len(train_loader) * 2, eta_min=CONFIG_LR/100))
     criterion = nn.CrossEntropyLoss()
 
     best_acc = 0.0
 
     print('Start training')
     for epoch in range(0, CONFIG_EPOCH):
+        model.train()
+        turn = 0
         for x_batch, y_batch in train_loader:
-            model.train()
             if device is not None:
                 x_batch = x_batch.to(device)
                 y_batch = y_batch.to(device)
             optimizer.zero_grad()
             out = model(x_batch)
+            preds = F.log_softmax(out, dim=1).argmax(dim=1) # predicted
+#if turn == 0:
+#print(preds, y_batch)
+            turn += 1
             loss = criterion(out, y_batch)
             loss.backward()
             optimizer.step()
-            scheduler.step()
-        model.eval()
+
         
+        model.eval()
         train_acc = calc_metric(model, train_loader, device=device)
         val_acc = calc_metric(model, val_loader, device=device)
 
@@ -118,4 +125,4 @@ def train_model(trainId:str, timestamp:int, config:dict):
             # export_pth(model, OUT_PATH_PTH)
             # export_pt(model, OUT_PATH_PT, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
             # export_onnx(model, OUT_PATH_ONNX, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
-            print(f'Epoch: {epoch}, best model accuracy: {best_acc:.3f}')
+            print(f'\tbest model accuracy: {best_acc:.3f}')
