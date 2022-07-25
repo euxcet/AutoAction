@@ -21,6 +21,7 @@ import com.hcifuture.shared.communicate.status.Heartbeat;
 import java.io.File;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
@@ -174,107 +175,31 @@ public class LoaderManager {
         classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
         loader = new ContextActionLoader(mService, classLoader);
 
-        /*
-        Gson gson = new Gson();
-        ContextActionConfigBean config = gson.fromJson(
-                FileUtils.getFileContent(BuildConfig.SAVE_PATH + "config.json"),
-                ContextActionConfigBean.class
-        );
-
-        List<ContextConfig> contextConfigs = new ArrayList<>();
-        List<ActionConfig> actionConfigs = new ArrayList<>();
-
-        if (config.getContext() != null) {
-            for (ContextActionConfigBean.ContextConfigBean bean: config.getContext()) {
-                if (bean == null)
-                    continue;
-                ContextConfig contextConfig = new ContextConfig();
-                contextConfig.setContext(bean.getBuiltInContext());
-                contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
-                for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
-                    contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
-                }
-                for (int i = 0; i < bean.getLongParamKey().size(); i++) {
-                    contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
-                }
-                for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
-                    contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
-                }
-                for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
-                    contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
-                }
-                contextConfigs.add(contextConfig);
-            }
-        }
-
-        if (config.getAction() != null) {
-            for (ContextActionConfigBean.ActionConfigBean bean: config.getAction()) {
-                if (bean == null)
-                    continue;
-                ActionConfig actionConfig = new ActionConfig();
-                actionConfig.setAction(bean.getBuiltInAction());
-                actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
-                for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
-                    actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
-                }
-                for (int i = 0; i < bean.getLongParamKey().size(); i++) {
-                    actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
-                }
-                for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
-                    actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
-                }
-                for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
-                    actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
-                }
-                actionConfigs.add(actionConfig);
-            }
-        }
-        */
-
         RequestListener requestListener = this::handleRequest;
 
         loader.startDetection(actionListener, contextListener, requestListener);
 
-//        loader.setBooleanExternalStatus("testboolean", true);
-//        loader.setNumberExternalStatus("testInt", 2);
-//        Log.e("TEST", loader.getBooleanExternalStatus("testboolean") + " " + loader.getIntegerExternalStatus("testInt"));
-//        loader.setBooleanExternalStatus("testboolean", false);
-//        loader.setNumberExternalStatus("testInt", 3);
-//        Log.e("TEST", loader.getBooleanExternalStatus("testboolean") + " " + loader.getIntegerExternalStatus("testInt"));
-        /*
-        NcnnInstance.init(mService,
-                BuildConfig.SAVE_PATH + "best.param",
-                BuildConfig.SAVE_PATH + "best.bin",
-                4,
-                128,
-                6,
-                1,
-                2);
-        NcnnInstance ncnnInstance = NcnnInstance.getInstance();
-        float[] data = new float[128 * 6];
-        Arrays.fill(data, 0.1f);
-        Log.e("result", ncnnInstance.actionDetect(data) + " ");
-         */
-
-        /*
+        final boolean[] enable = {true};
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                if (loader != null) {
-                    Heartbeat heartbeat = loader.getHeartbeat();
-                    if (heartbeat != null) {
-                        Log.e("Heartbeat", heartbeat.getTimestamp() + " " + heartbeat.getFutureCount() + " " + heartbeat.getAliveFutureCount());
-                        Log.e("Heartbeat", heartbeat.getLastActionAliveTimestamp().toString());
-                        Log.e("Heartbeat", heartbeat.getLastContextAliveTimestamp().toString());
-                        Log.e("Heartbeat", heartbeat.getLastActionTriggerTimestamp().toString());
-                        Log.e("Heartbeat", heartbeat.getLastContextTriggerTimestamp().toString());
-                        Log.e("Heartbeat", heartbeat.getLastSensorGetTimestamp().toString());
-                        Log.e("Heartbeat", heartbeat.getLastCollectorAliveTimestamp().toString());
-                    }
+                Bundle bundle = new Bundle();
+                ArrayList<String> list = new ArrayList<>();
+//                list.add("TapTapAction");
+                list.add("TopTapAction");
+                if (enable[0]) {
+                    Log.e("TEST", "Disable!");
+                    bundle.putStringArrayList("DisableFunctions", list);
+                    loader.onExternalEvent(bundle);
+                    enable[0] = false;
+                } else {
+                    Log.e("TEST", "Enable!");
+                    bundle.putStringArrayList("EnableFunctions", list);
+                    loader.onExternalEvent(bundle);
+                    enable[0] = true;
                 }
             }
-        }, 1000, 1000);
-         */
+        }, 8000, 8000);
     }
 
     public void onAccessibilityEvent(AccessibilityEvent event) {

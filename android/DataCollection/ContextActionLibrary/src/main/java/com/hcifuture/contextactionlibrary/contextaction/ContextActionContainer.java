@@ -35,6 +35,7 @@ import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder;
+import com.hcifuture.contextactionlibrary.sensor.collector.async.IMUCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.NonIMUCollector;
 import com.hcifuture.contextactionlibrary.sensor.distributor.DataDistributor;
@@ -293,6 +294,7 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         for (BaseContext context: contexts) {
             context.start();
         }
+        switchSensor(true);
         monitorAction();
         monitorContext();
         if (collectorManager != null) {
@@ -445,6 +447,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     ContextConfig contextConfig = new ContextConfig();
                     contextConfig.setContext(bean.getBuiltInContext());
                     contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                    contextConfig.setPriority(bean.getPriority());
+                    contextConfig.setImuSamplingFreq(bean.getImuSamplingFreq());
                     for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
                         contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
                     }
@@ -482,6 +486,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     ActionConfig actionConfig = new ActionConfig();
                     actionConfig.setAction(bean.getBuiltInAction());
                     actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                    actionConfig.setPriority(bean.getPriority());
+                    actionConfig.setImuSamplingFreq(bean.getImuSamplingFreq());
                     for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
                         actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
                     }
@@ -619,6 +625,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         ContextConfig contextConfig = new ContextConfig();
                         contextConfig.setContext(bean.getBuiltInContext());
                         contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                        contextConfig.setPriority(bean.getPriority());
+                        contextConfig.setImuSamplingFreq(bean.getImuSamplingFreq());
                         for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
                             contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
                         }
@@ -675,6 +683,8 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         ActionConfig actionConfig = new ActionConfig();
                         actionConfig.setAction(bean.getBuiltInAction());
                         actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
+                        actionConfig.setPriority(bean.getPriority());
+                        actionConfig.setImuSamplingFreq(bean.getImuSamplingFreq());
                         for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
                             actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
                         }
@@ -803,11 +813,84 @@ public class ContextActionContainer implements ActionListener, ContextListener {
         return ExternalStatus.getInstance().getStringStatus(key);
     }
 
+    private void switchSensor(boolean ignoreStarted) {
+        boolean needImu = false;
+        int maxImuFreq = 0;
+
+        for (BaseAction action: actions) {
+            if (action.getConfig().getPriority() == 0 && // necessary action
+                    action.getConfig().getSensorType().contains(SensorType.IMU) &&
+                    (ignoreStarted || action.isStarted())) {
+                needImu = true;
+                maxImuFreq = Math.max(maxImuFreq, action.getConfig().getImuSamplingFreq());
+            }
+        }
+
+        for (BaseContext context: contexts) {
+            if (context.getConfig().getPriority() == 0 && // necessary context
+                    context.getConfig().getSensorType().contains(SensorType.IMU) &&
+                    (ignoreStarted || context.isStarted())) {
+                needImu = true;
+                maxImuFreq = Math.max(maxImuFreq, context.getConfig().getImuSamplingFreq());
+            }
+        }
+
+        IMUCollector imuCollector = (IMUCollector) collectorManager.getCollector(CollectorManager.CollectorType.IMU);
+        imuCollector.setSamplingFrequency(maxImuFreq);
+
+        imuCollector.pause();
+        if (needImu) {
+            imuCollector.resume();
+        }
+
+        for (BaseAction action: actions) {
+            if (action.getConfig().getPriority() == 1 && // unnecessary action
+                    action.getConfig().getSensorType().contains(SensorType.IMU)) {
+                action.setPassiveDisabled(!imuCollector.isRegistered());
+            }
+        }
+
+        for (BaseContext context: contexts) {
+            if (context.getConfig().getPriority() == 1 && // unnecessary action
+                    context.getConfig().getSensorType().contains(SensorType.IMU)) {
+                context.setPassiveDisabled(!imuCollector.isRegistered());
+            }
+        }
+    }
+
     public void onExternalEventDex(Bundle bundle) {
         if (handler != null) {
             handler.post(() -> {
-                if (dataDistributor != null) {
-                    dataDistributor.onExternalEvent(bundle);
+                if (bundle.containsKey("EnableFunctions")) {
+                    List<String> functions = bundle.getStringArrayList("EnableFunctions");
+                    for (BaseAction action: actions) {
+                        if (functions.contains(action.getName())) {
+                            action.start();
+                        }
+                    }
+                    for (BaseContext context: contexts) {
+                        if (functions.contains(context.getName())) {
+                            context.start();
+                        }
+                    }
+                    switchSensor(false);
+                } else if (bundle.containsKey("DisableFunctions")) {
+                    List<String> functions = bundle.getStringArrayList("DisableFunctions");
+                    for (BaseAction action: actions) {
+                        if (functions.contains(action.getName())) {
+                            action.stop();
+                        }
+                    }
+                    for (BaseContext context: contexts) {
+                        if (functions.contains(context.getName())) {
+                            context.stop();
+                        }
+                    }
+                    switchSensor(false);
+                } else {
+                    if (dataDistributor != null) {
+                        dataDistributor.onExternalEvent(bundle);
+                    }
                 }
             });
         }

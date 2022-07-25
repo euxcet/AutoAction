@@ -30,8 +30,9 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
     // For complete data, keep 10s, 10 * 100 * 4 = 4k data
     // in case sampling period is higher, maybe max 500Hz for acc and gyro
     private final long DELAY_TIME = 5000;
-    private final int SAMPLING_PERIOD = SensorManager.SENSOR_DELAY_FASTEST;
     private int LENGTH_LIMIT = 12000;
+
+    private int samplingFrequency = SensorManager.SENSOR_DELAY_FASTEST;
 
     private IMUData data;
 
@@ -45,6 +46,14 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
     public IMUCollector(Context context, CollectorManager.CollectorType type, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         super(context, type, scheduledExecutorService, futureList);
         this.data = new IMUData();
+    }
+
+    public void setSamplingFrequency(int freq) {
+        samplingFrequency = freq;
+    }
+
+    public int getSamplingFrequency() {
+        return samplingFrequency;
     }
 
     @Override
@@ -66,20 +75,29 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
 
     @Override
     public void close() {
-        sensorManager.unregisterListener(this);
+        if (isRegistered.get()) {
+            sensorManager.unregisterListener(this);
+            isRegistered.set(false);
+        }
     }
 
     @Override
     public synchronized void pause() {
-        sensorManager.unregisterListener(this);
+        if (isRegistered.get()) {
+            sensorManager.unregisterListener(this);
+            isRegistered.set(false);
+        }
     }
 
     @Override
     public synchronized void resume() {
-        sensorManager.registerListener(this, mGyroSensor, SAMPLING_PERIOD, handler);
-        sensorManager.registerListener(this, mLinearAccSensor, SAMPLING_PERIOD, handler);
-        sensorManager.registerListener(this, mAccSensor, SAMPLING_PERIOD, handler);
-        sensorManager.registerListener(this, mMagSensor, SAMPLING_PERIOD, handler);
+        if (!isRegistered.get()) {
+            sensorManager.registerListener(this, mGyroSensor, samplingFrequency, handler);
+            sensorManager.registerListener(this, mLinearAccSensor, samplingFrequency, handler);
+            sensorManager.registerListener(this, mAccSensor, samplingFrequency, handler);
+            sensorManager.registerListener(this, mMagSensor, samplingFrequency, handler);
+            isRegistered.set(true);
+        }
     }
 
     @Override

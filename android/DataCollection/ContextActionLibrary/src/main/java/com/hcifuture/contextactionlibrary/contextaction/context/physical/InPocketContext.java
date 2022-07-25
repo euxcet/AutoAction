@@ -215,4 +215,9 @@ public class InPocketContext extends BaseContext {
 //            }
 //        }
     }
+
+    @Override
+    public String getName() {
+        return "InPocketContext";
+    }
 }

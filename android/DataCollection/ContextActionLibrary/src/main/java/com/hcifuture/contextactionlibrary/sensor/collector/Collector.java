@@ -66,6 +66,10 @@ public abstract class Collector {
         }
     }
 
+    public boolean isRegistered() {
+        return isRegistered.get();
+    }
+
     public abstract void initialize();
 
     public abstract void close();

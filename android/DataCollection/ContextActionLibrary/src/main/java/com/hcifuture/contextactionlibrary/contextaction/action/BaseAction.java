@@ -31,6 +31,8 @@ public abstract class BaseAction {
     protected List<ScheduledFuture<?>> futureList;
     protected LogCollector logCollector;
 
+    protected boolean passiveDisabled = false;
+
     public BaseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;
         this.config = config;
@@ -51,6 +53,9 @@ public abstract class BaseAction {
 
     public abstract void start();
     public abstract void stop();
+    public synchronized boolean isStarted() {
+        return isStarted;
+    }
     // public abstract void onIMUSensorChanged(SensorEvent event);
     // public abstract void onProximitySensorChanged(SensorEvent event);
     public abstract void onIMUSensorEvent(SingleIMUData data);
@@ -58,6 +63,15 @@ public abstract class BaseAction {
     public abstract void onExternalEvent(Bundle bundle);
 
     public abstract void getAction();
+    public abstract String getName();
+
+    public synchronized void setPassiveDisabled(boolean passiveDisabled) {
+        this.passiveDisabled = passiveDisabled;
+    }
+
+    public synchronized boolean isPassiveDisabled() {
+        return passiveDisabled;
+    }
 
     public ActionConfig getConfig() {
         return config;

@@ -7,6 +7,24 @@ import java.util.List;
 public class ContextConfig extends Config {
     private String context;
     private List<SensorType> sensorType;
+    private int priority;
+    private int imuSamplingFreq;
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    public int getImuSamplingFreq() {
+        return imuSamplingFreq;
+    }
+
+    public void setImuSamplingFreq(int imuSamplingFreq) {
+        this.imuSamplingFreq = imuSamplingFreq;
+    }
 
     public String getContext() {
         return context;

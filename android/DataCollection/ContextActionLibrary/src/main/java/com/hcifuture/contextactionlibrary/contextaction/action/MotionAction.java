@@ -86,4 +86,9 @@ public class MotionAction extends BaseAction {
             return;
         }
     }
+
+    @Override
+    public String getName() {
+        return "MotionAction";
+    }
 }

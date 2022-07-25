@@ -63,7 +63,6 @@ public class CloseAction extends BaseAction {
         light_flag = CollectorStatusHolder.getInstance().getStatus(Sensor.TYPE_LIGHT);
         send_flag = false;
         reset();
-
     }
 
     @Override
@@ -203,5 +202,10 @@ public class CloseAction extends BaseAction {
                 listener.onAction(new ActionResult("Close"));
             }
         }
+    }
+
+    @Override
+    public String getName() {
+        return "CloseAction";
     }
 }

@@ -312,4 +312,9 @@ public class FlipAction extends BaseAction {
         }
     }
 
+    @Override
+    public String getName() {
+        return "FlipAction";
+    }
+
 }

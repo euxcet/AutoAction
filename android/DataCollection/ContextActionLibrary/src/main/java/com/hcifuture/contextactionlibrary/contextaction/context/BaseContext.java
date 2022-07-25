@@ -32,6 +32,8 @@ public abstract class BaseContext {
 
     protected LogCollector logCollector;
 
+    protected boolean passiveDisabled = false;
+
     public BaseContext(Context context, ContextConfig config, RequestListener requestListener, List<ContextListener> contextListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList) {
         this.mContext = context;
         this.config = config;
@@ -52,6 +54,9 @@ public abstract class BaseContext {
 
     public abstract void start();
     public abstract void stop();
+    public synchronized boolean isStarted() {
+        return isStarted;
+    }
     // public abstract void onIMUSensorChanged(SensorEvent event);
     // public abstract void onProximitySensorChanged(SensorEvent event);
     public abstract void onIMUSensorEvent(SingleIMUData data);
@@ -62,6 +67,15 @@ public abstract class BaseContext {
     public abstract void onExternalEvent(Bundle bundle);
 
     public abstract void getContext();
+    public abstract String getName();
+
+    public synchronized void setPassiveDisabled(boolean passiveDisabled) {
+        this.passiveDisabled = passiveDisabled;
+    }
+
+    public synchronized boolean isPassiveDisabled() {
+        return passiveDisabled;
+    }
 
     public ContextConfig getConfig() {
         return config;

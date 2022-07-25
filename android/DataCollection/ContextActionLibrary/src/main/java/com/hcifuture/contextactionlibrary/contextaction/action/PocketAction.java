@@ -301,4 +301,9 @@ public class PocketAction extends BaseAction {
         }
          */
     }
+
+    @Override
+    public String getName() {
+        return "PocketAction";
+    }
 }

@@ -183,13 +183,15 @@ public class TopTapAction extends BaseAction {
 
     @Override
     public void onExternalEvent(Bundle bundle) {
-        switch (bundle.getString("type")) {
-            case "TopTapGuideStart":
-                inGuide = true;
-                break;
-            case "TopTapGuideStop":
-                inGuide = false;
-                break;
+        if (bundle.containsKey("type")) {
+            switch (bundle.getString("type")) {
+                case "TopTapGuideStart":
+                    inGuide = true;
+                    break;
+                case "TopTapGuideStop":
+                    inGuide = false;
+                    break;
+            }
         }
     }
 
@@ -430,5 +432,10 @@ public class TopTapAction extends BaseAction {
             }
         }
          */
+    }
+
+    @Override
+    public String getName() {
+        return "TopTapAction";
     }
 }
