@@ -86,3 +86,4 @@ lint/tmp/
 
 .DS_Store
 .*.swp
+__data/
