@@ -53,7 +53,7 @@ public class CameraController {
         mActivity = activity;
     }
 
-    public void initialize(boolean open) {
+    public void initialize(boolean open, int lensFacing) {
         Log.d("CameraController.initialize()", "Camera init called.");
         cameraPreview = mActivity.findViewById(R.id.camera_preview);
         cameraProviderFuture = ProcessCameraProvider.getInstance(mActivity);
@@ -62,7 +62,7 @@ public class CameraController {
                 mCameraProvider = cameraProviderFuture.get();
                 preview = new Preview.Builder().build();
                 cameraSelector = new CameraSelector.Builder()
-                        .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+                        .requireLensFacing(lensFacing)
                         .build();
                 preview.setSurfaceProvider(cameraPreview.getSurfaceProvider());
                 QualitySelector qualitySelector = QualitySelector.fromOrderedList(Arrays.asList(
@@ -81,9 +81,9 @@ public class CameraController {
         }, ContextCompat.getMainExecutor(mActivity));
     }
 
-    public void openCamera() {
+    public void openCamera(int lensFacing) {
         if (mCameraProvider == null) {
-            initialize(true);
+            initialize(true, lensFacing);
         }
     }
 

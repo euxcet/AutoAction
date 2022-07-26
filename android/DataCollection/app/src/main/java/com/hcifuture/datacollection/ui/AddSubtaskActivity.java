@@ -32,6 +32,7 @@ public class AddSubtaskActivity extends AppCompatActivity {
     private EditText mEditTextDuration;
     private CheckBox mCheckboxVideo;
     private CheckBox mCheckboxAudio;
+    private CheckBox mCheckboxFacing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +47,7 @@ public class AddSubtaskActivity extends AppCompatActivity {
         mEditTextDuration = findViewById(R.id.add_subtask_edit_text_duration);
         mCheckboxVideo = findViewById(R.id.add_subtask_video_switch);
         mCheckboxAudio = findViewById(R.id.add_subtask_audio_switch);
+        mCheckboxFacing = findViewById(R.id.add_subtask_video_facing);
 
         Button btnAdd = findViewById(R.id.add_subtask_btn_add);
         Button btnCancel = findViewById(R.id.add_subtask_btn_cancel);
@@ -68,7 +70,8 @@ public class AddSubtaskActivity extends AppCompatActivity {
                         Integer.parseInt(mEditTextTimes.getText().toString()),
                         Integer.parseInt(mEditTextDuration.getText().toString()),
                         mCheckboxAudio.isChecked(),
-                        mCheckboxVideo.isChecked()
+                        mCheckboxVideo.isChecked(),
+                        mCheckboxFacing.isChecked() ? 0 : 1
                 );
                 mTaskList.getTasks().get(task_id).addSubtask(newSubtask);
 

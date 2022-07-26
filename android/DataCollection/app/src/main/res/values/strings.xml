@@ -43,6 +43,7 @@
     <string name="task_duration_label">单次时长(ms)</string>
     <string name="default_task_duration">3000</string>
     <string name="task_video_switch_label">是否开启摄像头</string>
+    <string name="task_video_facing_label">开启前置摄像头</string>
     <string name="task_audio_switch_label">是否开启麦克风</string>
     <string name="btn_add_task">Add</string>
     <string name="btn_modify_task">Modify</string>

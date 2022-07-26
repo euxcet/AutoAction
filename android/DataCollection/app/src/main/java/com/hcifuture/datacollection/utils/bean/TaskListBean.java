@@ -167,14 +167,24 @@ public class TaskListBean implements Serializable {
             private int duration;
             private boolean audio;
             private boolean video;
+            private int lensFacing;
 
-            public Subtask(String id, String name, int times, int duration, boolean audio, boolean video) {
+            public Subtask(String id, String name, int times, int duration, boolean audio, boolean video, int lensFacing) {
                 this.id = id;
                 this.name = name;
                 this.times = times;
                 this.duration = duration;
                 this.audio = audio;
                 this.video = video;
+                this.lensFacing = lensFacing;
+            }
+
+            public void setLensFacing(int lensFacing) {
+                this.lensFacing = lensFacing;
+            }
+
+            public int getLensFacing() {
+                return lensFacing;
             }
 
             public void setTimes(int times) {

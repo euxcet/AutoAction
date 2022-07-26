@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -65,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean mIsVideo;
     private boolean mIsAudio;
+    private int mLensFacing;
 
     private CheckBox mVideoSwitch;
     private CheckBox mAudioSwitch;
@@ -257,6 +259,11 @@ public class MainActivity extends AppCompatActivity {
                 mTotalTics = currentSubtask.getTimes();
                 updateTaskCounter();
                 // modified, only depend on the subtask
+                if (mIsVideo && mLensFacing != currentSubtask.getLensFacing()) {
+                    mRecorder.setCamera(false, 0);
+                    mRecorder.setCamera(mIsVideo, currentSubtask.getLensFacing());
+                }
+                mLensFacing = currentSubtask.getLensFacing();
                 mIsVideo = currentSubtask.isVideo();
                 mVideoSwitch.setChecked(mIsVideo);
                 mIsAudio = currentSubtask.isAudio();
@@ -271,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
         // video switch
         mVideoSwitch = findViewById(R.id.video_switch);
         mVideoSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
-            mRecorder.setCamera(b);
+            mRecorder.setCamera(b, mLensFacing);
         });
         mVideoSwitch.setEnabled(false); // disabled
 

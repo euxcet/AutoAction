@@ -31,6 +31,7 @@ public class ModifySubtaskActivity extends AppCompatActivity {
     private EditText mEditTextDuration;
     private CheckBox mCheckboxVideo;
     private CheckBox mCheckboxAudio;
+    private CheckBox mCheckboxFacing;
 
     private int mTaskId;
     private int mSubtaskId;
@@ -51,6 +52,7 @@ public class ModifySubtaskActivity extends AppCompatActivity {
         mEditTextDuration = findViewById(R.id.modify_subtask_edit_text_duration);
         mCheckboxVideo = findViewById(R.id.modify_subtask_video_switch);
         mCheckboxAudio = findViewById(R.id.modify_subtask_audio_switch);
+        mCheckboxFacing = findViewById(R.id.modify_subtask_video_facing);
 
         Button btnModify = findViewById(R.id.modify_subtask_btn_modify);
         Button btnCancel = findViewById(R.id.modify_subtask_btn_cancel);
@@ -76,6 +78,7 @@ public class ModifySubtaskActivity extends AppCompatActivity {
                 mEditTextDuration.setText(String.valueOf(subtask.getDuration()));
                 mCheckboxVideo.setChecked(subtask.isVideo());
                 mCheckboxAudio.setChecked(subtask.isAudio());
+                mCheckboxFacing.setChecked(subtask.getLensFacing() == 0);
             }
         });
     }
@@ -87,6 +90,7 @@ public class ModifySubtaskActivity extends AppCompatActivity {
         subtask.setDuration(Integer.parseInt(mEditTextDuration.getText().toString()));
         subtask.setVideo(mCheckboxVideo.isChecked());
         subtask.setAudio(mCheckboxAudio.isChecked());
+        subtask.setLensFacing(mCheckboxFacing.isChecked() ? 0 : 1);
 
         NetworkUtils.updateTaskList(mContext, mTaskList, 0, new StringCallback() {
             @Override
