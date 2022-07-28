@@ -49,7 +49,7 @@ def get_subtask_path(taskListId, taskId, subtaskId):
     return os.path.join(get_task_path(taskListId, taskId), subtaskId)
 
 def get_recordlist_path(taskListId, taskId, subtaskId):
-    return os.path.join(get_subtask_path(taskListId, taskId, subtaskId), 'recordlist.txt')
+    return os.path.join(get_subtask_path(taskListId, taskId, subtaskId), 'recordlist.json')
 
 def get_record_path(taskListId, taskId, subtaskId, recordId):
     return os.path.join(get_subtask_path(taskListId, taskId, subtaskId), recordId)
@@ -118,10 +118,23 @@ def load_recordlist(taskListId, taskId, subtaskId):
                 recordlist.append(recordId)
     return recordlist
 
-def append_recordlist(taskListId, taskId, subtaskId, recordId):
-    recordlist_path = get_recordlist_path(taskListId, taskId, subtaskId)
-    with open(recordlist_path, 'a') as f:
-        f.write(recordId.strip() + '\n')
+def append_recordlist(taskListId, taskId, subtaskId, userName, recordId):
+    record_list_path = get_recordlist_path(taskListId, taskId, subtaskId)
+    if not os.path.exists(record_list_path):
+        save_json([], record_list_path)
+    record_list:list = json.load(open(record_list_path, 'r'))
+    record_list.append({'user_name': userName, 'record_id': recordId})
+    save_json(record_list, record_list_path)  
+
+def delete_recordlist(taskListId, taskId, subtaskId, recordId):
+    record_list_path = get_recordlist_path(taskListId, taskId, subtaskId)
+    if not os.path.exists(record_list_path): return
+    record_list:list = json.load(open(record_list_path, 'r'))
+    new_record_list = []
+    for record in record_list:
+        if record['record_id'] != recordId:
+            new_record_list.append(record)
+    save_json(new_record_list, record_list_path)
 
 def allowed_file(filename):
     return os.path.splitext(filename)[-1] in ['.json', '.mp4', '.bin', '.csv', '.param', '.dex', '.jar']
@@ -189,3 +202,26 @@ def create_default_files():
     default_tasklist_dst = os.path.join(DATA_RECORD_ROOT, DEFAULT_TASKLIST_ID)
     if os.path.exists(default_tasklist_src) and not os.path.exists(default_tasklist_dst):
         shutil.copytree(default_tasklist_src, default_tasklist_dst)
+        
+
+if __name__ == '__main__':
+    ''' This code section convert all 'recordlist.txt' to 'recordlist.json',
+        user_name = 'DefaultUser'.
+        Should be removed after patching.
+    '''
+    root = '../data/record/TL13r912je'
+    for dir, dir_names, file_names in os.walk(root):
+        for file_name in file_names:
+            if file_name == 'recordlist.txt':
+                txt_path = os.path.join(dir, file_name)
+                json_path = os.path.join(dir, 'recordlist.json')
+                record_list = []
+                with open(txt_path, 'r') as f:
+                    while True:
+                        record_id = f.readline().strip()
+                        if not record_id: break
+                        record_list.append({'user_name': 'DefaultUser', 'record_id': record_id})
+                save_json(record_list, json_path)
+                os.remove(txt_path)
+                print(f'converted {txt_path} to json file')
+    

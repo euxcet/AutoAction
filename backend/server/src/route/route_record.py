@@ -75,12 +75,13 @@ def add_record():
     taskListId = request.form.get("taskListId")
     taskId = request.form.get("taskId")
     subtaskId = request.form.get("subtaskId")
+    userName = request.form.get("userName")
     recordId = request.form.get("recordId")
     timestamp = int(request.form.get("timestamp"))
     record_path = file_utils.get_record_path(taskListId, taskId, subtaskId, recordId)
     file_utils.mkdir(record_path)
     file_utils.save_json({}, os.path.join(record_path, str(timestamp)+ ".json"))
-    file_utils.append_recordlist(taskListId, taskId, subtaskId, recordId)
+    file_utils.append_recordlist(taskListId, taskId, subtaskId, userName, recordId)
     return {}
 
 '''
@@ -100,6 +101,7 @@ def delete_record():
     subtaskId = request.form.get("subtaskId")
     recordId = request.form.get("recordId")
     record_path = file_utils.get_record_path(taskListId, taskId, subtaskId, recordId)
+    file_utils.delete_recordlist(taskListId, taskId, subtaskId, recordId)
     file_utils.delete_dir(record_path)
     return {}
 

@@ -48,10 +48,9 @@ public class Recorder {
     private RecorderListener mListener;
 
     private String mRecordId;
-
     private int mTickCount = 0;
-
     private final SimpleDateFormat mDateFormat = new SimpleDateFormat("yyMMddHHmmss");
+    private String mUserName; // user name set when starting recording
 
     public Recorder(Context context, RecorderListener listener) {
         this.mContext = context;
@@ -61,6 +60,7 @@ public class Recorder {
         mLightSensorController = new LightSensorController(mContext);
         mMicrophoneController = new MicrophoneController(mContext);
         mTimestampController = new TimestampController(mContext);
+        mUserName = "DefaultUser";
         FileUtils.makeDir(BuildConfig.SAVE_PATH);
     }
 
@@ -70,14 +70,15 @@ public class Recorder {
         else mCameraController.closeCamera();
     }
 
-    public void start(String name, int taskId, int subtaskId, TaskListBean taskList) {
-        this.mTaskList = taskList;
-        this.mTask = taskList.getTasks().get(taskId);
-        this.mSubtask = mTask.getSubtasks().get(subtaskId);
-        this.mTickCount = 0;
-        this.mRecordId = RandomUtils.generateRandomRecordId();
+    public void start(String userName, int taskId, int subtaskId, TaskListBean taskList) {
+        mTaskList = taskList;
+        mTask = taskList.getTasks().get(taskId);
+        mSubtask = mTask.getSubtasks().get(subtaskId);
+        mTickCount = 0;
+        mRecordId = RandomUtils.generateRandomRecordId();
+        mUserName = userName;
 
-        createFile(name, taskId, subtaskId);
+        createFile(taskId, subtaskId);
 
         long duration = mSubtask.getDuration();
         int times = mSubtask.getTimes();
@@ -134,7 +135,7 @@ public class Recorder {
         mTimestampController.stop();
 
         NetworkUtils.addRecord(mContext, mTaskList.getId(), mTask.getId(), mSubtask.getId(),
-                mRecordId, System.currentTimeMillis(), new StringCallback() {
+                mUserName, mRecordId, System.currentTimeMillis(), new StringCallback() {
             @Override
             public void onSuccess(Response<String> response) {}
         });
@@ -152,8 +153,8 @@ public class Recorder {
         }, 2000);
     }
 
-    public void createFile(String name, int taskId, int subtaskId) {
-        String suffix = name + "_" + taskId + "_" + subtaskId + "_" + mDateFormat.format(new Date());
+    public void createFile(int taskId, int subtaskId) {
+        String suffix = mUserName + "_" + taskId + "_" + subtaskId + "_" + mDateFormat.format(new Date());
         mTimestampFile = new File(BuildConfig.SAVE_PATH, "Timestamp_" + suffix + ".json");
         mMotionSensorFile = new File(BuildConfig.SAVE_PATH, "Motion_" + suffix + ".bin");
         if (mLightSensorController.isAvailable())
