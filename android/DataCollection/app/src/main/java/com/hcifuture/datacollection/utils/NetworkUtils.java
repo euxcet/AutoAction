@@ -84,12 +84,14 @@ public class NetworkUtils {
                 .execute(callback);
     }
 
-    public static void addRecord(Context context, String taskListId, String taskId, String subtaskId, String recordId, long timestamp, StringCallback callback) {
+    public static void addRecord(Context context, String taskListId, String taskId, String subtaskId,
+                                 String userName, String recordId, long timestamp, StringCallback callback) {
         OkGo.<String>post(RECORD_URL)
                 .tag(context)
                 .params("taskListId", taskListId)
                 .params("taskId", taskId)
                 .params("subtaskId", subtaskId)
+                .params("userName", userName)
                 .params("recordId", recordId)
                 .params("timestamp", timestamp)
                 .isMultipart(true)
