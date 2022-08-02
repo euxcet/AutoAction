@@ -259,7 +259,8 @@ public class MainActivity extends AppCompatActivity {
                 mTotalTics = currentSubtask.getTimes();
                 updateTaskCounter();
                 // modified, only depend on the subtask
-                if (mIsVideo && mLensFacing != currentSubtask.getLensFacing()) {
+                if (mIsVideo && currentSubtask.isVideo() && mLensFacing != currentSubtask.getLensFacing()) {
+                    Log.e("Camera","tt   " + mIsVideo + " " + mLensFacing);
                     mRecorder.setCamera(false, 0);
                     mRecorder.setCamera(mIsVideo, currentSubtask.getLensFacing());
                 }
@@ -278,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
         // video switch
         mVideoSwitch = findViewById(R.id.video_switch);
         mVideoSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
+            Log.e("Camera", b + " " + mLensFacing);
             mRecorder.setCamera(b, mLensFacing);
         });
         mVideoSwitch.setEnabled(false); // disabled

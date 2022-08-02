@@ -38,3 +38,4 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+__data/
