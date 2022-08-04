@@ -24,7 +24,7 @@ import com.hcifuture.shared.communicate.result.ActionResult;
 import java.io.File;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
@@ -45,17 +45,17 @@ public class TopTapAction extends BaseAction {
 
     private long SAMPLINGINTERVALNS = 10000000L;
     private long WINDOW_NS = 400000000L;
-    private int size = 40;
+    private int size = 40;  // WINDOW_NS / SAMPLINGINTERVALNS
 
     private boolean gotAcc = false;
     private boolean gotGyro = false;
     private long syncTime = 0L;
-    private List<Float> xsAcc = Collections.synchronizedList(new ArrayList<>());
-    private List<Float> ysAcc = Collections.synchronizedList(new ArrayList<>());
-    private List<Float> zsAcc = Collections.synchronizedList(new ArrayList<>());
-    private List<Float> xsGyro = Collections.synchronizedList(new ArrayList<>());
-    private List<Float> ysGyro = Collections.synchronizedList(new ArrayList<>());
-    private List<Float> zsGyro = Collections.synchronizedList(new ArrayList<>());
+    private float[] xsAcc = new float[size];
+    private float[] ysAcc = new float[size];
+    private float[] zsAcc = new float[size];
+    private float[] xsGyro = new float[size];
+    private float[] ysGyro = new float[size];
+    private float[] zsGyro = new float[size];
     private long lastTimestamp = 0L;
 
     private Highpass1C highpassKeyPositive = new Highpass1C();
@@ -106,12 +106,12 @@ public class TopTapAction extends BaseAction {
         gotAcc = false;
         gotGyro = false;
         syncTime = 0L;
-        xsAcc.clear();
-        ysAcc.clear();
-        zsAcc.clear();
-        xsGyro.clear();
-        ysGyro.clear();
-        zsGyro.clear();
+        Arrays.fill(xsAcc, 0);
+        Arrays.fill(ysAcc, 0);
+        Arrays.fill(zsAcc, 0);
+        Arrays.fill(xsGyro, 0);
+        Arrays.fill(ysGyro, 0);
+        Arrays.fill(zsGyro, 0);
         lastTimestamp = 0L;
         inGuide = false;
     }
@@ -196,31 +196,24 @@ public class TopTapAction extends BaseAction {
     }
 
     private void processAccAndKeySignal(float x, float y, float z, long t, long samplingInterval) {
-        xsAcc.add(x);
-        ysAcc.add(y);
-        zsAcc.add(z);
+        System.arraycopy(xsAcc, 1, xsAcc, 0, size - 1);
+        System.arraycopy(ysAcc, 1, ysAcc, 0, size - 1);
+        System.arraycopy(zsAcc, 1, zsAcc, 0, size - 1);
+        xsAcc[size - 1] = x;
+        ysAcc[size - 1] = y;
+        zsAcc[size - 1] = z;
         lastTimestamp = t;
-
-        while(xsAcc.size() > size) {
-            xsAcc.remove(0);
-            ysAcc.remove(0);
-            zsAcc.remove(0);
-        }
-
         peakDetectorPositive.update(highpassKeyPositive.update(lowpassKeyPositive.update(z)));
         peakDetectorNegative.update(-highpassKeyNegative.update(lowpassKeyNegative.update(y)));
     }
 
     private void processGyro(float x, float y, float z, long samplingInterval) {
-        xsGyro.add(x);
-        ysGyro.add(y);
-        zsGyro.add(z);
-
-        while(xsGyro.size() > size) {
-            xsGyro.remove(0);
-            ysGyro.remove(0);
-            zsGyro.remove(0);
-        }
+        System.arraycopy(xsGyro, 1, xsGyro, 0, size - 1);
+        System.arraycopy(ysGyro, 1, ysGyro, 0, size - 1);
+        System.arraycopy(zsGyro, 1, zsGyro, 0, size - 1);
+        xsGyro[size - 1] = x;
+        ysGyro[size - 1] = y;
+        zsGyro[size - 1] = z;
     }
 
     private ArrayList<Float> getInput(int idx) {
@@ -234,14 +227,12 @@ public class TopTapAction extends BaseAction {
         return res;
     }
 
-    private void addFeatureData(List<Float> list, int startIdx, int scale, List<Float> res) {
-        synchronized (list) {
-            for (int i = 0; i < seqLength; i++) {
-                if (i + startIdx >= list.size())
-                    res.add(0.0F);
-                else
-                    res.add(scale * list.get(i + startIdx));
-            }
+    private void addFeatureData(float[] list, int startIdx, int scale, List<Float> res) {
+        for (int i = 0; i < seqLength; i++) {
+            if (i + startIdx >= size)
+                res.add(0.0F);
+            else
+                res.add(scale * list[i + startIdx]);
         }
     }
 

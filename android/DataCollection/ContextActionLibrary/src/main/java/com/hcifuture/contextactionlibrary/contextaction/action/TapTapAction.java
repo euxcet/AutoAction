@@ -31,7 +31,7 @@ import com.hcifuture.shared.communicate.result.ActionResult;
 import java.io.File;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
@@ -52,6 +52,7 @@ public class TapTapAction extends BaseAction {
 
     private long SAMPLINGINTERVALNS = 2500000L;
     private long WINDOW_NS = 160000000L;
+    private int size = 64;  // WINDOW_NS / SAMPLINGINTERVALNS
 
     private boolean gotAcc = false;
     private boolean gotGyro = false;
@@ -64,12 +65,12 @@ public class TapTapAction extends BaseAction {
     protected Slope3C slopeAcc = new Slope3C();
     protected Slope3C slopeGyro = new Slope3C();
     private long syncTime = 0L;
-    private List<Float> xsAcc = Collections.synchronizedList(new ArrayList<>());
-    private List<Float> ysAcc = Collections.synchronizedList(new ArrayList<>());
-    private List<Float> zsAcc = Collections.synchronizedList(new ArrayList<>());
-    private List<Float> xsGyro = Collections.synchronizedList(new ArrayList<>());
-    private List<Float> ysGyro = Collections.synchronizedList(new ArrayList<>());
-    private List<Float> zsGyro = Collections.synchronizedList(new ArrayList<>());
+    private float[] xsAcc = new float[size];
+    private float[] ysAcc = new float[size];
+    private float[] zsAcc = new float[size];
+    private float[] xsGyro = new float[size];
+    private float[] ysGyro = new float[size];
+    private float[] zsGyro = new float[size];
     private long lastTimestamp = 0L;
 
     private Highpass1C highpassKey = new Highpass1C();
@@ -117,12 +118,12 @@ public class TapTapAction extends BaseAction {
         gotAcc = false;
         gotGyro = false;
         syncTime = 0L;
-        xsAcc.clear();
-        ysAcc.clear();
-        zsAcc.clear();
-        xsGyro.clear();
-        ysGyro.clear();
-        zsGyro.clear();
+        Arrays.fill(xsAcc, 0);
+        Arrays.fill(ysAcc, 0);
+        Arrays.fill(zsAcc, 0);
+        Arrays.fill(xsGyro, 0);
+        Arrays.fill(ysGyro, 0);
+        Arrays.fill(zsGyro, 0);
         lastTimestamp = 0L;
         inGuide = false;
     }
@@ -249,34 +250,25 @@ public class TapTapAction extends BaseAction {
         Sample3C sample = resampleAcc.getResults();
         Point3f point1 = slopeAcc.update(sample.point, 2500000.0F / (float)resampleAcc.getInterval());
         Point3f point3 = highpassAcc.update(lowpassAcc.update(point1));
-        xsAcc.add(point3.x);
-        ysAcc.add(point3.y);
-        zsAcc.add(point3.z);
+        System.arraycopy(xsAcc, 1, xsAcc, 0, size - 1);
+        System.arraycopy(ysAcc, 1, ysAcc, 0, size - 1);
+        System.arraycopy(zsAcc, 1, zsAcc, 0, size - 1);
+        xsAcc[size - 1] = point3.x;
+        ysAcc[size - 1] = point3.y;
+        zsAcc[size - 1] = point3.z;
         lastTimestamp = sample.t;
-        int size = (int)(WINDOW_NS / resampleAcc.getInterval());
-
-        while(xsAcc.size() > size) {
-            xsAcc.remove(0);
-            ysAcc.remove(0);
-            zsAcc.remove(0);
-        }
-
         peakDetectorPositive.update(highpassKey.update(lowpassKey.update(point1.z)));
     }
 
     private void processGyro() {
         Point3f point = resampleGyro.getResults().point;
         point = highpassGyro.update(lowpassGyro.update(slopeGyro.update(point, 2500000.0F / (float)resampleGyro.getInterval())));
-        xsGyro.add(point.x);
-        ysGyro.add(point.y);
-        zsGyro.add(point.z);
-        int size = (int)(WINDOW_NS / resampleGyro.getInterval());
-
-        while(xsGyro.size() > size) {
-            xsGyro.remove(0);
-            ysGyro.remove(0);
-            zsGyro.remove(0);
-        }
+        System.arraycopy(xsGyro, 1, xsGyro, 0, size - 1);
+        System.arraycopy(ysGyro, 1, ysGyro, 0, size - 1);
+        System.arraycopy(zsGyro, 1, zsGyro, 0, size - 1);
+        xsGyro[size - 1] = point.x;
+        ysGyro[size - 1] = point.y;
+        zsGyro[size - 1] = point.z;
     }
 
     private ArrayList<Float> getInput(int accIdx, int gyroIdx) {
@@ -290,17 +282,15 @@ public class TapTapAction extends BaseAction {
         return res;
     }
 
-    private void addFeatureData(List<Float> list, int startIdx, int scale, List<Float> res) {
-        synchronized (list) {
-            for (int i = 0; i < seqLength; i++) {
-                if (i + startIdx >= list.size())
-                    res.add(0.0F);
-                else
-                    res.add(scale * list.get(i + startIdx));
-            }
+    private void addFeatureData(float[] list, int startIdx, int scale, List<Float> res) {
+        for (int i = 0; i < seqLength; i++) {
+            if (i + startIdx >= size)
+                res.add(0.0F);
+            else
+                res.add(scale * list[i + startIdx]);
         }
     }
-    
+
     private synchronized int checkDoubleTapTiming(long timestamp) {
         Iterator iter = tapTimestamps.iterator();
         while (iter.hasNext()) {
@@ -338,7 +328,7 @@ public class TapTapAction extends BaseAction {
         int accIdx = peakIdx - 6;
         int gyroIdx = accIdx - diff;
         if (accIdx >= 0 && gyroIdx >= 0) {
-            if (accIdx + seqLength < zsAcc.size() && gyroIdx + seqLength < zsAcc.size() && wasPeakApproaching && peakIdx <= 12) {
+            if (accIdx + seqLength < size && gyroIdx + seqLength < size && wasPeakApproaching && peakIdx <= 12) {
                 wasPeakApproaching = false;
                 result = Util.getMaxId(tflite.predict(getInput(accIdx, gyroIdx), 7).get(0));
             }
