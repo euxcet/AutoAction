@@ -9,13 +9,14 @@ from ml.train.train import train_model
 from ml.global_vars import GlobalVars
 
 class TrainProcess(Process):
-    def __init__(self, train_info_path, taskListId, taskIdList, trainId, timestamp):
+    def __init__(self, train_info_path, taskListId, taskIdList, trainId, timestamp, dataset_version='0.2'):
         super(TrainProcess, self).__init__()
         self.train_info_path = train_info_path
         self.taskListId = taskListId
         self.taskIdList = taskIdList
         self.trainId = trainId
         self.timestamp = timestamp
+        self.dataset_version = dataset_version
 
     def get_trainId(self):
         return self.trainId
@@ -30,7 +31,7 @@ class TrainProcess(Process):
             Meanwhile record the training status in training info file.
         '''
         # first export csv before training
-        export_csv(self.taskListId, self.taskIdList, self.trainId, self.timestamp)
+        export_csv(self.taskListId, self.taskIdList, self.trainId, self.timestamp, self.dataset_version)
 
         # change status from 'Preprocessing' to 'Training'
         train_info = file_utils.load_json(self.train_info_path)
@@ -87,7 +88,7 @@ if __name__ == '__main__':
     trainId = 'XT9me9xq7y'
     timestamp = 142857142857
     
-    new_process = TrainProcess(train_info_path, taskListId, taskIdList, trainId, timestamp)
+    new_process = TrainProcess(train_info_path, taskListId, taskIdList, trainId, timestamp, dataset_version='0.1')
     new_process.start()
     new_process.join()
 

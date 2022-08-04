@@ -4,7 +4,6 @@ import shutil
 import hashlib
 from time import time
 from ml.record import Record
-
 DEFAULT_TASKLIST_ID = "TL13r912je"
 DEFAULT_ROOT = os.path.join("..", "assets", "default")
 DATA_ROOT = os.path.join("..", "data")
@@ -48,7 +47,9 @@ def get_task_path(taskListId, taskId):
 def get_subtask_path(taskListId, taskId, subtaskId):
     return os.path.join(get_task_path(taskListId, taskId), subtaskId)
 
-def get_recordlist_path(taskListId, taskId, subtaskId):
+def get_recordlist_path(taskListId, taskId, subtaskId, dataset_version):
+    if dataset_version == '0.1':
+        return os.path.join(get_subtask_path(taskListId, taskId, subtaskId), 'recordlist.txt')
     return os.path.join(get_subtask_path(taskListId, taskId, subtaskId), 'recordlist.json')
 
 def get_record_path(taskListId, taskId, subtaskId, recordId):
@@ -105,17 +106,25 @@ def load_taskList_info(taskListId, timestamp = None):
         data = json.load(f)
         return data
 
-def load_recordlist(taskListId, taskId, subtaskId):
-    recordlist_path = get_recordlist_path(taskListId, taskId, subtaskId)
+def load_recordlist(taskListId, taskId, subtaskId, dataset_version):
+    recordlist_path = get_recordlist_path(taskListId, taskId, subtaskId, dataset_version)
     if not os.path.exists(recordlist_path):
         return []
+
     recordlist = []
-    with open(recordlist_path, 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            recordId = line.strip()
-            if recordId.startswith('RD') and recordId not in recordlist:
-                recordlist.append(recordId)
+    if dataset_version == '0.1':
+        with open(recordlist_path, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                recordId = line.strip()
+                if recordId.startswith('RD') and recordId not in recordlist:
+                    recordlist.append(recordId)
+    else:
+        with open(recordlist_path, 'r') as fin:
+            records = json.load(fin)
+            for record in records:
+                recordlist.append(record['record_id'])
+        
     return recordlist
 
 def append_recordlist(taskListId, taskId, subtaskId, userName, recordId):

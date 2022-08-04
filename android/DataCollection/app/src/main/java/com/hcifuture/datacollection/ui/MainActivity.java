@@ -260,7 +260,6 @@ public class MainActivity extends AppCompatActivity {
                 updateTaskCounter();
                 // modified, only depend on the subtask
                 if (mIsVideo && currentSubtask.isVideo() && mLensFacing != currentSubtask.getLensFacing()) {
-                    Log.e("Camera","tt   " + mIsVideo + " " + mLensFacing);
                     mRecorder.setCamera(false, 0);
                     mRecorder.setCamera(mIsVideo, currentSubtask.getLensFacing());
                 }

@@ -6,7 +6,7 @@ from ml.cutter.random_cutter import RandomCutter
 from ml.dataset import Dataset
 from ml.global_vars import GlobalVars
 
-def export_csv(tasklistId, taskIds, trainId, timestamp):
+def export_csv(tasklistId, taskIds, trainId, timestamp, dataset_version='0.2'):
     dataset = Dataset()
     cutter_dict = {
         'peak': [PeakCutter('linear_acc', forward=100,
@@ -24,7 +24,7 @@ def export_csv(tasklistId, taskIds, trainId, timestamp):
         for subtask in task['subtasks']:
             subtaskId = subtask['id']
             # a list of record id
-            recordlist = file_utils.load_recordlist(tasklistId, taskId, subtaskId)
+            recordlist = file_utils.load_recordlist(tasklistId, taskId, subtaskId, dataset_version)
             for recordId in recordlist:
                 group_name = task['name']
                 group_id = taskIds.index(taskId)
