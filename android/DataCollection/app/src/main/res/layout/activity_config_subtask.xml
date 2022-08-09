@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.ConfigSubtaskActivity">
+    tools:context=".ui.config.ConfigSubtaskActivity">
 
     <TextView
         android:id="@+id/config_subtask_title"

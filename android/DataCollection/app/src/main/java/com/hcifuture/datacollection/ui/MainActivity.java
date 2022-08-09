@@ -22,6 +22,8 @@ import android.widget.TextView;
 import com.hcifuture.datacollection.R;
 import com.hcifuture.datacollection.inference.Inferencer;
 import com.hcifuture.datacollection.service.MainService;
+import com.hcifuture.datacollection.ui.config.ConfigTaskActivity;
+import com.hcifuture.datacollection.ui.register.TestModelActivity;
 import com.hcifuture.datacollection.utils.GlobalVariable;
 import com.hcifuture.datacollection.utils.bean.TaskListBean;
 import com.hcifuture.datacollection.data.Recorder;

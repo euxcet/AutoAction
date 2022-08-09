@@ -25,10 +25,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Inferencer {
     private static volatile Inferencer instance;
+    private final String mMobileNetName = "mobilenet.mnn";
     private final String mModelFileName = "best.mnn";
     private final String mLabelFileName = "label.txt";
     private String mModelPath;
     private String mLabelPath;
+    private String mMobileNetPath;
 
     private List<String> label;
 
@@ -119,15 +121,29 @@ public class Inferencer {
             }
 
             label = FileUtils.readLines(mLabelPath);
-            Log.e("MNN", label + " ");
 
-            mNetInstance = MNNNetInstance.createFromFile(mModelPath);
+            mNetInstance = MNNNetInstance.createFromFile(mMobileNetPath);
             mSession = mNetInstance.createSession(mConfig);
             mInputTensor = mSession.getInput(null);
             isStarted.set(true);
         } finally {
             lock.unlock();
         }
+    }
+
+    public int inferenceMobileNet(float[] data) {
+        if (isStarted.get()) {
+            try {
+                lock.lock();
+                mInputTensor.setInputFloatData(data);
+                mSession.run();
+                MNNNetInstance.Session.Tensor outputTensor = mSession.getOutput(null);
+                float[] result = outputTensor.getFloatData();
+            } finally {
+                lock.unlock();
+            }
+        }
+        return -1;
     }
 
     public int inference(float[] data) {
@@ -138,7 +154,6 @@ public class Inferencer {
                 mSession.run();
                 MNNNetInstance.Session.Tensor outputTensor = mSession.getOutput(null);
                 float[] result = outputTensor.getFloatData();
-                Log.e("MNN", result.length + "   " + result[0] + " " + result[1] + " " + result[2]);
             } finally {
                 lock.unlock();
             }
@@ -150,9 +165,11 @@ public class Inferencer {
     private void prepareModel(Context context) {
         mModelPath = context.getCacheDir() + "best.mnn";
         mLabelPath = context.getCacheDir() + "label.txt";
+        mMobileNetPath = context.getCacheDir() + "mobilenet.mnn";
         try {
             Common.copyAssetResource2File(context, mModelFileName, mModelPath);
             Common.copyAssetResource2File(context, mLabelFileName, mLabelPath);
+            Common.copyAssetResource2File(context, mMobileNetName, mMobileNetPath);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

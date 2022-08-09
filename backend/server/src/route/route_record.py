@@ -35,7 +35,7 @@ def get_record_list():
             c_subtaskId = subtask['id']
             if subtaskId is not None and subtaskId != "0" and c_subtaskId != subtaskId:
                 continue
-            recordlist_path = file_utils.get_recordlist_path(taskListId, c_taskId, c_subtaskId)
+            recordlist_path = file_utils.get_recordlist_path(taskListId, c_taskId, c_subtaskId, dataset_version="0.2")
             if os.path.exists(recordlist_path):
                 with open(recordlist_path, 'r') as fin:
                     lines = fin.readlines()

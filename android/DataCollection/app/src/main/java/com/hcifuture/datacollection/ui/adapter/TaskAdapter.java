@@ -13,7 +13,7 @@ import android.widget.TextView;
 import com.hcifuture.datacollection.R;
 import com.hcifuture.datacollection.ui.NormalAlertDialog;
 import com.hcifuture.datacollection.utils.bean.TaskListBean;
-import com.hcifuture.datacollection.ui.ConfigSubtaskActivity;
+import com.hcifuture.datacollection.ui.config.ConfigSubtaskActivity;
 import com.hcifuture.datacollection.utils.NetworkUtils;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;

@@ -47,7 +47,7 @@ def get_task_path(taskListId, taskId):
 def get_subtask_path(taskListId, taskId, subtaskId):
     return os.path.join(get_task_path(taskListId, taskId), subtaskId)
 
-def get_recordlist_path(taskListId, taskId, subtaskId, dataset_version):
+def get_recordlist_path(taskListId, taskId, subtaskId, dataset_version='0.2'):
     if dataset_version == '0.1':
         return os.path.join(get_subtask_path(taskListId, taskId, subtaskId), 'recordlist.txt')
     return os.path.join(get_subtask_path(taskListId, taskId, subtaskId), 'recordlist.json')

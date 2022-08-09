@@ -11,7 +11,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.hcifuture.datacollection.R;
-import com.hcifuture.datacollection.ui.ModifySubtaskActivity;
+import com.hcifuture.datacollection.ui.config.ModifySubtaskActivity;
 import com.hcifuture.datacollection.ui.NormalAlertDialog;
 import com.hcifuture.datacollection.utils.bean.TaskListBean;
 import com.hcifuture.datacollection.utils.NetworkUtils;

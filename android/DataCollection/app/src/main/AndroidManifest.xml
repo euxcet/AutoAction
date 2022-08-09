@@ -40,7 +40,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".ui.TestModelActivity"
+            android:name=".ui.register.TestModelActivity"
             android:exported="false" />
         <activity
             android:name=".visual.VisualizeTrainLogActivity"
@@ -57,10 +57,10 @@
             android:name=".visual.RecordListActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ModifySubtaskActivity"
+            android:name=".ui.config.ModifySubtaskActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ModifyTaskActivity"
+            android:name=".ui.config.ModifyTaskActivity"
             android:exported="false" />
 
         <service
@@ -84,16 +84,16 @@
             android:name=".ui.TrainActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.AddSubtaskActivity"
+            android:name=".ui.config.AddSubtaskActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.AddTaskActivity"
+            android:name=".ui.config.AddTaskActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ConfigSubtaskActivity"
+            android:name=".ui.config.ConfigSubtaskActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ConfigTaskActivity"
+            android:name=".ui.config.ConfigTaskActivity"
             android:exported="false" />
         <activity
             android:name=".ui.MainActivity"
