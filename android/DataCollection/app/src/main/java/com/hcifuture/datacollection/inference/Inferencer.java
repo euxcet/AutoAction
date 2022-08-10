@@ -37,10 +37,17 @@ public class Inferencer {
     private HandlerThread mThread;
     private Handler mHandler;
 
+    /*
     private MNNNetInstance mNetInstance;
     private MNNNetInstance.Session mSession;
     private MNNNetInstance.Session.Tensor mInputTensor;
+     */
     private final MNNNetInstance.Config mConfig = new MNNNetInstance.Config();
+
+    private List<String> mModelPaths;
+    private List<MNNNetInstance> mNetInstances;
+    private List<MNNNetInstance.Session> mSessions;
+    private List<MNNNetInstance.Session.Tensor> mInputTensors;
 
     private final Lock lock = new ReentrantLock();
     private AtomicBoolean isStarted = new AtomicBoolean(false);
@@ -68,7 +75,12 @@ public class Inferencer {
         mThread = new HandlerThread("MNNNet");
         mThread.start();
         mHandler = new Handler(mThread.getLooper());
-        mHandler.post(() -> prepareNet());
+        mHandler.post(() -> {
+            isStarted.set(false);
+            prepareNet(mModelPath);
+            prepareNet(mMobileNetPath);
+            isStarted.set(true);
+        });
         currentModelId = "Assets";
     }
 
@@ -77,7 +89,6 @@ public class Inferencer {
             return;
         }
         isDownloading.set(true);
-        Log.e("MNN", "use model " + trainId);
         mHandler.post(() -> {
             Toast.makeText(context, "Downloading model [" + trainId + "]", Toast.LENGTH_LONG).show();
         });
@@ -95,7 +106,7 @@ public class Inferencer {
                         File file = response.body();
                         FileUtils.copy(file, new File(mModelPath));
                         file.delete();
-                        prepareNet();
+                        prepareNet(mModelPath);
                         mHandler.post(() -> {
                             Toast.makeText(context, "Use model [" + trainId + "]", Toast.LENGTH_LONG).show();
                         });
@@ -107,53 +118,55 @@ public class Inferencer {
         });
     }
 
-    private void prepareNet() {
+    private void prepareNet(String path) {
         try {
             lock.lock();
-            isStarted.set(false);
-            if (mSession != null) {
-                mSession.release();
-                mSession = null;
+            int pos = -1;
+            for(int i = 0; i < mModelPaths.size(); i++) {
+                if (mModelPaths.get(i).equals(path)) {
+                    pos = i;
+                    break;
+                }
             }
-            if (mNetInstance != null) {
-                mNetInstance.release();
-                mNetInstance = null;
+            if (pos == -1) { // create a new model
+                MNNNetInstance netInstance = MNNNetInstance.createFromFile(path);
+                MNNNetInstance.Session session = netInstance.createSession(mConfig);
+                MNNNetInstance.Session.Tensor inputTensor = session.getInput(null);
+                mNetInstances.add(netInstance);
+                mSessions.add(session);
+                mInputTensors.add(inputTensor);
+            } else {
+                if (mSessions.get(pos) != null) {
+                    mSessions.get(pos).release();
+                }
+                if (mNetInstances.get(pos) != null) {
+                    mNetInstances.get(pos).release();
+                }
+
+                MNNNetInstance netInstance = MNNNetInstance.createFromFile(path);
+                MNNNetInstance.Session session = netInstance.createSession(mConfig);
+                MNNNetInstance.Session.Tensor inputTensor = session.getInput(null);
+                mNetInstances.set(pos, netInstance);
+                mSessions.set(pos, session);
+                mInputTensors.set(pos, inputTensor);
             }
-
-            label = FileUtils.readLines(mLabelPath);
-
-            mNetInstance = MNNNetInstance.createFromFile(mMobileNetPath);
-            mSession = mNetInstance.createSession(mConfig);
-            mInputTensor = mSession.getInput(null);
-            isStarted.set(true);
         } finally {
             lock.unlock();
         }
     }
 
-    public int inferenceMobileNet(float[] data) {
+    public int inference(String path, float[] data) {
         if (isStarted.get()) {
             try {
                 lock.lock();
-                mInputTensor.setInputFloatData(data);
-                mSession.run();
-                MNNNetInstance.Session.Tensor outputTensor = mSession.getOutput(null);
-                float[] result = outputTensor.getFloatData();
-            } finally {
-                lock.unlock();
-            }
-        }
-        return -1;
-    }
-
-    public int inference(float[] data) {
-        if (isStarted.get()) {
-            try {
-                lock.lock();
-                mInputTensor.setInputFloatData(data);
-                mSession.run();
-                MNNNetInstance.Session.Tensor outputTensor = mSession.getOutput(null);
-                float[] result = outputTensor.getFloatData();
+                for (int i = 0; i < mModelPaths.size(); i++) {
+                    if (mModelPaths.get(i).equals(path)) {
+                        mInputTensor.setInputFloatData(data);
+                        mSession.run();
+                        MNNNetInstance.Session.Tensor outputTensor = mSession.getOutput(null);
+                        float[] result = outputTensor.getFloatData();
+                    }
+                }
             } finally {
                 lock.unlock();
             }

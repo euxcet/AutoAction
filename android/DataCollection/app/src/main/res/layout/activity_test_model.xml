@@ -6,6 +6,17 @@
     android:layout_height="match_parent"
     tools:context=".ui.register.TestModelActivity">
 
+    <androidx.camera.view.PreviewView
+        android:id="@+id/camera_preview"
+        android:layout_width="155dp"
+        android:layout_height="230dp"
+        android:layout_margin="15dp"
+        android:layout_marginStart="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.993" />
+
     <TextView
         android:id="@+id/modelIdTextView"
         android:layout_width="wrap_content"

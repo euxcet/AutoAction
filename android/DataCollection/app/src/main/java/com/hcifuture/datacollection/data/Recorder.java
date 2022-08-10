@@ -66,7 +66,7 @@ public class Recorder {
 
     // open or close the camera
     public void setCamera(boolean b, int lensFacing) {
-        if (b) mCameraController.openCamera(lensFacing);
+        if (b) mCameraController.openCamera(lensFacing, true);
         else mCameraController.closeCamera();
     }
 

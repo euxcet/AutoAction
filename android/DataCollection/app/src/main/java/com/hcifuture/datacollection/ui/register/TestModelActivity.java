@@ -6,8 +6,12 @@ import android.os.Bundle;
 import android.widget.TextView;
 
 import com.hcifuture.datacollection.R;
+import com.hcifuture.datacollection.data.CameraController;
 import com.hcifuture.datacollection.inference.IMUSensorManager;
 import com.hcifuture.datacollection.inference.Inferencer;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * The activity to test a model.
@@ -15,14 +19,20 @@ import com.hcifuture.datacollection.inference.Inferencer;
  */
 public class TestModelActivity extends AppCompatActivity {
 
-    private IMUSensorManager imuSensorManager;
+    private AppCompatActivity mActivity;
+    private IMUSensorManager mImuSensorManager;
+    private CameraController mCameraController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test_model);
-        imuSensorManager = new IMUSensorManager(this);
-        imuSensorManager.start();
+//        mImuSensorManager = new IMUSensorManager(this);
+        mActivity = this;
+
+        mCameraController = new CameraController(mActivity);
+        mCameraController.openCamera(1, false);
+
         TextView modelIdView = findViewById(R.id.modelIdTextView);
         modelIdView.setText("Model Id: " + Inferencer.getInstance().getCurrentModelId());
         TextView labelView = findViewById(R.id.labelTextView);
@@ -32,24 +42,24 @@ public class TestModelActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (imuSensorManager != null) {
-            imuSensorManager.stop();
+        if (mImuSensorManager != null) {
+            mImuSensorManager.stop();
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (imuSensorManager != null) {
-            imuSensorManager.start();
+        if (mImuSensorManager != null) {
+            mImuSensorManager.start();
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (imuSensorManager != null) {
-            imuSensorManager.stop();
+        if (mImuSensorManager != null) {
+            mImuSensorManager.stop();
         }
     }
 }
