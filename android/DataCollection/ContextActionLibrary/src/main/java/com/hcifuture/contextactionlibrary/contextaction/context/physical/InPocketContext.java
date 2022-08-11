@@ -37,6 +37,9 @@ public class InPocketContext extends BaseContext {
     private boolean oriOk = false;
     private boolean lightOk = false;
 
+    private float upThreshold = 0.0F;
+    private float downThreshold = 0.5F;
+
     private boolean keep3s = false;
     private int lastOri = 0;
     private long lastDownTimestamp = 0, lastUpTimestamp = Long.MAX_VALUE, lastZeroTimestamp = 0;
@@ -81,9 +84,9 @@ public class InPocketContext extends BaseContext {
     private int checkOrientation() {
         int downNum = 0, upNum = 0;
         for (int i = 0; i < ORIENTATION_CHECK_NUMBER; i++) {
-            if (orientationMark[i][1] > 0.5)
+            if (orientationMark[i][1] > downThreshold)
                 downNum++;
-            else if (orientationMark[i][1] < 0)
+            else if (orientationMark[i][1] < upThreshold)
                 upNum++;
         }
         if (downNum >= ORIENTATION_CHECK_NUMBER)
@@ -198,7 +201,14 @@ public class InPocketContext extends BaseContext {
 
     @Override
     public void onExternalEvent(Bundle bundle) {
-
+        switch (bundle.getString("type")) {
+            case "upThreshold":
+                upThreshold = bundle.getFloat("value");
+                break;
+            case "downThreshold":
+                downThreshold = bundle.getFloat("value");
+                break;
+        }
     }
 
     @Override
