@@ -47,9 +47,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The controller for managing the camera data.
@@ -65,19 +67,19 @@ public class CameraController {
     private ProcessCameraProvider mCameraProvider;
     private AppCompatActivity mActivity;
     private ExecutorService executorService;
-
     private File saveFile;
+    private AtomicBoolean needCapture;
+    private CompletableFuture<float[]> captureFuture;
 
     public CameraController(AppCompatActivity activity) {
         mActivity = activity;
         executorService = Executors.newFixedThreadPool(2);
+        needCapture = new AtomicBoolean(false);
     }
 
     private Bitmap imageToBitmap(Image image) {
         byte[] data = imageToByteArray(image);
-        Log.e("TEST", "length " + data.length + " " + data[0] + " " + data[1]);
         Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-        Log.e("TEST", "bitmap " + bitmap);
         return bitmap;
     }
 
@@ -147,17 +149,19 @@ public class CameraController {
                 ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                         .setTargetResolution(new Size(1280, 720))
                         .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
-//                        .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
                 imageAnalysis.setAnalyzer(executorService, imageProxy -> {
                     @SuppressLint("UnsafeOptInUsageError")
                     Bitmap bitmap = resizeBitmap(yuvToBitmap(imageProxy.getImage()), 224, 224);
                     int bytes = bitmap.getByteCount();
-                    Log.e("TEST", bytes + " ");
                     ByteBuffer buffer = ByteBuffer.allocate(bytes);
                     bitmap.copyPixelsToBuffer(buffer);
                     byte[] data = buffer.array();
+                    // TODO: send data
+                    if (needCapture.get() && captureFuture != null) {
+
+                    }
                 });
 
                 if (open) {
@@ -208,6 +212,15 @@ public class CameraController {
             recording.stop();
             recording.close();
         }
+    }
+
+    public CompletableFuture<float[]> capture() {
+        if (needCapture.get()) {
+            return null;
+        }
+        captureFuture = new CompletableFuture<>();
+        needCapture.set(true);
+        return captureFuture;
     }
 
     public void upload(String taskListId, String taskId, String subtaskId, String recordId, long timestamp) {

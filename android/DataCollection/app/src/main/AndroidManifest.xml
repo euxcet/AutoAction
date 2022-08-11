@@ -40,6 +40,27 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".RegisterAutoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RegisterPointActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RegisterKnockActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RegisterLeanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RegisterPlaceActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RegisterCaptureActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.register.TestModelActivity"
             android:exported="false" />
         <activity

@@ -7,11 +7,8 @@ import android.widget.TextView;
 
 import com.hcifuture.datacollection.R;
 import com.hcifuture.datacollection.data.CameraController;
-import com.hcifuture.datacollection.inference.IMUSensorManager;
+import com.hcifuture.datacollection.inference.ImuSensorManager;
 import com.hcifuture.datacollection.inference.Inferencer;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * The activity to test a model.
@@ -20,7 +17,7 @@ import java.util.TimerTask;
 public class TestModelActivity extends AppCompatActivity {
 
     private AppCompatActivity mActivity;
-    private IMUSensorManager mImuSensorManager;
+    private ImuSensorManager mImuSensorManager;
     private CameraController mCameraController;
 
     @Override

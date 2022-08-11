@@ -48,5 +48,6 @@
     <string name="btn_add_task">Add</string>
     <string name="btn_modify_task">Modify</string>
     <string name="btn_cancel_task">Cancel</string>
+    <string name="registerPlaceGuide">请将手机放在桌面上</string>
 
 </resources>

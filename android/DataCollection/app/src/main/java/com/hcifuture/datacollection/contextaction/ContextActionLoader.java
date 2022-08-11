@@ -2,12 +2,11 @@ package com.hcifuture.datacollection.contextaction;
 
 import android.content.Context;
 import android.hardware.SensorEvent;
-import android.hardware.SensorManager;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 
 import com.hcifuture.datacollection.BuildConfig;
-import com.hcifuture.datacollection.inference.IMUSensorManager;
+import com.hcifuture.datacollection.inference.ImuSensorManager;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.listener.ContextListener;
 import com.hcifuture.shared.communicate.listener.RequestListener;
@@ -24,7 +23,7 @@ public class ContextActionLoader {
 
     private Object container;
 
-    private IMUSensorManager imuSensorManager;
+    private ImuSensorManager imuSensorManager;
 
     private Method onAccessibilityEvent;
     private Method onKeyEvent;
@@ -113,7 +112,7 @@ public class ContextActionLoader {
     }
 
     private void startSensorManager(Object container, Method onSensorChanged) {
-        imuSensorManager = new IMUSensorManager(mContext);
+        imuSensorManager = new ImuSensorManager(mContext);
     }
 
     public void startDetection(ActionListener actionListener, ContextListener contextListener, RequestListener requestListener) {

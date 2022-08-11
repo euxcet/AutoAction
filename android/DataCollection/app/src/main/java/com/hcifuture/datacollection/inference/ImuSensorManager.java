@@ -5,15 +5,14 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.util.Log;
 
-import java.lang.reflect.Method;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class IMUSensorManager implements SensorEventListener {
+public class ImuSensorManager implements SensorEventListener {
 
     private Context mContext;
 
@@ -39,7 +38,9 @@ public class IMUSensorManager implements SensorEventListener {
 
     private ThreadPoolExecutor threadPoolExecutor;
 
-    public IMUSensorManager(Context context) {
+    private List<ImuEventListener> listeners;
+
+    public ImuSensorManager(Context context) {
         this.mContext = context;
         threadPoolExecutor = new ThreadPoolExecutor(1, 2, 1000,
                 TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(10),
@@ -60,6 +61,19 @@ public class IMUSensorManager implements SensorEventListener {
         isInitialized = true;
 
         return true;
+    }
+
+    public void addListener(ImuEventListener listener) {
+        for (ImuEventListener l: listeners) {
+            if (l == listener) {
+                return;
+            }
+        }
+        listeners.add(listener);
+    }
+
+    public void removeListener(ImuEventListener listener) {
+        listeners.removeIf(l -> l == listener);
     }
 
     public void registerSensorListener() {
@@ -135,11 +149,14 @@ public class IMUSensorManager implements SensorEventListener {
                 break;
         }
 
+        // TODO: stable on hand, stable on table, not stable
+
         threadPoolExecutor.execute(() -> {
             float[] input_data = data.clone();
             if (isStarted) {
                 if (Inferencer.getInstance() != null) {
-                    int result = Inferencer.getInstance().inference(input_data);
+                    int result = Inferencer.getInstance().inference("best.mnn", input_data);
+                    // TODO: event
                 }
             }
         });

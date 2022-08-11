@@ -18,6 +18,7 @@ import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.model.Response;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
@@ -25,12 +26,18 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Inferencer {
     private static volatile Inferencer instance;
-    private final String mMobileNetName = "mobilenet.mnn";
-    private final String mModelFileName = "best.mnn";
-    private final String mLabelFileName = "label.txt";
-    private String mModelPath;
-    private String mLabelPath;
-    private String mMobileNetPath;
+
+    private Context mContext;
+
+    private final List<String> ASSETS_FILES = Arrays.asList("mobilenet.mnn", "best.mnn", "label.txt");
+
+//    private final String mMobileNetName = "mobilenet.mnn";
+//    private final String mModelFileName = "best.mnn";
+//    private final String mLabelFileName = "label.txt";
+
+//    private String mModelPath;
+//    private String mLabelPath;
+//    private String mMobileNetPath;
 
     private List<String> label;
 
@@ -67,6 +74,7 @@ public class Inferencer {
     }
 
     public void start(Context context) {
+        mContext = context;
         isStarted.set(false);
         isDownloading.set(false);
         prepareModel(context);
@@ -77,8 +85,11 @@ public class Inferencer {
         mHandler = new Handler(mThread.getLooper());
         mHandler.post(() -> {
             isStarted.set(false);
-            prepareNet(mModelPath);
-            prepareNet(mMobileNetPath);
+            for (String name: ASSETS_FILES) {
+                if (name.endsWith(".mnn")) {
+                    prepareNet(name);
+                }
+            }
             isStarted.set(true);
         });
         currentModelId = "Assets";
@@ -92,21 +103,20 @@ public class Inferencer {
         mHandler.post(() -> {
             Toast.makeText(context, "Downloading model [" + trainId + "]", Toast.LENGTH_LONG).show();
         });
-        mModelPath = context.getCacheDir() + "best.mnn";
-        mLabelPath = context.getCacheDir() + "label.txt";
+        String path = context.getCacheDir() + "best.mnn";
         NetworkUtils.downloadTrainLabel(trainId, new FileCallback() {
             @Override
             public void onSuccess(Response<File> response) {
                 File file = response.body();
-                FileUtils.copy(file, new File(mLabelPath));
+                FileUtils.copy(file, new File(path));
                 file.delete();
                 NetworkUtils.downloadTrainMNNModel(trainId, new FileCallback() {
                     @Override
                     public void onSuccess(Response<File> response) {
                         File file = response.body();
-                        FileUtils.copy(file, new File(mModelPath));
+                        FileUtils.copy(file, new File(path));
                         file.delete();
-                        prepareNet(mModelPath);
+                        prepareNet(path);
                         mHandler.post(() -> {
                             Toast.makeText(context, "Use model [" + trainId + "]", Toast.LENGTH_LONG).show();
                         });
@@ -118,7 +128,8 @@ public class Inferencer {
         });
     }
 
-    private void prepareNet(String path) {
+    private void prepareNet(String name) {
+        String path = getPath(name);
         try {
             lock.lock();
             int pos = -1;
@@ -155,37 +166,41 @@ public class Inferencer {
         }
     }
 
-    public int inference(String path, float[] data) {
+    public int inference(String name, float[] data) {
+        String path = getPath(name);
+        int result = -1;
         if (isStarted.get()) {
             try {
                 lock.lock();
                 for (int i = 0; i < mModelPaths.size(); i++) {
                     if (mModelPaths.get(i).equals(path)) {
-                        mInputTensor.setInputFloatData(data);
-                        mSession.run();
-                        MNNNetInstance.Session.Tensor outputTensor = mSession.getOutput(null);
-                        float[] result = outputTensor.getFloatData();
+                        mInputTensors.get(i).setInputFloatData(data);
+                        mSessions.get(i).run();
+                        MNNNetInstance.Session.Tensor outputTensor = mSessions.get(i).getOutput(null);
+                        float[] output = outputTensor.getFloatData();
+                        Log.e("TEST", "length " + output.length);
                     }
                 }
             } finally {
                 lock.unlock();
             }
         }
-        return -1;
+        return result;
     }
 
 
     private void prepareModel(Context context) {
-        mModelPath = context.getCacheDir() + "best.mnn";
-        mLabelPath = context.getCacheDir() + "label.txt";
-        mMobileNetPath = context.getCacheDir() + "mobilenet.mnn";
         try {
-            Common.copyAssetResource2File(context, mModelFileName, mModelPath);
-            Common.copyAssetResource2File(context, mLabelFileName, mLabelPath);
-            Common.copyAssetResource2File(context, mMobileNetName, mMobileNetPath);
+            for (String name: ASSETS_FILES) {
+                Common.copyAssetResource2File(context, name, getPath(name));
+            }
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String getPath(String name) {
+        return mContext.getCacheDir() + name;
     }
 
     public static Inferencer getInstance() {
