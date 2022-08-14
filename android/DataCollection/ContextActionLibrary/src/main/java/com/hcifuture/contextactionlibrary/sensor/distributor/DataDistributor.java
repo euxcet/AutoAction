@@ -39,7 +39,7 @@ public class DataDistributor implements CollectorListener {
     }
 
     public void onExternalEvent(Bundle bundle) {
-        if (isRunning.get()) {
+//        if (isRunning.get()) {
             contextLock.lock();
             try {
                 for (BaseAction action : actions) {
@@ -51,7 +51,7 @@ public class DataDistributor implements CollectorListener {
             } finally {
                 contextLock.unlock();
             }
-        }
+//        }
     }
 
     public void onBroadcastEvent(BroadcastEvent event) {
