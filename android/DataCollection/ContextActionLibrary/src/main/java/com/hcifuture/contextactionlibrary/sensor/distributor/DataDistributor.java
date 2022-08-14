@@ -39,9 +39,9 @@ public class DataDistributor implements CollectorListener {
     }
 
     public void onExternalEvent(Bundle bundle) {
-        if (isRunning.get()) {
+//        if (isRunning.get()) {
+            contextLock.lock();
             try {
-                contextLock.lock();
                 for (BaseAction action : actions) {
                     action.onExternalEvent(bundle);
                 }
@@ -51,13 +51,13 @@ public class DataDistributor implements CollectorListener {
             } finally {
                 contextLock.unlock();
             }
-        }
+//        }
     }
 
     public void onBroadcastEvent(BroadcastEvent event) {
         if (isRunning.get()) {
+            contextLock.lock();
             try {
-                contextLock.lock();
                 for (BaseContext context : contexts) {
                     context.onBroadcastEvent(event);
                 }
@@ -69,8 +69,8 @@ public class DataDistributor implements CollectorListener {
 
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if (isRunning.get()) {
+            contextLock.lock();
             try {
-                contextLock.lock();
                 for (BaseContext context : contexts) {
                     context.onAccessibilityEvent(event);
                 }
@@ -83,8 +83,8 @@ public class DataDistributor implements CollectorListener {
     @Override
     public void onSensorEvent(Data data) {
         if (isRunning.get()) {
+            contextLock.lock();
             try {
-                contextLock.lock();
                 for (BaseAction action : actions) {
                     List<SensorType> types = action.getConfig().getSensorType();
                     switch (data.dataType()) {
