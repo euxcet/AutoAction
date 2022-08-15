@@ -16,6 +16,7 @@ import android.media.Image;
 import android.util.Log;
 import android.util.Size;
 import android.view.View;
+import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.Camera;
@@ -37,6 +38,7 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hcifuture.datacollection.R;
+import com.hcifuture.datacollection.inference.Inferencer;
 import com.hcifuture.datacollection.utils.bean.TaskListBean;
 import com.hcifuture.datacollection.utils.NetworkUtils;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -154,14 +156,28 @@ public class CameraController {
                 imageAnalysis.setAnalyzer(executorService, imageProxy -> {
                     @SuppressLint("UnsafeOptInUsageError")
                     Bitmap bitmap = resizeBitmap(yuvToBitmap(imageProxy.getImage()), 224, 224);
-                    int bytes = bitmap.getByteCount();
-                    ByteBuffer buffer = ByteBuffer.allocate(bytes);
-                    bitmap.copyPixelsToBuffer(buffer);
-                    byte[] data = buffer.array();
+
+                    /*
+                    ByteArrayOutputStream outs = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outs);
+                    byte[] data = outs.toByteArray();
+                    Log.e("TEST", "byte length " + data.length);
+                     */
+//                    int bytes = bitmap.getByteCount();
+//                    ByteBuffer buffer = ByteBuffer.allocate(bytes);
+//                    bitmap.copyPixelsToBuffer(buffer);
+//                    byte[] data = buffer.array();
+
+//                    Log.e("TEST", "bitmap length " + data.length + " " + data[0] + " " + data[1] + " " + data[2]);
+//                    Bitmap new_bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+
                     // TODO: send data
                     if (needCapture.get() && captureFuture != null) {
-
+                        needCapture.set(false);
+                        float[] feature = Inferencer.getInstance().inferenceImage("shufflenet_.mnn", bitmap);
+                        captureFuture.complete(feature);
                     }
+                    imageProxy.close();
                 });
 
                 if (open) {

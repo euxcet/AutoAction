@@ -21,19 +21,26 @@ if __name__ == '__main__':
     taskListId = 'TL13r912je'
     taskIdList = [
         "TKkwio3zgi",
-        "TKavu21lvb",
+        # "TKavu21lvb",
         "TKyu7y676q",
         "TKI8tdknq0",
-        "TKsf9f7zo2",
-        "TKzmggzhdt",
+        # "TKsf9f7zo2",
+        # "TKzmggzhdt",
         "TKf774yu2p",
     ]
+    cutter_type = {
+        "TKkwio3zgi": ["peak"],
+        "TKyu7y676q": ["peak"],
+        "TKI8tdknq0": ["peak"],
+        "TKf774yu2p": ["random" for i in range(5)]
+    }
+    
     timestamp = 142857142857
 
     file_utils.mkdir(os.path.join(file_utils.DATA_TRAIN_ROOT, trainId))
     file_utils.save_json({}, train_info_path)
     
-    new_process = TrainProcess(train_info_path, taskListId, taskIdList, trainId, timestamp, dataset_version='0.2')
+    new_process = TrainProcess(train_info_path, taskListId, taskIdList, trainId, timestamp, cutter_type, dataset_version='0.2')
     new_process.start()
     new_process.join()
 

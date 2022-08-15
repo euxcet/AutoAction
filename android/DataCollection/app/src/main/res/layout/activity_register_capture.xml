@@ -6,4 +6,44 @@
     android:layout_height="match_parent"
     tools:context=".ui.register.RegisterCaptureActivity">
 
+    <androidx.camera.view.PreviewView
+        android:id="@+id/camera_preview"
+        android:layout_width="151dp"
+        android:layout_height="212dp"
+        android:layout_margin="15dp"
+        android:layout_marginStart="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.969" />
+
+    <LinearLayout
+        android:layout_width="409dp"
+        android:layout_height="487dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginTop="1dp"
+        android:orientation="vertical"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <EditText
+            android:id="@+id/actionNameEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ActionName"
+            />
+
+        <Button
+            android:id="@+id/registerButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="register" />
+
+        <TextView
+            android:id="@+id/actionListView"
+            android:layout_width="match_parent"
+            android:layout_height="274dp"
+            android:text="TextView" />
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

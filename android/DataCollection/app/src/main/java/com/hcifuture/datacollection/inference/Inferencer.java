@@ -1,6 +1,9 @@
 package com.hcifuture.datacollection.inference;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Matrix;
 import android.net.Network;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -9,6 +12,7 @@ import android.widget.Toast;
 
 import com.hcifuture.datacollection.BuildConfig;
 import com.hcifuture.datacollection.inference.mnn.MNNForwardType;
+import com.hcifuture.datacollection.inference.mnn.MNNImageProcess;
 import com.hcifuture.datacollection.inference.mnn.MNNNetInstance;
 import com.hcifuture.datacollection.inference.mnn.MNNNetNative;
 import com.hcifuture.datacollection.inference.utils.Common;
@@ -17,7 +21,10 @@ import com.hcifuture.datacollection.utils.NetworkUtils;
 import com.lzy.okgo.callback.FileCallback;
 import com.lzy.okgo.model.Response;
 
+import org.checkerframework.checker.units.qual.A;
+
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,40 +36,30 @@ public class Inferencer {
 
     private Context mContext;
 
-    private final List<String> ASSETS_FILES = Arrays.asList("mobilenet.mnn", "best.mnn", "label.txt");
-
-//    private final String mMobileNetName = "mobilenet.mnn";
-//    private final String mModelFileName = "best.mnn";
-//    private final String mLabelFileName = "label.txt";
-
-//    private String mModelPath;
-//    private String mLabelPath;
-//    private String mMobileNetPath;
+    private final List<String> ASSETS_FILES = Arrays.asList("mobilenet.mnn", "action.mnn", "shufflenet_.mnn", "label.txt");
 
     private List<String> label;
 
     private HandlerThread mThread;
     private Handler mHandler;
 
-    /*
-    private MNNNetInstance mNetInstance;
-    private MNNNetInstance.Session mSession;
-    private MNNNetInstance.Session.Tensor mInputTensor;
-     */
     private final MNNNetInstance.Config mConfig = new MNNNetInstance.Config();
 
-    private List<String> mModelPaths;
-    private List<MNNNetInstance> mNetInstances;
-    private List<MNNNetInstance.Session> mSessions;
-    private List<MNNNetInstance.Session.Tensor> mInputTensors;
+    private List<String> mModelPaths = new ArrayList<>();
+    private List<MNNNetInstance> mNetInstances = new ArrayList<>();
+    private List<MNNNetInstance.Session> mSessions = new ArrayList<>();
+    private List<MNNNetInstance.Session.Tensor> mInputTensors = new ArrayList<>();
 
     private final Lock lock = new ReentrantLock();
     private AtomicBoolean isStarted = new AtomicBoolean(false);
     private AtomicBoolean isDownloading = new AtomicBoolean(false);
 
+    Matrix imgData;
+
     private String currentModelId;
 
     private Inferencer() {
+        imgData = new Matrix();
     }
 
     public String getCurrentModelId() {
@@ -71,6 +68,31 @@ public class Inferencer {
 
     public List<String> getLabel() {
         return label;
+    }
+
+    private void prepareModel(Context context) {
+        try {
+            for (String name: ASSETS_FILES) {
+                Common.copyAssetResource2File(context, name, getPath(name));
+            }
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String getPath(String name) {
+        return mContext.getCacheDir() + name;
+    }
+
+    public static Inferencer getInstance() {
+        if (instance == null) {
+            synchronized (Inferencer.class) {
+                if (instance == null) {
+                    instance = new Inferencer();
+                }
+            }
+        }
+        return instance;
     }
 
     public void start(Context context) {
@@ -103,7 +125,7 @@ public class Inferencer {
         mHandler.post(() -> {
             Toast.makeText(context, "Downloading model [" + trainId + "]", Toast.LENGTH_LONG).show();
         });
-        String path = context.getCacheDir() + "best.mnn";
+        String path = context.getCacheDir() + "action.mnn";
         NetworkUtils.downloadTrainLabel(trainId, new FileCallback() {
             @Override
             public void onSuccess(Response<File> response) {
@@ -143,6 +165,7 @@ public class Inferencer {
                 MNNNetInstance netInstance = MNNNetInstance.createFromFile(path);
                 MNNNetInstance.Session session = netInstance.createSession(mConfig);
                 MNNNetInstance.Session.Tensor inputTensor = session.getInput(null);
+                mModelPaths.add(path);
                 mNetInstances.add(netInstance);
                 mSessions.add(session);
                 mInputTensors.add(inputTensor);
@@ -178,7 +201,13 @@ public class Inferencer {
                         mSessions.get(i).run();
                         MNNNetInstance.Session.Tensor outputTensor = mSessions.get(i).getOutput(null);
                         float[] output = outputTensor.getFloatData();
-                        Log.e("TEST", "length " + output.length);
+                        float max_value = -1.0f;
+                        for (int p = 0; p < output.length; p++) {
+                            if (output[p] > max_value) {
+                                max_value = output[p];
+                                result = p;
+                            }
+                        }
                     }
                 }
             } finally {
@@ -188,29 +217,39 @@ public class Inferencer {
         return result;
     }
 
+    public float[] inferenceImage(String name, Bitmap bitmap) {
+        String path = getPath(name);
+        float[] result = null;
+        if (isStarted.get()) {
+            try {
+                lock.lock();
+                for (int i = 0; i < mModelPaths.size(); i++) {
+                    if (mModelPaths.get(i).equals(path)) {
+                        MNNImageProcess.Config dataConfig = new MNNImageProcess.Config();
+                        dataConfig.mean = new float[]{128.0f, 128.0f, 128.0f};
+                        dataConfig.normal= new float[]{0.0078125f, 0.0078125f, 0.0078125f};
+                        dataConfig.dest = MNNImageProcess.Format.RGB;
 
-    private void prepareModel(Context context) {
-        try {
-            for (String name: ASSETS_FILES) {
-                Common.copyAssetResource2File(context, name, getPath(name));
-            }
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String getPath(String name) {
-        return mContext.getCacheDir() + name;
-    }
-
-    public static Inferencer getInstance() {
-        if (instance == null) {
-            synchronized (Inferencer.class) {
-                if (instance == null) {
-                    instance = new Inferencer();
+                        MNNImageProcess.convertBitmap(bitmap, mInputTensors.get(i), dataConfig, imgData);
+                        mSessions.get(i).run();
+                        MNNNetInstance.Session.Tensor outputTensor = mSessions.get(i).getOutput(null);
+                        result = outputTensor.getFloatData();
+                        /*
+                        float max_value = -1.0f;
+                        for (int p = 0; p < output.length; p++) {
+                            if (output[p] > max_value) {
+                                max_value = output[p];
+                                result = p;
+                            }
+                        }
+                         */
+                    }
                 }
+            } finally {
+                lock.unlock();
             }
         }
-        return instance;
+        return result;
     }
+
 }

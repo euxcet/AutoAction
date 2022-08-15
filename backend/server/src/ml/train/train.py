@@ -10,7 +10,7 @@ import file_utils
 from ml.train.model import LSTMClassifier, CNNClassifier
 from ml.train.dataset import create_train_val_loader
 from ml.train.metric import calc_metric
-from ml.train.export import export_pt, export_onnx, export_pth
+from ml.train.export import export_pt, export_onnx, export_pth, export_mnn
 from ml.global_vars import GlobalVars
 
 class CyclicLR(_LRScheduler):
@@ -39,6 +39,7 @@ def train_model(trainId:str, timestamp:int, config:dict):
     OUT_PATH_PTH = os.path.join(ROOT, 'best.pth')
     OUT_PATH_PT = os.path.join(ROOT, 'best.pt')
     OUT_PATH_ONNX = os.path.join(ROOT, 'best.onnx')
+    OUT_PATH_MNN = os.path.join(ROOT, 'best.mnn')
 
     device:str = GlobalVars.DEVICE
     if device == 'cuda' and torch.cuda.is_available():
@@ -123,5 +124,6 @@ def train_model(trainId:str, timestamp:int, config:dict):
             best_acc = val_acc
             # export_pth(model, OUT_PATH_PTH)
             # export_pt(model, OUT_PATH_PT, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
-            # export_onnx(model, OUT_PATH_ONNX, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
+            export_onnx(model, OUT_PATH_ONNX, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
+            export_mnn(OUT_PATH_ONNX, OUT_PATH_MNN)
             print(f'\tbest model accuracy: {best_acc:.3f}')

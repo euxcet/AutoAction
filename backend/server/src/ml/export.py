@@ -6,14 +6,12 @@ from ml.cutter.random_cutter import RandomCutter
 from ml.dataset import Dataset
 from ml.global_vars import GlobalVars
 
-def export_csv(tasklistId, taskIds, trainId, timestamp, dataset_version='0.2'):
+def export_csv(tasklistId, taskIds, trainId, timestamp, cutter_type, dataset_version='0.2'):
     dataset = Dataset()
     cutter_dict = {
-        'peak': [PeakCutter('linear_acc', forward=100,
-            length=GlobalVars.WINDOW_LENGTH, noise=20)],
-        'random': [RandomCutter(), RandomCutter()],
-        'peakrandom': [RandomCutter(), PeakCutter('linear_acc', forward=100,
-            length=GlobalVars.WINDOW_LENGTH, noise=20)]
+        'peak': PeakCutter('linear_acc', forward=100,
+            length=GlobalVars.WINDOW_LENGTH, noise=20),
+        'random': RandomCutter()
     }
     tasklist = file_utils.load_taskList_info(tasklistId)
     records = []
@@ -28,7 +26,6 @@ def export_csv(tasklistId, taskIds, trainId, timestamp, dataset_version='0.2'):
             for recordId in recordlist:
                 group_name = task['name']
                 group_id = taskIds.index(taskId)
-                cutter_type = 'peak'
                 record_path = file_utils.get_record_path(tasklistId, taskId, subtaskId, recordId)
                 if not os.path.exists(record_path): continue
                 for record_filename in os.listdir(record_path):
@@ -37,8 +34,11 @@ def export_csv(tasklistId, taskIds, trainId, timestamp, dataset_version='0.2'):
                         # record filename and timestamp filename
                         r_fn = os.path.join(record_path, record_filename)
                         t_fn = os.path.join(record_path, f'Timestamp_{record_timestamp}.json')
-                        for c in cutter_dict[cutter_type]:
-                            records.append(Record(r_fn, t_fn, recordId, group_id, group_name, cutter=c))
+                        print(taskId)
+                        for c in cutter_type[taskId]:
+                            records.append(Record(r_fn, t_fn, recordId, group_id, group_name, cutter=cutter_dict[c]))
+                        # for c in cutter_dict[cutter_type]:
+                        #     records.append(Record(r_fn, t_fn, recordId, group_id, group_name, cutter=c))
 
     dataset.insert_records(records) # DONE
     dataset.export_csv(file_utils.get_train_path(trainId))

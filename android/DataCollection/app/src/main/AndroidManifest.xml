@@ -19,6 +19,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
 
     <uses-feature
         android:name="android.hardware.bluetooth_le"
@@ -40,28 +41,36 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".RegisterAutoActivity"
+            android:name=".ui.register.RegisterAutoActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
-            android:name=".RegisterPointActivity"
+            android:name=".ui.register.RegisterPointActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
-            android:name=".RegisterKnockActivity"
+            android:name=".ui.register.RegisterKnockActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
-            android:name=".RegisterLeanActivity"
+            android:name=".ui.register.RegisterLeanActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
-            android:name=".RegisterPlaceActivity"
+            android:name=".ui.register.RegisterPlaceActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
-            android:name=".RegisterCaptureActivity"
+            android:name=".ui.register.RegisterCaptureActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
-            android:name=".RegisterActivity"
+            android:name=".ui.register.RegisterActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".ui.register.TestModelActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".visual.VisualizeTrainLogActivity"
@@ -118,6 +127,7 @@
             android:exported="false" />
         <activity
             android:name=".ui.MainActivity"
+            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

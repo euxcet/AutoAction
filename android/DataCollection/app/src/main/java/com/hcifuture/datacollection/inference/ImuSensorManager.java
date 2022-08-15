@@ -5,7 +5,11 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.util.Log;
 
+import org.checkerframework.checker.units.qual.A;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
@@ -26,7 +30,7 @@ public class ImuSensorManager implements SensorEventListener {
     private boolean isInitialized;
     private boolean isStarted;
 
-    private final int DATA_LENGTH = 128 * 6;
+    private final int DATA_LENGTH = 200 * 6;
     private final int DATA_ELEMSIZE = 6;
     private final int INTERVAL = 9900000;
 
@@ -59,6 +63,7 @@ public class ImuSensorManager implements SensorEventListener {
 
         isSensorOpened = true;
         isInitialized = true;
+        listeners = new ArrayList<>();
 
         return true;
     }
@@ -153,9 +158,10 @@ public class ImuSensorManager implements SensorEventListener {
 
         threadPoolExecutor.execute(() -> {
             float[] input_data = data.clone();
+            // add filter
             if (isStarted) {
                 if (Inferencer.getInstance() != null) {
-                    int result = Inferencer.getInstance().inference("best.mnn", input_data);
+//                    int result = Inferencer.getInstance().inference("action.mnn", input_data);
                     // TODO: event
                 }
             }

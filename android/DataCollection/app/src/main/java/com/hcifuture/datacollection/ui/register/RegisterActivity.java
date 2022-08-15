@@ -4,11 +4,15 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.hcifuture.datacollection.R;
+import com.hcifuture.datacollection.action.ActionManager;
 
 public class RegisterActivity extends AppCompatActivity {
+    private TextView actionListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,6 +24,14 @@ public class RegisterActivity extends AppCompatActivity {
         setRoute(R.id.placeButton, RegisterPlaceActivity.class);
         setRoute(R.id.leanButton, RegisterLeanActivity.class);
         setRoute(R.id.autoButton, RegisterAutoActivity.class);
+        actionListView = findViewById(R.id.actionListView);
+        refreshActionList();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshActionList();
     }
 
     private void setRoute(int buttonId, Class activityClass) {
@@ -28,6 +40,11 @@ public class RegisterActivity extends AppCompatActivity {
             Intent intent = new Intent(RegisterActivity.this, activityClass);
             startActivity(intent);
         });
+    }
+
+    private void refreshActionList() {
+        actionListView.setText(ActionManager.encodeActions(
+                ActionManager.getInstance().getActions()));
     }
 
 }

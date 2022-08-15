@@ -45,4 +45,5 @@
         android:text="Register"
         app:layout_constraintStart_toEndOf="@+id/camera_preview"
         app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

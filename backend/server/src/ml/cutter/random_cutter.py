@@ -1,9 +1,10 @@
 import numpy as np
 from ml.cutter.range_cutter import RangeCutter
 from ml.cutter.simple_cutter import SimpleCutter
+from ml.global_vars import GlobalVars
 
 class RandomCutter():
-    def __init__(self, length=128):
+    def __init__(self, length=GlobalVars.WINDOW_LENGTH):
         ''' Init the cutter.
         '''
         self.length = length
@@ -31,7 +32,7 @@ class RandomCutter():
         simple_cut_range = simple_cutter.cut_range(data[anchor], timestamp)
         for start, end in simple_cut_range:
             r = np.random.randint(start, end - length)
-            cut_range.append(r, r + length)
+            cut_range.append((r, r + length))
         for label in data:
             cut_data[label] = range_cutter.cut(data[label], cut_range)
         return cut_data
