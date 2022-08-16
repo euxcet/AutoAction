@@ -55,7 +55,7 @@ public class DataDistributor implements CollectorListener {
     }
 
     public void onBroadcastEvent(BroadcastEvent event) {
-        if (isRunning.get()) {
+//        if (isRunning.get()) {
             contextLock.lock();
             try {
                 for (BaseContext context : contexts) {
@@ -64,11 +64,11 @@ public class DataDistributor implements CollectorListener {
             } finally {
                 contextLock.unlock();
             }
-        }
+//        }
     }
 
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        if (isRunning.get()) {
+//        if (isRunning.get()) {
             contextLock.lock();
             try {
                 for (BaseContext context : contexts) {
@@ -77,7 +77,7 @@ public class DataDistributor implements CollectorListener {
             } finally {
                 contextLock.unlock();
             }
-        }
+//        }
     }
 
     @Override
