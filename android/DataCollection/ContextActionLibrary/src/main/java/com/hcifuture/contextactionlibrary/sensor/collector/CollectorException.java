@@ -2,7 +2,7 @@ package com.hcifuture.contextactionlibrary.sensor.collector;
 
 import androidx.annotation.NonNull;
 
-public class CollectorException extends Exception {
+public class CollectorException extends RuntimeException {
 
     private final int code;
 
