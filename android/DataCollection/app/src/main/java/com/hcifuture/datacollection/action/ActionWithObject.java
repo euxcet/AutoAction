@@ -34,4 +34,8 @@ public class ActionWithObject {
     public void setName(String name) {
         this.name = name;
     }
+
+    public float distance(float[] frame) {
+        return object.distance(frame);
+    }
 }

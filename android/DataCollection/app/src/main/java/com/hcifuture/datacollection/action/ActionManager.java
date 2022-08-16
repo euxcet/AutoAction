@@ -1,5 +1,8 @@
 package com.hcifuture.datacollection.action;
 
+import android.util.Log;
+import android.util.Pair;
+
 import com.hcifuture.datacollection.inference.Inferencer;
 
 import java.util.ArrayList;
@@ -38,6 +41,20 @@ public class ActionManager {
 
     public List<ActionWithObject> getActions() {
         return actions;
+    }
+
+    public Pair<Integer, Float> classify(float[] frame) {
+        float min_distance = 10000.0f;
+        int result = -1;
+        for (int i = 0; i < actions.size(); i++) {
+            ActionWithObject action = actions.get(i);
+            float distance = action.distance(frame);
+            if (distance < min_distance) {
+                min_distance = distance;
+                result = i;
+            }
+        }
+        return new Pair<>(result, min_distance);
     }
 
     public List<ActionWithObject> filterWithActionEnum(ActionEnum actionEnum) {
