@@ -11,14 +11,14 @@ class GlobalVars:
     # sensor types used in training
     MOTION_SENSORS = ('acc', 'linear_acc', 'gyro')
     # cut window length in time domain
-    WINDOW_LENGTH = 200
+    WINDOW_LENGTH = 100
     # training device: in {'cuda', 'mps', None (cpu)}
     # first check if the device is available, if not, use cpu
     # Note: 'mps' is the apple sillicon GPU backend, which requires macOS Monterey 12.3+
     #   and pytorch 1.13.0(nightly)+, currently is available but has bugs.
     DEVICE = 'cuda'
     # training batch size
-    BATCH_SIZE = 128
+    BATCH_SIZE = 32
     # filter parameters
     FILTER_EN = True
     FILTER_TW = 1

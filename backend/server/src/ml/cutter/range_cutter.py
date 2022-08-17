@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import pyplot as plt
 
 class RangeCutter():
     def __init__(self):

@@ -25,10 +25,8 @@ def export_onnx(model, ONNX_PATH, sequence_dim, channel_dim, device=None):
 
 def export_mnn(ONNX_PATH, MNN_PATH):
     converter = os.getenv("MNN_CONVERTER")
-    print(ONNX_PATH)
-    print(MNN_PATH)
-    cmd = converter + " -f ONNX --modelFile " + ONNX_PATH + " --MNNModel " + MNN_PATH + " --bizCode biz"
     try:
+        cmd = converter + " -f ONNX --modelFile " + ONNX_PATH + " --MNNModel " + MNN_PATH + " --bizCode biz"
         os.system(cmd)
         # subprocess.call(cmd, shell=True, executable="/bin/zsh")
     except Exception as e:

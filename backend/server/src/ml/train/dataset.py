@@ -27,6 +27,12 @@ def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.25, drop_cols=None)
     # used to transform labels into numbers in [0, num_classes)
     le = LabelEncoder()
     y_enc = le.fit_transform(y) # encoded labels
+    # print('Encode ', le.inverse_transform([0, 1, 2, 3, 4]))
+    try:
+        for i in range(0, 10):
+            print('Encode ', i, le.inverse_transform([i]))
+    except:
+        pass
     # reconstructed data, shape = (samples, length, channels)
     X_grouped:np.ndarray = create_grouped_array(X, drop_cols=drop_cols)
         

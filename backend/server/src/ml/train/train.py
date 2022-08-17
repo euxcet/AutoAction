@@ -105,7 +105,6 @@ def train_model(trainId:str, timestamp:int, config:dict):
             if device is not None:
                 x_batch = x_batch.to(device)
                 y_batch = y_batch.to(device)
-            print('Shape', x_batch.shape)
             optimizer.zero_grad()
             out = model(x_batch)
             loss = criterion(out, y_batch)

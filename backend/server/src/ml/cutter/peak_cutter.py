@@ -8,7 +8,7 @@ from ml.global_vars import GlobalVars
 class PeakCutter():
     ''' Cut by amplitude peaks.
     '''
-    def __init__(self, anchor:str, forward=100, length=200, noise=20):
+    def __init__(self, anchor:str, forward=60, length=100, noise=10):
         ''' Init the cutter with some basic parameters.
         '''
         self.anchor = anchor # anchor = 'acc'
@@ -73,6 +73,7 @@ class PeakCutter():
             if t < bound[bound_idx]: continue
             end = i
             peak_idx = start + np.argmax(norm_filtered[start+offset:end+offset])
+
             # note: first min then max, the order matters!
             peak_start = min(end - length, peak_idx - forward + randint(-noise, noise+1))
             peak_start = max(0, peak_start)

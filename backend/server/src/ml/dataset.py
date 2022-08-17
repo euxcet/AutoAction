@@ -88,11 +88,11 @@ class Dataset:
             
             
     
-    def split(self, train_prop=0.8):
+    def split(self, train_prop=0.9):
         ''' Randomly split self.data and self.labels into train and test sets,
             with train proportion specified by train_prop.
         args:
-            train_prop: the proportion of training samples, in (0, 1), default=0.7
+            train_prop: the proportion of training samples, in (0, 1), default=0.9
         note:
             1. Call this function after inserting records.
             2. Calc test_prop = 1.0 - train_prop, make sure train_prop < 1.0 .

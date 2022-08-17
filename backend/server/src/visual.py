@@ -1,13 +1,16 @@
 # this file is used for debugging
 import os
+import argparse
 import numpy as np
 from matplotlib import pyplot as plt
 
 import file_utils
 from ml.record import Record
 from ml.cutter.peak_cutter import PeakCutter
+from ml.train.dataset import create_train_val_loader
 from ml.filter import Filter
 
+import pandas as pd
 
 def plot_data(data:dict, sensors:tuple=('acc',), idx_range:tuple=None,
         title:str=None, timestamps:list=None):
@@ -81,12 +84,11 @@ def plot_filter(data:dict, sensor:str, idx_range:tuple=None, timestamps:list=Non
         
     plt.show()
 
-
-if __name__ == '__main__':
+def visual_record():
     task_list_id = 'TL13r912je' # default task list
-    task_id = 'TKh01oe3tq' # Task-3
-    subtask_id = 'ST1drt1qtx' # Unstable
-    record_id = 'RDd8zerklh'
+    task_id = 'TKknwgwok9' # Task-3
+    subtask_id = 'STd8wlnc3o' # Unstable
+    record_id = 'RD7dni8lr8'
     record_path = file_utils.get_record_path(task_list_id, task_id, subtask_id, record_id)
     print(record_path)
     motion_path, timestamp_path = None, None
@@ -105,3 +107,59 @@ if __name__ == '__main__':
     
     # plot_data(data, sensors=('acc', 'linear_acc', 'gyro'), timestamps=timestamps)
     plot_filter(data, 'linear_acc', idx_range=(0.0, 1.0))
+
+
+def visual_dataset():
+    train_id = 'XT9me9xq7y'
+    ROOT = file_utils.get_train_path(train_id)
+    X_TEST_PATH = os.path.join(ROOT, 'X_test.csv')    # train_data
+    Y_TEST_PATH = os.path.join(ROOT, 'Y_test.csv')    # train_labels
+
+
+    '''
+    with open(X_TEST_PATH, 'r') as f:
+        x = f.readline()
+        for _ in range(9):
+            xs = []
+            ys = []
+            zs = []
+            for p in range(100):
+                t = f.readline().strip().split(',')
+                offset = 0
+                xs.append(float(t[3 + offset]))
+                ys.append(float(t[4 + offset]))
+                zs.append(float(t[5 + offset]))
+            plt.plot(xs)
+            plt.plot(ys)
+            plt.plot(zs)
+            plt.show()
+
+        print(x)
+    '''
+
+
+
+    train_loader, val_loader = create_train_val_loader(X_TEST_PATH, Y_TEST_PATH)
+
+
+    for x_batch, y_batch in val_loader:
+        x = x_batch.numpy()
+        print(x_batch.shape, y_batch)
+
+        for i in range(x_batch.shape[0]):
+            offset = 0
+            if y_batch[i] == 1:
+                for j in range(36):
+                    plt.plot(x[i, :, j + offset])
+                plt.show()
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_root', type=str, default = '../data', help='Root directory of raw data.')
+    args = parser.parse_args()
+    file_utils.set_data_root(args.data_root)
+
+    # visual_record()
+    # visual_logcat()
+    visual_dataset()
+

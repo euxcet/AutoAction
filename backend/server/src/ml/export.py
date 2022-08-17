@@ -9,14 +9,15 @@ from ml.global_vars import GlobalVars
 def export_csv(tasklistId, taskIds, trainId, timestamp, cutter_type, dataset_version='0.2'):
     dataset = Dataset()
     cutter_dict = {
-        'peak': PeakCutter('linear_acc', forward=100,
-            length=GlobalVars.WINDOW_LENGTH, noise=20),
+        'peak': PeakCutter('linear_acc', forward=60,
+            length=GlobalVars.WINDOW_LENGTH, noise=10),
         'random': RandomCutter()
     }
     tasklist = file_utils.load_taskList_info(tasklistId)
     records = []
     for task in tasklist['tasks']:
         taskId = task['id']
+        print(taskId, taskIds)
         if taskId not in taskIds: continue
         # choose all subtasks in selected tasks
         for subtask in task['subtasks']:
