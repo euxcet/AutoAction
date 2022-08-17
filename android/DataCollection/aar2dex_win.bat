@@ -15,7 +15,8 @@ rem TODO: configurate d8 path
 rem set sdk_version=30.0.3
 rem set D8_PATH=%USERPROFILE%\AppData\Local\Android\Sdk\build-tools\%sdk_version%\d8.bat
 call "%D8_PATH%" classes.jar
-if errorlevel 1 goto err else goto checkarg
+if errorlevel 1 goto err
+move classes.dex release.dex
 
 :checkarg
 if [%~1]==[-s] if not [%~2]==[] set server_addr=%~2
@@ -23,7 +24,7 @@ goto updatefile
 
 :updatefile
 echo Updating server at %server_addr%
-curl -XPOST http://%server_addr%/file -F "file=@classes.dex"
+curl -XPOST http://%server_addr%/file -F "file=@release.dex"
 if errorlevel 1 goto err else goto updatemd5
 
 :updatemd5
