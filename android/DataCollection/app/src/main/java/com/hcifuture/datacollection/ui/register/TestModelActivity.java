@@ -34,7 +34,7 @@ public class TestModelActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test_model);
-//        mImuSensorManager = new ImuSensorManager(this);
+        mImuSensorManager = new ImuSensorManager(this);
         mActivity = this;
 
         mCameraController = new CameraController(mActivity);
@@ -63,13 +63,13 @@ public class TestModelActivity extends AppCompatActivity {
     }
 
     private void detectFrame() {
-        Log.e("TEST", "Detect frame");
+        /*
         mCameraController.capture().whenComplete((v, e) -> {
             Pair<Integer, Float> result = ActionManager.getInstance().classify(v);
-            Log.e("TEST", "RESULT: " + result);
             runOnUiThread(() -> frameResultView.setText("Result: " + result.first + " " + result.second));
             detectFrame();
         });
+         */
     }
 
     @Override

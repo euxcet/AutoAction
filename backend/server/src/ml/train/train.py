@@ -98,13 +98,14 @@ def train_model(trainId:str, timestamp:int, config:dict):
 
     best_acc = 0.0
 
-    print('Start training')
+    print('Start training!!')
     for epoch in range(0, CONFIG_EPOCH):
         model.train()
         for x_batch, y_batch in train_loader:
             if device is not None:
                 x_batch = x_batch.to(device)
                 y_batch = y_batch.to(device)
+            print('Shape', x_batch.shape)
             optimizer.zero_grad()
             out = model(x_batch)
             loss = criterion(out, y_batch)

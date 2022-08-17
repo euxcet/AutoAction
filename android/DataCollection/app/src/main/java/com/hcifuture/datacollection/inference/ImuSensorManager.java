@@ -7,6 +7,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
+import com.hcifuture.datacollection.inference.filter.ImuFilter;
+
 import org.checkerframework.checker.units.qual.A;
 
 import java.util.ArrayList;
@@ -30,11 +32,13 @@ public class ImuSensorManager implements SensorEventListener {
     private boolean isInitialized;
     private boolean isStarted;
 
-    private final int DATA_LENGTH = 200 * 6;
-    private final int DATA_ELEMSIZE = 6;
+    private final int DATA_SAMPLES = 200;
+    private final int DATA_ELEMSIZE = 9;
     private final int INTERVAL = 9900000;
 
-    private float[] data = new float[DATA_LENGTH];
+    private float[][] data = new float[DATA_ELEMSIZE][DATA_SAMPLES];
+
+    private long lastTimestampAcc = 0;
     private long lastTimestampGyro = 0;
     private long lastTimestampLinear = 0;
 
@@ -44,12 +48,23 @@ public class ImuSensorManager implements SensorEventListener {
 
     private List<ImuEventListener> listeners;
 
+    private ImuFilter lowPassFilter;
+    private ImuFilter bandPassFilter;
+    private ImuFilter highPassFilter;
+
     public ImuSensorManager(Context context) {
         this.mContext = context;
         threadPoolExecutor = new ThreadPoolExecutor(1, 2, 1000,
                 TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(10),
                 Executors.defaultThreadFactory(), new ThreadPoolExecutor.DiscardOldestPolicy());
         initialize();
+        float fs = 100.0f;
+        float tw = 1.0f;
+        float fc_low = 6.0f;
+        float fc_high = 12.0f;
+        lowPassFilter = new ImuFilter("low-pass", fs, tw, fc_low, 0, "hamming");
+        bandPassFilter = new ImuFilter("band-pass", fs, tw, fc_low, fc_high, "hamming");
+        highPassFilter = new ImuFilter("high-pass", fs, tw, 0, fc_high, "hamming");
     }
 
     public boolean initialize() {
@@ -124,30 +139,38 @@ public class ImuSensorManager implements SensorEventListener {
     public void onSensorChanged(SensorEvent event) {
         int type = event.sensor.getType();
         switch (type) {
-            case Sensor.TYPE_GYROSCOPE:
-                if (event.timestamp - lastTimestampGyro > INTERVAL) {
-                    for (int i = 0; i < DATA_LENGTH - DATA_ELEMSIZE; i += DATA_ELEMSIZE) {
-                        for (int j = 0; j < 3; j++) {
-                            data[i + j] = data[i + j + DATA_ELEMSIZE];
-                        }
+            // acc linear gyro
+            case Sensor.TYPE_ACCELEROMETER:
+                if (event.timestamp - lastTimestampAcc > INTERVAL) {
+                    for (int i = 0; i < 3; i++) {
+                        System.arraycopy(data[i], 1, data[i], 0, DATA_SAMPLES - 1);
                     }
-                    data[DATA_LENGTH - DATA_ELEMSIZE] = event.values[0];
-                    data[DATA_LENGTH - DATA_ELEMSIZE + 1] = event.values[1];
-                    data[DATA_LENGTH - DATA_ELEMSIZE + 2] = event.values[2];
-                    lastTimestampGyro = event.timestamp;
+                    data[0][DATA_SAMPLES - 1] = event.values[0];
+                    data[1][DATA_SAMPLES - 1] = event.values[1];
+                    data[2][DATA_SAMPLES - 1] = event.values[2];
+                    lastTimestampAcc = event.timestamp;
                 }
                 break;
             case Sensor.TYPE_LINEAR_ACCELERATION:
                 if (event.timestamp - lastTimestampLinear > INTERVAL) {
-                    for (int i = 0; i < DATA_LENGTH - DATA_ELEMSIZE; i += DATA_ELEMSIZE) {
-                        for (int j = 3; j < 6; j++) {
-                            data[i + j] = data[i + j + DATA_ELEMSIZE];
-                        }
+                    for (int i = 3; i < 6; i++) {
+                        System.arraycopy(data[i], 1, data[i], 0, DATA_SAMPLES - 1);
                     }
-                    data[DATA_LENGTH - DATA_ELEMSIZE + 3] = event.values[0];
-                    data[DATA_LENGTH - DATA_ELEMSIZE + 4] = event.values[1];
-                    data[DATA_LENGTH - DATA_ELEMSIZE + 5] = event.values[2];
+                    data[3][DATA_SAMPLES - 1] = event.values[0];
+                    data[4][DATA_SAMPLES - 1] = event.values[1];
+                    data[5][DATA_SAMPLES - 1] = event.values[2];
                     lastTimestampLinear = event.timestamp;
+                }
+                break;
+            case Sensor.TYPE_GYROSCOPE:
+                if (event.timestamp - lastTimestampGyro > INTERVAL) {
+                    for (int i = 6; i < 9; i++) {
+                        System.arraycopy(data[i], 1, data[i], 0, DATA_SAMPLES - 1);
+                    }
+                    data[6][DATA_SAMPLES - 1] = event.values[0];
+                    data[7][DATA_SAMPLES - 1] = event.values[1];
+                    data[8][DATA_SAMPLES - 1] = event.values[2];
+                    lastTimestampGyro = event.timestamp;
                 }
                 break;
             default:
@@ -157,11 +180,26 @@ public class ImuSensorManager implements SensorEventListener {
         // TODO: stable on hand, stable on table, not stable
 
         threadPoolExecutor.execute(() -> {
-            float[] input_data = data.clone();
-            // add filter
+            float[][] input_data = new float[DATA_ELEMSIZE * 4][DATA_SAMPLES];
+            for (int i = 0; i < 9; i++) {
+                input_data[i * 4] = data[i].clone();
+
+            }
+            for (int i = 0; i < 9; i++) {
+                input_data[i * 4 + 1] = lowPassFilter.filter(input_data[i * 4]);
+                input_data[i * 4 + 2] = bandPassFilter.filter(input_data[i * 4]);
+                input_data[i * 4 + 3] = highPassFilter.filter(input_data[i * 4]);
+            }
+            float[] data_1d = new float[DATA_ELEMSIZE * 4 * DATA_SAMPLES];
+            for (int i = 0; i < 36; i++) {
+                for (int j = 0; j < DATA_SAMPLES; j++) {
+                    data_1d[j * 36 + i] = input_data[i][j];
+                }
+            }
             if (isStarted) {
                 if (Inferencer.getInstance() != null) {
-//                    int result = Inferencer.getInstance().inference("action.mnn", input_data);
+                    int result = Inferencer.getInstance().inference("action.mnn", data_1d);
+                    Log.e("TEST", "IMU result: " + result);
                     // TODO: event
                 }
             }

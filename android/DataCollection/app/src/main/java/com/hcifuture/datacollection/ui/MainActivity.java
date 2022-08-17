@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import com.hcifuture.datacollection.R;
 import com.hcifuture.datacollection.inference.Inferencer;
+import com.hcifuture.datacollection.inference.filter.ImuFilter;
 import com.hcifuture.datacollection.service.MainService;
 import com.hcifuture.datacollection.ui.config.ConfigTaskActivity;
 import com.hcifuture.datacollection.ui.register.TestModelActivity;
@@ -95,6 +96,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ImuFilter.unitTest();
 
         // ask for permissions
         requestPermissions();

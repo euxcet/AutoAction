@@ -154,6 +154,8 @@ if __name__ == '__main__':
     
     plt.subplot(4, 2, 3)
     low_f_filter = low_pass.filter(f)
+    print(low_f_filter, low_f_filter.shape)
+    print()
     fft_low_f_filter = np.abs(np.fft.fft(low_f_filter))
     plt.plot(t, low_f)
     plt.plot(t, low_f_filter)
@@ -163,6 +165,8 @@ if __name__ == '__main__':
     
     plt.subplot(4, 2, 5)
     high_f_filter = high_pass.filter(f)
+    print(high_f_filter)
+    print()
     fft_high_f_filter = np.abs(np.fft.fft(high_f_filter))
     plt.plot(t, high_f)
     plt.plot(t, high_f_filter)
@@ -172,6 +176,8 @@ if __name__ == '__main__':
     
     plt.subplot(4, 2, 7)
     band_f_filter = band_pass.filter(f)
+    print(band_f_filter)
+    print()
     fft_band_f_filter = np.abs(np.fft.fft(band_f_filter))
     plt.plot(t, band_f)
     plt.plot(t, band_f_filter)
@@ -179,6 +185,6 @@ if __name__ == '__main__':
     plt.plot(fft_band_f[:half_len])
     plt.plot(fft_band_f_filter[:half_len])
     
-    plt.show()
+#plt.show()
             
         
