@@ -7,4 +7,5 @@ cp contextactionlibrary-debug/classes.jar ../../../../../../backend/server/data/
 cd ../../../../../../backend/server/data/file/
 # TODO: configurate d8 path
 $D8_PATH classes.jar
+mv classes.dex release.dex
 curl -XPOST http://127.0.0.1:6125/md5 
