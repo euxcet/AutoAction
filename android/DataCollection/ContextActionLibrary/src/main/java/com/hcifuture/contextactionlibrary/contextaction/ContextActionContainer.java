@@ -861,29 +861,31 @@ public class ContextActionContainer implements ActionListener, ContextListener {
     public void onExternalEventDex(Bundle bundle) {
         if (handler != null) {
             handler.post(() -> {
-                if (bundle.containsKey("EnableFunctions")) {
-                    List<String> functions = bundle.getStringArrayList("EnableFunctions");
-                    for (BaseAction action: actions) {
-                        if (functions.contains(action.getName())) {
-                            action.start();
+                if (bundle.getString("type", "").equals("SwitchFunction")) {
+                    if (bundle.containsKey("EnableFunctions")) {
+                        List<String> functions = bundle.getStringArrayList("EnableFunctions");
+                        for (BaseAction action: actions) {
+                            if (functions.contains(action.getName())) {
+                                action.start();
+                            }
+                        }
+                        for (BaseContext context: contexts) {
+                            if (functions.contains(context.getName())) {
+                                context.start();
+                            }
                         }
                     }
-                    for (BaseContext context: contexts) {
-                        if (functions.contains(context.getName())) {
-                            context.start();
+                    if (bundle.containsKey("DisableFunctions")) {
+                        List<String> functions = bundle.getStringArrayList("DisableFunctions");
+                        for (BaseAction action: actions) {
+                            if (functions.contains(action.getName())) {
+                                action.stop();
+                            }
                         }
-                    }
-                    switchSensor(false);
-                } else if (bundle.containsKey("DisableFunctions")) {
-                    List<String> functions = bundle.getStringArrayList("DisableFunctions");
-                    for (BaseAction action: actions) {
-                        if (functions.contains(action.getName())) {
-                            action.stop();
-                        }
-                    }
-                    for (BaseContext context: contexts) {
-                        if (functions.contains(context.getName())) {
-                            context.stop();
+                        for (BaseContext context: contexts) {
+                            if (functions.contains(context.getName())) {
+                                context.stop();
+                            }
                         }
                     }
                     switchSensor(false);
