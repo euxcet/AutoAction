@@ -37,8 +37,8 @@ public class InPocketContext extends BaseContext {
     private boolean oriOk = false;
     private boolean lightOk = false;
 
-    private float upThreshold = 0.0F;
-    private float downThreshold = 0.5F;
+    private float upThreshold = 0.15F;
+    private float downThreshold = 0.9F;
 
     private boolean keep3s = false;
     private int lastOri = 0;
@@ -119,8 +119,8 @@ public class InPocketContext extends BaseContext {
                         lastDownTimestamp = data.getTimestamp();
                         while (downTimestamps.size() > 0 && data.getTimestamp() - downTimestamps.peek() > 8 * 1e9)
                             downTimestamps.remove();
-                        if (downTimestamps.size() >= 4)
-                            keep3s = true;
+//                        if (downTimestamps.size() >= 4)
+//                            keep3s = true;
                     }
                     if (!oriOk) {
                         oriOk = true;
@@ -141,10 +141,10 @@ public class InPocketContext extends BaseContext {
                     if (!keep3s) {
                         changeStatus = true;
                     }
-                    if (keep3s && (data.getTimestamp() - lastDownTimestamp > 1.5 * 1e9 && data.getTimestamp() - lastZeroTimestamp > 1.5 * 1e9)) {
-                        keep3s = false;
-                        changeStatus = true;
-                    }
+//                    if (keep3s && (data.getTimestamp() - lastDownTimestamp > 1.5 * 1e9 && data.getTimestamp() - lastZeroTimestamp > 1.5 * 1e9)) {
+//                        keep3s = false;
+//                        changeStatus = true;
+//                    }
                     if (!lightOk && changeStatus) {
                         if (oriOk) {
                             oriOk = false;
