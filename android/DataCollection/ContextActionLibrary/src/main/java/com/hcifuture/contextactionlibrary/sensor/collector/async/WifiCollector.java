@@ -100,9 +100,9 @@ public class WifiCollector extends AsynchronousCollector {
                                     result.setErrorReason(e.toString());
                                 } finally {
                                     setCollectData(result);
-                                    mFt.complete(result);
                                     isCollecting.set(false);
                                     isScanning.set(false);
+                                    mFt.complete(result);
                                 }
                             }
                         }
@@ -146,9 +146,9 @@ public class WifiCollector extends AsynchronousCollector {
                         setCollectData(result);
                         result.setErrorCode(1);
                         result.setErrorReason("Cannot start Wifi scan");
-                        ft.complete(result);
                         isCollecting.set(false);
                         isScanning.set(false);
+                        ft.complete(result);
                     } else {
                         isScanning.set(true);
                         // start a new thread to check Bluetooth scan timeout
@@ -172,9 +172,9 @@ public class WifiCollector extends AsynchronousCollector {
                                             result.setErrorReason(result.getErrorReason() + " | " + e1);
                                         } finally {
                                             setCollectData(result);
-                                            ft.complete(result);
                                             isCollecting.set(false);
                                             isScanning.set(false);
+                                            ft.complete(result);
                                         }
                                     }
                                 }
@@ -184,9 +184,9 @@ public class WifiCollector extends AsynchronousCollector {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                ft.completeExceptionally(new CollectorException(4, e));
                 isCollecting.set(false);
                 isScanning.set(false);
+                ft.completeExceptionally(new CollectorException(4, e));
             }
         } else {
             ft.completeExceptionally(new CollectorException(3, "Concurrent task of Wifi scanning"));
