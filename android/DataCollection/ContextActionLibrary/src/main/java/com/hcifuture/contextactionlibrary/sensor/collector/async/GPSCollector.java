@@ -117,8 +117,8 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
                     setCollectData(result);
                     result.setErrorCode(1);
                     result.setErrorReason("GPS provider not enabled");
-                    ft.complete(result);
                     isCollecting.set(false);
+                    ft.complete(result);
                 } else {
                     bindListener();
                     futureList.add(scheduledExecutorService.schedule(() -> {
@@ -131,16 +131,16 @@ public class GPSCollector extends AsynchronousCollector implements LocationListe
                         } finally {
                             unbindListener();
                             setCollectData(result);
-                            ft.complete(result);
                             isCollecting.set(false);
+                            ft.complete(result);
                         }
                     }, config.getGPSRequestTime(), TimeUnit.MILLISECONDS));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 unbindListener();
-                ft.completeExceptionally(new CollectorException(5, e));
                 isCollecting.set(false);
+                ft.completeExceptionally(new CollectorException(5, e));
             }
         } else {
             ft.completeExceptionally(new CollectorException(2, "Concurrent task of GPS collecting"));
