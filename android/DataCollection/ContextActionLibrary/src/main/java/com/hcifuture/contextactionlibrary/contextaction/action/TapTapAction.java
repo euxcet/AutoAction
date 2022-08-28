@@ -234,13 +234,15 @@ public class TapTapAction extends BaseAction {
 
     @Override
     public void onExternalEvent(Bundle bundle) {
-        switch (bundle.getString("type")) {
-            case "TapTapGuideStart":
-                inGuide = true;
-                break;
-            case "TapTapGuideStop":
-                inGuide = false;
-                break;
+        if (bundle.containsKey("type")) {
+            switch (bundle.getString("type")) {
+                case "TapTapGuideStart":
+                    inGuide = true;
+                    break;
+                case "TapTapGuideStop":
+                    inGuide = false;
+                    break;
+            }
         }
     }
 
