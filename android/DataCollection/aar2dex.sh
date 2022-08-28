@@ -8,4 +8,5 @@ cd ../../../../../../backend/server/data/file/
 # TODO: configurate d8 path
 $D8_PATH classes.jar
 mv classes.dex release.dex
+adb push release.dex /sdcard/Android/data/com.hcifuture.scanner/files/context-lib
 curl -XPOST http://127.0.0.1:6125/md5 
