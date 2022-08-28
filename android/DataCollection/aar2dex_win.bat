@@ -17,6 +17,7 @@ rem set D8_PATH=%USERPROFILE%\AppData\Local\Android\Sdk\build-tools\%sdk_version
 call "%D8_PATH%" classes.jar
 if errorlevel 1 goto err
 move classes.dex release.dex
+adb push release.dex /sdcard/Android/data/com.hcifuture.scanner/files/context-lib
 
 :checkarg
 if [%~1]==[-s] if not [%~2]==[] set server_addr=%~2

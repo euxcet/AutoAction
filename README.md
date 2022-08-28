@@ -16,7 +16,7 @@ cd script
 
 安卓应用位于android/DataCollection中，运行需要动态加载contextactionlibrary库的dex二进制包。编译二进制包分为两步，首先生成classes.jar，再将classes.jar转化为classes.dex。classes.jar由android studio生成，在左侧的Project栏中选择ContextActionLibrary库，再点击菜单栏Build下的Make Module 'DataCollection.contextactionlibrary'。编译得到的结果位于contextactionlibrary/build/outputs/aar/contextactionlibrary-debug.aar。
 
-执行DataCollection下的aar2dex.sh脚本可以将aar包中的classes.jar提取转化为classes.dex，并放到后端的指定位置供前端下载使用。
+执行DataCollection下的aar2dex.sh脚本可以将aar包中的classes.jar提取转化为release.dex，并放到后端的指定位置供前端下载使用；同时还会尝试使用ADB将dex文件直接push到所连接设备的拍拍助手app的情境包文件夹下。
 
 执行aar2dex.sh需要配置D8\_PATH这个环境变量，即d8所在的路径。在Mac下一般位于~/Library/Android/sdk/build-tools/{sdk-version}/d8。
 
