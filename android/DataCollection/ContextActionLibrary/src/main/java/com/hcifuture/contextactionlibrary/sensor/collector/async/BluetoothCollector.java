@@ -121,8 +121,8 @@ public class BluetoothCollector extends AsynchronousCollector {
                     setCollectData(result);
                     result.setErrorCode(errorCode);
                     result.setErrorReason(errorReason);
-                    ft.complete(result);
                     isCollecting.set(false);
+                    ft.complete(result);
                 } else {
                     // Stops scanning after given time
                     futureList.add(scheduledExecutorService.schedule(() -> {
@@ -143,8 +143,8 @@ public class BluetoothCollector extends AsynchronousCollector {
                                 result.setErrorCode(9);
                                 result.setErrorReason(e.toString());
                             } finally {
-                                ft.complete(result);
                                 isCollecting.set(false);
+                                ft.complete(result);
                             }
                         }
                     }, config.getBluetoothScanTime(), TimeUnit.MILLISECONDS));
@@ -152,8 +152,8 @@ public class BluetoothCollector extends AsynchronousCollector {
             } catch (Exception e) {
                 e.printStackTrace();
                 stopScan();
-                ft.completeExceptionally(new CollectorException(7, e));
                 isCollecting.set(false);
+                ft.completeExceptionally(new CollectorException(7, e));
             }
         } else {
             ft.completeExceptionally(new CollectorException(6, "Concurrent task of Bluetooth scanning"));
