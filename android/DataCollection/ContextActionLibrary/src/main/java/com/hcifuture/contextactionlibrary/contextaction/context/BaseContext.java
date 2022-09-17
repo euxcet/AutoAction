@@ -52,6 +52,12 @@ public abstract class BaseContext {
 
     public abstract void start();
     public abstract void stop();
+    public void pause() {
+        stop();
+    }
+    public void resume() {
+        start();
+    }
     // public abstract void onIMUSensorChanged(SensorEvent event);
     // public abstract void onProximitySensorChanged(SensorEvent event);
     public abstract void onIMUSensorEvent(SingleIMUData data);

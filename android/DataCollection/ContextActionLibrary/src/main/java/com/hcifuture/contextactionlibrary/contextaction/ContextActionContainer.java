@@ -352,10 +352,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
 
     public void pause() {
         for (BaseAction action: actions) {
-            action.stop();
+            action.pause();
         }
         for (BaseContext context: contexts) {
-            context.stop();
+            context.pause();
         }
         if (dataDistributor != null) {
             dataDistributor.stop();
@@ -370,10 +370,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
             dataDistributor.start();
         }
         for (BaseAction action: actions) {
-            action.start();
+            action.resume();
         }
         for (BaseContext context: contexts) {
-            context.start();
+            context.resume();
         }
         if (actionFuture != null && (actionFuture.isDone() || actionFuture.isCancelled())) {
             monitorAction();
