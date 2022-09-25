@@ -58,34 +58,16 @@ public abstract class BaseCollector {
 
     public abstract String getName();
 
-    public String getUserID() {
-        return uploader.getUserId();
-        /*
-        String macAddress = getMacMoreThanM();
-        if (macAddress != null) {
-            return macAddress.replace(":", "_");
-        } else {
-            return "TEST_USERID";
-        }
-         */
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public CollectorResult upload(CollectorResult result, String name, String commit) {
-        return upload(result, name, commit, null);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public CollectorResult upload(CollectorResult collectorResult, String name, String commit, Result contextOrAction) {
+    static public CollectorResult upload(Uploader uploader, CollectorResult collectorResult, String name, String commit, Result contextOrAction) {
         long uploadTime = System.currentTimeMillis();
         Log.e("Upload name", name);
         Log.e("Upload commit", commit);
         Log.e("Upload file", collectorResult.getSavePath());
-        Log.e("User id", getUserID());
+        Log.e("User id", uploader.getUserId());
 
         File file = new File(collectorResult.getSavePath());
         File metaFile = new File(file.getAbsolutePath() + ".meta");
-        TaskMetaBean meta = new TaskMetaBean(file.getName(), 0, commit, name, getUserID(), uploadTime);
+        TaskMetaBean meta = new TaskMetaBean(file.getName(), 0, commit, name, uploader.getUserId(), uploadTime);
         meta.setCollectorResult(JSONUtils.collectorResultToMap(collectorResult));
         meta.setContextAction(JSONUtils.resultToMap(contextOrAction));
         FileUtils.writeStringToFile(new Gson().toJson(meta), metaFile);
@@ -94,27 +76,36 @@ public abstract class BaseCollector {
         return collectorResult;
     }
 
+    static public CollectorResult upload(Uploader uploader, CollectorResult collectorResult, String name, String commit) {
+        return upload(uploader, collectorResult, name, commit, null);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public CollectorResult upload(CollectorResult result, String name, String commit) {
+        return upload(uploader, result, name, commit, null);
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<CollectorResult> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String commit) {
         return clickTrigger.trigger(collector, triggerConfig)
-                .thenApply((v) -> upload(v, name, commit));
+                .thenApply((v) -> upload(uploader, v, name, commit));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<CollectorResult> triggerAndUpload(Collector collector, TriggerConfig triggerConfig, String name, String commit, Result contextOrAction) {
         return clickTrigger.trigger(collector, triggerConfig)
-                .thenApply((v) -> upload(v, name, commit, contextOrAction));
+                .thenApply((v) -> upload(uploader, v, name, commit, contextOrAction));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<CollectorResult> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String commit) {
         return clickTrigger.trigger(Collections.singletonList(type), triggerConfig)
-                .thenApply((v) -> upload(v.get(0), name, commit));
+                .thenApply((v) -> upload(uploader, v.get(0), name, commit));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CompletableFuture<CollectorResult> triggerAndUpload(CollectorManager.CollectorType type, TriggerConfig triggerConfig, String name, String commit, Result contextOrAction) {
         return clickTrigger.trigger(Collections.singletonList(type), triggerConfig)
-                .thenApply((v) -> upload(v.get(0), name, commit, contextOrAction));
+                .thenApply((v) -> upload(uploader, v.get(0), name, commit, contextOrAction));
     }
 }
