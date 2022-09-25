@@ -409,7 +409,7 @@ public class Uploader {
             if (isUploadingLocalFiles.compareAndSet(false, true)) {
                 try {
                     Log.e(TAG, "uploadLocalFiles");
-                    long timestamp = System.currentTimeMillis() - 5 * MINUTE;
+                    long timestamp = System.currentTimeMillis();
                     uploadDirectory(new File(this.fileFolder), timestamp, false);
                     uploadDirectory(new File(this.zipFolder), timestamp, true);
                 } finally {
