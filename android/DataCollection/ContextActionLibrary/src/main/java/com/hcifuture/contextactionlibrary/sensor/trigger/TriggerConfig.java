@@ -3,6 +3,7 @@ package com.hcifuture.contextactionlibrary.sensor.trigger;
 public class TriggerConfig {
     private int imuHead = -1;
     private int imuTail = -1;
+    private boolean imuGetAll = false;
     private int audioLength = 5000;
     private String audioFilename;
     private int bluetoothScanTime = 10000;
@@ -60,6 +61,10 @@ public class TriggerConfig {
         return locationTimeout;
     }
 
+    public boolean isImuGetAll() {
+        return imuGetAll;
+    }
+
     public TriggerConfig setAudioLength(int audioLength) {
         this.audioLength = audioLength;
         return this;
@@ -82,5 +87,10 @@ public class TriggerConfig {
 
     public void setLocationTimeout(int locationTimeout) {
         this.locationTimeout = locationTimeout;
+    }
+
+    public TriggerConfig setImuGetAll(boolean imuGetAll) {
+        this.imuGetAll = imuGetAll;
+        return this;
     }
 }

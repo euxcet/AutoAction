@@ -156,7 +156,7 @@ public class AudioCollector extends AsynchronousCollector {
 
     @Override
     public String getExt() {
-        return ".mp3";
+        return ".aac";
     }
 
     public String getDummyOutputFilePath() {

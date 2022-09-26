@@ -5,7 +5,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.media.Session2CommandGroup;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -31,7 +30,7 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
     // in case sampling period is higher, maybe max 500Hz for acc and gyro
     private final long DELAY_TIME = 5000;
     private final int SAMPLING_PERIOD = SensorManager.SENSOR_DELAY_FASTEST;
-    private int LENGTH_LIMIT = 12000;
+    private int LENGTH_LIMIT = 12000 * 10;
 
     private IMUData data;
 
@@ -122,12 +121,20 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
         if (config.getImuHead() > 0 && config.getImuTail() > 0) {
             delay = config.getImuTail();
         }
+        if (config.isImuGetAll()) {
+            delay = 0;
+        }
         futureList.add(scheduledExecutorService.schedule(() -> {
             try {
                 if (config.getImuHead() > 0 && config.getImuTail() > 0) {
                     int length = (config.getImuHead() + config.getImuTail()) * LENGTH_LIMIT / 10000;
                     CollectorResult result = new CollectorResult();
                     result.setData(data.deepClone().tail(length));
+                    ft.complete(result);
+                } else if (config.isImuGetAll()) {
+                    CollectorResult result = new CollectorResult();
+                    result.setData(data.deepClone());
+                    data.clear();
                     ft.complete(result);
                 } else {
                     CollectorResult result = new CollectorResult();
