@@ -1,13 +1,14 @@
 package com.hcifuture.contextactionlibrary.sensor.data;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class IMUData extends Data {
-    private List<SingleIMUData> data;
+    private final List<SingleIMUData> data;
 
     public IMUData() {
-        data = new ArrayList<>();
+        data = Collections.synchronizedList(new ArrayList<>());
     }
 
     public List<SingleIMUData> getData() {
@@ -18,37 +19,49 @@ public class IMUData extends Data {
         if (data.isEmpty()) {
             return null;
         }
-        return data.get(data.size() - 1);
-    }
-
-    public void setData(List<SingleIMUData> data) {
-        this.data = data;
-    }
-
-    public synchronized IMUData tail(int length) {
-        if (length < data.size()) {
-            data = data.subList(data.size() - length, data.size());
+        synchronized (data) {
+            return data.get(data.size() - 1);
         }
-        return this;
     }
 
-    public synchronized void insert(SingleIMUData d, int limit) {
-        if (limit > 0) {
-            while (data.size() >= limit) {
-                data.remove(0);
+    public void removeFirst(int length) {
+        synchronized (data) {
+            data.subList(0, length).clear();
+        }
+    }
+
+    public IMUData tail(int length) {
+        synchronized (data) {
+            if (length < data.size()) {
+                removeFirst(data.size() - length);
             }
+            return this;
         }
-        data.add(d);
+    }
+
+    public void insert(SingleIMUData d, int limit) {
+        synchronized (data) {
+            if (limit > 0) {
+                if (data.size() >= limit) {
+                    removeFirst(data.size() - limit + 1);
+                }
+            }
+            data.add(d);
+        }
     }
 
     public void clear() {
-        data.clear();
+        synchronized (data) {
+            data.clear();
+        }
     }
 
-    public synchronized IMUData deepClone() {
+    public IMUData deepClone() {
         IMUData result = new IMUData();
-        for (SingleIMUData d: data) {
-            result.insert(d.deepClone(), -1);
+        synchronized (data) {
+            for (SingleIMUData d : data) {
+                result.insert(d.deepClone(), -1);
+            }
         }
         return result;
     }
