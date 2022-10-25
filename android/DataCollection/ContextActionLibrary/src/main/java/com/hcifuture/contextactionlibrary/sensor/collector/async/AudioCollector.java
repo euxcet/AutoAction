@@ -32,6 +32,7 @@ public class AudioCollector extends AsynchronousCollector {
 
     private ScheduledFuture<?> repeatedSampleFt;
     private final File dummyOutputFile;
+    private File saveFile;
 
     /*
       Error code:
@@ -62,8 +63,17 @@ public class AudioCollector extends AsynchronousCollector {
 
     @Override
     public void close() {
+        stopRecordingAndDelete();
+    }
+
+    private void stopRecordingAndDelete() {
         stopRecording();
-        clearDummyOutputFile();
+        // remove file
+        try {
+            FileUtils.deleteFile(saveFile, "");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -79,7 +89,7 @@ public class AudioCollector extends AsynchronousCollector {
         } else {
             filename = config.getAudioFilename();
         }
-        File saveFile = new File(filename);
+        saveFile = new File(filename);
         result.setSavePath(saveFile.getAbsolutePath());
 
         if (config.getAudioLength() <= 0) {
@@ -117,9 +127,7 @@ public class AudioCollector extends AsynchronousCollector {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                stopRecording();
-                // remove file
-                FileUtils.deleteFile(saveFile, "");
+                stopRecordingAndDelete();
                 isCollecting.set(false);
                 ft.completeExceptionally(new CollectorException(4, e));
             }
@@ -140,8 +148,7 @@ public class AudioCollector extends AsynchronousCollector {
 
     @Override
     public void pause() {
-        stopRecording();
-        clearDummyOutputFile();
+        stopRecordingAndDelete();
     }
 
     @Override
@@ -162,14 +169,6 @@ public class AudioCollector extends AsynchronousCollector {
     public String getDummyOutputFilePath() {
         // from Android 11 (SDK 30) on, cannot use "/dev/null"
         return dummyOutputFile.getAbsolutePath();
-    }
-
-    public void clearDummyOutputFile() {
-        try {
-            FileUtils.deleteFile(dummyOutputFile, "");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     private MediaRecorder startNewMediaRecorder(int audioSource, String outputFilePath) throws IOException {
