@@ -12,8 +12,9 @@ import ml.data_aug as data_aug
 from ml.global_vars import GlobalVars
 from ml.filter import Filter
 
+import file_utils
 
-def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.25, drop_cols=None):
+def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.25, drop_cols=None, label_path=None):
     ''' Create train and validation datasets, by spliting X into two parts.
     args:
         X: pd.DataFrame, data read from .csv files
@@ -28,11 +29,19 @@ def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.25, drop_cols=None)
     le = LabelEncoder()
     y_enc = le.fit_transform(y) # encoded labels
     # print('Encode ', le.inverse_transform([0, 1, 2, 3, 4]))
+    labels = []
     try:
-        for i in range(0, 10):
+        for i in range(0, 2**10):
             print('Encode ', i, le.inverse_transform([i]))
+            labels.append(le.inverse_transform([i])[0])
     except:
         pass
+
+    if label_path != None:
+        with open(label_path, 'w') as fout:
+            for label in labels:
+                fout.write(label + '\n')
+
     # reconstructed data, shape = (samples, length, channels)
     X_grouped:np.ndarray = create_grouped_array(X, drop_cols=drop_cols)
         
@@ -57,6 +66,22 @@ def create_datasets(X:pd.DataFrame, y:pd.Series, test_size=0.25, drop_cols=None)
         np.random.shuffle(idxs)
         X_train = X_train[idxs]
         y_train = y_train[idxs]
+
+    if GlobalVars.AUGMENT_ROTATE:
+        X_augmented = []
+        y_augmented = []
+        X_augmented.append(X_train)
+        y_augmented.append(y_train)
+        for label in set(y_train):
+            if labels[label] == 'point':
+                mask = (y_train == label)
+                for repeat in range(50):
+                    X_augmented.append(data_aug.rotate(X_train[mask]))
+                    y_augmented.append(np.concatenate([y_train[mask]]))
+        X_train = np.row_stack(X_augmented)
+        y_train = np.concatenate(y_augmented)
+
+    print('X_train:', X_train.shape)
 
     
     # frequency division
@@ -126,7 +151,7 @@ def create_test_dataset(X, drop_cols=None):
     return TensorDataset(X_grouped, y_fake)
 
 
-def create_loaders(train_ds, val_ds, batch_size=512, jobs=0):
+def create_loaders(train_ds: TensorDataset, val_ds: TensorDataset, batch_size=512, jobs=0):
     ''' Construct data loaders from datasets
     args:
         train_ds: torch.DataSet, training dataset
@@ -136,12 +161,23 @@ def create_loaders(train_ds, val_ds, batch_size=512, jobs=0):
     return:
         tuple: (train data loader, validation data loader)
     '''
-    train_dl = DataLoader(train_ds, batch_size, shuffle=True, num_workers=jobs)
+    max_y = 0
+    labels = []
+    for _, y in train_ds:
+        max_y = max(max_y, y)
+        labels.append(y)
+    sample_count = [0 for i in range(max_y + 1)]
+    for _, y in train_ds:
+        sample_count[y] += 1
+    class_weights = [len(train_ds) / sample_count[i] for i in range(len(sample_count))]
+    weights = [class_weights[labels[i]] for i in range(len(train_ds))]
+    sampler = torch.utils.data.sampler.WeightedRandomSampler(torch.DoubleTensor(weights), len(train_ds))
+    train_dl = DataLoader(train_ds, batch_size, num_workers=jobs, sampler=sampler)
     val_dl = DataLoader(val_ds, batch_size, shuffle=False, num_workers=jobs)
     return train_dl, val_dl
 
 
-def create_train_val_loader(X_TRAIN_PATH, Y_TRAIN_PATH):
+def create_train_val_loader(X_TRAIN_PATH, Y_TRAIN_PATH, label_path):
     ''' Read csv files and construct data loaders.
     args:
         X_TRAIN_PATH: path of X_train.csv file
@@ -174,7 +210,7 @@ def create_train_val_loader(X_TRAIN_PATH, Y_TRAIN_PATH):
     y_train:pd.DataFrame = pd.read_csv(Y_TRAIN_PATH, usecols=y_cols.keys(), dtype=y_cols)
     
     print('Preparing datasets')
-    train_ds, val_ds, le = create_datasets(x_train, y_train['group_name'], drop_cols=ID_COLS)
+    train_ds, val_ds, le = create_datasets(x_train, y_train['group_name'], drop_cols=ID_COLS, label_path=label_path)
 
     batch_size = GlobalVars.BATCH_SIZE
     print(f'Creating data loaders with batch size: {batch_size}')

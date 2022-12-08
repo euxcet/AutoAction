@@ -1,7 +1,3 @@
-classA
-classB
-classC
-classD
-classE
-classF
-classG
+lean
+negative
+point

@@ -26,7 +26,8 @@ def plot_data(data:dict, sensors:tuple=('acc',), idx_range:tuple=None,
         x = sensor_data['x'][start:end]
         y = sensor_data['y'][start:end]
         z = sensor_data['z'][start:end]
-        t = sensor_data['t'][start:end]
+        ts = sensor_data['t'][start:end]
+        t = [i for i in range(len(ts))]
         norm = np.sqrt(np.square(x) + np.square(y) + np.square(z))
         plt.plot(t, x); plt.plot(t, y); plt.plot(t, z); plt.plot(t, norm)
         
@@ -34,8 +35,9 @@ def plot_data(data:dict, sensors:tuple=('acc',), idx_range:tuple=None,
             xyz = np.concatenate([x, y, z])
             min_val, max_val = np.min(xyz), np.max(norm)
             for t in timestamps:
-                plt.plot([t,t], [min_val,max_val], '--', color='black')
-    
+                pos = np.searchsorted(ts, t)
+                plt.plot([pos,pos], [min_val,max_val], '--', color='black')
+
         plt.ylabel(sensor)
         plt.legend(['x', 'y', 'z', 'norm'], loc='lower right')
         
@@ -84,11 +86,8 @@ def plot_filter(data:dict, sensor:str, idx_range:tuple=None, timestamps:list=Non
         
     plt.show()
 
-def visual_record():
+def visual_record(task_id, subtask_id, record_id):
     task_list_id = 'TL13r912je' # default task list
-    task_id = 'TKknwgwok9' # Task-3
-    subtask_id = 'STd8wlnc3o' # Unstable
-    record_id = 'RD7dni8lr8'
     record_path = file_utils.get_record_path(task_list_id, task_id, subtask_id, record_id)
     print(record_path)
     motion_path, timestamp_path = None, None
@@ -99,67 +98,73 @@ def visual_record():
             timestamp_path = os.path.join(record_path, filename)
             
     # timestamps
-    cutter = PeakCutter('linear_acc', 80, 200, 20)
+    cutter = PeakCutter('linear_acc', 60, 100, 10)
     record = Record(motion_path, timestamp_path, record_id,
         group_id=0, group_name='Task-0', cutter=cutter, cut_data=True)
     data = record.data
     timestamps = record.timestamps
+    print(data)
     
-    # plot_data(data, sensors=('acc', 'linear_acc', 'gyro'), timestamps=timestamps)
-    plot_filter(data, 'linear_acc', idx_range=(0.0, 1.0))
+    plot_data(data, sensors=('acc', 'linear_acc', 'gyro'), timestamps=timestamps)
+    #plot_filter(data, 'linear_acc', idx_range=(0.0, 1.0))
 
 
-def visual_dataset():
-    train_id = 'XT9me9xq7y'
+def visual_dataset(train_id:str, sensors:tuple=('acc', 'linear', 'gyro'), sample_count:int=10, class_ids:list=[0]):
     ROOT = file_utils.get_train_path(train_id)
     X_TEST_PATH = os.path.join(ROOT, 'X_test.csv')    # train_data
     Y_TEST_PATH = os.path.join(ROOT, 'Y_test.csv')    # train_labels
 
+    train_loader, val_loader = create_train_val_loader(X_TEST_PATH, Y_TEST_PATH, 'label.txt')
 
-    '''
-    with open(X_TEST_PATH, 'r') as f:
-        x = f.readline()
-        for _ in range(9):
-            xs = []
-            ys = []
-            zs = []
-            for p in range(100):
-                t = f.readline().strip().split(',')
-                offset = 0
-                xs.append(float(t[3 + offset]))
-                ys.append(float(t[4 + offset]))
-                zs.append(float(t[5 + offset]))
-            plt.plot(xs)
-            plt.plot(ys)
-            plt.plot(zs)
-            plt.show()
+    data = [[] for i in range(len(class_ids))]
 
-        print(x)
-    '''
+    current_sample_count = np.zeros(shape=max(class_ids)+1, dtype=np.int)
 
-
-
-    train_loader, val_loader = create_train_val_loader(X_TEST_PATH, Y_TEST_PATH)
-
-
-    for x_batch, y_batch in val_loader:
+    for x_batch, y_batch in train_loader:
         x = x_batch.numpy()
-        print(x_batch.shape, y_batch)
-
+        
         for i in range(x_batch.shape[0]):
-            offset = 0
-            if y_batch[i] == 1:
-                for j in range(36):
-                    plt.plot(x[i, :, j + offset])
-                plt.show()
+            if y_batch[i] in class_ids and current_sample_count[y_batch[i]] < sample_count:
+                current_sample_count[y_batch[i]] += 1
+                data[class_ids.index(y_batch[i])].append(x[i, :, 0::4])
+
+    sample_length = data[0][0].shape[0]
+
+    figure_row = len(sensors)
+    figure_col = len(class_ids)
+    for i in range(len(class_ids)):
+        d = np.array(data[i]).transpose([2, 0, 1])
+        for j, sensor in enumerate(sensors):
+            plt.subplot(figure_row, figure_col, j * figure_col + i + 1)
+            if sensor == 'acc':
+                xyz = d[0:3]
+            elif sensor == 'linear':
+                xyz = d[3:6]
+            elif sensor == 'gyro':
+                xyz = d[6:9]
+            xyz = xyz.reshape(xyz.shape[0], -1)
+            t = np.arange(0, xyz.shape[1])
+            plt.plot(t, xyz[0])
+            plt.plot(t, xyz[1])
+            plt.plot(t, xyz[2])
+
+            min_val, max_val = np.min(xyz), np.max(xyz)
+            for divider in range(0, len(t) + 1, sample_length):
+                plt.plot([divider,divider], [min_val,max_val], '--', color='black')
+
+
+    plt.show()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_root', type=str, default = '../data', help='Root directory of raw data.')
+    parser.add_argument('--task_id', type=str, default = 'TK7t0oxh08', help='Task id of the record.')
+    parser.add_argument('--subtask_id', type=str, default = 'STh1cx490s', help='Subtask id of the record.')
+    parser.add_argument('--record_id', type=str, default = 'RD0', help='Record id of the record.')
     args = parser.parse_args()
     file_utils.set_data_root(args.data_root)
 
-    # visual_record()
-    # visual_logcat()
-    visual_dataset()
+    #visual_record()
+    #visual_dataset('XT9me9xq7y', sample_count=10, class_ids=[1, 2])
+    visual_record(args.task_id, args.subtask_id, args.record_id)
 

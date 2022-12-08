@@ -12,6 +12,7 @@ DATA_TRAIN_ROOT = os.path.join(DATA_ROOT, "train")
 DATA_FILE_ROOT = os.path.join(DATA_ROOT, "file")
 DATA_DEX_ROOT = os.path.join(DATA_ROOT, "dex")
 DATA_TEMP_ROOT  = os.path.join(DATA_ROOT, "temp")
+DATA_MATCH_ROOT = os.path.join(DATA_ROOT, "match")
 
 md5 = dict()
 
@@ -24,8 +25,12 @@ def set_data_root(root):
     DATA_FILE_ROOT = os.path.join(DATA_ROOT, "file")
     DATA_DEX_ROOT = os.path.join(DATA_ROOT, "dex")
     DATA_TEMP_ROOT  = os.path.join(DATA_ROOT, "temp")
+    DATA_MATCH_ROOT = os.path.join(DATA_ROOT, "match")
 
 # a series functions to get some file path
+def get_match_path():
+    return DATA_MATCH_ROOT
+
 def get_temp_path():
     return DATA_TEMP_ROOT
 
@@ -71,6 +76,9 @@ def get_train_path(trainId):
 
 def get_train_info_path(trainId):
     return os.path.join(get_train_path(trainId), trainId + '.json')
+
+def get_train_label_path(trainId):
+    return os.path.join(get_train_path(trainId), 'label.txt')
 
 def delete_dir(path):
     try:
@@ -200,17 +208,32 @@ def get_md5(filename):
         return md5[filename]
     return ""
 
+def change_train_status(train_info_path, cur_status):
+    train_info = load_json(train_info_path)
+    train_info['status'] = cur_status
+    save_json(train_info, train_info_path)
+
 def create_default_files():
     mkdir(DATA_RECORD_ROOT)
     mkdir(DATA_TRAIN_ROOT)
     mkdir(DATA_FILE_ROOT)
     mkdir(DATA_DEX_ROOT)
     mkdir(DATA_TEMP_ROOT)
+    mkdir(DATA_MATCH_ROOT)
     shutil.copyfile(os.path.join(DEFAULT_ROOT, "config.json"), os.path.join(DATA_FILE_ROOT, "config.json"))
     default_tasklist_src = os.path.join(DEFAULT_ROOT, DEFAULT_TASKLIST_ID)
     default_tasklist_dst = os.path.join(DATA_RECORD_ROOT, DEFAULT_TASKLIST_ID)
     if os.path.exists(default_tasklist_src) and not os.path.exists(default_tasklist_dst):
         shutil.copytree(default_tasklist_src, default_tasklist_dst)
+
+def read_labels(path):
+    result = []
+    with open(path, 'r') as fin:
+        lines = fin.readlines()
+        for l in lines:
+            if l.strip() != '':
+                result.append(l.strip())
+    return result
         
 
 if __name__ == '__main__':

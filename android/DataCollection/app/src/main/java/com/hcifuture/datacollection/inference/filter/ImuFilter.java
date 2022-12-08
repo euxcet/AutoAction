@@ -92,7 +92,6 @@ public class ImuFilter {
     }
 
     public float[] filter(float[] input) {
-        Log.e("FILTER", input.length + " " + h.length);
         float[] mul = new float[input.length + h.length - 1];
         for (int i = 0; i < input.length + h.length - 1; i++) {
             mul[i] = 0;
@@ -134,6 +133,7 @@ public class ImuFilter {
         float[] high_f = high_pass.filter(f);
         float[] band_f = band_pass.filter(f);
 
+        /*
         for (int i = 0; i < 10; i++) {
             Log.e("Filter", "Low " + i + " " + low_f[i]);
         }
@@ -143,5 +143,6 @@ public class ImuFilter {
         for (int i = 0; i < 10; i++) {
             Log.e("Filter", "Band " + i + " " + band_f[i]);
         }
+         */
     }
 }

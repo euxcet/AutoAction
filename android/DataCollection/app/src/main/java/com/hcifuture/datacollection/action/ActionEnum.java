@@ -5,5 +5,7 @@ public enum ActionEnum {
     Knock,
     Lean,
     Place,
-    Point
+    Point,
+    PointIn,
+    PointOut,
 }

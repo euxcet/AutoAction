@@ -18,6 +18,7 @@ from route.route_tasklist import *
 from route.route_train import *
 from route.route_file import *
 from route.route_dex import *
+from route.route_match import *
 
 # multi-thread saver
 saver = ThreadPoolExecutor(max_workers=1)

@@ -36,7 +36,7 @@ if __name__ == '__main__':
     dataset = Dataset()
     dataset.insert_records(records)
     for t in range(0, 1000):
-        for p in range(5):
+        for p in range(3):
             print(p)
             x = dataset.get_series(p, t)
             plt.plot([i for i in range(x.shape[0])], x[:, 3:])

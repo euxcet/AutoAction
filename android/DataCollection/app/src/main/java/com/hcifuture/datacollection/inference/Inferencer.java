@@ -8,6 +8,7 @@ import android.net.Network;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
+import android.util.Pair;
 import android.widget.Toast;
 
 import com.hcifuture.datacollection.BuildConfig;
@@ -23,7 +24,14 @@ import com.lzy.okgo.model.Response;
 
 import org.checkerframework.checker.units.qual.A;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,9 +44,9 @@ public class Inferencer {
 
     private Context mContext;
 
-    private final List<String> ASSETS_FILES = Arrays.asList("mobilenet.mnn", "action.mnn", "shufflenet_.mnn", "label.txt");
+    private final List<String> ASSETS_FILES = Arrays.asList("best.mnn", "action.mnn", "siamese_export.mnn", "label.txt");
 
-    private List<String> label;
+    private List<String> mActionLabels;
 
     private HandlerThread mThread;
     private Handler mHandler;
@@ -66,8 +74,30 @@ public class Inferencer {
         return currentModelId;
     }
 
-    public List<String> getLabel() {
-        return label;
+    public List<String> getActionLabels() {
+        return mActionLabels;
+    }
+
+    private List<String> getLabels() {
+        List<String> labels = new ArrayList<>();
+        File labelFile = new File(getPath("label.txt"));
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(labelFile);
+            InputStreamReader reader = new InputStreamReader(fis, "UTF-8");
+            BufferedReader br = new BufferedReader(reader);
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.length() > 0) {
+                    labels.add(line);
+                }
+            }
+            fis.close();
+            reader.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return labels;
     }
 
     private void prepareModel(Context context) {
@@ -100,6 +130,7 @@ public class Inferencer {
         isStarted.set(false);
         isDownloading.set(false);
         prepareModel(context);
+        mActionLabels = getLabels();
         mConfig.numThread = 4;
         mConfig.forwardType = MNNForwardType.FORWARD_CPU.type;
         mThread = new HandlerThread("MNNNet");
@@ -189,9 +220,17 @@ public class Inferencer {
         }
     }
 
-    public int inference(String name, float[] data) {
+    private String getLabelById(int id) {
+        if (id < 0 || id >= mActionLabels.size()) {
+            return "[ERROR]INDEX_OUT_OF_BOUNDS";
+        }
+        return mActionLabels.get(id);
+    }
+
+    public InferenceResult inferenceAction(String name, float[] data) {
         String path = getPath(name);
         int result = -1;
+        float max_value = -1.0f;
         if (isStarted.get()) {
             try {
                 lock.lock();
@@ -201,20 +240,20 @@ public class Inferencer {
                         mSessions.get(i).run();
                         MNNNetInstance.Session.Tensor outputTensor = mSessions.get(i).getOutput(null);
                         float[] output = outputTensor.getFloatData();
-                        float max_value = -1.0f;
                         for (int p = 0; p < output.length; p++) {
                             if (output[p] > max_value) {
                                 max_value = output[p];
                                 result = p;
                             }
                         }
+
                     }
                 }
             } finally {
                 lock.unlock();
             }
         }
-        return result;
+        return new InferenceResult(result, getLabelById(result), max_value);
     }
 
     public float[] inferenceImage(String name, Bitmap bitmap) {
@@ -228,21 +267,16 @@ public class Inferencer {
                         MNNImageProcess.Config dataConfig = new MNNImageProcess.Config();
                         dataConfig.mean = new float[]{128.0f, 128.0f, 128.0f};
                         dataConfig.normal= new float[]{0.0078125f, 0.0078125f, 0.0078125f};
+//                        dataConfig.mean = new float[]{124.16f, 116.736f, 103.936f};
+//                        dataConfig.normal= new float[]{56.624f, 57.344f, 57.6f};
                         dataConfig.dest = MNNImageProcess.Format.RGB;
 
                         MNNImageProcess.convertBitmap(bitmap, mInputTensors.get(i), dataConfig, imgData);
+                        float[] x = mInputTensors.get(i).getFloatData();
+                        Log.e("TEST", "input data " + x.length + " " + x[0] + " " + x[1] + " " + x[2]);
                         mSessions.get(i).run();
                         MNNNetInstance.Session.Tensor outputTensor = mSessions.get(i).getOutput(null);
                         result = outputTensor.getFloatData();
-                        /*
-                        float max_value = -1.0f;
-                        for (int p = 0; p < output.length; p++) {
-                            if (output[p] > max_value) {
-                                max_value = output[p];
-                                result = p;
-                            }
-                        }
-                         */
                     }
                 }
             } finally {

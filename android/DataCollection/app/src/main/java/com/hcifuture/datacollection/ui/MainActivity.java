@@ -106,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
         mActivity = this;
 
         // vibrate to indicate data collection progress
-        mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         mVibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
 
         mRecorder = new Recorder(this, new Recorder.RecorderListener() {

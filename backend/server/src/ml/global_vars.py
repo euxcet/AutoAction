@@ -27,4 +27,5 @@ class GlobalVars:
     FILTER_FC_LOW = 6.0
     FILTER_FC_HIGH = 12.0
     # data augmentation
-    AUGMENT_EN = True
+    AUGMENT_EN = False
+    AUGMENT_ROTATE = False

@@ -1,0 +1,6 @@
+capture
+point
+place
+knock
+negative
+lean

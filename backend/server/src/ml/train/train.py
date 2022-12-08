@@ -28,8 +28,44 @@ def cosine(t_max, eta_min=0):
         return eta_min + (base_lr - eta_min) * (1 + np.cos(np.pi * t / t_max)) / 2
     return scheduler
 
+def prepare_log_files(LOG_FOLDER):
+    file_utils.mkdir(LOG_FOLDER)
+    log_metrics_file = None
+    for i in range(np.iinfo(np.int32).max):
+        run_folder = os.path.join(LOG_FOLDER, 'run' + str(i))
+        if not os.path.exists(run_folder):
+            file_utils.mkdir(run_folder)
+            log_metrics_file = os.path.join(run_folder, 'metrics.txt')
+            break
+    return log_metrics_file
 
-def train_model(trainId:str, timestamp:int, config:dict):
+def log_metrics(log_metrics_file:str, epoch:int, train_metrics:dict, valid_metrics:dict):
+    with open(log_metrics_file, 'a') as fout:
+        metrics_name = ['accuracy', 'balanced_accuracy', 'recall', 'precision', 'f1_score', 'f0_5_score', 'f2_score', 'auc']
+        print("-----------------------------------------")
+        fout.write("-----------------------------------------\n")
+        print(f"Epoch: {epoch}")
+        fout.write(f"Epoch: {epoch}\n")
+
+        print("Metrics on train dataset:")
+        fout.write("Metrics on train dataset:\n")
+        for name in metrics_name:
+            metric = train_metrics[name]
+            print("\t{}: {:.3}".format(name, metric), end='')
+            fout.write("\t{}: {:.3}".format(name, metric))
+        print()
+        fout.write('\n')
+            
+        print("Metrics on valid dataset:")
+        fout.write("Metrics on valid dataset:\n")
+        for name in metrics_name:
+            metric = valid_metrics[name]
+            print("\t{}: {:.3}".format(name, metric), end='')
+            fout.write("\t{}: {:.3}".format(name, metric))
+        print()
+        fout.write('\n')
+
+def train_model(trainId:str, timestamp:int, sessionId:int, config:dict):
     # get input and output file paths
     ROOT = file_utils.get_train_path(trainId)
     X_TRAIN_PATH = os.path.join(ROOT, 'X_train.csv')    # train_data
@@ -40,6 +76,13 @@ def train_model(trainId:str, timestamp:int, config:dict):
     OUT_PATH_PT = os.path.join(ROOT, 'best.pt')
     OUT_PATH_ONNX = os.path.join(ROOT, 'best.onnx')
     OUT_PATH_MNN = os.path.join(ROOT, 'best.mnn')
+    OUT_SESSION_PATH_PTH = os.path.join(ROOT, 'best_s' + str(sessionId) + '.pth')
+    OUT_SESSION_PATH_PT = os.path.join(ROOT, 'best_s' + str(sessionId) + '.pt')
+    OUT_SESSION_PATH_ONNX = os.path.join(ROOT, 'best_s' + str(sessionId) + '.onnx')
+    OUT_SESSION_PATH_MNN = os.path.join(ROOT, 'best_s' + str(sessionId) + '.mnn')
+
+    LOG_FOLDER = os.path.join(ROOT, 'log')
+    log_metrics_file = prepare_log_files(LOG_FOLDER)
 
     device:str = GlobalVars.DEVICE
     if device == 'cuda' and torch.cuda.is_available():
@@ -76,19 +119,20 @@ def train_model(trainId:str, timestamp:int, config:dict):
             CONFIG_FC_DIM, CONFIG_OUTPUT_DIM, device=device)
     elif backbone == 'cnn':
         # parse hyperparameters for cnn
-        model = CNNClassifier()
+        model = CNNClassifier(CONFIG_OUTPUT_DIM)
 
     if device is not None:
         model = model.to(device)
         
     # reset random seed
-    # np.random.seed(0)
+    np.random.seed(0)
 
     # create train and val data loader
-    train_loader, val_loader = create_train_val_loader(X_TRAIN_PATH, Y_TRAIN_PATH)
+    label_path = file_utils.get_train_label_path(trainId)
+    train_loader, val_loader = create_train_val_loader(X_TRAIN_PATH, Y_TRAIN_PATH, label_path)
     
-    model = LSTMClassifier(CONFIG_CHANNEL_DIM, CONFIG_HIDDEN_DIM, CONFIG_LAYER_DIM,
-        CONFIG_FC_DIM, CONFIG_OUTPUT_DIM, device=device)
+    # model = LSTMClassifier(CONFIG_CHANNEL_DIM, CONFIG_HIDDEN_DIM, CONFIG_LAYER_DIM,
+    #     CONFIG_FC_DIM, CONFIG_OUTPUT_DIM, device=device)
     if device is not None:
         model = model.to(device)
 #optimizer = torch.optim.RMSprop(model.parameters(), lr=CONFIG_LR)
@@ -96,9 +140,26 @@ def train_model(trainId:str, timestamp:int, config:dict):
 #scheduler = CyclicLR(optimizer, cosine(t_max=len(train_loader) * 2, eta_min=CONFIG_LR/100))
     criterion = nn.CrossEntropyLoss()
 
-    best_acc = 0.0
 
-    print('Start training!!')
+    # save configs to the log file.
+    print(GlobalVars.__dict__)
+    with open(log_metrics_file, 'a') as fout:
+        fout.write("Config:\n")
+        for k, v in config.items():
+            fout.write(k + " " + str(v) + "\n")
+
+        fout.write("\n\n")
+
+        fout.write("Global Variables:\n")
+        for k, v in GlobalVars.__dict__.items():
+            if not k.startswith('_'):
+                fout.write(k + " " + str(v) + "\n")
+        fout.write("\n\n")
+
+
+    best_metric = 0.0
+
+    print('Start training!')
     for epoch in range(0, CONFIG_EPOCH):
         model.train()
         for x_batch, y_batch in train_loader:
@@ -113,17 +174,25 @@ def train_model(trainId:str, timestamp:int, config:dict):
 
         
         model.eval()
-        train_acc = calc_metric(model, train_loader, device=device)
-        val_acc = calc_metric(model, val_loader, device=device)
+        train_metrics = calc_metric(model, train_loader, CONFIG_OUTPUT_DIM, device=device)
+        valid_metrics = calc_metric(model, val_loader, CONFIG_OUTPUT_DIM, device=device)
 
-        if epoch % 1 == 0:
-            print(f'Epoch: {epoch}, loss: {loss.item():.3f}, ' \
-                f'train_acc: {train_acc:.3f}, val_acc: {val_acc:.3f}')
+        log_metrics(log_metrics_file, epoch, train_metrics, valid_metrics)
 
-        if val_acc > best_acc:
-            best_acc = val_acc
+        metric = valid_metrics['balanced_accuracy']
+
+        if metric > best_metric:
+            best_metric = metric
             # export_pth(model, OUT_PATH_PTH)
             # export_pt(model, OUT_PATH_PT, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
             export_onnx(model, OUT_PATH_ONNX, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
             export_mnn(OUT_PATH_ONNX, OUT_PATH_MNN)
-            print(f'\tbest model accuracy: {best_acc:.3f}')
+            export_onnx(model, OUT_SESSION_PATH_ONNX, CONFIG_SEQUENCE_DIM, CONFIG_CHANNEL_DIM, device=device)
+            export_mnn(OUT_SESSION_PATH_ONNX, OUT_SESSION_PATH_MNN)
+            print(f'\tbest model metric: {best_metric:.3f}')
+
+    print(best_metric)
+    with open(log_metrics_file, 'a') as fout:
+        fout.write('Best metric: {:.3}'.format(best_metric))
+
+    return model

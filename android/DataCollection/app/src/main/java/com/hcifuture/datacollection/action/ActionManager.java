@@ -43,18 +43,20 @@ public class ActionManager {
         return actions;
     }
 
-    public Pair<Integer, Float> classify(float[] frame) {
-        float min_distance = 10000.0f;
-        int result = -1;
+    public ActionResult classify(float[] frame, ActionEnum actionEnum) {
+        float minDistance = 10000.0f;
+        ActionWithObject result = null;
         for (int i = 0; i < actions.size(); i++) {
             ActionWithObject action = actions.get(i);
-            float distance = action.distance(frame);
-            if (distance < min_distance) {
-                min_distance = distance;
-                result = i;
+            if (action.getAction() == actionEnum) {
+                float distance = action.distance(frame);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    result = action;
+                }
             }
         }
-        return new Pair<>(result, min_distance);
+        return new ActionResult(result, minDistance, System.currentTimeMillis());
     }
 
     public List<ActionWithObject> filterWithActionEnum(ActionEnum actionEnum) {
@@ -66,7 +68,10 @@ public class ActionManager {
     public static String encodeActions(List<ActionWithObject> actions) {
         StringBuilder result = new StringBuilder();
         for (ActionWithObject action: actions) {
-            result.append(action.getName()).append("\n");
+            result.append(action.getName())
+                    .append(" ")
+                    .append(action.getAction())
+                    .append("\n");
         }
         return result.toString();
     }

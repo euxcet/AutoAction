@@ -8,13 +8,14 @@ from ml.global_vars import GlobalVars
 class PeakCutter():
     ''' Cut by amplitude peaks.
     '''
-    def __init__(self, anchor:str, forward=60, length=100, noise=10):
+    def __init__(self, anchor:str, forward=60, length=100, noise=10, skip_index=None):
         ''' Init the cutter with some basic parameters.
         '''
         self.anchor = anchor # anchor = 'acc'
         self.forward = forward
         self.length = length
         self.noise = noise
+        self.skip_index = skip_index
 
     def cut(self, data, timestamp):
         ''' Cut the sensors data by amplitude peaks.
@@ -31,7 +32,7 @@ class PeakCutter():
         '''
         anchor = self.anchor
         assert(anchor in data)
-        range_cutter = RangeCutter()
+        range_cutter = RangeCutter(self.skip_index)
         cut_range = self.cut_range(data[anchor], timestamp)
         cut_data = {}
         for label in data:

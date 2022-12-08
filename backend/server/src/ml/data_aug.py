@@ -1,6 +1,8 @@
 import time
 import numpy as np
+import random
 from scipy import interpolate as interp
+from scipy.spatial.transform import Rotation as R
 from matplotlib import pyplot as plt
 
 from ml.filter import Filter
@@ -13,7 +15,6 @@ filters = []
 def init_filters():
     global filters
     if not filters:
-        print('init')
         filters = [Filter(mode='low-pass', fs=100, tw=GlobalVars.FILTER_TW,
             fc_low=GlobalVars.FILTER_FC_LOW, window_type=GlobalVars.FILTER_WINDOW),
         Filter(mode='band-pass', fs=100, tw=GlobalVars.FILTER_TW, fc_low=GlobalVars.FILTER_FC_LOW,
@@ -173,6 +174,22 @@ def augment(data:np.ndarray, gain:int=1, strategies:tuple=('scale', 'zoom', 'tim
             else: current_data = freq_mix(current_data, gain=current_gain)
         res.append(current_data)
     return np.row_stack(res)
+
+def rotate(data:np.ndarray):
+    ''' Augment data by rotation.
+    args:
+        data: np.ndarray, shape = (samples, length, channels).
+            All samples must be from the same group.
+    return:
+        The augmented data, with the same length as input
+
+    '''
+    mat = R.from_rotvec(np.array([random.uniform(-20, 20), random.uniform(-20, 20), random.uniform(-20, 20)]), degrees=True)
+    mat = R.random()
+    p = data.reshape(-1, 3)
+    pr = mat.apply(p)
+    pr = pr.reshape(data.shape)
+    return pr
 
         
 if __name__ == '__main__':

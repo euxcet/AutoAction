@@ -71,7 +71,7 @@ public class CameraController {
     private ExecutorService executorService;
     private File saveFile;
     private AtomicBoolean needCapture;
-    private CompletableFuture<float[]> captureFuture;
+    private CompletableFuture<CameraCaptureResult> captureFuture;
 
     public CameraController(AppCompatActivity activity) {
         mActivity = activity;
@@ -155,27 +155,14 @@ public class CameraController {
                         .build();
                 imageAnalysis.setAnalyzer(executorService, imageProxy -> {
                     @SuppressLint("UnsafeOptInUsageError")
-                    Bitmap bitmap = resizeBitmap(yuvToBitmap(imageProxy.getImage()), 224, 224);
-
-                    /*
-                    ByteArrayOutputStream outs = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outs);
-                    byte[] data = outs.toByteArray();
-                    Log.e("TEST", "byte length " + data.length);
-                     */
-//                    int bytes = bitmap.getByteCount();
-//                    ByteBuffer buffer = ByteBuffer.allocate(bytes);
-//                    bitmap.copyPixelsToBuffer(buffer);
-//                    byte[] data = buffer.array();
-
-//                    Log.e("TEST", "bitmap length " + data.length + " " + data[0] + " " + data[1] + " " + data[2]);
-//                    Bitmap new_bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                    Bitmap bitmap = resizeBitmap(yuvToBitmap(imageProxy.getImage()), 640, 480);
 
                     // TODO: send data
                     if (needCapture.get() && captureFuture != null) {
                         needCapture.set(false);
-                        float[] feature = Inferencer.getInstance().inferenceImage("shufflenet_.mnn", bitmap);
-                        captureFuture.complete(feature);
+                        float[] feature = Inferencer.getInstance().inferenceImage("siamese_export.mnn", bitmap);
+                        Log.e("TEST", "Feature " + feature.length + " " + feature[0] + " " + feature[1]);
+                        captureFuture.complete(new CameraCaptureResult(bitmap, feature));
                     }
                     imageProxy.close();
                 });
@@ -230,7 +217,7 @@ public class CameraController {
         }
     }
 
-    public CompletableFuture<float[]> capture() {
+    public CompletableFuture<CameraCaptureResult> capture() {
         if (needCapture.get()) {
             return null;
         }
