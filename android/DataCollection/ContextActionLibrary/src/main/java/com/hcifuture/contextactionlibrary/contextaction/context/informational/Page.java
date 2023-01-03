@@ -39,7 +39,7 @@ public class Page {
         HashSet<String> result = new HashSet<>();
         result.addAll(functionWords);
         result.retainAll(words);
-        double res = (double) result.size()/(functionWords.size()+words.size()-result.size());
+        double res = ((double) result.size()/functionWords.size()+(double) result.size()/words.size())/2;
         return res;
     }
 }

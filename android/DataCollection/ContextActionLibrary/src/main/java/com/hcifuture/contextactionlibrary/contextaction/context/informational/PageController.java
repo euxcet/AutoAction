@@ -7,13 +7,10 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
-import com.hcifuture.contextactionlibrary.BuildConfig;
-import com.hcifuture.contextactionlibrary.R;
 import com.hcifuture.contextactionlibrary.contextaction.ContextActionContainer;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -23,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 public class PageController {
-    private static Map<String,List<Page>> pages = new HashMap<>();
+    public static Map<String,List<Page>> pages = new HashMap<>();
     private static Map<Integer,Page> idToPage = new HashMap<>();
     private static HashSet<String> allFunctionWords = new HashSet<>();
 
@@ -33,7 +30,6 @@ public class PageController {
         try
         {
             loadFunctionWords(context);
-
             InputStream inStream = new FileInputStream(ContextActionContainer.getSavePath() + "pages.csv");
             BufferedReader br = new BufferedReader(new InputStreamReader(inStream));
             String line;
@@ -68,9 +64,21 @@ public class PageController {
             e.printStackTrace();
         }
     }
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    synchronized static void loadPages(StringBuilder sb)
+    {
+        allFunctionWords.clear();
+        pages.clear();
+        idToPage.clear();
+        String[] lines = sb.toString().split("\n");
+        for(String line : lines)
+        {
+            loadLine(line);
+        }
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private static void loadLine(String line)
+    public static void loadLine(String line)
     {
         try
         {
@@ -106,7 +114,20 @@ public class PageController {
         }
     }
 
-    public static Page recognizePage(List<AccessibilityNodeInfoRecordFromFile> roots,String packageName) {
+    synchronized static void loadWords(StringBuilder sb)
+    {
+        allFunctionWords.clear();
+        String[] lines = sb.toString().split("\n");
+        for(String line : lines)
+        {
+            String[] res = line.split("\t");
+            allFunctionWords.add(res[0]);
+        }
+    }
+
+
+    public static Page recognizePage(List<AccessibilityNodeInfoRecordFromFile> roots,String packageName)
+    {
         HashSet<String> words = getAllFunctionWords(roots);
         double max_sim = 0.5;
         Page res=null;
@@ -126,7 +147,8 @@ public class PageController {
         return res;
     }
 
-    public static Page recognizePage(HashSet<String> words,String packageName) {
+    public static Page recognizePage(HashSet<String> words,String packageName)
+    {
         double max_sim = 0.5;
         Page res=null;
         if(pages.containsKey(packageName)) {
@@ -145,18 +167,20 @@ public class PageController {
         return res;
     }
 
-    public static HashSet<String> getAllFunctionWords(List<AccessibilityNodeInfoRecordFromFile> roots) {
+    public static HashSet<String> getAllFunctionWords(List<AccessibilityNodeInfoRecordFromFile> roots)
+    {
         HashSet<String> res = new HashSet<>();
         for(AccessibilityNodeInfoRecordFromFile root:roots)
         {
             getNodeFunctionWords(root,res);
+            break;
         }
-//        Log.d("InformationalContext","getAllFunctionWords" + res);
-
+        Log.e("getAllFunctionWords",res.toString());
         return res;
     }
 
-    private static void getNodeFunctionWords(AccessibilityNodeInfoRecordFromFile node, HashSet<String> set) {
+    public static void getNodeFunctionWords(AccessibilityNodeInfoRecordFromFile node, HashSet<String> set)
+    {
         if(!judgeBound(node))
             return;
         if(node._isScrollable)
@@ -182,7 +206,7 @@ public class PageController {
             getNodeFunctionWords(n,set);
     }
 
-    private static boolean judgeBound(AccessibilityNodeInfoRecordFromFile node)
+    public static boolean judgeBound(AccessibilityNodeInfoRecordFromFile node)
     {
         if(!node._isVisibleToUser)
             return false;
@@ -192,14 +216,8 @@ public class PageController {
         return !r.isEmpty();
     }
 
-    public static Map<String, List<Page>> getPages() {
-        return pages;
-    }
-
     public static Map<Integer, Page> getIdToPage() {
         return idToPage;
     }
-    public static HashSet<String> getAllFunctionWords() {
-        return allFunctionWords;
-    }
 }
+
