@@ -65,8 +65,8 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
     @Override
     public synchronized void resume() {
         sensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL, handler);
-//        sensorManager.registerListener(this, mLight, SensorManager.SENSOR_DELAY_NORMAL, handler);
-//        sensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_NORMAL, handler);
+        sensorManager.registerListener(this, mLight, SensorManager.SENSOR_DELAY_NORMAL, handler);
+        sensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_NORMAL, handler);
         sensorManager.registerListener(this, mStepCounter, SensorManager.SENSOR_DELAY_NORMAL, handler);
     }
 

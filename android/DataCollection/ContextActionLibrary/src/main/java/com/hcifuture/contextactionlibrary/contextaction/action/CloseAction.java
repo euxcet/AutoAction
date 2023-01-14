@@ -75,7 +75,7 @@ public class CloseAction extends BaseAction {
     //识别成功时调用此函数
     private void Success(){
         //识别成功时，注册listener
-        reset();
+        success_flag = true;
         vibrate();
         Log.i("Close","---------凑近嘴部------------");
     }
@@ -286,45 +286,6 @@ public class CloseAction extends BaseAction {
         }
         check();
 
-//        if(data.getType()==Sensor.TYPE_PROXIMITY){
-//            dist = data.getProximity();
-//            Log.e(TAG,"dist: "+dist);
-//        }
-//        if(data.getType()==Sensor.TYPE_LIGHT){
-//            bright = data.getEnvironmentBrightness();
-//            Log.e(TAG,"LIGHT: "+bright);
-//        }
-//        if(upright_gyro) {
-//            if (logCollector != null) {
-//                if(data.getType() == Sensor.TYPE_PROXIMITY)
-//                    logCollector.addLog(data.getProximityTimestamp() + " " + dist + " " + bright);
-//                else if(data.getType() == Sensor.TYPE_LIGHT) {
-//                    logCollector.addLog(data.getEnvironmentBrightnessTimestamp() + " " + dist + " " + bright);
-//                }
-//            }
-//        }
-//        if(dist == 0 ) {
-//            if (upright_gyro) {
-//                success_id = System.currentTimeMillis();
-//                Log.i(TAG, "识别成功2----"+(success_id-register_time)+" "+success_id);
-//            }
-////            else {
-////                Log.i(TAG, "gyro不满足条件");
-////            }
-//        }
-//        if(dist==5) {
-//            success_id = -1;
-//            if (System.currentTimeMillis() - register_time > 10000 && register_flag) {
-//                //TODO: 取消传感器注册
-////                for (ActionListener listener : actionListener) {
-////                    listener.onAction(new ActionResult("STOP_PROXIMITY"));
-////                }
-////                    sm.unregisterListener(this, sm.getDefaultSensor(Sensor.TYPE_PROXIMITY));
-//                Log.i(TAG, "接近光 时间过长，取消注册传感器");
-//                reset();
-//                register_flag = false;
-//            }
-//        }
     }
 
     public void check(){
@@ -349,8 +310,7 @@ public class CloseAction extends BaseAction {
             if (System.currentTimeMillis() - success_id > 300) {
                 if(x_stop_flag==1) {
                     if(gx<50 && gx>-20 && abs(gz)<10 ) {
-                        Log.i(TAG, "成功了！" + success_id);
-                        success_flag = true;
+//                        Log.i(TAG, "成功了！" + success_id);
                         Success();
                     }
                 }

@@ -75,6 +75,8 @@ public class FlipAction extends BaseAction {
 
     private Vibrator vibrator;
 
+    private String TAG = "FLIP";
+
     private void vibrate(){
         VibrationEffect vibe = null;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -114,37 +116,37 @@ public class FlipAction extends BaseAction {
         min_gx_id = -1; max_gx_id = -1;
         min_gy_id = -1; max_gy_id = -1;
         success_flag = false;
-//        logCollector = new LogCollector(mContext, CollectorManager.CollectorType.Log, scheduledExecutorService, futureList, "Flip", 800);
+//        logCollector = new LogCollector(mContext, CollectorManager.CollectorType.Log, scheduledExecutorService, futureList, TAG, 800);
     }
 
     private boolean check_gy(){
         if(max_gx>max_gy+100 && gx_id> Long.min(gyro_id1,flag1_id) && gx_id< Long.max(gyro_id2,flag2_id)){
-            Log.i("getnum","-------gy不满足条件");
+            Log.i(TAG,"getnum"+"-------gy不满足条件");
             return false;
         }
-        Log.i("getnum","-------gy满足条件");
+        Log.i(TAG,"getnum"+"-------gy满足条件");
         return true;
     }
 
     private void double_check(){
-        Log.i("getnum","------开始进行二次检查------"+System.currentTimeMillis());
+        Log.i(TAG,"getnum"+"------开始进行二次检查------"+System.currentTimeMillis());
         //检查是否是先大后小
         if(max_gx_id>min_gx_id){ //假如是先小后大， 则说明gx不对
-            Log.i("getnum:","-------gx不满足条件"+max_gx_id+" "+max_gx_check+" "+min_gx_id+" "+min_gx_check);
+            Log.i(TAG,"getnum:"+"-------gx不满足条件"+max_gx_id+" "+max_gx_check+" "+min_gx_id+" "+min_gx_check);
         }
         else{
-            Log.i("getnum:","-------gx满足条件"+max_gx_id+" "+min_gx_id);
+            Log.i(TAG,"getnum:"+"-------gx满足条件"+max_gx_id+" "+min_gx_id);
         }
 //        if(max_gx_id>min_gx_id || !check_gy() || !analysis()){
         if(!check_gy() || !analysis()){
             reset();
-            Log.i("getnum","========二次检查不满足条件------"+System.currentTimeMillis());
+            Log.i(TAG,"getnum"+"========二次检查不满足条件------"+System.currentTimeMillis());
             return;
         }
 
         check_stable_flag = true;
         check_stable_id = System.currentTimeMillis();
-        Log.i("getnum:","-------二次检查全部满足条件---------"+max_gx_id+" "+min_gx_id);
+        Log.i(TAG,"getnum:"+"-------二次检查全部满足条件---------"+max_gx_id+" "+min_gx_id);
         return;
     }
 
@@ -157,9 +159,9 @@ public class FlipAction extends BaseAction {
 
         Long t;
 
-        Log.i("getnum","===size=== "+ gx_before.size()+" "+gy_before.size()+" "+time.size());
-        Log.i("getnum","actual_time:"+max_gx_id +" "+min_gx_id+" "+max_gy_id+" "+min_gy_id);
-        Log.i("getnum","time_interval:"+abs(max_gx_id-min_gx_id)+" "+abs(max_gy_id-min_gy_id));
+        Log.i(TAG,"getnum"+"===size=== "+ gx_before.size()+" "+gy_before.size()+" "+time.size());
+        Log.i(TAG,"getnum"+"actual_time:"+max_gx_id +" "+min_gx_id+" "+max_gy_id+" "+min_gy_id);
+        Log.i(TAG,"getnum"+"time_interval:"+abs(max_gx_id-min_gx_id)+" "+abs(max_gy_id-min_gy_id));
 
 
         // 得到迭代器之后，就得break掉，要是一直遍历 就会到最后一个 迭代器就不对了！！
@@ -195,7 +197,7 @@ public class FlipAction extends BaseAction {
                     st2_x = get_num(gx_iterator,iterator,thres_x,false,min_gx_id,false);
 //                    st1_num_x = get_num(gx_before.iterator(),time.iterator(),thres_x,true,max_gx_id,true);
 //                    r2_x = get_num(gx_iterator,iterator,thres_x,false,min_gx_id,false);
-                    Log.i("getnum","situation1");
+                    Log.i(TAG,"getnum"+"situation1");
                     break;
                 }
             }
@@ -205,18 +207,18 @@ public class FlipAction extends BaseAction {
                     st2_x = get_num(gx_iterator,iterator,thres_x,true,max_gx_id,false);
 //                    st1_num_x = get_num(gx_before.iterator(),time.iterator(),thres_x,false,min_gx_id,true);
 //                    r2_x = get_num(gx_iterator,iterator,thres_x,true,max_gx_id,false);
-                    Log.i("getnum","situation2");
+                    Log.i(TAG,"getnum"+"situation2");
                     break;
                 }
             }
         }
 
         if(!(st1_x[0]>30 && st2_x[0]>0.75)) {
-            Log.i("getnum","===x不满足一般条件 "+st1_x[0]+" "+st2_x[0]);
+            Log.i(TAG,"getnum"+"===x不满足一般条件 "+st1_x[0]+" "+st2_x[0]);
             if(!(st1_x[1]<30 && st1_x[0]>st1_x[1]*0.6 && st2_x[0]>0.75)){
-                Log.i("getnum","===x不满足过快条件 "+st1_x[1]+" "+st1_x[0]+" "+st2_x[0]);
+                Log.i(TAG,"getnum"+"===x不满足过快条件 "+st1_x[1]+" "+st1_x[0]+" "+st2_x[0]);
                 if(!(st2_x[1]>400 && st1_x[1]>400 && st1_x[0]>30 && st2_x[0]>0.6 && st2_x[2]==3)){
-                    Log.i("getnum","===x不满足过慢条件"+st2_x[1]+" "+st1_x[1]+" "+st1_x[0]+" "+st2_x[0]+" "+st2_x[2]);
+                    Log.i(TAG,"getnum"+"===x不满足过慢条件"+st2_x[1]+" "+st1_x[1]+" "+st1_x[0]+" "+st2_x[0]+" "+st2_x[2]);
                     return false;
                 }
             }
@@ -229,7 +231,7 @@ public class FlipAction extends BaseAction {
             t = iterator.next();
             gy_iterator.next();
             if(first_time){
-                Log.i("getnum","第一次的时间："+t);
+                Log.i(TAG,"getnum"+"第一次的时间："+t);
                 first_time = false;
             }
 //            gy_num ++;
@@ -240,7 +242,7 @@ public class FlipAction extends BaseAction {
                     st2_y = get_num(gy_iterator,iterator,thres_y,false,min_gy_id,false);
 //                    st1_num_y = get_num(gy_before.iterator(),time.iterator(),thres_y,true,max_gy_id,true);
 //                    r2_y = get_num(gy_iterator,iterator,thres_y,false,min_gy_id,false);
-                    Log.i("getnum","situation3");
+                    Log.i(TAG,"getnum"+"situation3");
                     break;
                 }
             }
@@ -250,7 +252,7 @@ public class FlipAction extends BaseAction {
                     st2_y = get_num(gy_iterator,iterator,thres_y,true,max_gy_id,false);
 //                    st1_num_y = get_num(gy_before.iterator(),time.iterator(),thres_y,false,min_gy_id,true);
 //                    r2_y = get_num(gy_iterator,iterator,thres_y,true,max_gy_id,false);
-                    Log.i("getnum","situation4");
+                    Log.i(TAG,"getnum"+"situation4");
                     break;
                 }
             }
@@ -262,26 +264,26 @@ public class FlipAction extends BaseAction {
         }
 
         if(!(st1_y[0]>25 && st2_y[0]>thres_st2_y)) {
-            Log.i("getnum","===y不满足一般条件 "+st1_y[0]+" "+st2_y[0]);
+            Log.i(TAG,"getnum"+"===y不满足一般条件 "+st1_y[0]+" "+st2_y[0]);
             if(!(st1_y[1]<30 && st1_y[0]>st1_y[1]*0.7 && st2_y[0]>thres_st2_y)){
-                Log.i("getnum","===y不满足过快条件 "+st1_y[1]+" "+st1_y[0]+" "+st2_y[0]);
+                Log.i(TAG,"getnum"+"===y不满足过快条件 "+st1_y[1]+" "+st1_y[0]+" "+st2_y[0]);
                 if(!(st2_y[1]>400 && st1_y[1]>400 && st1_y[0]>30 && st2_y[0]>thres_st2_y-0.05 && st2_y[2]==3)){
-                    Log.i("getnum","===y不满足过慢条件"+st2_y[1]+" "+st1_y[1]+" "+st1_y[0]+" "+st2_y[0]+" "+st2_y[2]);
+                    Log.i(TAG,"getnum"+"===y不满足过慢条件"+st2_y[1]+" "+st1_y[1]+" "+st1_y[0]+" "+st2_y[0]+" "+st2_y[2]);
                     return false;
                 }
             }
         }
 
-        Log.i("getnum","stage:"+st1_num_x+" "+r2_x+" "+st1_num_y+" "+r2_y);
+        Log.i(TAG,"getnum"+"stage:"+st1_num_x+" "+r2_x+" "+st1_num_y+" "+r2_y);
 
         //1。 正常情况， 前一个用数量 后一个用比例 （因为前一个是小波动，后一个是连续的大波动，用比例比较好！！！）
         //2。 很慢的情况，比例会不对，但是基本是连续的数目，改小所需的比例！
         //3。 很快的情况，数量会不对，可以改用比例？
 //        if (!(st1_num_x > 30 && r2_x > 0.8 && st1_num_y > 20 && r2_y > 0.75)) {
-//            Log.i("getnum","-------analysis不满足条件："+st1_num_x+" "+r2_x+" "+st1_num_y+" "+r2_y);
+//            Log.i(TAG,"getnum"+"-------analysis不满足条件："+st1_num_x+" "+r2_x+" "+st1_num_y+" "+r2_y);
 //            return false;
 //        }
-        Log.i("getnum","-------analysis满足条件");
+        Log.i(TAG,"getnum"+"-------analysis满足条件");
         return true;
     }
 
@@ -314,12 +316,12 @@ public class FlipAction extends BaseAction {
                     before_value = it1.next();
                     continue;
                 } else {
-                    Log.i("getnum", "初始化就失败了");
+                    Log.i(TAG,"getnum"+ "初始化就失败了");
                     break;
                 }
             }
             now_value = it1.next();
-//                Log.i("getnum", String.valueOf(now_value));
+//                Log.i(TAG,"getnum"+ String.valueOf(now_value));
             if (now_value > before_value) {
                 increase_num += 1;
             } else {
@@ -329,12 +331,12 @@ public class FlipAction extends BaseAction {
                     if (tolerance_increase > 0) {
                         tolerance_increase -= 1;
                     } else {
-                        Log.i("getnum", "increase 没有容忍度了");
+                        Log.i(TAG,"getnum"+ "increase 没有容忍度了");
                         increase_num = 1; //重新开始计数
                         tolerance_increase = 3;
                     }
                 } else {
-                    Log.i("getnum", "increase 突变地太离谱了"+String.valueOf((float)((now_value-before_value)/thres)));
+                    Log.i(TAG,"getnum"+ "increase 突变地太离谱了"+String.valueOf((float)((now_value-before_value)/thres)));
                     increase_num = 1; //重新开始计数
                     tolerance_increase = 3;
                 }
@@ -348,19 +350,19 @@ public class FlipAction extends BaseAction {
                     if (tolerance_decrease > 0) {
                         tolerance_decrease -= 1;
                     } else {
-                        Log.i("getnum", "decrease 没有容忍度了");
+                        Log.i(TAG,"getnum"+ "decrease 没有容忍度了");
                         decrease_num = 1; //重新开始计数
                         tolerance_decrease = 3;
                     }
                 } else {
-                    Log.i("getnum", "decrease  突变地太离谱了");
+                    Log.i(TAG,"getnum"+ "decrease  突变地太离谱了");
                     decrease_num = 1; //重新开始计数
                     tolerance_decrease = 3;
                 }
             }
             before_value = now_value;
         }
-        Log.i("getnum","all_num:"+increase_num+" "+decrease_num+" "+cnt+" "+tolerance_decrease+" "+tolerance_increase);
+        Log.i(TAG,"getnum"+"all_num:"+increase_num+" "+decrease_num+" "+cnt+" "+tolerance_decrease+" "+tolerance_increase);
 
         if(order)
             if(st1)
@@ -382,7 +384,7 @@ public class FlipAction extends BaseAction {
     private void check_stable(){
         if(!stable_flag1_gx) { //先减小到一定的值
             if (System.currentTimeMillis() - check_stable_id > stable_thres1) {
-                Log.i("getnum","gx太久没成功");
+                Log.i(TAG,"getnum"+"gx太久没成功");
                 reset();
             }
             else if (abs(gx)<stable_num){
@@ -394,10 +396,10 @@ public class FlipAction extends BaseAction {
         else{
             if(System.currentTimeMillis()-stable_min_id_gx>stable_thres2){
                 stable_long_gx = true;
-                Log.i("getnum","gx足够长");
+                Log.i(TAG,"getnum"+"gx足够长");
             }
             if(abs(gx)>=stay_num){
-                Log.i("getnum","gx有剧烈抖动"+gx);
+                Log.i(TAG,"getnum"+"gx有剧烈抖动"+gx);
                 stable_flag1_gx = false;
 //                reset();
             }
@@ -433,9 +435,8 @@ public class FlipAction extends BaseAction {
         //判断是否在一段时间内保持稳定了
         //识别成功时，注册listener
         success_flag = true;
-        reset();
         vibrate();
-        Log.i("FLIP","===========翻转============");
+//        Log.i(TAG,"===========翻转识别成功============");
     }
 
     @Override
@@ -461,8 +462,8 @@ public class FlipAction extends BaseAction {
                 gravity[2] = data.getValues().get(2);
                 getValue(); //更新方位角
                 if(abs(gravity[2])>55){
-                    Log.i("FLIP","角速度过大"+abs(gravity[2]));
-                    Log.i("getnum","角速度过大"+abs(gravity[2]));
+                    Log.i(TAG,"角速度过大"+abs(gravity[2]));
+                    Log.i(TAG,"getnum"+"角速度过大"+abs(gravity[2]));
                     reset();
                 }
                 break;
@@ -490,7 +491,7 @@ public class FlipAction extends BaseAction {
                     while(!time.isEmpty()){
                         //以前的时间间隔太远了
                         if(abs(time.getFirst()-time_now)>time_thres) {
-                            Log.i("remove:", String.valueOf(time.getFirst())+" "+time_now);
+//                            Log.i("remove:", String.valueOf(time.getFirst())+" "+time_now);
                             time.removeFirst();
                             gx_before.removeFirst();
                             gy_before.removeFirst();
@@ -533,29 +534,29 @@ public class FlipAction extends BaseAction {
                             postive = gy > 0 ? true : false;
                             gyro_flag1 = true;
                             gyro_id1 = System.currentTimeMillis();
-                            Log.i("FLIP", "角速度1:第一次大于200:" + "gy: " + gy + " gx: " + gx + "gz:" + gz + "ID：" + gyro_id1);
+                            Log.i(TAG, "角速度1:第一次大于200:" + "gy: " + gy + " gx: " + gx + "gz:" + gz + "ID：" + gyro_id1);
                         } else if (!gyro_flag2) {
-                            Log.i("FLIP", "角速度2:第二次大于200" + "gy: " + gy + " gx: " + gx + "gz:" + gz + "ID：" + gyro_id1);
+                            Log.i(TAG, "角速度2:第二次大于200" + "gy: " + gy + " gx: " + gx + "gz:" + gz + "ID：" + gyro_id1);
                             if (postive) {
                                 if (gy < 0 && flag1) {
                                     if (System.currentTimeMillis() - gyro_id1 < 20000) {
                                         gyro_flag2 = true;
                                         gyro_id2 = System.currentTimeMillis();
-                                        Log.i("FLIP", "角速度2:第二次为正" + gyro_id2);
-                                        Log.i("FLIP", "-------------------角速度ok");
+                                        Log.i(TAG, "角速度2:第二次为正" + gyro_id2);
+                                        Log.i(TAG, "-------------------角速度ok");
                                         if (flag2 && (gyro_id2 - flag2_id) < 100) {
-                                            Log.i("FLIP", "角速度3:角度也满足条件！");
+                                            Log.i(TAG, "角速度3:角度也满足条件！");
                                             double_check(); //进行二次检查
 //                                        Success();
                                         }
                                     }
                                 } else {
-                                    Log.i("FLIP", "角速度4:距离上次200的时间太长");
+                                    Log.i(TAG, "角速度4:距离上次200的时间太长");
                                     gyro_id1 = System.currentTimeMillis();
                                     postive = false;
                                 }
                             } else {
-                                Log.i("FLIP", "角速度5:更新上一次为正");
+                                Log.i(TAG, "角速度5:更新上一次为正");
                                 gyro_id1 = System.currentTimeMillis();
                                 postive = true;
                             }
@@ -564,21 +565,21 @@ public class FlipAction extends BaseAction {
                                 if (System.currentTimeMillis() - gyro_id1 < 20000) {
                                     gyro_flag2 = true;
                                     gyro_id2 = System.currentTimeMillis();
-                                    Log.i("FLIP", "角速度2:第二次为负");
-                                    Log.i("FLIP", "-------------------角速度ok");
+                                    Log.i(TAG, "角速度2:第二次为负");
+                                    Log.i(TAG, "-------------------角速度ok");
                                     if (flag2 && (gyro_id2 - flag2_id) < 3000) {
-                                        Log.i("FLIP", "角速度3:角度也满足条件！");
+                                        Log.i(TAG, "角速度3:角度也满足条件！");
                                         double_check();
                                         //  Success();
 
                                     }
                                 } else {
-                                    Log.i("FLIP", "角速度4:距离上次200的时间太长");
+                                    Log.i(TAG, "角速度4:距离上次200的时间太长");
                                     gyro_id1 = System.currentTimeMillis();
                                     postive = true;
                                 }
                             } else {
-                                Log.i("FLIP", "角速度5:更新上一次为负");
+                                Log.i(TAG, "角速度5:更新上一次为负");
                                 gyro_id1 = System.currentTimeMillis();
                                 postive = false;
                             }
@@ -586,21 +587,21 @@ public class FlipAction extends BaseAction {
                     } else {
                         if (((postive && gy < 0) || (!postive && gy > 0)) && (System.currentTimeMillis() - gyro_id1 < 30000)) {
                             gyro_id2 = System.currentTimeMillis();
-//                            Log.i("FLIP", "角速度7：更新gyro2" + gy + "id2:" + gyro_id2);
+//                            Log.i(TAG, "角速度7：更新gyro2" + gy + "id2:" + gyro_id2);
                         } else {
                             //假如gyro_flag1和2 都满足了，就要考虑更新gyro_flag1和2
                             //可能是用户第一次没识别出来，要通过第二次来识别，假如这时不更新，只能等到时长太长再更新了！
                             postive = gy > 0 ? true : false;
                             gyro_flag1 = true;
                             gyro_id1 = System.currentTimeMillis();
-//                            Log.i("FLIP", "角速度6:第三次大于200" + "postive:" + postive + "gy:" + gy);
+//                            Log.i(TAG, "角速度6:第三次大于200" + "postive:" + postive + "gy:" + gy);
                             gyro_flag2 = false;
                         }
                     }
                 }
                 if (gyro_flag1 && gyro_flag2) {
                     if (System.currentTimeMillis() - gyro_id2 > 10000) {
-                        Log.i("FLIP", "角速度6:时间太长了 角速度的两个flag更新为false");
+                        Log.i(TAG, "角速度6:时间太长了 角速度的两个flag更新为false");
                         gyro_flag1 = false;
                         gyro_flag2 = false;
                     }
@@ -609,126 +610,6 @@ public class FlipAction extends BaseAction {
             default:
                 break;
         }
-//        if (data.getType() == Sensor.TYPE_ACCELEROMETER) {
-//            gravity[0] = data.getValues().get(0);
-//            gravity[1] = data.getValues().get(1);
-//            gravity[2] = data.getValues().get(2);
-//            value_timestamp = data.getTimestamp();
-//            getValue(); //更新方位角
-//            if(abs(gravity[2])>20){
-//                Log.i("FLIP","角速度过大"+abs(gravity[2]));
-//                reset();
-//            }
-//        }
-//        else if(data.getType() == Sensor.TYPE_MAGNETIC_FIELD){
-//            if(geomagnetic == null){
-//                geomagnetic = new float[3];
-//            }
-//            geomagnetic[0] = data.getValues().get(0);
-//            geomagnetic[1] = data.getValues().get(1);
-//            geomagnetic[2] = data.getValues().get(2);
-//            value_timestamp = data.getTimestamp();
-//            getValue();
-//        }
-//        else if(data.getType() == Sensor.TYPE_GYROSCOPE){
-//            //需要将弧度转为角度
-//            gx = (float)Math.toDegrees(data.getValues().get(0));
-//            gy = (float)Math.toDegrees(data.getValues().get(1));
-//            gz = (float)Math.toDegrees(data.getValues().get(2));
-//            if(abs(gy)>max_gy+100){
-//                max_gx = abs(gx);
-//                gx_id = System.currentTimeMillis();
-//            }
-//
-//            if(abs(gy)>160){
-//                max_gy = max(max_gy,abs(gy));
-//                if(!gyro_flag1){
-//                    postive = gy>0?true:false;
-//                    gyro_flag1 = true;
-//                    gyro_id1 = System.currentTimeMillis();
-//                    Log.i("FLIP","角速度1:第一次大于200:"+"gy: "+gy+" gx: "+gx+"gz:" +gz+"ID："+gyro_id1);
-//                }
-//                else if(!gyro_flag2){
-////                    Log.i("FLIP","角速度2:第二次大于200"+"gy: "+gy+" gx: "+gx+"gz:" +gz+"ID："+gyro_id1);
-//                    if(postive){
-//                        if(gy<0 && flag1){
-//                            if(System.currentTimeMillis()-gyro_id1<20000) {
-//                                gyro_flag2 = true;
-//                                gyro_id2 = System.currentTimeMillis();
-//                                Log.i("FLIP","角速度2:第二次为正"+gyro_id2);
-//                                Log.i("FLIP","-------------------角速度ok");
-//                                if(flag2 && (gyro_id2-flag2_id)<100){
-//                                    Log.i("FLIP","角速度3:角度也满足条件！");
-//                                    if(!success_flag&&check_gy()) {
-//                                        success_flag=true;
-////                                        Success();
-//                                    }
-//                                }
-//                            }
-//                            else{
-//                                Log.i("FLIP","角速度4:距离上次200的时间太长");
-//                                gyro_id1 = System.currentTimeMillis();
-//                                postive = false;
-//                            }
-//                        }
-//                        else{
-//                            Log.i("FLIP","角速度5:更新上一次为正");
-//                            gyro_id1 = System.currentTimeMillis();
-//                            postive = true;
-//                        }
-//                    }
-//                    else{
-//                        if(gy>0){
-//                            if(System.currentTimeMillis()-gyro_id1<20000) {
-//                                gyro_flag2 = true;
-//                                gyro_id2 = System.currentTimeMillis();
-//                                Log.i("FLIP","角速度2:第二次为负");
-//                                Log.i("FLIP","-------------------角速度ok");
-//                                if(flag2 && (gyro_id2-flag2_id)<3000){
-//                                    Log.i("FLIP","角速度3:角度也满足条件！");
-//                                    if(!success_flag && check_gy())
-//                                        success_flag = true;
-////                                        Success();
-//                                }
-//                            }
-//                            else{
-//                                Log.i("FLIP","角速度4:距离上次200的时间太长");
-//                                gyro_id1 = System.currentTimeMillis();
-//                                postive = true;
-//                            }
-//                        }
-//                        else{
-//                            Log.i("FLIP","角速度5:更新上一次为负");
-//                            gyro_id1 = System.currentTimeMillis();
-//                            postive = false;
-//                        }
-//                    }
-//                }
-//                else{
-//                    if(((postive && gy<0)||(!postive && gy>0))&&(System.currentTimeMillis()-gyro_id1<30000)){
-//                        gyro_id2 = System.currentTimeMillis();
-////                        Log.i("FLIP","角速度7：更新gyro2"+gy+"id2:"+gyro_id2);
-//                    }
-//                    else {
-//                        //假如gyro_flag1和2 都满足了，就要考虑更新gyro_flag1和2
-//                        //可能是用户第一次没识别出来，要通过第二次来识别，假如这时不更新，只能等到时长太长再更新了！
-//                        postive = gy > 0 ? true : false;
-//                        gyro_flag1 = true;
-//                        gyro_id1 = System.currentTimeMillis();
-//                        Log.i("FLIP", "角速度6:第三次大于200"+"postive:"+postive+"gy:"+gy);
-//                        gyro_flag2 = false;
-//                    }
-//                }
-//            }
-//            if(gyro_flag1&&gyro_flag2){
-//                if(System.currentTimeMillis()-gyro_id2>10000){
-//                    Log.i("FLIP","角速度6:时间太长了 角速度的两个flag更新为false");
-//                    gyro_flag1 = false;gyro_flag2 = false;
-//                }
-//            }
-//
-//        }
-
 
     }
 
@@ -758,7 +639,7 @@ public class FlipAction extends BaseAction {
                 }
                 pitch = Math.toDegrees(values[1]);
                 double roll = Math.toDegrees(values[2]);
-//                Log.i("FLIP","roll: "+Math.floor(roll)+"ptich: "+Math.floor(pitch));
+//                Log.i(TAG,"roll: "+Math.floor(roll)+"ptich: "+Math.floor(pitch));
 
                 if(pitch>45){
                     reset();
@@ -770,14 +651,14 @@ public class FlipAction extends BaseAction {
                     if(gyro_flag1) {
                         if (pitch > -60 && pitch < 35) { //保证是平面 , <35是因为当速度很快时 就会让pitch很大
                             //TODO: 快的时候，很多次 roll不在阈值范围里面
-//                        Log.i("FLIP","角度0:满足pitch条件" + roll);
+//                        Log.i(TAG,"角度0:满足pitch条件" + roll);
                             if ((roll < -100 && roll > -180) || (roll > 100 && roll < 180)) { //保证翻转了180度
                                 flag1 = true;
                                 flag1_id = System.currentTimeMillis();
-                                Log.i("FLIP", "角度1:翻转到下面了"+(flag1_id-gyro_id1)+" "+flag1_id+" "+gyro_id1);
+                                Log.i(TAG, "角度1:翻转到下面了"+(flag1_id-gyro_id1)+" "+flag1_id+" "+gyro_id1);
                             }
 //                        else{
-//                            Log.i("FLIP","roll的角度不满足:"+roll);
+//                            Log.i(TAG,"roll的角度不满足:"+roll);
 //                        }
                         }
                     }
@@ -786,31 +667,31 @@ public class FlipAction extends BaseAction {
                 else{
 //                    if(!(pitch>-65 && pitch<35)) {
 //                        flag1 = false;
-//                        Log.i("FLIP","角度2:太竖直了 失败:"+pitch);
+//                        Log.i(TAG,"角度2:太竖直了 失败:"+pitch);
 ////                        flip_cnt = 0;
 //                    }
                     if(roll<30 && roll>-30 && pitch > -60 && pitch < 15){
                         flag1 = false;
-                        Log.i("FLIP","角度3:返回平面了");
+                        Log.i(TAG,"角度3:返回平面了");
                         if(System.currentTimeMillis() - flag1_id<20000) {
-                            Log.i("FLIP","角度4:时间满足");
+                            Log.i(TAG,"角度4:时间满足");
                             //检查gyro满足条件没 , 只要gyro_id2满足条件就行， 其实不用检查gyro_flag2
                             if((System.currentTimeMillis()-gyro_id2)<10000) {
-                                Log.i("FLIP","角度5:角速度也满足条件啦！");
+                                Log.i(TAG,"角度5:角速度也满足条件啦！");
                                 double_check();
 //                                      Success();
 //                                }
                             }
                             else{
-                                Log.i("FLIP","角度6:角速度未满足条件"+(System.currentTimeMillis()-gyro_id2)+"f1:"+gyro_flag1+"f2:"+gyro_flag2);
-                                Log.i("FLIP","-------------------角度ok");
+                                Log.i(TAG,"角度6:角速度未满足条件"+(System.currentTimeMillis()-gyro_id2)+"f1:"+gyro_flag1+"f2:"+gyro_flag2);
+                                Log.i(TAG,"-------------------角度ok");
                                 flag2 = true;
                                 flag2_id = System.currentTimeMillis();
                             }
                         }
                     }
 //                    else{
-//                        Log.i("FLIP","roll: "+Math.floor(roll)+"ptich: "+Math.floor(pitch));
+//                        Log.i(TAG,"roll: "+Math.floor(roll)+"ptich: "+Math.floor(pitch));
 //                    }
                 }
             }
@@ -829,10 +710,10 @@ public class FlipAction extends BaseAction {
         if (!isStarted)
             return;
         if (success_flag) {
-            Log.i("FLIP","识别成功了");
+            Log.i(TAG,"识别成功了");
             reset();
             for (ActionListener listener: actionListener) {
-                listener.onAction(new ActionResult("Flip"));
+                listener.onAction(new ActionResult(TAG));
             }
         }
     }
