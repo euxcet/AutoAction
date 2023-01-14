@@ -63,8 +63,8 @@ public class FlipCollector extends BaseCollector{
             }
             if (clickTrigger != null && scheduledExecutorService != null) {
                 try {
-                    Log.e("upload","log_flip:"+logCollector.getData().getDataString());
-                    Log.e("uplaod:","Flip try to upload log");
+//                    Log.e("upload","log_flip:"+logCollector.getData().getDataString());
+//                    Log.e("uplaod:","Flip try to upload log");
                     triggerAndUpload(logCollector, new TriggerConfig(), "Flip", "time: "+time)
                             .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
                 } catch (Exception e) {
