@@ -19,10 +19,8 @@ android {
     compileSdk 32
 
     defaultConfig {
-        minSdk 21
+        minSdk 24
         targetSdk 32
-        versionCode 1
-        versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -62,7 +60,7 @@ dependencies {
     implementation('org.tensorflow:tensorflow-lite-support:0.0.0-nightly') { changing = true }
     // implementation 'com.lzy.net:okgo:3.0.4'
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
-    api 'com.amap.api:3dmap:latest.integration'
+    //api 'com.amap.api:3dmap:latest.integration'
     api 'com.amap.api:location:latest.integration'
     api 'com.amap.api:search:latest.integration'
 }

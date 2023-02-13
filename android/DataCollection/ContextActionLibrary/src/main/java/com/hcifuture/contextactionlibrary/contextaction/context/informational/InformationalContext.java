@@ -43,6 +43,9 @@ import java.util.concurrent.TimeUnit;
 
 public class InformationalContext extends BaseContext {
     private static final String TAG = "TaskContext";
+
+    private static String CONTEXT = "context.taskrec.context";
+
     private Map<String, List<Task>> tasks = new HashMap<>();
     private List<Page> pageList = new ArrayList<>();
     private List<Action> actionList = new ArrayList<Action>();
@@ -387,9 +390,11 @@ public class InformationalContext extends BaseContext {
             logCollector.addLog(sb.toString());
         }
 
+        ContextResult contextResult = new ContextResult(CONTEXT);
+        contextResult.getExtras().putString("content", sb.toString());
         for(ContextListener contextListener:contextListener)
         {
-            contextListener.onContext(new ContextResult(sb.toString()));
+            contextListener.onContext(contextResult);
         }
     }
 
