@@ -171,7 +171,7 @@ public class LoaderManager {
 
     private void loadContextActionLibrary() {
         final File tmpDir = mService.getDir("dex", 0);
-        classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "classes.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
+        classLoader = new DexClassLoader(BuildConfig.SAVE_PATH + "release.dex", tmpDir.getAbsolutePath(), null, this.getClass().getClassLoader());
         loader = new ContextActionLoader(mService, classLoader);
 
         /*

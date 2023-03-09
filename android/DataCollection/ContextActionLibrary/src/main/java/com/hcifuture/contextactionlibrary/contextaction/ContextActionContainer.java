@@ -24,6 +24,7 @@ import androidx.annotation.RequiresApi;
 
 //import com.amap.api.services.core.ServiceSettings;
 import com.google.gson.Gson;
+import com.hcifuture.contextactionlibrary.contextaction.action.ActivityAction;
 import com.hcifuture.contextactionlibrary.contextaction.action.MotionAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.CloseCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ConfigCollector;
@@ -520,6 +521,9 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                             MotionAction motionAction = new MotionAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
                             actions.add(motionAction);
                             break;
+                        case "Activity":
+                            ActivityAction activityAction = new ActivityAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                            actions.add(activityAction);
                         default:
                             break;
                     }
