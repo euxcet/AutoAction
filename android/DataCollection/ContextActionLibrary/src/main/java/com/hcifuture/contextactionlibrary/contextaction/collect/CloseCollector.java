@@ -6,6 +6,7 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
+import com.hcifuture.contextactionlibrary.contextaction.action.CloseAction;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorManager;
 import com.hcifuture.contextactionlibrary.sensor.collector.CollectorResult;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
@@ -45,7 +46,7 @@ public class CloseCollector extends BaseCollector {
     @Override
     public void onAction(ActionResult action) {
         long time = System.currentTimeMillis();
-        if (action.getAction().equals("Close")) {
+        if (action.getAction().equals(CloseAction.ACTION)) {
             Heart.getInstance().newCollectorAliveEvent(getName(), time);
             //先传log
             if (clickTrigger != null && scheduledExecutorService != null) {
@@ -78,7 +79,7 @@ public class CloseCollector extends BaseCollector {
                 }
             }
         }
-        if (action.getAction().equals("CloseStart")) {
+        if (action.getAction().equals(CloseAction.ACTION_START)) {
             Heart.getInstance().newCollectorAliveEvent(getName(), time);
             if (clickTrigger != null && scheduledExecutorService != null) {
                 try {
