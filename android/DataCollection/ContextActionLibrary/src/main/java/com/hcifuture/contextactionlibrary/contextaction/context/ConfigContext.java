@@ -88,14 +88,16 @@ public class ConfigContext extends BaseContext {
     }
 
     @Override
-    public void start() {
+    public synchronized void start() {
+        isStarted = true;
         record_all("start");
     }
 
     @Override
-    public void stop() {
+    public synchronized void stop() {
         // do not perform record_all() in stop(),
         // it may cause crashes when frequently called
+        isStarted = false;
     }
 
     @Override
@@ -115,6 +117,11 @@ public class ConfigContext extends BaseContext {
         if (current_call - last_record_all >= 30 * 60000) {
             record_all("period_30m");
         }
+    }
+
+    @Override
+    public String getName() {
+        return "ConfigContext";
     }
 
     @Override

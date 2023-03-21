@@ -43,10 +43,14 @@ public class DataDistributor implements CollectorListener {
             try {
                 contextLock.lock();
                 for (BaseAction action : actions) {
-                    action.onExternalEvent(bundle);
+                    if (!action.isPassiveDisabled() && action.isStarted()) {
+                        action.onExternalEvent(bundle);
+                    }
                 }
                 for (BaseContext context : contexts) {
-                    context.onExternalEvent(bundle);
+                    if (!context.isPassiveDisabled() && context.isStarted()) {
+                        context.onExternalEvent(bundle);
+                    }
                 }
             } finally {
                 contextLock.unlock();
@@ -59,7 +63,9 @@ public class DataDistributor implements CollectorListener {
             try {
                 contextLock.lock();
                 for (BaseContext context : contexts) {
-                    context.onBroadcastEvent(event);
+                    if (!context.isPassiveDisabled() && context.isStarted()) {
+                        context.onBroadcastEvent(event);
+                    }
                 }
             } finally {
                 contextLock.unlock();
@@ -72,7 +78,9 @@ public class DataDistributor implements CollectorListener {
             try {
                 contextLock.lock();
                 for (BaseContext context : contexts) {
-                    context.onAccessibilityEvent(event);
+                    if (!context.isPassiveDisabled() && context.isStarted()) {
+                        context.onAccessibilityEvent(event);
+                    }
                 }
             } finally {
                 contextLock.unlock();
@@ -86,37 +94,41 @@ public class DataDistributor implements CollectorListener {
             try {
                 contextLock.lock();
                 for (BaseAction action : actions) {
-                    List<SensorType> types = action.getConfig().getSensorType();
-                    switch (data.dataType()) {
-                        case SingleIMUData:
-                            if (types.contains(SensorType.IMU)) {
-                                action.onIMUSensorEvent((SingleIMUData) data);
-                            }
-                            break;
-                        case NonIMUData:
-                            if (types.contains(SensorType.PROXIMITY)) {
-                                action.onNonIMUSensorEvent((NonIMUData) data);
-                            }
-                            break;
-                        default:
-                            break;
+                    if (!action.isPassiveDisabled() && action.isStarted()) {
+                        List<SensorType> types = action.getConfig().getSensorType();
+                        switch (data.dataType()) {
+                            case SingleIMUData:
+                                if (types.contains(SensorType.IMU)) {
+                                    action.onIMUSensorEvent((SingleIMUData) data);
+                                }
+                                break;
+                            case NonIMUData:
+                                if (types.contains(SensorType.PROXIMITY)) {
+                                    action.onNonIMUSensorEvent((NonIMUData) data);
+                                }
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
                 for (BaseContext context : contexts) {
-                    List<SensorType> types = context.getConfig().getSensorType();
-                    switch (data.dataType()) {
-                        case SingleIMUData:
-                            if (types.contains(SensorType.IMU)) {
-                                context.onIMUSensorEvent((SingleIMUData) data);
-                            }
-                            break;
-                        case NonIMUData:
-                            if (types.contains(SensorType.PROXIMITY)) {
-                                context.onNonIMUSensorEvent((NonIMUData) data);
-                            }
-                            break;
-                        default:
-                            break;
+                    if (!context.isPassiveDisabled() && context.isStarted()) {
+                        List<SensorType> types = context.getConfig().getSensorType();
+                        switch (data.dataType()) {
+                            case SingleIMUData:
+                                if (types.contains(SensorType.IMU)) {
+                                    context.onIMUSensorEvent((SingleIMUData) data);
+                                }
+                                break;
+                            case NonIMUData:
+                                if (types.contains(SensorType.PROXIMITY)) {
+                                    context.onNonIMUSensorEvent((NonIMUData) data);
+                                }
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
             } finally {

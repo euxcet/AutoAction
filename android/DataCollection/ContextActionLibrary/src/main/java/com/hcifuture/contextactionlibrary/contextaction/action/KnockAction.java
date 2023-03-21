@@ -102,4 +102,9 @@ public class KnockAction extends BaseAction {
         }
          */
     }
+
+    @Override
+    public String getName() {
+        return "KnockAction";
+    }
 }

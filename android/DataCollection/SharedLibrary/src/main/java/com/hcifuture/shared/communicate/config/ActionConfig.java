@@ -6,7 +6,25 @@ import java.util.List;
 
 public class ActionConfig extends Config {
     private String action;
+    private int priority; // 0 necessary  1 unnecessary
+    private int imuSamplingFreq;
     private List<SensorType> sensorType;
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    public int getImuSamplingFreq() {
+        return imuSamplingFreq;
+    }
+
+    public void setImuSamplingFreq(int imuSamplingFreq) {
+        this.imuSamplingFreq = imuSamplingFreq;
+    }
 
     public String getAction() {
         return action;

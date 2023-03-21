@@ -165,7 +165,6 @@ public class CloseAction extends BaseAction {
         light_flag = CollectorStatusHolder.getInstance().getStatus(Sensor.TYPE_LIGHT);
         send_flag = false;
         reset();
-        vibrator=(Vibrator)mContext.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     @Override
@@ -339,5 +338,10 @@ public class CloseAction extends BaseAction {
                 listener.onAction(new ActionResult(ACTION));
             }
         }
+    }
+
+    @Override
+    public String getName() {
+        return "CloseAction";
     }
 }

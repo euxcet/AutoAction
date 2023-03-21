@@ -120,6 +120,8 @@ public class ContextActionConfigBean {
 
     public static class ContextConfigBean {
         private String builtInContext;
+        private int priority;
+        private int imuSamplingFreq;
         private List<String> sensorType;
         private List<String> integerParamKey;
         private List<Integer> integerParamValue;
@@ -129,6 +131,22 @@ public class ContextActionConfigBean {
         private List<Float> floatParamValue;
         private List<String> booleanParamKey;
         private List<Boolean> booleanParamValue;
+
+        public int getPriority() {
+            return priority;
+        }
+
+        public void setPriority(int priority) {
+            this.priority = priority;
+        }
+
+        public int getImuSamplingFreq() {
+            return imuSamplingFreq;
+        }
+
+        public void setImuSamplingFreq(int imuSamplingFreq) {
+            this.imuSamplingFreq = imuSamplingFreq;
+        }
 
         public List<Boolean> getBooleanParamValue() {
             return booleanParamValue;
@@ -213,6 +231,8 @@ public class ContextActionConfigBean {
 
     public static class ActionConfigBean {
         private String builtInAction;
+        private int priority;
+        private int imuSamplingFreq;
         private List<String> sensorType;
         private List<String> integerParamKey;
         private List<Integer> integerParamValue;
@@ -222,6 +242,22 @@ public class ContextActionConfigBean {
         private List<Float> floatParamValue;
         private List<String> booleanParamKey;
         private List<Boolean> booleanParamValue;
+
+        public void setImuSamplingFreq(int imuSamplingFreq) {
+            this.imuSamplingFreq = imuSamplingFreq;
+        }
+
+        public int getImuSamplingFreq() {
+            return imuSamplingFreq;
+        }
+
+        public void setPriority(int priority) {
+            this.priority = priority;
+        }
+
+        public int getPriority() {
+            return priority;
+        }
 
         public List<Boolean> getBooleanParamValue() {
             return booleanParamValue;

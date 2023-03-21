@@ -164,4 +164,9 @@ public class TableContext extends BaseContext {
             }
         }
     }
+
+    @Override
+    public String getName() {
+        return "TableContext";
+    }
 }

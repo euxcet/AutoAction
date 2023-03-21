@@ -37,6 +37,9 @@ public class InPocketContext extends BaseContext {
     private boolean oriOk = false;
     private boolean lightOk = false;
 
+    private float upThreshold = 0.15F;
+    private float downThreshold = 0.9F;
+
     private boolean keep3s = false;
     private int lastOri = 0;
     private long lastDownTimestamp = 0, lastUpTimestamp = Long.MAX_VALUE, lastZeroTimestamp = 0;
@@ -81,9 +84,9 @@ public class InPocketContext extends BaseContext {
     private int checkOrientation() {
         int downNum = 0, upNum = 0;
         for (int i = 0; i < ORIENTATION_CHECK_NUMBER; i++) {
-            if (orientationMark[i][1] > 0.5)
+            if (orientationMark[i][1] > downThreshold)
                 downNum++;
-            else if (orientationMark[i][1] < 0)
+            else if (orientationMark[i][1] < upThreshold)
                 upNum++;
         }
         if (downNum >= ORIENTATION_CHECK_NUMBER)
@@ -116,8 +119,8 @@ public class InPocketContext extends BaseContext {
                         lastDownTimestamp = data.getTimestamp();
                         while (downTimestamps.size() > 0 && data.getTimestamp() - downTimestamps.peek() > 8 * 1e9)
                             downTimestamps.remove();
-                        if (downTimestamps.size() >= 4)
-                            keep3s = true;
+//                        if (downTimestamps.size() >= 4)
+//                            keep3s = true;
                     }
                     if (!oriOk) {
                         oriOk = true;
@@ -138,10 +141,10 @@ public class InPocketContext extends BaseContext {
                     if (!keep3s) {
                         changeStatus = true;
                     }
-                    if (keep3s && (data.getTimestamp() - lastDownTimestamp > 1.5 * 1e9 && data.getTimestamp() - lastZeroTimestamp > 1.5 * 1e9)) {
-                        keep3s = false;
-                        changeStatus = true;
-                    }
+//                    if (keep3s && (data.getTimestamp() - lastDownTimestamp > 1.5 * 1e9 && data.getTimestamp() - lastZeroTimestamp > 1.5 * 1e9)) {
+//                        keep3s = false;
+//                        changeStatus = true;
+//                    }
                     if (!lightOk && changeStatus) {
                         if (oriOk) {
                             oriOk = false;
@@ -198,7 +201,14 @@ public class InPocketContext extends BaseContext {
 
     @Override
     public void onExternalEvent(Bundle bundle) {
-
+        switch (bundle.getString("type")) {
+            case "upThreshold":
+                upThreshold = bundle.getFloat("value");
+                break;
+            case "downThreshold":
+                downThreshold = bundle.getFloat("value");
+                break;
+        }
     }
 
     @Override
@@ -214,5 +224,10 @@ public class InPocketContext extends BaseContext {
 //                    listener.onContext(new ContextResult("OutOfPocket"));
 //            }
 //        }
+    }
+
+    @Override
+    public String getName() {
+        return "InPocketContext";
     }
 }

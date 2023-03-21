@@ -319,6 +319,11 @@ public class InformationalContext extends BaseContext {
 
     }
 
+    @Override
+    public String getName() {
+        return "InformationalContext";
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void initFromFile()
     {

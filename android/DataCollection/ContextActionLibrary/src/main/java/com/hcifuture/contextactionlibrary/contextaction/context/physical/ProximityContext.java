@@ -97,4 +97,9 @@ public class ProximityContext extends BaseContext {
 //            }
         }
     }
+
+    @Override
+    public String getName() {
+        return "ProximityContext";
+    }
 }
