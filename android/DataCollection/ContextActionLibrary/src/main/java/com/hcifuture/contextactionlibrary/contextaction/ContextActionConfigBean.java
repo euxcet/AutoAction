@@ -132,6 +132,10 @@ public class ContextActionConfigBean {
         private List<String> booleanParamKey;
         private List<Boolean> booleanParamValue;
 
+        private List<String> stringParamKey;
+        private List<String> stringParamValue;
+
+
         public int getPriority() {
             return priority;
         }
@@ -164,6 +168,10 @@ public class ContextActionConfigBean {
             return longParamValue;
         }
 
+        public List<String> getStringParamValue() {
+            return stringParamValue;
+        }
+
         public List<String> getBooleanParamKey() {
             return booleanParamKey;
         }
@@ -179,6 +187,10 @@ public class ContextActionConfigBean {
         public List<String> getLongParamKey() {
             return longParamKey;
         }
+        public List<String> getStringParamKey() {
+            return stringParamKey;
+        }
+
 
         public List<String> getSensorType() {
             return sensorType;
@@ -204,6 +216,10 @@ public class ContextActionConfigBean {
             this.floatParamKey = floatParamKey;
         }
 
+        public void setStringParamKey(List<String> stringParamKey) {
+            this.stringParamKey = stringParamKey;
+        }
+
         public void setFloatParamValue(List<Float> floatParamValue) {
             this.floatParamValue = floatParamValue;
         }
@@ -224,6 +240,10 @@ public class ContextActionConfigBean {
             this.longParamValue = longParamValue;
         }
 
+        public void setStringParamValue(List<String> stringParamValue) {
+            this.stringParamValue = stringParamValue;
+        }
+
         public void setSensorType(List<String> sensorType) {
             this.sensorType = sensorType;
         }
@@ -242,6 +262,9 @@ public class ContextActionConfigBean {
         private List<Float> floatParamValue;
         private List<String> booleanParamKey;
         private List<Boolean> booleanParamValue;
+
+        private List<String> stringParamKey;
+        private List<String> stringParamValue;
 
         public void setImuSamplingFreq(int imuSamplingFreq) {
             this.imuSamplingFreq = imuSamplingFreq;
@@ -274,6 +297,9 @@ public class ContextActionConfigBean {
         public List<Long> getLongParamValue() {
             return longParamValue;
         }
+        public List<String> getStringParamValue() {
+            return stringParamValue;
+        }
 
         public List<String> getBooleanParamKey() {
             return booleanParamKey;
@@ -289,6 +315,9 @@ public class ContextActionConfigBean {
 
         public List<String> getLongParamKey() {
             return longParamKey;
+        }
+        public List<String> getStringParamKey() {
+            return stringParamKey;
         }
 
         public List<String> getSensorType() {
@@ -333,6 +362,14 @@ public class ContextActionConfigBean {
 
         public void setLongParamValue(List<Long> longParamValue) {
             this.longParamValue = longParamValue;
+        }
+
+        public void setStringParamKey(List<String> stringParamKey) {
+            this.stringParamKey = stringParamKey;
+        }
+
+        public void setStringParamValue(List<String> stringParamValue) {
+            this.stringParamValue = stringParamValue;
         }
 
         public void setSensorType(List<String> sensorType) {

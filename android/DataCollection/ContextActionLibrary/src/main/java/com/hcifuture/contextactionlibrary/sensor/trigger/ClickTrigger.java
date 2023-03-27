@@ -103,7 +103,8 @@ public class ClickTrigger extends Trigger {
         Log.e(TAG, "数据收集开始执行: [" + startTimestamp + "] " + triggerID + " " + collectorName + " " + saveFile.getAbsolutePath());
 
         if (collector instanceof SynchronousCollector) { // sync
-            ft = FileSaver.getInstance().writeStringToFile(((SynchronousCollector)collector).getData(config), saveFile);
+            CollectorResult result = ((SynchronousCollector)collector).getData(config);
+            ft = FileSaver.getInstance().writeStringToFile(result, saveFile);
         } else if (collector instanceof AsynchronousCollector) {
             if (collector instanceof IMUCollector) { // imu
                 ft = ((IMUCollector) collector).getData(config)

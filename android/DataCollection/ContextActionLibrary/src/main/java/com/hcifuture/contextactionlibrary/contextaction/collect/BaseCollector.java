@@ -77,6 +77,7 @@ public abstract class BaseCollector {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public CollectorResult upload(CollectorResult collectorResult, String name, String commit, Result contextOrAction) {
+        if (collectorResult == null) return null;
         long uploadTime = System.currentTimeMillis();
         Log.e("Upload name", name);
         Log.e("Upload commit", commit);

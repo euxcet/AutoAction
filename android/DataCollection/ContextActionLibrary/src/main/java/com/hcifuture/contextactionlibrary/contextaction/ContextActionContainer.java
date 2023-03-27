@@ -25,6 +25,7 @@ import androidx.annotation.RequiresApi;
 //import com.amap.api.services.core.ServiceSettings;
 import com.google.gson.Gson;
 import com.hcifuture.contextactionlibrary.contextaction.action.MotionAction;
+import com.hcifuture.contextactionlibrary.contextaction.action.UploadDataAction;
 import com.hcifuture.contextactionlibrary.contextaction.collect.CloseCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.ConfigCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.FlipCollector;
@@ -34,7 +35,6 @@ import com.hcifuture.contextactionlibrary.contextaction.collect.TimedCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
-import com.hcifuture.contextactionlibrary.sensor.collector.CollectorStatusHolder;
 import com.hcifuture.contextactionlibrary.sensor.collector.async.IMUCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.LogCollector;
 import com.hcifuture.contextactionlibrary.sensor.collector.sync.NonIMUCollector;
@@ -63,7 +63,6 @@ import com.hcifuture.contextactionlibrary.utils.NetworkUtils;
 import com.hcifuture.shared.communicate.config.ActionConfig;
 import com.hcifuture.shared.communicate.config.ContextConfig;
 import com.hcifuture.contextactionlibrary.contextaction.event.BroadcastEvent;
-import com.hcifuture.shared.communicate.config.RequestConfig;
 import com.hcifuture.shared.communicate.listener.ActionListener;
 import com.hcifuture.shared.communicate.SensorType;
 import com.hcifuture.shared.communicate.listener.ContextListener;
@@ -76,7 +75,6 @@ import com.hcifuture.shared.communicate.status.Heartbeat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -449,17 +447,30 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
                     contextConfig.setPriority(bean.getPriority());
                     contextConfig.setImuSamplingFreq(bean.getImuSamplingFreq());
-                    for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
-                        contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                    if (bean.getIntegerParamKey() != null && bean.getIntegerParamValue() != null) {
+                        for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                            contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                        }
                     }
-                    for (int i = 0; i < bean.getLongParamKey().size(); i++) {
-                        contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                    if (bean.getLongParamKey() != null && bean.getLongParamValue() != null) {
+                        for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                            contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                        }
                     }
-                    for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
-                        contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                    if (bean.getFloatParamKey() != null && bean.getFloatParamValue() != null) {
+                        for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                            contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                        }
                     }
-                    for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
-                        contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                    if (bean.getBooleanParamKey() != null && bean.getBooleanParamValue() != null) {
+                        for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                            contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                        }
+                    }
+                    if (bean.getStringParamKey() != null && bean.getStringParamValue() != null) {
+                        for (int i = 0; i < bean.getStringParamKey().size(); i++) {
+                            contextConfig.putString(bean.getStringParamKey().get(i), bean.getStringParamValue().get(i));
+                        }
                     }
                     switch (contextConfig.getContext()) {
                         case "Proximity":
@@ -488,17 +499,30 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                     actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
                     actionConfig.setPriority(bean.getPriority());
                     actionConfig.setImuSamplingFreq(bean.getImuSamplingFreq());
-                    for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
-                        actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                    if (bean.getIntegerParamKey() != null && bean.getIntegerParamValue() != null) {
+                        for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                            actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                        }
                     }
-                    for (int i = 0; i < bean.getLongParamKey().size(); i++) {
-                        actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                    if (bean.getLongParamKey() != null && bean.getLongParamValue() != null) {
+                        for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                            actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                        }
                     }
-                    for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
-                        actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                    if (bean.getFloatParamKey() != null && bean.getFloatParamValue() != null) {
+                        for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                            actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                        }
                     }
-                    for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
-                        actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                    if (bean.getBooleanParamKey() != null && bean.getBooleanParamValue() != null) {
+                        for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                            actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                        }
+                    }
+                    if (bean.getStringParamKey() != null && bean.getStringParamValue() != null) {
+                        for (int i = 0; i < bean.getStringParamKey().size(); i++) {
+                            actionConfig.putString(bean.getStringParamKey().get(i), bean.getStringParamValue().get(i));
+                        }
                     }
                     switch (actionConfig.getAction()) {
                         case "TapTap":
@@ -525,6 +549,10 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         case "Motion":
                             MotionAction motionAction = new MotionAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
                             actions.add(motionAction);
+                            break;
+                        case "UploadData":
+                            UploadDataAction uploadDataAction = new UploadDataAction(mContext, actionConfig, requestListener, Arrays.asList(this, actionListener), scheduledExecutorService, futureList);
+                            actions.add(uploadDataAction);
                             break;
                         default:
                             break;
@@ -627,17 +655,30 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         contextConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
                         contextConfig.setPriority(bean.getPriority());
                         contextConfig.setImuSamplingFreq(bean.getImuSamplingFreq());
-                        for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
-                            contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                        if (bean.getIntegerParamKey() != null && bean.getIntegerParamValue() != null) {
+                            for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                                contextConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                            }
                         }
-                        for (int i = 0; i < bean.getLongParamKey().size(); i++) {
-                            contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                        if (bean.getLongParamKey() != null && bean.getLongParamValue() != null) {
+                            for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                                contextConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                            }
                         }
-                        for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
-                            contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                        if (bean.getFloatParamKey() != null && bean.getFloatParamValue() != null) {
+                            for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                                contextConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                            }
                         }
-                        for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
-                            contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                        if (bean.getBooleanParamKey() != null && bean.getBooleanParamValue() != null) {
+                            for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                                contextConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                            }
+                        }
+                        if (bean.getStringParamKey() != null && bean.getStringParamValue() != null) {
+                            for (int i = 0; i < bean.getStringParamKey().size(); i++) {
+                                contextConfig.putString(bean.getStringParamKey().get(i), bean.getStringParamValue().get(i));
+                            }
                         }
                         Number initialDelay = contextConfig.getValue("intialDelay");
                         Number period = contextConfig.getValue("period");
@@ -685,18 +726,35 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                         actionConfig.setSensorType(bean.getSensorType().stream().map(SensorType::fromString).collect(Collectors.toList()));
                         actionConfig.setPriority(bean.getPriority());
                         actionConfig.setImuSamplingFreq(bean.getImuSamplingFreq());
-                        for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
-                            actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                        if (bean.getIntegerParamKey() != null && bean.getIntegerParamValue() != null) {
+                            for (int i = 0; i < bean.getIntegerParamKey().size(); i++) {
+                                actionConfig.putValue(bean.getIntegerParamKey().get(i), bean.getIntegerParamValue().get(i));
+                            }
                         }
-                        for (int i = 0; i < bean.getLongParamKey().size(); i++) {
-                            actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                        if (bean.getLongParamKey() != null && bean.getLongParamValue() != null) {
+                            for (int i = 0; i < bean.getLongParamKey().size(); i++) {
+                                actionConfig.putValue(bean.getLongParamKey().get(i), bean.getLongParamValue().get(i));
+                            }
                         }
-                        for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
-                            actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                        if (bean.getFloatParamKey() != null && bean.getFloatParamValue() != null) {
+                            for (int i = 0; i < bean.getFloatParamKey().size(); i++) {
+                                actionConfig.putValue(bean.getFloatParamKey().get(i), bean.getFloatParamValue().get(i));
+                            }
                         }
-                        for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
-                            actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                        if (bean.getBooleanParamKey() != null && bean.getBooleanParamValue() != null) {
+                            for (int i = 0; i < bean.getBooleanParamKey().size(); i++) {
+                                actionConfig.putValue(bean.getBooleanParamKey().get(i), bean.getBooleanParamValue().get(i));
+                            }
                         }
+                        if (bean.getStringParamKey() != null && bean.getStringParamValue() != null) {
+                            for (int i = 0; i < bean.getStringParamKey().size(); i++) {
+                                actionConfig.putString(bean.getStringParamKey().get(i), bean.getStringParamValue().get(i));
+                            }
+                        }
+                        Number initialDelay = actionConfig.getValue("intialDelay");
+                        Number period = actionConfig.getValue("period");
+                        String name = actionConfig.getString("name");
+                        Number logLen = actionConfig.getValue("logMaxLen");
                         switch (actionConfig.getAction()) {
                             case "Flip":
                                 Log.e("upload:", "register Flip LogCollector");
@@ -709,6 +767,15 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                                 LogCollector closeLogCollector = collectorManager.newLogCollector("Close", 800);
                                 collectors.add(new CloseCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, closeLogCollector));
                                 setLogCollector(CloseAction.class, closeLogCollector);
+                                break;
+                            case "UploadData":
+                                Log.e("upload", "register uploaddata LogCollector");
+                                LogCollector uploadLogCollector = collectorManager.newLogCollector(((name == null)?"UploadData":name), ((logLen == null)?1000:logLen.intValue()));
+                                setLogCollector(UploadDataAction.class, uploadLogCollector);
+                                timedCollector.scheduleTimedLogUpload(uploadLogCollector,
+                                        (period == null) ? 30 * 60000 : period.longValue(),
+                                        (initialDelay == null) ? 5000 : initialDelay.longValue(),
+                                        (name == null) ? "UploadData" : name);
                                 break;
                             default:
                                 break;
