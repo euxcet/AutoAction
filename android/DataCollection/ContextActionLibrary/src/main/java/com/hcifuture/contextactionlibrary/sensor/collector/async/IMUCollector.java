@@ -121,9 +121,11 @@ public class IMUCollector extends AsynchronousCollector implements SensorEventLi
                     event.timestamp
             );
             data.insert(newData, LENGTH_LIMIT);
-            for (CollectorListener listener: listenerList) {
-                if (listener != null) {
-                    listener.onSensorEvent(newData);
+            synchronized (listenerList) {
+                for (CollectorListener listener : listenerList) {
+                    if (listener != null) {
+                        listener.onSensorEvent(newData);
+                    }
                 }
             }
         }

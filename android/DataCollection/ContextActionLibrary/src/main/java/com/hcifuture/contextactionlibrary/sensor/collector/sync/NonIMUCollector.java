@@ -134,8 +134,12 @@ public class NonIMUCollector extends SynchronousCollector implements SensorEvent
                 default:
                     break;
             }
-            for (CollectorListener listener: listenerList) {
-                listener.onSensorEvent(nonIMUData);
+            synchronized (listenerList) {
+                for (CollectorListener listener : listenerList) {
+                    if (listener != null) {
+                        listener.onSensorEvent(nonIMUData);
+                    }
+                }
             }
         }
     }
