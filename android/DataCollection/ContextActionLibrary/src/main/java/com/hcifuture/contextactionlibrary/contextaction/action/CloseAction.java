@@ -239,6 +239,22 @@ public class CloseAction extends BaseAction {
             Log.e(TAG,"proximity not ready");
             return;
         }
+        //在Log中添加凑近的接近光和光线传感器的数据
+        if(data.getType()==Sensor.TYPE_PROXIMITY){
+            dist = data.getProximity();
+        }
+        if(data.getType()==Sensor.TYPE_LIGHT){
+            bright = data.getEnvironmentBrightness();
+        }
+        if(upright_gyro) {
+            if (logCollector != null) {
+                if(data.getType() == Sensor.TYPE_PROXIMITY)
+                    logCollector.addLog(data.getProximityTimestamp() + " " + dist + " " + bright);
+                else if(data.getType() == Sensor.TYPE_LIGHT) {
+                    logCollector.addLog(data.getEnvironmentBrightnessTimestamp() + " " + dist + " " + bright);
+                }
+            }
+        }
 
         Heart.getInstance().newActionAliveEvent(getConfig().getAction(), data.getTimestamp());
 
