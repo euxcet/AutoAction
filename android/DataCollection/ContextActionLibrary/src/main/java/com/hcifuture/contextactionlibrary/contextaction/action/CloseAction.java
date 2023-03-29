@@ -202,18 +202,18 @@ public class CloseAction extends BaseAction {
 //                            sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_PROXIMITY), SensorManager.SENSOR_DELAY_FASTEST);
                             register_flag = true;
                         }
-                        //Log.i(TAG,"gyro为true了！");
+//                        Log.i(TAG,"gyro为true了！");
                     }
                 }
                 else if(upright_gyro){
-//                Log.i(TAG,"gx:"+gx+" gy:"+gy+" gz:"+gz);
+//                    Log.i(TAG,"gx:"+gx+" gy:"+gy+" gz:"+gz);
                     if((abs(abs(gy)-abs(gx))<30||abs(abs(gz)-abs(gx))<30||(abs(gz)>abs(gx))||abs(gy)>abs(gx))&&(abs(gy)>60||abs(gz)>60)){
                         upright_gyro = false;
-                        //Log.i(TAG,"其他方向的角速度太大了");
+//                        Log.i(TAG,"其他方向的角速度太大了");
                     }
                     if(System.currentTimeMillis()-up_gyro_id>4000){
                         upright_gyro = false;
-                        //Log.i(TAG,"角速度时间过长");
+//                        Log.i(TAG,"角速度时间过长");
                     }
                 }
                 break;
