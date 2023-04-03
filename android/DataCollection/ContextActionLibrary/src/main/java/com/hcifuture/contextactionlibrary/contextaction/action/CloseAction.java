@@ -53,6 +53,7 @@ public class CloseAction extends BaseAction {
     boolean send_flag; //假如没有传感器时，是否发送了日志
     String TAG = "proximity";
 
+
     public CloseAction(Context context, ActionConfig config, RequestListener requestListener, List<ActionListener> actionListener, ScheduledExecutorService scheduledExecutorService, List<ScheduledFuture<?>> futureList, LogCollector CloseLogCollector) {
         super(context, config, requestListener, actionListener, scheduledExecutorService, futureList);
         logCollector = CloseLogCollector;
@@ -78,8 +79,9 @@ public class CloseAction extends BaseAction {
     private void Success(){
         //识别成功时，注册listener
         success_flag = true;
-        //vibrate();
-        //Log.i("Close","---------凑近嘴部------------");
+//        vibrate();
+        //Log.e(TAG, "---------凑近嘴部------------");
+   
     }
 
     private float[] movingaverage(int window_size){
@@ -90,11 +92,11 @@ public class CloseAction extends BaseAction {
         Iterator<Float> head = gx_before.iterator();
         Iterator<Float> tail = gx_before.iterator();
         int cnt = 0; //计数现在到第几个了
-//        Log.i("moving:", String.valueOf(gx_before.size()));
+//        //Log.e("moving:", String.valueOf(gx_before.size()));
         while(tail.hasNext()){
             cnt ++;
             sum += tail.next();
-//            Log.i("moving:",cnt+" "+sum);
+//            //Log.e("moving:",cnt+" "+sum);
             if(cnt==window_size){
                 data[cnt-window_size] = sum;
             }
@@ -105,7 +107,7 @@ public class CloseAction extends BaseAction {
             else{
                 continue;
             }
-//            Log.i("moving:",cnt+" "+sum);
+//            //Log.e("moving:",cnt+" "+sum);
         }
         return data;
     }
@@ -116,7 +118,7 @@ public class CloseAction extends BaseAction {
         float tolerance = 1;
         int negative_num = 0;
         float[] data =movingaverage(20);
-        //Log.i("moving:", String.valueOf(data));
+        ////Log.e("moving:", String.valueOf(data));
         for(int i=0;i<data.length;i++){
             if(data[i]<0){
                 negative_num ++;
@@ -138,13 +140,13 @@ public class CloseAction extends BaseAction {
                         num = 1;
                 }
                 else{
-                    //Log.i("close","gx突变太剧烈了"+data[i]+" "+data[i+1]);
+                    ////Log.e("close","gx突变太剧烈了"+data[i]+" "+data[i+1]);
                     //新增的
                     num = 1;
                 }
             }
         }
-        //Log.i("moving:",num+" "+negative_num);
+        ////Log.e("moving:",num+" "+negative_num);
         return new int[]{num,negative_num};
     }
 
@@ -161,7 +163,7 @@ public class CloseAction extends BaseAction {
     public synchronized void start() {
         isStarted = true;
         proximity_flag = CollectorStatusHolder.getInstance().getStatus(Sensor.TYPE_PROXIMITY);
-        //Log.e(TAG,"proximity_flag:"+proximity_flag);
+        ////Log.e(TAG,"proximity_flag:"+proximity_flag);
         light_flag = CollectorStatusHolder.getInstance().getStatus(Sensor.TYPE_LIGHT);
         send_flag = false;
         reset();
@@ -189,31 +191,73 @@ public class CloseAction extends BaseAction {
                     gx_before.removeFirst();
                 }
                 gx_before.add(gx);
-
+                int gx_gy_threshold =25;
                 //gx要必须很大，且gy，gz不大，才可以说明是凑近嘴部。
                 if(!upright_gyro) {
-//                Log.i(TAG,"gx: "+gx+" gy: "+gy+" gz: "+gz);
-                    if (gx>50&&abs(gx)-abs(gy)>30&&abs(gx)-abs(gz)>30) {
+//                    //Log.e(TAG,s);
+
+                    if (gx>50&&abs(gx)-abs(gy)>gx_gy_threshold &&abs(gx)-abs(gz)>30) {
                         up_gyro_id = System.currentTimeMillis(); // TODO：改成sensorEvent的时间
                         upright_gyro = true;
                         if(!register_flag){
                             register_time = System.currentTimeMillis();
-//                            Log.i(TAG,"注册传感器!"+register_time);
+//                            //Log.e(TAG,"注册传感器!"+register_time);
 //                            sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_PROXIMITY), SensorManager.SENSOR_DELAY_FASTEST);
                             register_flag = true;
                         }
-//                        Log.i(TAG,"gyro为true了！");
+                        //Log.e(TAG,"gyro为true了！");
+                    }
+                    else{
+                        if(gx>50){
+                            boolean b2 =  abs(gx)-abs(gy)> gx_gy_threshold?true:false;
+                            boolean b3 =  abs(gx)-abs(gz)>30?true:false;
+                            String s = "";
+                            if(!b2){
+                                s+=" b2: false,"+ (abs(gx)-abs(gy));
+                            }
+                            if(!b3){
+                                s+=" b3: false,"+ (abs(gx)-abs(gz));
+                            }
+                            //Log.e(TAG,"gx满足，但其他不满足 "+s);
+                        }
                     }
                 }
                 else if(upright_gyro){
-//                    Log.i(TAG,"gx:"+gx+" gy:"+gy+" gz:"+gz);
-                    if((abs(abs(gy)-abs(gx))<30||abs(abs(gz)-abs(gx))<30||(abs(gz)>abs(gx))||abs(gy)>abs(gx))&&(abs(gy)>60||abs(gz)>60)){
+//                    //Log.e(TAG,"gx:"+gx+" gy:"+gy+" gz:"+gz);
+                    int gy_gx_threshold = 20;
+                    int gy_threshold = 100;
+                    if((abs(abs(gy)-abs(gx))<gy_gx_threshold||abs(abs(gz)-abs(gx))<30||(abs(gz)>abs(gx))||abs(gy)>abs(gx))&&(abs(gy)>gy_threshold||abs(gz)>60)){
                         upright_gyro = false;
-//                        Log.i(TAG,"其他方向的角速度太大了");
+//                        boolean b1 =  abs(abs(gy)-abs(gx))<gy_gx_threshold?true:false;
+//                        boolean b2 =  abs(abs(gz)-abs(gx))<30?true:false;
+//                        boolean b3 =  (abs(gz)>abs(gx))?true:false;
+//                        boolean b4 = abs(gy)>abs(gx)?true:false;
+//                        boolean b5 = abs(gy)>gy_threshold?true:false;
+//                        boolean b6 = abs(gz)>60?true:false;
+//                        String s = "";
+//                        if(b1){
+//                            s+=" b1:"+ abs(abs(gy)-abs(gx));
+//                        }
+//                        if(b2){
+//                            s+=" b2: "+ abs(abs(gz)-abs(gx));
+//                        }
+//                        if(b3){
+//                            s+=" b3: "+ (abs(gz)-abs(gx));
+//                        }
+//                        if(b4){
+//                            s+=" b4: "+ (abs(gy)-abs(gx));
+//                        }
+//                        if(b5){
+//                            s+=" b5:,"+ (abs(gy));
+//                        }
+//                        if(b6){
+//                            s+=" b6:,"+ (abs(gz));
+//                        }
+                        //Log.e(TAG,"其他方向的角速度太大了："+s);
                     }
                     if(System.currentTimeMillis()-up_gyro_id>4000){
                         upright_gyro = false;
-//                        Log.i(TAG,"角速度时间过长");
+                        //Log.e(TAG,"角速度时间过长");
                     }
                 }
                 break;
@@ -236,7 +280,7 @@ public class CloseAction extends BaseAction {
             }
         }
         if(proximity_flag != CollectorStatus.READY){
-            Log.e(TAG,"proximity not ready");
+            //Log.e(TAG,"proximity not ready");
             return;
         }
         //在Log中添加凑近的接近光和光线传感器的数据
@@ -262,29 +306,44 @@ public class CloseAction extends BaseAction {
         switch (type) {
             case Sensor.TYPE_PROXIMITY:
                 dist = data.getProximity();
-                //Log.i(TAG,"接近光距离为："+dist);
-                if(dist == 0 ) {
+                ////Log.e(TAG,"接近光距离为："+dist);
+                if(dist == 0 ) { //凑近了
                     if (upright_gyro && last_proxi!=0) {
 //                if (upright_gyro && last_proxi!=0 && gx<60 && gx>-25 && abs(gz)<25 && abs(gy)<55) {
                         int[] num = get_num();
                         if(num[0]<15 || num[1]>5){
                             //不满足条件
+                            //Log.e("moving:","数量不满足条件"+num[0]+" "+num[1]);
                             reset();
-                            //Log.i("moving:","数量不满足条件");
                         }
                         else{
                             success_id = System.currentTimeMillis();
-                            //Log.i(TAG, "识别成功2----"+(success_id-register_time)+" "+success_id);
+                            //Log.e(TAG, "识别成功2----"+(success_id-register_time)+" "+success_id);
                         }
                     } else {
-                        //Log.i(TAG, "gyro不满足条件"+gx+" "+gy+" "+gz);
+                        if(last_proxi==5) { //稳定之后就不做这个判断了
+                            boolean b1 = gx > 50 ? true : false;
+                            boolean b2 = abs(gx) - abs(gy) > 30 ? true : false;
+                            boolean b3 = abs(gx) - abs(gz) > 30 ? true : false;
+                            String s = "";
+                            if (!b1) {
+                                s += " b1: false," + gx;
+                            }
+                            if (!b2) {
+                                s += " b2: false," + (abs(gx) - abs(gy));
+                            }
+                            if (!b3) {
+                                s += " b3: false," + (abs(gx) - abs(gz));
+                            }
+                            //Log.e(TAG, "gyro不满足条件" + s + " " + last_proxi);
+                        }
                     }
                 }
                 if(dist==5) {
                     success_id = -1;
                     if (System.currentTimeMillis() - register_time > 10000 && register_flag) {
 //                        sm.unregisterListener(this, sm.getDefaultSensor(Sensor.TYPE_PROXIMITY));
-                        //Log.i(TAG, "接近光 时间过长，取消注册传感器");
+                        //Log.e(TAG, "接近光 时间过长，取消注册传感器");
                         reset();
                         register_flag = false;
                     }
@@ -294,6 +353,7 @@ public class CloseAction extends BaseAction {
             case Sensor.TYPE_LIGHT:
                 if(dist == 5){ //距离远 但光传感器很小
                     if(data.getEnvironmentBrightness()<5){
+                        //Log.e(TAG,"光传感器很小，重置");
                         reset();
                     }
                 }
@@ -307,18 +367,20 @@ public class CloseAction extends BaseAction {
 
     public void check(){
         if(success_id != -1){
-            //Log.i(TAG,"stop:"+x_stop_flag+"gx:"+gx+" diff:"+(System.currentTimeMillis() - success_id));
+            ////Log.e(TAG,"stop:"+x_stop_flag+"gx:"+gx+" diff:"+(System.currentTimeMillis() - success_id));
             if(x_stop_flag == -1)
                 if(System.currentTimeMillis() - success_id<100) {
                     if (gx < 50 && gx > -20 && abs(gz) < 20 && abs(gy) < 50) {
-                        //Log.i(TAG, "time:" + (System.currentTimeMillis() - success_id));
+                        ////Log.e(TAG, "time:" + (System.currentTimeMillis() - success_id));
                         x_stop_flag = 1;
+                        //Log.e(TAG,"已停下");
                     }
                 }
                 else
                     reset(); //太久都没有停止
             if(x_stop_flag==1) { //停止之后不能有大的变动
-                if (gx > 50 || gx<-20 || abs(gy)>50 || abs(gz)>20) { //角速度太大
+                if (gx > 50 || gx<-30 || abs(gy)>50 || abs(gz)>22) { //角速度太大
+                    //Log.e(TAG,"停下后 角速度太大："+gx+" "+gy+" "+gz);
                     x_stop_flag = 0;
                     reset();
                 }
@@ -327,13 +389,13 @@ public class CloseAction extends BaseAction {
             if (System.currentTimeMillis() - success_id > 50) {//300) {
                 if(x_stop_flag==1) {
                     if(gx<50 && gx>-20 && abs(gz)<10 ) {
-//                        Log.i(TAG, "成功了！" + success_id);
+//                        //Log.e(TAG, "成功了！" + success_id);
                         Success();
                     }
                 }
             }
             else{
-                //Log.i(TAG,"稳定的时间不够"+(System.currentTimeMillis()-success_id));
+                ////Log.e(TAG,"稳定的时间不够"+(System.currentTimeMillis()-success_id));
             }
         }
     }
@@ -349,7 +411,7 @@ public class CloseAction extends BaseAction {
             return;
         if (success_flag) {
             reset();
-           // Log.i(TAG,"识别成功了");
+           // //Log.e(TAG,"识别成功了");
             for (ActionListener listener: actionListener) {
                 listener.onAction(new ActionResult(ACTION));
             }

@@ -53,7 +53,7 @@ public class CloseCollector extends BaseCollector {
                 try {
 //                    Log.e("upload","log_close:"+logCollector.getData().getDataString());
 //                    Log.e("upload","log_close:"+logCollector.toString());
-//                    Log.e("uplaod:","Close try to upload log");
+                    Log.e("uplaod:","Close try to upload log");
                     triggerAndUpload(logCollector, new TriggerConfig(), "Close", "time: "+time)
                             .thenAccept(v -> logCollector.eraseLog(v.getLogLength()));
                 } catch (Exception e) {
@@ -67,7 +67,7 @@ public class CloseCollector extends BaseCollector {
                 String commit = action.getAction() + ":" + action.getReason() + " " + action.getTimestamp()+" "+time;
                 if(FutureIMU.isDone()) {
                     try {
-//                        Log.e("uplaod:","Close try to upload IMU");
+                        Log.e("uplaod:","Close try to upload IMU");
                         upload(FutureIMU.get().get(0), name, commit);
                     } catch (ExecutionException | InterruptedException e) {
                         e.printStackTrace();
@@ -75,11 +75,12 @@ public class CloseCollector extends BaseCollector {
                 }
                 else {
                     FutureIMU.whenComplete((v, e) -> upload(v.get(0), name, commit));
+                    Log.e("uplaod:","Close try to upload IMU");
 //                    FutureNon.whenComplete((v, e) -> upload(v.get(0), name, commit));
                 }
             }
             else{
-//                Log.e("uplaod:","FutureIMU 是 None ");
+                Log.e("uplaod:","Close 的 FutureIMU 是 None ");
             }
         }
         if (action.getAction().equals(CloseAction.ACTION_START)) {

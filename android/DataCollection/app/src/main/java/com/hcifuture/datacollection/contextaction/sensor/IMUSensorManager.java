@@ -27,6 +27,7 @@ public class IMUSensorManager extends MySensorManager implements SensorEventList
         this.container = container;
         this.onSensorChanged = onSensorChanged;
         initialize();
+        Log.e("IMUSensorManager:","Initialized!");
     }
 
     public boolean initialize() {
@@ -100,7 +101,12 @@ public class IMUSensorManager extends MySensorManager implements SensorEventList
     @Override
     public void onSensorChanged(SensorEvent event) {
         try {
-            onSensorChanged.invoke(container, event);
+            if(onSensorChanged!=null) {
+                onSensorChanged.invoke(container, event);
+            }
+            else{
+                onSensorChanged.invoke(container, event);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
