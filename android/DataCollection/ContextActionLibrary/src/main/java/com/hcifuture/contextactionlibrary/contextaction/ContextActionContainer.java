@@ -32,6 +32,7 @@ import com.hcifuture.contextactionlibrary.contextaction.collect.FlipCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.InformationalContextCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TapTapCollector;
 import com.hcifuture.contextactionlibrary.contextaction.collect.TimedCollector;
+import com.hcifuture.contextactionlibrary.contextaction.collect.UploadDataCollector;
 import com.hcifuture.contextactionlibrary.contextaction.context.ConfigContext;
 import com.hcifuture.contextactionlibrary.contextaction.context.informational.InformationalContext;
 import com.hcifuture.contextactionlibrary.sensor.collector.Collector;
@@ -775,27 +776,41 @@ public class ContextActionContainer implements ActionListener, ContextListener {
                                 LogCollector uploadLogCollector = collectorManager.newLogCollector(((name == null)?"UploadData":name), ((logLen == null)?1000:logLen.intValue()));
                                 setLogCollector(UploadDataAction.class, uploadLogCollector);
                                 if (type == null) type = "immediate";
-                                if (type.equals("fixed")) {
-                                    Calendar now = Calendar.getInstance();
-                                    int hour = now.get(Calendar.HOUR_OF_DAY);
-                                    Number configHour = actionConfig.getValue("hour");
-                                    long initHour = hour;
-                                    if (configHour != null) initHour = configHour.longValue();
-                                    int minute = now.get(Calendar.MINUTE);
-                                    Number configMinute = actionConfig.getValue("minute");
-                                    long initMinute = minute;
-                                    if (configMinute != null) initMinute = configMinute.longValue();
-                                    long delay = (((initHour - hour + 24) % 24) * 3600 + ((initMinute - minute + 60) % 60) * 60) * 1000;
-                                    Log.e("upload setting", "in fixed upload action, delay:" + delay);
-                                    timedCollector.scheduleTimedLogUpload(uploadLogCollector,
-                                            (period == null) ? 30 * 60000 : period.longValue(),
-                                            delay,
-                                            (name == null) ? "UploadData" : name);
-                                } else if (type.equals("immediate")) {
-                                    timedCollector.scheduleTimedLogUpload(uploadLogCollector,
-                                            (period == null) ? 30 * 60000 : period.longValue(),
-                                            (initialDelay == null) ? 5000 : initialDelay.longValue(),
-                                            (name == null) ? "UploadData" : name);
+                                switch (type) {
+                                    case "fixed":
+                                        Calendar now = Calendar.getInstance();
+                                        int hour = now.get(Calendar.HOUR_OF_DAY);
+                                        Number configHour = actionConfig.getValue("hour");
+                                        long initHour = hour;
+                                        if (configHour != null) initHour = configHour.longValue();
+                                        int minute = now.get(Calendar.MINUTE);
+                                        Number configMinute = actionConfig.getValue("minute");
+                                        long initMinute = minute;
+                                        if (configMinute != null)
+                                            initMinute = configMinute.longValue();
+                                        long delay = (((initHour - hour + 24) % 24) * 3600 + ((initMinute - minute + 60) % 60) * 60) * 1000;
+                                        Log.e("upload setting", "in fixed upload action, delay:" + delay);
+                                        timedCollector.scheduleTimedLogUpload(uploadLogCollector,
+                                                (period == null) ? 30 * 60000 : period.longValue(),
+                                                delay,
+                                                (name == null) ? "UploadData" : name);
+                                        break;
+                                    case "immediate":
+                                        timedCollector.scheduleTimedLogUpload(uploadLogCollector,
+                                                (period == null) ? 30 * 60000 : period.longValue(),
+                                                (initialDelay == null) ? 5000 : initialDelay.longValue(),
+                                                (name == null) ? "UploadData" : name);
+                                        break;
+                                    case "trigger":
+                                        UploadDataCollector collector = new UploadDataCollector(mContext, scheduledExecutorService, futureList, requestListener, clickTrigger, uploader, uploadLogCollector);
+                                        Number configInterval = actionConfig.getValue("interval");
+                                        if (configInterval != null) {
+                                            collector.setInterval(configInterval.longValue());
+                                        }
+                                        collector.setName((name == null) ? "UploadData" : name);
+                                        collectors.add(collector);
+                                        //timedCollector
+                                        break;
                                 }
                                 break;
                             default:
